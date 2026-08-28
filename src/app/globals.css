@@ -93,8 +93,23 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 5.5rem; /* clears the sticky header on anchor jumps */
   -webkit-text-size-adjust: 100%;
+
+  /*
+   * Single source of truth for anchor-jump offset — sections carry no
+   * scroll-margin of their own, since scroll-padding and scroll-margin add up
+   * and double-counting leaves a large gap above the heading you jumped to.
+   * Below 1536px the sticky header (72px) and the section bar (~52px) both
+   * sit above the content; from 1536px the rail moves to the side gutter and
+   * only the header needs clearing.
+   */
+  scroll-padding-top: 8.5rem;
+}
+
+@media (min-width: 1536px) {
+  html {
+    scroll-padding-top: 6rem;
+  }
 }
 
 body {

@@ -4,7 +4,7 @@ import { process } from "@/lib/content";
 
 export function Process() {
   return (
-    <section id="process" className="scroll-mt-24 py-24 sm:py-28 lg:py-32">
+    <section id="process" className="py-24 sm:py-28 lg:py-32">
       <div className="shell">
         <SectionHead
           eyebrow={process.eyebrow}

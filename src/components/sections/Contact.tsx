@@ -44,7 +44,7 @@ export function Contact() {
   return (
     <section
       id="contact"
-      className="bg-night relative scroll-mt-24 overflow-hidden py-24 text-white sm:py-28 lg:py-32"
+      className="bg-night relative overflow-hidden py-24 text-white sm:py-28 lg:py-32"
     >
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [mask-image:radial-gradient(100%_70%_at_50%_0%,#000_30%,transparent_78%)] [background-size:46px_46px] opacity-50" />

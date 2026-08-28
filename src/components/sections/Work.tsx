@@ -13,7 +13,7 @@ export function Work() {
   return (
     <section
       id="work"
-      className="border-line bg-mist relative scroll-mt-24 overflow-hidden border-y py-24 sm:py-28 lg:py-32"
+      className="border-line bg-mist relative overflow-hidden border-y py-24 sm:py-28 lg:py-32"
     >
       <div
         className="grid-paper pointer-events-none absolute inset-0 -z-10 opacity-60"

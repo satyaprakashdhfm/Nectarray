@@ -1,5 +1,7 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { SectionBar } from "@/components/layout/SectionBar";
+import { SectionRail } from "@/components/layout/SectionRail";
 import { Academy } from "@/components/sections/Academy";
 import { AgenticAI } from "@/components/sections/AgenticAI";
 import { Contact } from "@/components/sections/Contact";
@@ -26,6 +28,10 @@ export default function HomePage() {
       />
 
       <Header />
+
+      {/* Section index: vertical rail from 1440px, horizontal bar below it */}
+      <SectionRail />
+      <SectionBar />
 
       <main id="main">
         <Hero />

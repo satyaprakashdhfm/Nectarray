@@ -12,7 +12,7 @@ const accents = [
 
 export function Practices() {
   return (
-    <section id="services" className="scroll-mt-24 py-24 sm:py-28 lg:py-32">
+    <section id="services" className="py-24 sm:py-28 lg:py-32">
       <div className="shell">
         <SectionHead
           eyebrow="What we do"

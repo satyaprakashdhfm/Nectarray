@@ -7,7 +7,7 @@ export function AgenticAI() {
   return (
     <section
       id="ai"
-      className="bg-night relative scroll-mt-24 overflow-hidden py-24 text-white sm:py-28 lg:py-32"
+      className="bg-night relative overflow-hidden py-24 text-white sm:py-28 lg:py-32"
     >
       {/* Circuit-coloured glow, echoing the mark */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>

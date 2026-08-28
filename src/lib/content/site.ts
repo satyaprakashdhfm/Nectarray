@@ -24,6 +24,25 @@ export const nav: Link[] = [
   { label: "Pricing", href: "#pricing" },
 ];
 
+/**
+ * Every section a visitor can jump to, in page order. Drives both the desktop
+ * side rail and the mobile section bar, and doubles as the scroll-spy list —
+ * so each `id` must match the id on the corresponding <section>.
+ */
+export const sectionRail: Link[] = [
+  { label: "Home", href: "top" },
+  { label: "Services", href: "services" },
+  { label: "Marketing", href: "marketing" },
+  { label: "Software", href: "software" },
+  { label: "Agentic AI", href: "ai" },
+  { label: "Academy", href: "academy" },
+  { label: "Process", href: "process" },
+  { label: "Work", href: "work" },
+  { label: "Pricing", href: "pricing" },
+  { label: "FAQ", href: "faq" },
+  { label: "Contact", href: "contact" },
+];
+
 export const hero = {
   eyebrow: "Studio · Est. 2026",
   headline: ["We build the software,", "and the demand for it."],
