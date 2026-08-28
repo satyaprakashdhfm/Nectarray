@@ -1,0 +1,295 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   BRAND FONTS
+   ---------------------------------------------------------------------------
+   The site is set in "Anthropic Sans" / "Anthropic Serif". Those are licensed
+   fonts and are NOT bundled here. Until the real files are dropped in, the
+   stack falls through to close open-source stand-ins loaded in app/layout.tsx
+   (Schibsted Grotesk for the sans, Source Serif 4 for the serif).
+
+   To switch to the real thing: put the woff2 files in /public/fonts and
+   uncomment the @font-face blocks below. Nothing else needs to change --
+   "Anthropic Sans"/"Anthropic Serif" already sit first in every stack.
+   See public/fonts/README.md.
+--------------------------------------------------------------------------- */
+
+/*
+@font-face {
+  font-family: "Anthropic Sans";
+  src: url("/fonts/AnthropicSans-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Sans";
+  src: url("/fonts/AnthropicSans-Medium.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Sans";
+  src: url("/fonts/AnthropicSans-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Serif";
+  src: url("/fonts/AnthropicSerif-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Serif";
+  src: url("/fonts/AnthropicSerif-Italic.woff2") format("woff2");
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+*/
+
+@theme {
+  /* Type ------------------------------------------------------------------ */
+  --font-sans:
+    "Anthropic Sans", var(--font-fallback-sans), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --font-serif:
+    "Anthropic Serif", var(--font-fallback-serif), ui-serif, Georgia,
+    "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+
+  /* Palette — sampled from the NectArray mark ----------------------------- */
+  --color-canvas: #fbfcfc; /* page ground, under the grid */
+  --color-surface: #ffffff; /* cards */
+  --color-mist: #f2f6f8; /* recessed panels */
+  --color-line: #e4eaee; /* hairlines */
+  --color-line-soft: #eef2f5;
+
+  --color-ink: #0e1b26; /* headings */
+  --color-ink-soft: #4c5a66; /* body */
+  --color-ink-faint: #7c8894; /* meta */
+
+  --color-brand: #1fa5de; /* the mark's circuit blue */
+  --color-brand-deep: #147fae;
+  --color-brand-wash: #e9f6fd;
+
+  --color-leaf: #7ed957; /* the mark's green */
+  --color-leaf-deep: #4c9c2e;
+  --color-leaf-wash: #eefae7;
+
+  --color-amber: #f5a44a; /* the mark's radiating rays */
+  --color-amber-deep: #d8801f;
+  --color-amber-wash: #fdf3e6;
+
+  --color-night: #0b1720; /* dark section ground */
+  --color-night-soft: #14232e;
+  --color-night-line: #223644;
+
+  /* Motion ---------------------------------------------------------------- */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Base
+-------------------------------------------------------------------------- */
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem; /* clears the sticky header on anchor jumps */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--color-brand);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Utilities
+-------------------------------------------------------------------------- */
+
+/* Page gutter, shared by every section */
+@utility shell {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @media (min-width: 768px) {
+    padding-inline: 2rem;
+  }
+  @media (min-width: 1280px) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Big bold headline, the reference site's dominant voice */
+@utility display {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.032em;
+  line-height: 1.03;
+  text-wrap: balance;
+}
+
+/* The serif counter-voice — quotes and editorial moments */
+@utility display-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.014em;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+/* Accent words inside a headline, painted with the wordmark gradient */
+@utility ink-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-leaf) 0%,
+    #46c9c0 42%,
+    var(--color-brand) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  /* keeps descenders from being clipped by the text-fill box */
+  padding-bottom: 0.06em;
+}
+
+@utility eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+@utility lede {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+  text-wrap: pretty;
+  @media (min-width: 768px) {
+    font-size: 1.1875rem;
+  }
+}
+
+/* The faint graph-paper ground from the reference site */
+@utility grid-paper {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, #0e1b26 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, #0e1b26 5%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 46px 46px;
+}
+
+/* Soft lifted card shadow, used on every white panel */
+@utility card {
+  background-color: var(--color-surface);
+  border-radius: 1.25rem;
+  border: 1px solid var(--color-line-soft);
+  box-shadow:
+    0 1px 2px rgba(14, 27, 38, 0.04),
+    0 8px 24px -12px rgba(14, 27, 38, 0.1);
+}
+
+@utility card-hover {
+  transition:
+    transform 0.4s var(--ease-out-quint),
+    box-shadow 0.4s var(--ease-out-quint),
+    border-color 0.4s var(--ease-out-quint);
+  &:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--color-brand) 28%, transparent);
+    box-shadow:
+      0 1px 2px rgba(14, 27, 38, 0.04),
+      0 20px 44px -20px rgba(14, 27, 38, 0.22);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Motion — scroll reveal (see components/ui/Reveal.tsx)
+-------------------------------------------------------------------------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * Only hide un-revealed content once the inline script in layout.tsx has
+ * flagged the document. Without scripting the flag is never set, so every
+ * .reveal renders at full opacity rather than vanishing.
+ */
+[data-reveal="on"] .reveal {
+  opacity: 0;
+}
+
+[data-reveal="on"] .reveal[data-shown="true"] {
+  animation: rise 0.7s var(--ease-out-quint) forwards;
+}
+
+@keyframes marquee-track {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.marquee-track {
+  animation: marquee-track 42s linear infinite;
+  will-change: transform;
+}
+
+.marquee-track-fast {
+  animation-duration: 28s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  [data-reveal="on"] .reveal,
+  [data-reveal="on"] .reveal[data-shown="true"] {
+    opacity: 1;
+    animation: none;
+  }
+  .marquee-track {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
