@@ -13,7 +13,6 @@ import { Practices } from "@/components/sections/Practices";
 import { Pricing } from "@/components/sections/Pricing";
 import { Process } from "@/components/sections/Process";
 import { Software } from "@/components/sections/Software";
-import { Testimonials } from "@/components/sections/Testimonials";
 import { Work } from "@/components/sections/Work";
 import { buildStructuredData } from "@/lib/seo";
 
@@ -43,7 +42,15 @@ export default function HomePage() {
         <Academy />
         <Process />
         <Work />
-        <Testimonials />
+        {/*
+          Testimonials are held back until there are real, attributable
+          quotes — the ones written in lib/content/engagement.ts are
+          placeholders ("Client name", "Student name") and would read as
+          fake on a live site. To bring the section back: replace those
+          quotes, then restore the import and this line.
+              import { Testimonials } from "@/components/sections/Testimonials";
+              <Testimonials />
+        */}
         <Pricing />
         <Faq />
         <Contact />

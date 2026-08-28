@@ -107,9 +107,11 @@ Custom utilities worth knowing: `shell` (page gutter), `display` /
 
 ## Known gaps before launch
 
-- **Testimonials are placeholders.** `engagement.ts` attributes them to
-  "Client name" / "Student name". Replace with real, attributable quotes or
-  delete `<Testimonials />` from `src/app/page.tsx`.
+- **Testimonials are hidden.** The quotes in `engagement.ts` are placeholders
+  attributed to "Client name" / "Student name", so `<Testimonials />` is
+  commented out of `src/app/page.tsx`. Replace them with real, attributable
+  quotes and restore the import and the one line to bring the section back —
+  the component and its styling are untouched.
 - **Contact details are placeholders** — `company.phone`, `calendarUrl` and
   the social URLs in `site.ts` all need real values.
 - **The contact form has no backend.** It composes a `mailto:` and hands off
