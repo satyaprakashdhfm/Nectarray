@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "brand": "node scripts/prepare-brand-assets.cjs",
+    "og": "node scripts/generate-og.cjs"
   },
   "dependencies": {
     "lucide-react": "^1.35.0",

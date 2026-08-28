@@ -38,17 +38,50 @@ export const metadata: Metadata = {
     "Google ads",
     "Python SQL data science course",
   ],
+  applicationName: company.name,
+  authors: [{ name: company.name, url: siteUrl }],
+  creator: company.name,
+  publisher: company.name,
+  category: "technology",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: siteUrl,
     siteName: company.name,
+    locale: "en_IN",
     title,
     description: siteDescription,
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: `${company.name} — ${company.tagline}`,
+      },
+    ],
   },
-  twitter: { card: "summary_large_image", title, description: siteDescription },
-  icons: { icon: "/logo-mark.png", apple: "/logo-mark.png" },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description: siteDescription,
+    images: ["/og.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  // Paste the token from Search Console → Settings → Ownership verification →
+  // HTML tag, then redeploy. Until then this key is simply omitted.
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export const viewport: Viewport = {
