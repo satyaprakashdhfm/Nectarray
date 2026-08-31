@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk, Source_Serif_4 } from "next/font/google";
+import { Analytics } from "@/components/Analytics";
 import { company } from "@/lib/content";
 import { siteDescription, siteUrl } from "@/lib/seo";
 import "./globals.css";
@@ -115,6 +116,7 @@ export default function RootLayout({
           Skip to content
         </a>
         {children}
+        <Analytics />
       </body>
     </html>
   );

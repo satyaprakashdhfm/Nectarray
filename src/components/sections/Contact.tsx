@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
+import { trackEvent } from "@/lib/analytics";
 import { company, contact } from "@/lib/content";
 
 /**
@@ -30,6 +31,15 @@ export function Contact() {
       "",
       data.get("message"),
     ].join("\n");
+
+    // Records that someone completed the form and was handed to their mail
+    // client. It does NOT prove an email was sent — that happens in an app we
+    // cannot see — so treat it as intent, not a confirmed lead. It becomes a
+    // true conversion once the form posts to a real endpoint.
+    trackEvent("generate_lead", {
+      interest: String(data.get("interest") ?? "unknown"),
+      method: "mailto",
+    });
 
     window.location.href = `mailto:${company.email}?subject=${encodeURIComponent(
       subject,
