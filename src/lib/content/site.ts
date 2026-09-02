@@ -4,7 +4,7 @@ import type { Link } from "@/types";
 export const company = {
   name: "NectArray",
   tagline: "Software solutions, growth marketing & applied AI",
-  email: "hello@nectarray.com",
+  email: "info@nectarray.com",
   phone: "+91 93815 02998",
   location: "Hyderabad, India — working worldwide",
 
