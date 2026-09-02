@@ -7,43 +7,61 @@ import { SectionHead } from "@/components/ui/SectionHead";
 import { trackEvent } from "@/lib/analytics";
 import { company, contact } from "@/lib/content";
 
+type Status = "idle" | "sending" | "sent" | "error";
+
 /**
- * There is no backend yet, so the form composes a pre-filled email and hands
- * it to the visitor's mail client. Nothing is stored or sent by the page.
+ * Posts the enquiry to /api/contact, which sends it on through Resend.
  *
- * To move to a real endpoint later, replace `handleSubmit` with a POST to
- * your API route / Formspree / Resend handler — the markup below does not
- * need to change.
+ * The generate_lead event fires only on a confirmed 200 from the endpoint, so
+ * it counts real enquiries rather than form submissions that failed — which
+ * is what makes it usable as a Google Ads conversion.
  */
 export function Contact() {
   const [interest, setInterest] = useState(contact.interests[0]);
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    if (status === "sending") return;
 
-    const subject = `${data.get("interest")} — enquiry from ${data.get("name")}`;
-    const body = [
-      `Name: ${data.get("name")}`,
-      `Email: ${data.get("email")}`,
-      `Company: ${data.get("company") || "—"}`,
-      `Interested in: ${data.get("interest")}`,
-      "",
-      data.get("message"),
-    ].join("\n");
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    setStatus("sending");
+    setErrorMessage("");
 
-    // Records that someone completed the form and was handed to their mail
-    // client. It does NOT prove an email was sent — that happens in an app we
-    // cannot see — so treat it as intent, not a confirmed lead. It becomes a
-    // true conversion once the form posts to a real endpoint.
-    trackEvent("generate_lead", {
-      interest: String(data.get("interest") ?? "unknown"),
-      method: "mailto",
-    });
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.get("name"),
+          email: data.get("email"),
+          company: data.get("company"),
+          interest: data.get("interest"),
+          message: data.get("message"),
+        }),
+      });
 
-    window.location.href = `mailto:${company.email}?subject=${encodeURIComponent(
-      subject,
-    )}&body=${encodeURIComponent(body)}`;
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error ?? "That did not go through.");
+      }
+
+      trackEvent("generate_lead", {
+        interest: String(data.get("interest") ?? "unknown"),
+        method: "form",
+      });
+
+      form.reset();
+      setInterest(contact.interests[0]);
+      setStatus("sent");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "That did not go through.",
+      );
+      setStatus("error");
+    }
   }
 
   const field =
@@ -211,14 +229,43 @@ export function Contact() {
 
             <button
               type="submit"
-              className="text-ink hover:bg-leaf hover:text-night mt-7 w-full rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
+              disabled={status === "sending"}
+              className="text-ink hover:bg-leaf hover:text-night disabled:hover:text-ink mt-7 w-full rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
             >
-              Send enquiry
+              {status === "sending" ? "Sending…" : "Send enquiry"}
             </button>
 
+            {/* Announced to screen readers as it changes, not just shown */}
+            <p aria-live="polite" className="sr-only">
+              {status === "sent"
+                ? "Your enquiry was sent."
+                : status === "error"
+                  ? `Not sent. ${errorMessage}`
+                  : ""}
+            </p>
+
+            {status === "sent" && (
+              <p className="border-leaf/30 bg-leaf/10 text-leaf mt-4 rounded-xl border px-4 py-3 text-center text-[0.875rem] leading-relaxed">
+                Thanks — that reached us. We reply to every enquiry within one
+                business day.
+              </p>
+            )}
+
+            {status === "error" && (
+              <p className="border-amber/30 bg-amber/10 text-amber mt-4 rounded-xl border px-4 py-3 text-center text-[0.875rem] leading-relaxed">
+                {errorMessage} You can also email us directly at{" "}
+                <a
+                  href={`mailto:${company.email}`}
+                  className="underline underline-offset-2"
+                >
+                  {company.email}
+                </a>
+                .
+              </p>
+            )}
+
             <p className="mt-4 text-center text-[0.8125rem] leading-relaxed text-white/40">
-              This opens your email app with the message ready to send. Prefer
-              to write directly? {""}
+              Prefer to write directly?{" "}
               <a
                 href={`mailto:${company.email}`}
                 className="text-leaf underline underline-offset-2"

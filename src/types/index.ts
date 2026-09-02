@@ -52,8 +52,6 @@ export type Testimonial = {
 
 export type Plan = {
   name: string;
-  price: string;
-  cadence: string;
   body: string;
   features: string[];
   cta: string;

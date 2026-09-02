@@ -49,34 +49,18 @@ export function Pricing() {
                   </>
                 )}
 
+                {/* Carries the top of the card now that no price sits below it */}
                 <h3
-                  className={`relative text-[1.125rem] font-semibold tracking-tight ${
+                  className={`display relative text-[1.75rem] ${
                     plan.featured ? "text-white" : "text-ink"
                   }`}
                 >
                   {plan.name}
                 </h3>
 
-                <p className="relative mt-4 flex flex-wrap items-baseline gap-2">
-                  <span
-                    className={`display text-[2.25rem] ${
-                      plan.featured ? "text-white" : "text-ink"
-                    }`}
-                  >
-                    {plan.price}
-                  </span>
-                  <span
-                    className={`text-[0.875rem] ${
-                      plan.featured ? "text-white/50" : "text-ink-faint"
-                    }`}
-                  >
-                    {plan.cadence}
-                  </span>
-                </p>
-
                 <p
-                  className={`relative mt-4 text-[0.9375rem] leading-relaxed ${
-                    plan.featured ? "text-white/65" : "text-ink-soft"
+                  className={`relative mt-3 text-[1.0625rem] leading-relaxed ${
+                    plan.featured ? "text-white/75" : "text-ink-soft"
                   }`}
                 >
                   {plan.body}

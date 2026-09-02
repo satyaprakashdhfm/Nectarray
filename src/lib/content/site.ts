@@ -5,9 +5,8 @@ export const company = {
   name: "NectArray",
   tagline: "Software solutions, growth marketing & applied AI",
   email: "hello@nectarray.com",
-  phone: "+91 00000 00000",
+  phone: "+91 93815 02998",
   location: "Hyderabad, India — working worldwide",
-  calendarUrl: "https://cal.com/nectarray/intro",
 
   /**
    * Profiles the studio actually owns.
@@ -43,7 +42,7 @@ export const nav: Link[] = [
   { label: "Work", href: "#work" },
   { label: "Academy", href: "#academy" },
   { label: "Process", href: "#process" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Engagements", href: "#pricing" },
 ];
 
 /**
@@ -60,7 +59,7 @@ export const sectionRail: Link[] = [
   { label: "Academy", href: "academy" },
   { label: "Process", href: "process" },
   { label: "Work", href: "work" },
-  { label: "Pricing", href: "pricing" },
+  { label: "Engagements", href: "pricing" },
   { label: "FAQ", href: "faq" },
   { label: "Contact", href: "contact" },
 ];

@@ -103,15 +103,13 @@ export const pricing: {
 } = {
   eyebrow: "Engagements",
   title: "Three ways to work with us.",
-  lede: "Every number below is a starting point, not a quote. You get a fixed figure in writing after the discovery call.",
+  lede: "Every engagement is quoted for the work in front of it. You get a fixed figure in writing after the discovery call — no rate card, no surprises later.",
   plans: [
     {
       name: "Project",
-      price: "From ₹75,000",
-      cadence: "fixed scope",
       body: "A defined build with a start and an end — a website, an app, an agent, a rebuild.",
       features: [
-        "Fixed scope and fixed price",
+        "Fixed scope, quoted up front",
         "Design, build and launch",
         "Weekly demos on staging",
         "Full code and asset handover",
@@ -122,8 +120,6 @@ export const pricing: {
     },
     {
       name: "Retainer",
-      price: "From ₹40,000",
-      cadence: "per month",
       body: "An ongoing team for marketing, product iteration or both. Most clients end up here.",
       features: [
         "Paid media and content management",
@@ -137,8 +133,6 @@ export const pricing: {
     },
     {
       name: "Academy",
-      price: "₹24,999",
-      cadence: "per seat, per cohort",
       body: "A seat in the live Python, SQL & Data Science programme. Instalments available.",
       features: [
         "16 weeks of live instruction",
@@ -152,7 +146,7 @@ export const pricing: {
     },
   ],
   footnote:
-    "Bundled engagements — a build plus the marketing to launch it — are priced together and come out lower than the two separately.",
+    "Bundled engagements — a build plus the marketing to launch it — are quoted together and come out lower than the two separately.",
 };
 
 export const faqs: Faq[] = [

@@ -4,8 +4,8 @@ Marketing site for NectArray — a single-page studio site covering the four
 practices: growth marketing, software engineering, agentic AI, and the
 Academy.
 
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · static,
-front-end only.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4. Statically
+rendered apart from one route handler for the contact form.
 
 ## Getting started
 
@@ -112,20 +112,39 @@ Custom utilities worth knowing: `shell` (page gutter), `display` /
   commented out of `src/app/page.tsx`. Replace them with real, attributable
   quotes and restore the import and the one line to bring the section back —
   the component and its styling are untouched.
-- **Contact details are placeholders** — `company.phone`, `calendarUrl` and
-  the social URLs in `site.ts` all need real values.
-- **The contact form has no backend.** It composes a `mailto:` and hands off
-  to the visitor's mail client. To use a real endpoint, replace `handleSubmit`
-  in `src/components/sections/Contact.tsx` with a POST — the markup is
-  unchanged.
-- **Prices are indicative** and should be confirmed before publishing.
+- **Contact details** — `company.phone` and `company.email` in `site.ts` are
+  real. The four social profiles are not yet created; each carries
+  `live: false`, which keeps it out of the footer and out of `sameAs`. Flip a
+  flag once the profile exists.
+- **No prices are published.** The engagement cards describe how we work, not
+  what it costs; quotes go out after the discovery call.
+
+## Contact form
+
+`src/app/api/contact/route.ts` posts enquiries to Resend's REST API — one
+`fetch`, no SDK dependency. On a confirmed 200 the client fires a
+`generate_lead` GA4 event, so the event counts delivered enquiries rather than
+attempted submissions, which is what makes it usable as an ads conversion.
+
+Environment variables, set in Vercel → Settings → Environment Variables:
+
+| Variable             | Required | Notes                                                                                                                       |
+| -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `RESEND_API_KEY`     | yes      | From resend.com/api-keys                                                                                                    |
+| `CONTACT_FROM_EMAIL` | no       | Must be on a domain verified in Resend. Defaults to Resend's `onboarding@resend.dev`, which only sends to the account owner |
+| `CONTACT_TO_EMAIL`   | no       | Defaults to `company.email`                                                                                                 |
+
+Until `nectarray.com` is verified in Resend (Domains → Add → add the DKIM
+records to Hostinger alongside the existing Zoho ones), leave
+`CONTACT_FROM_EMAIL` unset. Failures are logged server-side prefixed
+`[contact]` with Resend's own explanation, visible in the Vercel function logs.
 
 ## Deploying to Vercel
 
 Import the repository at [vercel.com/new](https://vercel.com/new). The
 framework preset, build command and output directory are all detected
-automatically — no configuration needed, and there are no environment
-variables.
+automatically. The only configuration is `RESEND_API_KEY` for the contact
+form — see **Contact form** above.
 
 Add your domain under **Project → Settings → Domains**, then point the
 registrar at Vercel (an `A` record to `76.76.21.21` for the apex, and a
