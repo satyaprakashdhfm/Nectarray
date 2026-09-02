@@ -15,7 +15,7 @@ export const pillars: Practice[] = [
       "Social management",
       "Analytics & CRO",
     ],
-    href: "#marketing",
+    href: "/marketing",
   },
   {
     id: "software",
@@ -30,7 +30,7 @@ export const pillars: Practice[] = [
       "E-commerce",
       "Dashboards & portals",
     ],
-    href: "#software",
+    href: "/software",
   },
   {
     id: "ai",
@@ -60,7 +60,7 @@ export const pillars: Practice[] = [
       "Data science",
       "Portfolio projects",
     ],
-    href: "#academy",
+    href: "/academy",
   },
 ];
 

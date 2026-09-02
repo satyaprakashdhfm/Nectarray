@@ -3,9 +3,9 @@ import {
   company,
   faqs,
   liveSocials,
+  nav,
   marketing,
   pillars,
-  sectionRail,
   software,
 } from "@/lib/content";
 
@@ -145,22 +145,21 @@ export function buildStructuredData() {
         primaryImageOfPage: `${siteUrl}/og.png`,
       },
       {
-        // Named anchors on a one-page site — the closest thing to a route map
-        // a crawler can use here.
+        // The site's real routes, so a crawler has a map of the pages.
         "@type": "ItemList",
-        name: `${company.name} sections`,
-        itemListElement: sectionRail.map((section, index) => ({
+        name: `${company.name} pages`,
+        itemListElement: nav.map((item, index) => ({
           "@type": "SiteNavigationElement",
           position: index + 1,
-          name: section.label,
-          url: `${siteUrl}/#${section.href}`,
+          name: item.label,
+          url: `${siteUrl}${item.href}`,
         })),
       },
       {
         "@type": "Course",
         name: academy.course.title,
         description: academy.course.summary,
-        url: `${siteUrl}/#academy`,
+        url: `${siteUrl}/academy`,
         provider: { "@id": orgId },
         inLanguage: "en",
         teaches: academy.course.outcomes,
@@ -173,7 +172,7 @@ export function buildStructuredData() {
       },
       {
         "@type": "FAQPage",
-        "@id": `${siteUrl}/#faq`,
+        "@id": `${siteUrl}/contact#faq`,
         mainEntity: faqs.map((faq) => ({
           "@type": "Question",
           name: faq.q,
@@ -181,5 +180,32 @@ export function buildStructuredData() {
         })),
       },
     ],
+  };
+}
+
+/**
+ * Metadata for a sub-page. Titles run through the template in the root
+ * layout, so pass the page's own name only — not the brand.
+ */
+export function pageMetadata({
+  title,
+  description,
+  path,
+}: {
+  title: string;
+  description: string;
+  path: string;
+}) {
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website" as const,
+      url: `${siteUrl}${path}`,
+      title,
+      description,
+      images: [{ url: "/og.png", width: 1200, height: 630 }],
+    },
   };
 }

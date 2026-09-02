@@ -70,7 +70,7 @@ export const work: {
       status: "Enrolling",
     },
   ],
-  cta: { label: "Discuss your project", href: "#contact" },
+  cta: { label: "Discuss your project", href: "/contact" },
 };
 
 export const testimonials: Testimonial[] = [

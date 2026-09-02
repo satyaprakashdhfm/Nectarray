@@ -75,7 +75,7 @@ export const academy: {
       "Working professionals moving into data",
       "Founders and operators who want to stop asking someone else for numbers",
     ],
-    cta: { label: "Request the syllabus", href: "#contact" },
+    cta: { label: "Request the syllabus", href: "/contact" },
   },
   moreSoon:
     "Cohorts in web development and applied AI engineering are in the works — ask to be told first.",

@@ -9,7 +9,13 @@ const statusTone: Record<string, string> = {
   Enrolling: "bg-amber-wash text-amber-deep",
 };
 
-export function Work() {
+/**
+ * `asPage` is set when this section is the body of its own route rather than
+ * one of several on the homepage, and promotes its heading to that page's h1.
+ * The offset for the fixed header lives on <main>, so the section keeps its
+ * own vertical rhythm either way.
+ */
+export function Work({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section
       id="work"
@@ -23,6 +29,7 @@ export function Work() {
       <div className="shell">
         <div className="flex flex-wrap items-end justify-between gap-8">
           <SectionHead
+            as={asPage ? "h1" : "h2"}
             eyebrow={work.eyebrow}
             title={
               <>

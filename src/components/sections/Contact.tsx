@@ -16,7 +16,13 @@ type Status = "idle" | "sending" | "sent" | "error";
  * it counts real enquiries rather than form submissions that failed — which
  * is what makes it usable as a Google Ads conversion.
  */
-export function Contact() {
+/**
+ * `asPage` is set when this section is the body of its own route rather than
+ * one of several on the homepage, and promotes its heading to that page's h1.
+ * The offset for the fixed header lives on <main>, so the section keeps its
+ * own vertical rhythm either way.
+ */
+export function Contact({ asPage = false }: { asPage?: boolean } = {}) {
   const [interest, setInterest] = useState(contact.interests[0]);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -83,6 +89,7 @@ export function Contact() {
       <div className="shell grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div>
           <SectionHead
+            as={asPage ? "h1" : "h2"}
             onDark
             eyebrow={contact.eyebrow}
             title={

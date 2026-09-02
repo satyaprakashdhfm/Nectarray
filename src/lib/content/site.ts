@@ -37,36 +37,13 @@ export const company = {
 /** Only the profiles that exist — safe to link and to publish as sameAs. */
 export const liveSocials = company.socials.filter((social) => social.live);
 
-/**
- * Header navigation. Anchors are root-relative ("/#services") rather than
- * bare ("#services") so they still reach the homepage from a sub-page like
- * /agentic-ai; on the homepage the browser treats them as a same-page jump.
- */
+/** Header navigation. Every entry is now a real route. */
 export const nav: Link[] = [
-  { label: "Services", href: "/#services" },
+  { label: "Marketing", href: "/marketing" },
+  { label: "Software", href: "/software" },
   { label: "Agentic AI", href: "/agentic-ai" },
-  { label: "Academy", href: "/#academy" },
-  { label: "Work", href: "/#work" },
-  { label: "Engagements", href: "/#pricing" },
-];
-
-/**
- * Every section a visitor can jump to, in page order. Drives both the desktop
- * side rail and the mobile section bar, and doubles as the scroll-spy list —
- * so each `id` must match the id on the corresponding <section>.
- */
-export const sectionRail: Link[] = [
-  { label: "Home", href: "top" },
-  { label: "Services", href: "services" },
-  { label: "Marketing", href: "marketing" },
-  { label: "Software", href: "software" },
-  { label: "Agentic AI", href: "ai" },
-  { label: "Academy", href: "academy" },
-  { label: "Process", href: "process" },
-  { label: "Work", href: "work" },
-  { label: "Engagements", href: "pricing" },
-  { label: "FAQ", href: "faq" },
-  { label: "Contact", href: "contact" },
+  { label: "Academy", href: "/academy" },
+  { label: "Work", href: "/work" },
 ];
 
 export const hero = {
@@ -76,7 +53,7 @@ export const hero = {
   eyebrow: "NectArray · Hyderabad · Est. 2026",
   headline: ["We build the software,", "and the demand for it."],
   lede: "NectArray is a four-in-one studio: we engineer web products, ship AI agents that actually do work, run the paid and organic marketing that fills them, and train the next set of engineers who build them.",
-  primaryCta: { label: "Start a project", href: "#contact" },
+  primaryCta: { label: "Start a project", href: "/contact" },
   secondaryCta: { label: "See what we do", href: "#services" },
   microNote: "No pitch deck. One call, and a straight answer on what you need.",
   stats: [

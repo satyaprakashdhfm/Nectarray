@@ -2,11 +2,17 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { process } from "@/lib/content";
 
-export function Process() {
+/**
+ * `asPage` is set when this section is the body of its own route rather than
+ * one of several on the homepage: it promotes the heading to the page's h1
+ * and adds the top offset the fixed header needs.
+ */
+export function Process({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section id="process" className="py-24 sm:py-28 lg:py-32">
       <div className="shell">
         <SectionHead
+          as={asPage ? "h1" : "h2"}
           eyebrow={process.eyebrow}
           title={
             <>

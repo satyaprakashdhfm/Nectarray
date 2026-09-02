@@ -5,7 +5,13 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { academy } from "@/lib/content";
 
-export function Academy() {
+/**
+ * `asPage` is set when this section is the body of its own route rather than
+ * one of several on the homepage, and promotes its heading to that page's h1.
+ * The offset for the fixed header lives on <main>, so the section keeps its
+ * own vertical rhythm either way.
+ */
+export function Academy({ asPage = false }: { asPage?: boolean } = {}) {
   const { course } = academy;
 
   return (
@@ -20,6 +26,7 @@ export function Academy() {
 
       <div className="shell">
         <SectionHead
+          as={asPage ? "h1" : "h2"}
           eyebrow={academy.eyebrow}
           title={
             <>

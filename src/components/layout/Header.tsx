@@ -57,7 +57,7 @@ export function Header({ onDark = false }: { onDark?: boolean }) {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/#contact"
+            href="/contact"
             className={cn(
               "hidden rounded-full px-5 py-2.5 text-[0.9375rem] font-semibold transition-colors sm:inline-flex",
               onDark
@@ -115,7 +115,7 @@ export function Header({ onDark = false }: { onDark?: boolean }) {
             </Link>
           ))}
           <Link
-            href="/#contact"
+            href="/contact"
             onClick={close}
             className={cn(
               "mt-5 rounded-full px-5 py-3.5 text-center text-base font-semibold",

@@ -4,7 +4,13 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { pricing } from "@/lib/content";
 
-export function Pricing() {
+/**
+ * `asPage` is set when this section is the body of its own route rather than
+ * one of several on the homepage, and promotes its heading to that page's h1.
+ * The offset for the fixed header lives on <main>, so the section keeps its
+ * own vertical rhythm either way.
+ */
+export function Pricing({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section
       id="pricing"
@@ -17,6 +23,7 @@ export function Pricing() {
 
       <div className="shell">
         <SectionHead
+          as={asPage ? "h1" : "h2"}
           align="center"
           eyebrow={pricing.eyebrow}
           title={
@@ -93,7 +100,7 @@ export function Pricing() {
 
                 <div className="relative mt-8">
                   <Button
-                    href="#contact"
+                    href="/contact"
                     variant={plan.featured ? "onDark" : "secondary"}
                     className="w-full"
                   >

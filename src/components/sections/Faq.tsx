@@ -7,11 +7,17 @@ import { faqs } from "@/lib/content";
  * Native <details> accordion — keyboard accessible and works without JS.
  * The first item is open by default so the section never reads as empty.
  */
-export function Faq() {
+/**
+ * `asPage` is set when this section is the body of its own route rather than
+ * one of several on the homepage: it promotes the heading to the page's h1
+ * and adds the top offset the fixed header needs.
+ */
+export function Faq({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section id="faq" className="py-24 sm:py-28 lg:py-32">
       <div className="shell grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
         <SectionHead
+          as={asPage ? "h1" : "h2"}
           eyebrow="Questions"
           title={
             <>

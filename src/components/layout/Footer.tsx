@@ -79,7 +79,11 @@ export function Footer({ onDark = false }: { onDark?: boolean }) {
           <nav aria-label="Sections">
             <h2 className={heading}>Company</h2>
             <ul className="space-y-3">
-              {[...nav, { label: "Contact", href: "/#contact" }].map((item) => (
+              {[
+                ...nav,
+                { label: "Engagements", href: "/engagements" },
+                { label: "Contact", href: "/contact" },
+              ].map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className={link}>
                     {item.label}

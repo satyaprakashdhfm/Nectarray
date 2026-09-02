@@ -2,8 +2,12 @@ import { Reveal } from "./Reveal";
 
 /**
  * Eyebrow → headline → lede, the header used at the top of every section.
+ *
  * `title` accepts nodes so callers can wrap accent words in <em> (styled as
- * the gradient, not italic) without a second component.
+ * the gradient, not italic) without a second component. `as` exists because
+ * these sections are used twice: as one of several on a page, where they are
+ * an h2, and as the whole body of a dedicated page, where the same block is
+ * that page's h1.
  */
 export function SectionHead({
   eyebrow,
@@ -11,6 +15,7 @@ export function SectionHead({
   lede,
   align = "left",
   onDark = false,
+  as: Heading = "h2",
   className = "",
 }: {
   eyebrow?: string;
@@ -18,6 +23,7 @@ export function SectionHead({
   lede?: string;
   align?: "left" | "center";
   onDark?: boolean;
+  as?: "h1" | "h2";
   className?: string;
 }) {
   const centered = align === "center";
@@ -43,13 +49,13 @@ export function SectionHead({
       )}
 
       <Reveal delay={60}>
-        <h2
+        <Heading
           className={`display text-[2.125rem] leading-[1.06] sm:text-[2.75rem] lg:text-[3.25rem] ${
             onDark ? "text-white" : "text-ink"
           } [&_em]:ink-gradient [&_em]:not-italic`}
         >
           {title}
-        </h2>
+        </Heading>
       </Reveal>
 
       {lede && (

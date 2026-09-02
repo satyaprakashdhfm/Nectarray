@@ -22,7 +22,7 @@ export const agenticAiPage = {
       { value: "MCP", label: "Native, not bolted on" },
       { value: "100%", label: "Yours to host and own" },
     ],
-    primaryCta: { label: "Scope an agent", href: "/#contact" },
+    primaryCta: { label: "Scope an agent", href: "/contact" },
     secondaryCta: { label: "See what we build", href: "#capabilities" },
   },
 
@@ -310,7 +310,7 @@ export const agenticAiPage = {
   cta: {
     title: "Tell us the task, not the technology.",
     body: "The best first conversation is about the work that eats your team's week — not about which model to use. Bring that and we will tell you honestly whether an agent is the right answer.",
-    primary: { label: "Start the conversation", href: "/#contact" },
+    primary: { label: "Start the conversation", href: "/contact" },
     secondary: { label: "See our other practices", href: "/#services" },
   },
 };

@@ -1,8 +1,8 @@
 # NectArray
 
-Marketing site for NectArray — a single-page studio site covering the four
-practices: growth marketing, software engineering, agentic AI, and the
-Academy.
+Marketing site for NectArray, covering the four practices: growth marketing,
+software engineering, agentic AI, and the Academy. One route per practice,
+plus work, engagements and contact.
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4. Statically
 rendered apart from one route handler for the contact form.
@@ -28,43 +28,67 @@ npm run dev          # http://localhost:3000
 
 ```
 src/
-├── app/
-│   ├── globals.css        Design tokens, utilities, reveal animation
-│   ├── layout.tsx         Fonts, metadata, <html> shell
-│   ├── page.tsx           Section order for the one page
-│   ├── robots.ts          → /robots.txt
-│   ├── sitemap.ts         → /sitemap.xml
-│   ├── icon.png           Favicon (Next serves it automatically)
-│   └── apple-icon.png     iOS home-screen icon
+├── app/                        One folder per route (App Router)
+│   ├── layout.tsx              Fonts, metadata, analytics, <html> shell
+│   ├── page.tsx                Home — hero, practices, CTA
+│   ├── not-found.tsx           404
+│   ├── globals.css             Design tokens, utilities, reveal animation
+│   ├── robots.ts               → /robots.txt
+│   ├── sitemap.ts              → /sitemap.xml
+│   ├── icon.png                Favicon (Next serves it automatically)
+│   ├── apple-icon.png          iOS home-screen icon
+│   ├── api/contact/route.ts    Contact form endpoint (Resend)
+│   ├── marketing/page.tsx
+│   ├── software/page.tsx
+│   ├── agentic-ai/page.tsx     Long-form service page, dark treatment
+│   ├── academy/page.tsx
+│   ├── work/page.tsx
+│   ├── engagements/page.tsx
+│   └── contact/page.tsx
 ├── components/
-│   ├── layout/            Header, Footer, Logo, SectionRail, SectionBar
-│   ├── sections/          One file per page section, in page order
-│   └── ui/                Button, Icon, Reveal, SectionHead
-├── hooks/                 useActiveSection, useInView, useHasScrolled,
-│                          useLockBodyScroll, useEscapeKey
+│   ├── layout/                 Header, Footer, Logo, PageCta
+│   ├── sections/               One file per content block, reused across routes
+│   └── ui/                     Button, Icon, Reveal, SectionHead
+├── hooks/                      useInView, useHasScrolled, useLockBodyScroll,
+│                               useEscapeKey
 ├── lib/
-│   ├── content/           ALL site copy (see below)
-│   ├── seo.ts             Canonical URL + JSON-LD structured data
-│   └── utils.ts           cn() class-name helper
-└── types/                 Shared content shapes
+│   ├── analytics.ts            GA4 + GTM ids, trackEvent
+│   ├── content/                ALL site copy (see below)
+│   ├── seo.ts                  Canonical URL, JSON-LD, pageMetadata()
+│   └── utils.ts                cn() class-name helper
+└── types/                      Shared content shapes
 scripts/
-├── prepare-brand-assets.cjs   Logo → transparent PNGs, favicons  (npm run brand)
-└── generate-og.cjs            Renders the social card            (npm run og)
+├── prepare-brand-assets.cjs    Logo → transparent PNGs, favicons  (npm run brand)
+└── generate-og.cjs             Renders the social card            (npm run og)
 public/
-├── fonts/                 Brand fonts — see fonts/README.md
-├── og.png                 1200×630 social/search preview card
-├── logo.png               Full lockup (transparent)
-├── logo-mark.png          Circuit mark only (transparent)
-├── logo-square.png        512px mark on ivory — Organization schema logo
-└── logo-source.jpg        Original supplied artwork
+├── fonts/                      Brand fonts — see fonts/README.md
+├── og.png                      1200×630 social/search preview card
+├── logo.png                    Full lockup (transparent)
+├── logo-mark.png               Circuit mark only (transparent)
+├── logo-square.png             512px mark on ivory — Organization schema logo
+└── logo-source.jpg             Original supplied artwork
 ```
 
-### Section index
+### Routes
 
-`sectionRail` in `src/lib/content/site.ts` is the single list behind both the
-desktop side rail and the mobile section bar, and it doubles as the scroll-spy
-list — so each `href` must match the `id` on the corresponding `<section>`. Add
-a section there and both navigations pick it up.
+| Route          | Content                                                   |
+| -------------- | --------------------------------------------------------- |
+| `/`            | Hero, the four practice cards, closing CTA                |
+| `/marketing`   | Growth & marketing channels                               |
+| `/software`    | Software & web services, default stack                    |
+| `/agentic-ai`  | Long-form: 5 capability families, MCP servers, evals, FAQ |
+| `/academy`     | The Python, SQL & data science cohort                     |
+| `/work`        | Selected work                                             |
+| `/engagements` | Three engagement models + the four-step process           |
+| `/contact`     | Contact form + FAQ                                        |
+
+### Sections as pages
+
+Section components under `components/sections/` are written to work in two
+places: as one of several blocks on a page, and as the whole body of their own
+route. Passing `asPage` promotes the section's heading to that page's `<h1>` —
+the only structural difference. The offset for the fixed header lives on
+`<main>`, so the section keeps its own vertical rhythm in both positions.
 
 ### Editing copy
 
@@ -109,7 +133,7 @@ Custom utilities worth knowing: `shell` (page gutter), `display` /
 
 - **Testimonials are hidden.** The quotes in `engagement.ts` are placeholders
   attributed to "Client name" / "Student name", so `<Testimonials />` is
-  commented out of `src/app/page.tsx`. Replace them with real, attributable
+  commented out of the routes. Replace them with real, attributable
   quotes and restore the import and the one line to bring the section back —
   the component and its styling are untouched.
 - **Contact details** — `company.phone` and `company.email` in `site.ts` are
@@ -158,7 +182,9 @@ Everything a crawler reads is generated from `src/lib/content` — no duplicated
 copy to keep in sync.
 
 - `/robots.txt` and `/sitemap.xml` are generated routes (`src/app/robots.ts`,
-  `src/app/sitemap.ts`).
+  `src/app/sitemap.ts`); the sitemap lists every route.
+- Sub-page metadata goes through `pageMetadata()` in `lib/seo.ts`, so canonical
+  URLs and Open Graph tags stay consistent across routes.
 - **Canonical URL** is `siteUrl` in `src/lib/seo.ts`. It must match whichever
   host Vercel serves as primary. Both the apex and `www` resolve, but only one
   can be canonical — pointing canonical tags at the host that 308-redirects

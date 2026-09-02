@@ -3,7 +3,13 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { marketing } from "@/lib/content";
 
-export function Marketing() {
+/**
+ * `asPage` is set when this section is the body of its own route rather than
+ * one of several on the homepage, and promotes its heading to that page's h1.
+ * The offset for the fixed header lives on <main>, so the section keeps its
+ * own vertical rhythm either way.
+ */
+export function Marketing({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section
       id="marketing"
@@ -16,6 +22,7 @@ export function Marketing() {
 
       <div className="shell">
         <SectionHead
+          as={asPage ? "h1" : "h2"}
           eyebrow={marketing.eyebrow}
           title={
             <>
