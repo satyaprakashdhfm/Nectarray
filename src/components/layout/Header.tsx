@@ -1,13 +1,20 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { useEscapeKey, useHasScrolled, useLockBodyScroll } from "@/hooks";
 import { nav } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-export function Header() {
+/**
+ * `onDark` switches the chrome for pages built on the night ground, such as
+ * /agentic-ai. Without it the header keeps its light scrolled background and
+ * ink-coloured links, which on a dark page is both jarring on scroll and
+ * unreadable at the top.
+ */
+export function Header({ onDark = false }: { onDark?: boolean }) {
   const [open, setOpen] = useState(false);
   const scrolled = useHasScrolled();
 
@@ -15,12 +22,16 @@ export function Header() {
   useLockBodyScroll(open);
   useEscapeKey(close);
 
+  const solid = scrolled || open;
+
   return (
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 border-b transition-colors duration-300",
-        scrolled || open
-          ? "border-line bg-canvas/85 backdrop-blur-xl"
+        solid
+          ? onDark
+            ? "border-night-line bg-night/85 backdrop-blur-xl"
+            : "border-line bg-canvas/85 backdrop-blur-xl"
           : "border-transparent",
       )}
     >
@@ -29,23 +40,33 @@ export function Header() {
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
           {nav.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
-              className="text-ink-soft hover:bg-mist hover:text-ink rounded-full px-4 py-2 text-[0.9375rem] font-medium transition-colors"
+              className={cn(
+                "rounded-full px-4 py-2 text-[0.9375rem] font-medium transition-colors",
+                onDark
+                  ? "text-white/65 hover:bg-white/10 hover:text-white"
+                  : "text-ink-soft hover:bg-mist hover:text-ink",
+              )}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
-          <a
-            href="#contact"
-            className="bg-ink hover:bg-brand-deep hidden rounded-full px-5 py-2.5 text-[0.9375rem] font-semibold text-white transition-colors sm:inline-flex"
+          <Link
+            href="/#contact"
+            className={cn(
+              "hidden rounded-full px-5 py-2.5 text-[0.9375rem] font-semibold transition-colors sm:inline-flex",
+              onDark
+                ? "text-night hover:bg-leaf bg-white"
+                : "bg-ink hover:bg-brand-deep text-white",
+            )}
           >
             Book a call
-          </a>
+          </Link>
 
           <button
             type="button"
@@ -53,7 +74,12 @@ export function Header() {
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="border-line bg-surface text-ink grid size-10 place-items-center rounded-full border lg:hidden"
+            className={cn(
+              "grid size-10 place-items-center rounded-full border lg:hidden",
+              onDark
+                ? "border-night-line bg-night-soft text-white"
+                : "border-line bg-surface text-ink",
+            )}
           >
             {open ? (
               <X className="size-5" strokeWidth={2} aria-hidden />
@@ -67,26 +93,37 @@ export function Header() {
       <div
         id="mobile-nav"
         hidden={!open}
-        className="border-line bg-canvas border-t lg:hidden"
+        className={cn(
+          "border-t lg:hidden",
+          onDark ? "border-night-line bg-night" : "border-line bg-canvas",
+        )}
       >
         <nav className="shell flex flex-col py-4" aria-label="Mobile">
           {nav.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               onClick={close}
-              className="border-line-soft text-ink border-b py-3.5 text-lg font-medium"
+              className={cn(
+                "border-b py-3.5 text-lg font-medium",
+                onDark
+                  ? "border-night-line text-white"
+                  : "border-line-soft text-ink",
+              )}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
-          <a
-            href="#contact"
+          <Link
+            href="/#contact"
             onClick={close}
-            className="bg-ink mt-5 rounded-full px-5 py-3.5 text-center text-base font-semibold text-white"
+            className={cn(
+              "mt-5 rounded-full px-5 py-3.5 text-center text-base font-semibold",
+              onDark ? "text-night bg-white" : "bg-ink text-white",
+            )}
           >
             Book a call
-          </a>
+          </Link>
         </nav>
       </div>
     </header>

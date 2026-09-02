@@ -74,6 +74,26 @@ export function AgenticAI() {
             </ul>
           </div>
         </Reveal>
+
+        {/* The homepage carries the summary; /agentic-ai carries the detail */}
+        <Reveal delay={160}>
+          <div className="mt-10 text-center">
+            <a
+              href="/agentic-ai"
+              className="group text-night hover:bg-leaf inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
+            >
+              Explore the full practice
+              <Icon
+                name="arrow"
+                className="size-4 transition-transform duration-300 group-hover:translate-x-1"
+              />
+            </a>
+            <p className="mt-4 text-[0.875rem] text-white/45">
+              Chatbots, workflow agents, custom MCP servers and the evals that
+              keep them honest.
+            </p>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -37,12 +37,17 @@ export const company = {
 /** Only the profiles that exist — safe to link and to publish as sameAs. */
 export const liveSocials = company.socials.filter((social) => social.live);
 
+/**
+ * Header navigation. Anchors are root-relative ("/#services") rather than
+ * bare ("#services") so they still reach the homepage from a sub-page like
+ * /agentic-ai; on the homepage the browser treats them as a same-page jump.
+ */
 export const nav: Link[] = [
-  { label: "Services", href: "#services" },
-  { label: "Work", href: "#work" },
-  { label: "Academy", href: "#academy" },
-  { label: "Process", href: "#process" },
-  { label: "Engagements", href: "#pricing" },
+  { label: "Services", href: "/#services" },
+  { label: "Agentic AI", href: "/agentic-ai" },
+  { label: "Academy", href: "/#academy" },
+  { label: "Work", href: "/#work" },
+  { label: "Engagements", href: "/#pricing" },
 ];
 
 /**

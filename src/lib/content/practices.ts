@@ -45,7 +45,7 @@ export const pillars: Practice[] = [
       "Workflow agents",
       "Agents inside your product",
     ],
-    href: "#ai",
+    href: "/agentic-ai",
   },
   {
     id: "academy",

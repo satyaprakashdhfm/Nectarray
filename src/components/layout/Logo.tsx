@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { company } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
@@ -15,8 +16,8 @@ export function Logo({
   priority?: boolean;
 }) {
   return (
-    <a
-      href="#top"
+    <Link
+      href="/"
       className={cn("flex items-center gap-2", className)}
       aria-label={`${company.name} — home`}
     >
@@ -36,6 +37,6 @@ export function Logo({
       >
         {company.name}
       </span>
-    </a>
+    </Link>
   );
 }

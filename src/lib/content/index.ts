@@ -7,4 +7,5 @@
 export * from "./site";
 export * from "./practices";
 export * from "./academy";
+export * from "./agentic-ai";
 export * from "./engagement";
