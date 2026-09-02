@@ -8,7 +8,7 @@ import { company, contact } from "@/lib/content";
  * SDK — it is one fetch call, and the project stays dependency-free.
  *
  * Environment variables (set in Vercel → Settings → Environment Variables):
- *   RESEND_API_KEY      required. The key from resend.com/api-keys.
+ *   RESEND_KEY          required. The key from resend.com/api-keys.
  *   CONTACT_FROM_EMAIL  optional. Must be an address on a domain verified in
  *                       Resend. Until nectarray.com is verified there, Resend
  *                       only accepts its own onboarding@resend.dev sender.
@@ -85,11 +85,11 @@ function buildEmail(enquiry: Enquiry) {
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_KEY;
 
   if (!apiKey) {
     // Surfaces in the Vercel function logs with the exact variable to add.
-    console.error("[contact] RESEND_API_KEY is not set");
+    console.error("[contact] RESEND_KEY is not set");
     return NextResponse.json(
       { error: "Email is not configured on the server." },
       { status: 500 },

@@ -130,7 +130,7 @@ Environment variables, set in Vercel → Settings → Environment Variables:
 
 | Variable             | Required | Notes                                                                                                                       |
 | -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `RESEND_API_KEY`     | yes      | From resend.com/api-keys                                                                                                    |
+| `RESEND_KEY`         | yes      | From resend.com/api-keys                                                                                                    |
 | `CONTACT_FROM_EMAIL` | no       | Must be on a domain verified in Resend. Defaults to Resend's `onboarding@resend.dev`, which only sends to the account owner |
 | `CONTACT_TO_EMAIL`   | no       | Defaults to `company.email`                                                                                                 |
 
@@ -143,7 +143,7 @@ records to Hostinger alongside the existing Zoho ones), leave
 
 Import the repository at [vercel.com/new](https://vercel.com/new). The
 framework preset, build command and output directory are all detected
-automatically. The only configuration is `RESEND_API_KEY` for the contact
+automatically. The only configuration is `RESEND_KEY` for the contact
 form — see **Contact form** above.
 
 Add your domain under **Project → Settings → Domains**, then point the
