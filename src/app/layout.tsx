@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk, Source_Serif_4 } from "next/font/google";
-import { Analytics } from "@/components/Analytics";
+import { Analytics, TagManagerNoScript } from "@/components/Analytics";
 import { company } from "@/lib/content";
 import { siteDescription, siteUrl } from "@/lib/seo";
 import "./globals.css";
@@ -109,6 +109,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: revealFlag }} />
       </head>
       <body>
+        <TagManagerNoScript />
         <a
           href="#main"
           className="focus:bg-ink sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-100 focus:rounded-lg focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"

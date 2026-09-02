@@ -9,6 +9,21 @@
 export const GA_MEASUREMENT_ID = "G-E5N83KZDXQ";
 
 /**
+ * Google Tag Manager container.
+ *
+ * GTM is here to carry the tags that arrive later — Google Ads conversions,
+ * the Meta Pixel, the LinkedIn Insight tag — so they can be added from the
+ * GTM console without a deploy.
+ *
+ * ⚠ Do NOT add a GA4 configuration tag inside this container. GA4 is loaded
+ * directly by <Analytics />, and a second copy firing through GTM would count
+ * every page view and every event twice. The split is deliberate:
+ *   GA4          → lives in code, version-controlled, already working
+ *   Everything else → lives in GTM, changeable without a deploy
+ */
+export const GTM_CONTAINER_ID = "GTM-P6CR6X3N";
+
+/**
  * Analytics only loads in production builds, so local development and
  * preview work never pollutes the property's data. To check the tag locally,
  * run `npm run build && npm start` and watch GA4 → Reports → Realtime.
