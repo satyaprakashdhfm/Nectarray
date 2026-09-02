@@ -2,6 +2,7 @@ import {
   academy,
   company,
   faqs,
+  liveSocials,
   marketing,
   pillars,
   sectionRail,
@@ -56,7 +57,13 @@ export function buildStructuredData() {
         "@type": ["Organization", "ProfessionalService"],
         "@id": orgId,
         name: company.name,
-        alternateName: "NectArray Studio",
+        /*
+         * Spellings a person might reasonably type for a coined name.
+         * Google currently spell-corrects "nectarray" to "nextarray" because
+         * it has no record of the word; listing the real variants helps it
+         * map them all to this one entity rather than guessing.
+         */
+        alternateName: ["Nectarray", "Nect Array", "NectArray Studio"],
         url: siteUrl,
         logo: {
           "@type": "ImageObject",
@@ -93,7 +100,10 @@ export function buildStructuredData() {
           "SQL",
           "Data science",
         ],
-        sameAs: company.socials.map((social) => social.href),
+        // Only profiles that actually exist — see the note in content/site.ts.
+        ...(liveSocials.length
+          ? { sameAs: liveSocials.map((social) => social.href) }
+          : {}),
         contactPoint: {
           "@type": "ContactPoint",
           contactType: "sales",

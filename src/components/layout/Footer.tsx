@@ -1,5 +1,5 @@
 import { Logo } from "@/components/layout/Logo";
-import { company, footerNote, nav, pillars } from "@/lib/content";
+import { company, footerNote, liveSocials, nav, pillars } from "@/lib/content";
 
 export function Footer() {
   return (
@@ -18,7 +18,7 @@ export function Footer() {
             </p>
 
             <ul className="mt-7 flex flex-wrap gap-2">
-              {company.socials.map((social) => (
+              {liveSocials.map((social) => (
                 <li key={social.label}>
                   <a
                     href={social.href}

@@ -8,13 +8,35 @@ export const company = {
   phone: "+91 00000 00000",
   location: "Hyderabad, India — working worldwide",
   calendarUrl: "https://cal.com/nectarray/intro",
+
+  /**
+   * Profiles the studio actually owns.
+   *
+   * `live` gates both the footer links and the `sameAs` array in the
+   * structured data. Flip one to true only once the profile really exists:
+   * a footer link to a missing page is a dead end for visitors, and a
+   * `sameAs` pointing nowhere actively works against the brand, since
+   * `sameAs` is exactly how Google corroborates that an entity is real.
+   * That corroboration is what stops it spell-correcting "NectArray".
+   */
   socials: [
-    { label: "LinkedIn", href: "https://linkedin.com/company/nectarray" },
-    { label: "Instagram", href: "https://instagram.com/nectarray" },
-    { label: "X", href: "https://x.com/nectarray" },
-    { label: "GitHub", href: "https://github.com/nectarray" },
+    {
+      label: "LinkedIn",
+      href: "https://linkedin.com/company/nectarray",
+      live: false,
+    },
+    {
+      label: "Instagram",
+      href: "https://instagram.com/nectarray",
+      live: false,
+    },
+    { label: "X", href: "https://x.com/nectarray", live: false },
+    { label: "GitHub", href: "https://github.com/nectarray", live: false },
   ],
 };
+
+/** Only the profiles that exist — safe to link and to publish as sameAs. */
+export const liveSocials = company.socials.filter((social) => social.live);
 
 export const nav: Link[] = [
   { label: "Services", href: "#services" },
@@ -44,7 +66,10 @@ export const sectionRail: Link[] = [
 ];
 
 export const hero = {
-  eyebrow: "Studio · Est. 2026",
+  // Brand and city sit in the first line a visitor reads. For a coined name
+  // Google does not yet recognise, having it adjacent to a real place helps
+  // tie the two together as one entity.
+  eyebrow: "NectArray · Hyderabad · Est. 2026",
   headline: ["We build the software,", "and the demand for it."],
   lede: "NectArray is a four-in-one studio: we engineer web products, ship AI agents that actually do work, run the paid and organic marketing that fills them, and train the next set of engineers who build them.",
   primaryCta: { label: "Start a project", href: "#contact" },
