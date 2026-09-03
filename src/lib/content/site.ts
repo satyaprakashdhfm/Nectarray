@@ -21,8 +21,8 @@ export const company = {
   socials: [
     {
       label: "LinkedIn",
-      href: "https://linkedin.com/company/nectarray",
-      live: false,
+      href: "https://www.linkedin.com/company/nectarray/",
+      live: true,
     },
     {
       label: "Instagram",
