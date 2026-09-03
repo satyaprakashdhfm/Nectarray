@@ -3,16 +3,58 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { pillars } from "@/lib/content";
 
+/**
+ * One accent per practice, in wordmark order: amber, blue, green, teal.
+ *
+ * `chip` and `pill` use the deep tones because they carry text or a glyph;
+ * `bar` and `tint` use the display tones, which only ever sit behind
+ * nothing. The fourth practice used to fall back to grey, which read as a
+ * disabled card rather than a fourth equal.
+ */
 const accents = [
-  { wash: "bg-amber-wash", fg: "text-amber-deep", bar: "bg-amber" },
-  { wash: "bg-brand-wash", fg: "text-brand-deep", bar: "bg-brand" },
-  { wash: "bg-leaf-wash", fg: "text-leaf-deep", bar: "bg-leaf" },
-  { wash: "bg-mist", fg: "text-ink", bar: "bg-ink" },
+  {
+    bar: "bg-amber",
+    chip: "bg-amber-deep",
+    tint: "from-amber-wash",
+    pill: "bg-amber-wash text-amber-deep",
+    link: "group-hover:text-amber-deep",
+  },
+  {
+    bar: "bg-brand",
+    chip: "bg-brand-deep",
+    tint: "from-brand-wash",
+    pill: "bg-brand-wash text-brand-deep",
+    link: "group-hover:text-brand-deep",
+  },
+  {
+    bar: "bg-leaf",
+    chip: "bg-leaf-deep",
+    tint: "from-leaf-wash",
+    pill: "bg-leaf-wash text-leaf-deep",
+    link: "group-hover:text-leaf-deep",
+  },
+  {
+    bar: "bg-teal",
+    chip: "bg-teal-deep",
+    tint: "from-teal-wash",
+    pill: "bg-teal-wash text-teal-deep",
+    link: "group-hover:text-teal-deep",
+  },
 ];
 
 export function Practices() {
   return (
-    <section id="services" className="py-24 sm:py-28 lg:py-32">
+    <section
+      id="services"
+      className="bg-mist relative overflow-hidden py-24 sm:py-28 lg:py-32"
+    >
+      {/* A recessed ground, so the cards read as lifted rather than as more
+          of the same white the section is drawn on. */}
+      <div
+        className="grid-paper pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(95%_65%_at_50%_0%,#000_20%,transparent_78%)] opacity-50"
+        aria-hidden
+      />
+
       <div className="shell">
         <SectionHead
           eyebrow="What we do"
@@ -29,17 +71,19 @@ export function Practices() {
             <Reveal as="li" key={pillar.id} delay={i * 80}>
               <a
                 href={pillar.href}
-                className="card card-hover group relative flex h-full flex-col overflow-hidden p-7 sm:p-8"
+                className={`card card-hover group relative flex h-full flex-col overflow-hidden bg-gradient-to-br p-7 sm:p-8 ${accents[i].tint} to-surface`}
               >
-                {/* accent rule that draws in on hover */}
+                {/* Accent rule — always on, so the card is identifiable at
+                    rest rather than only under a cursor that never lands on
+                    a phone. */}
                 <span
-                  className={`absolute inset-x-0 top-0 h-1 origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100 ${accents[i].bar}`}
+                  className={`absolute inset-x-0 top-0 h-1.5 ${accents[i].bar}`}
                   aria-hidden
                 />
 
                 <div className="flex items-start justify-between gap-4">
                   <span
-                    className={`grid size-12 place-items-center rounded-2xl ${accents[i].wash} ${accents[i].fg}`}
+                    className={`grid size-12 place-items-center rounded-2xl text-white ${accents[i].chip}`}
                   >
                     <Icon name={pillar.icon} className="size-[1.375rem]" />
                   </span>
@@ -59,14 +103,16 @@ export function Practices() {
                   {pillar.points.map((point) => (
                     <li
                       key={point}
-                      className="bg-mist text-ink-soft rounded-full px-3 py-1.5 text-[0.8125rem] font-medium"
+                      className={`rounded-full px-3 py-1.5 text-[0.8125rem] font-medium ${accents[i].pill}`}
                     >
                       {point}
                     </li>
                   ))}
                 </ul>
 
-                <span className="text-ink group-hover:text-brand-deep mt-7 inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors">
+                <span
+                  className={`text-ink mt-7 inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors ${accents[i].link}`}
+                >
                   Explore
                   <Icon
                     name="arrow"

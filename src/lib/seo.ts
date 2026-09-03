@@ -19,7 +19,7 @@ import {
 export const siteUrl = "https://nectarray.com";
 
 export const siteDescription =
-  "NectArray is a software studio in Hyderabad: web and product engineering, AI agents and chatbots, growth marketing across Meta and Google Ads, and live courses in Python, SQL and data science.";
+  "NectArray is a software studio in Bengaluru: web and product engineering, AI agents and chatbots, growth marketing across Meta and Google Ads, and live courses in Python, SQL and data science.";
 
 const orgId = `${siteUrl}/#organization`;
 const siteId = `${siteUrl}/#website`;
@@ -80,8 +80,8 @@ export function buildStructuredData() {
         foundingDate: "2026",
         address: {
           "@type": "PostalAddress",
-          addressLocality: "Hyderabad",
-          addressRegion: "Telangana",
+          addressLocality: "Bengaluru",
+          addressRegion: "Karnataka",
           addressCountry: "IN",
         },
         areaServed: [

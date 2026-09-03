@@ -9,7 +9,7 @@ import { marqueeItems, trustChips } from "@/lib/content";
 export function Marquee() {
   return (
     <section
-      className="border-line bg-surface relative border-y py-7 sm:py-9"
+      className="border-night-line bg-night relative border-y py-7 sm:py-9"
       aria-label="What we promise and what we build with"
     >
       {/* Chips */}
@@ -18,14 +18,14 @@ export function Marquee() {
           {[...trustChips, ...trustChips].map((chip, i) => (
             <li
               key={`${chip}-${i}`}
-              className="border-line bg-canvas flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5"
+              className="border-night-line bg-night-soft flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5"
             >
               <Star
                 className="fill-amber text-amber size-3.5 shrink-0"
                 strokeWidth={1.5}
                 aria-hidden
               />
-              <span className="text-ink text-[0.875rem] font-medium whitespace-nowrap">
+              <span className="text-[0.875rem] font-medium whitespace-nowrap text-white">
                 {chip}
               </span>
             </li>
@@ -42,7 +42,7 @@ export function Marquee() {
           {[...marqueeItems, ...marqueeItems].map((item, i) => (
             <li
               key={`${item}-${i}`}
-              className="text-ink-faint text-[0.9375rem] font-medium tracking-tight whitespace-nowrap"
+              className="text-[0.9375rem] font-medium tracking-tight whitespace-nowrap text-white/45"
             >
               {item}
             </li>

@@ -1,29 +1,17 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/Logo";
 import { company, footerNote, liveSocials, nav, pillars } from "@/lib/content";
-import { cn } from "@/lib/utils";
 
 /**
- * `onDark` matches the footer to pages built on the night ground, so a dark
- * page does not end in a bright cream slab.
+ * One flat colour, on every route — the other half of the bookend the header
+ * opens. It previously took the page colour, which put a near-white footer
+ * under a near-white page and left the site with no bottom edge at all.
  */
-export function Footer({ onDark = false }: { onDark?: boolean }) {
-  const link = cn(
-    "text-[0.9375rem] transition-colors",
-    onDark
-      ? "text-white/60 hover:text-leaf"
-      : "text-ink-soft hover:text-brand-deep",
-  );
-  const heading = cn("eyebrow mb-5", onDark && "text-white/40");
-  const rule = onDark ? "border-night-line" : "border-line";
+const link = "text-[0.9375rem] text-white/60 transition-colors hover:text-leaf";
 
+export function Footer() {
   return (
-    <footer
-      className={cn(
-        "border-t",
-        onDark ? "border-night-line bg-night" : "border-line bg-canvas",
-      )}
-    >
+    <footer className="border-night-line bg-night border-t">
       <div className="shell py-16 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-16">
           <div>
@@ -33,12 +21,7 @@ export function Footer({ onDark = false }: { onDark?: boolean }) {
               wordClassName="text-[1.5rem]"
             />
 
-            <p
-              className={cn(
-                "mt-5 max-w-sm text-[0.9375rem] leading-relaxed",
-                onDark ? "text-white/55" : "text-ink-soft",
-              )}
-            >
+            <p className="mt-5 max-w-sm text-[0.9375rem] leading-relaxed text-white/55">
               {footerNote}
             </p>
 
@@ -49,12 +32,7 @@ export function Footer({ onDark = false }: { onDark?: boolean }) {
                     href={social.href}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className={cn(
-                      "inline-flex rounded-full border px-3.5 py-2 text-[0.8125rem] font-medium transition-colors",
-                      onDark
-                        ? "border-night-line hover:border-leaf hover:text-leaf bg-white/[0.03] text-white/70"
-                        : "border-line bg-surface text-ink-soft hover:border-brand hover:text-brand-deep",
-                    )}
+                    className="border-night-line hover:border-leaf hover:text-leaf inline-flex rounded-full border bg-white/[0.03] px-3.5 py-2 text-[0.8125rem] font-medium text-white/70 transition-colors"
                   >
                     {social.label}
                   </a>
@@ -64,7 +42,7 @@ export function Footer({ onDark = false }: { onDark?: boolean }) {
           </div>
 
           <nav aria-label="Practices">
-            <h2 className={heading}>Practices</h2>
+            <h2 className="eyebrow mb-5 text-white/40">Practices</h2>
             <ul className="space-y-3">
               {pillars.map((pillar) => (
                 <li key={pillar.id}>
@@ -77,7 +55,7 @@ export function Footer({ onDark = false }: { onDark?: boolean }) {
           </nav>
 
           <nav aria-label="Sections">
-            <h2 className={heading}>Company</h2>
+            <h2 className="eyebrow mb-5 text-white/40">Company</h2>
             <ul className="space-y-3">
               {[
                 ...nav,
@@ -94,28 +72,11 @@ export function Footer({ onDark = false }: { onDark?: boolean }) {
           </nav>
         </div>
 
-        <div
-          className={cn(
-            "mt-14 flex flex-col gap-3 border-t pt-8 sm:flex-row sm:items-center sm:justify-between",
-            rule,
-          )}
-        >
-          <p
-            className={cn(
-              "text-[0.8125rem]",
-              onDark ? "text-white/40" : "text-ink-faint",
-            )}
-          >
+        <div className="border-night-line mt-14 flex flex-col gap-3 border-t pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[0.8125rem] text-white/40">
             © {new Date().getFullYear()} {company.name}. All rights reserved.
           </p>
-          <p
-            className={cn(
-              "text-[0.8125rem]",
-              onDark ? "text-white/40" : "text-ink-faint",
-            )}
-          >
-            {company.location}
-          </p>
+          <p className="text-[0.8125rem] text-white/40">{company.location}</p>
         </div>
       </div>
     </footer>

@@ -75,7 +75,7 @@ export default function AgenticAiPage() {
   return (
     <>
       <StructuredData />
-      <Header onDark />
+      <Header />
 
       {/*
         This page commits to the dark treatment the practice already uses on
@@ -418,7 +418,7 @@ export default function AgenticAiPage() {
         </section>
       </main>
 
-      <Footer onDark />
+      <Footer />
     </>
   );
 }

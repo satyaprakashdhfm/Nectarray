@@ -5,50 +5,51 @@ import { hero, pillars } from "@/lib/content";
 
 /** Alternating tilt for the stacked practice cards. */
 const tilts = ["-rotate-2", "rotate-1", "-rotate-1", "rotate-2"];
+
+/**
+ * One accent per practice, in wordmark order: amber, blue, green, teal.
+ *
+ * The chips are the *deep* tones because they carry a white glyph — the
+ * display tones only reach ~2.5:1 against white. The card tint is the
+ * matching wash, so each card has a colour identity at rest rather than
+ * only on hover.
+ */
 const accents = [
-  { wash: "bg-amber-wash", fg: "text-amber-deep" },
-  { wash: "bg-brand-wash", fg: "text-brand-deep" },
-  { wash: "bg-leaf-wash", fg: "text-leaf-deep" },
-  { wash: "bg-mist", fg: "text-ink" },
+  { chip: "bg-amber-deep", tint: "from-amber-wash" },
+  { chip: "bg-brand-deep", tint: "from-brand-wash" },
+  { chip: "bg-leaf-deep", tint: "from-leaf-wash" },
+  { chip: "bg-teal-deep", tint: "from-teal-wash" },
 ];
 
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden pt-[72px]">
-      {/* Ground: graph paper, faded out at the edges */}
+      {/* Ground: a tinted wash, graph paper, and four brand glows ---------- */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+        <div className="from-brand-wash via-canvas to-leaf-wash absolute inset-0 bg-gradient-to-br" />
         <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(120%_80%_at_50%_20%,#000_35%,transparent_78%)]" />
-        <div className="bg-brand/8 absolute top-0 -left-40 size-[34rem] rounded-full blur-[110px]" />
-        <div className="bg-leaf/10 absolute top-40 -right-32 size-[30rem] rounded-full blur-[110px]" />
-        <div className="bg-amber/8 absolute -top-20 left-1/3 size-[22rem] rounded-full blur-[100px]" />
+        <div className="bg-brand/25 absolute -top-24 -left-40 size-[34rem] rounded-full blur-[120px]" />
+        <div className="bg-leaf/30 absolute top-32 -right-32 size-[30rem] rounded-full blur-[120px]" />
+        <div className="bg-amber/25 absolute -top-16 left-1/3 size-[24rem] rounded-full blur-[110px]" />
+        <div className="bg-teal/20 absolute bottom-0 left-1/4 size-[26rem] rounded-full blur-[120px]" />
       </div>
 
-      <div className="shell grid items-center gap-16 py-16 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:py-28">
+      <div className="shell grid items-center gap-16 py-20 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:py-28">
         {/* ---------------------------------------------------------------- */}
         <div>
           <Reveal>
-            <p className="border-line bg-surface/80 text-ink-soft inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[0.8125rem] font-medium backdrop-blur">
-              <span className="relative flex size-2">
-                <span className="bg-leaf absolute inline-flex size-full animate-ping rounded-full opacity-70" />
-                <span className="bg-leaf-deep relative inline-flex size-2 rounded-full" />
-              </span>
-              {hero.eyebrow}
-            </p>
-          </Reveal>
-
-          <Reveal delay={80}>
-            <h1 className="display mt-7 text-[2.6rem] leading-[1.02] sm:text-[3.4rem] lg:text-[4rem] xl:text-[4.4rem]">
+            <h1 className="display text-[2.6rem] leading-[1.02] sm:text-[3.4rem] lg:text-[4rem] xl:text-[4.4rem]">
               {hero.headline[0]}
               <br />
               <span className="ink-gradient">{hero.headline[1]}</span>
             </h1>
           </Reveal>
 
-          <Reveal delay={150}>
+          <Reveal delay={80}>
             <p className="lede mt-7 max-w-xl">{hero.lede}</p>
           </Reveal>
 
-          <Reveal delay={220}>
+          <Reveal delay={150}>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Button href={hero.primaryCta.href}>
                 {hero.primaryCta.label}
@@ -59,13 +60,13 @@ export function Hero() {
             </div>
           </Reveal>
 
-          <Reveal delay={280}>
+          <Reveal delay={210}>
             <p className="text-ink-faint mt-6 text-[0.9375rem]">
               {hero.microNote}
             </p>
           </Reveal>
 
-          <Reveal delay={340}>
+          <Reveal delay={270}>
             <dl className="border-line mt-12 grid max-w-lg grid-cols-3 gap-6 border-t pt-8">
               {hero.stats.map((stat) => (
                 <div key={stat.label}>
@@ -74,7 +75,7 @@ export function Hero() {
                     <span className="display ink-gradient block text-[2rem] leading-none sm:text-[2.35rem]">
                       {stat.value}
                     </span>
-                    <span className="text-ink-faint mt-2.5 block text-[0.8125rem] leading-snug">
+                    <span className="text-ink-soft mt-2.5 block text-[0.8125rem] leading-snug">
                       {stat.label}
                     </span>
                   </dd>
@@ -89,13 +90,13 @@ export function Hero() {
         <div className="relative lg:pl-6">
           <ul className="space-y-3.5 sm:space-y-4">
             {pillars.map((pillar, i) => (
-              <Reveal as="li" key={pillar.id} delay={200 + i * 90}>
+              <Reveal as="li" key={pillar.id} delay={140 + i * 90}>
                 <a
                   href={pillar.href}
-                  className={`card card-hover group flex items-start gap-4 p-5 sm:gap-5 sm:p-6 ${tilts[i]} hover:rotate-0`}
+                  className={`card card-hover group flex items-start gap-4 bg-gradient-to-br p-5 sm:gap-5 sm:p-6 ${accents[i].tint} to-surface ${tilts[i]} hover:rotate-0`}
                 >
                   <span
-                    className={`grid size-11 shrink-0 place-items-center rounded-xl ${accents[i].wash} ${accents[i].fg}`}
+                    className={`grid size-11 shrink-0 place-items-center rounded-xl text-white ${accents[i].chip}`}
                   >
                     <Icon name={pillar.icon} className="size-5" />
                   </span>

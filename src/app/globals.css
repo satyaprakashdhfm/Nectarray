@@ -75,6 +75,15 @@
   --color-amber-deep: #d8801f;
   --color-amber-wash: #fdf3e6;
 
+  /*
+   * The teal midpoint of the wordmark gradient, promoted to a full accent.
+   * There are four practices and only three accents were sampled, so the
+   * fourth card fell back to grey and read as the odd one out.
+   */
+  --color-teal: #2bb3ad;
+  --color-teal-deep: #17827e;
+  --color-teal-wash: #e4f6f5;
+
   --color-night: #0b1720; /* dark section ground */
   --color-night-soft: #14232e;
   --color-night-line: #223644;
@@ -99,17 +108,11 @@ html {
    * Single source of truth for anchor-jump offset — sections carry no
    * scroll-margin of their own, since scroll-padding and scroll-margin add up
    * and double-counting leaves a large gap above the heading you jumped to.
-   * Below 1536px the sticky header (72px) and the section bar (~52px) both
-   * sit above the content; from 1536px the rail moves to the side gutter and
-   * only the header needs clearing.
+   * The fixed header is 72px; the rest is breathing room. This was 8.5rem
+   * when a section rail sat under the header too, and kept over-scrolling by
+   * that rail's height after the site was split into one route per practice.
    */
-  scroll-padding-top: 8.5rem;
-}
-
-@media (min-width: 1536px) {
-  html {
-    scroll-padding-top: 6rem;
-  }
+  scroll-padding-top: 6rem;
 }
 
 body {
@@ -183,6 +186,22 @@ body {
   color: transparent;
   /* keeps descenders from being clipped by the text-fill box */
   padding-bottom: 0.06em;
+}
+
+/*
+ * The wordmark gradient as a *surface* rather than as text.
+ *
+ * These are deliberately darker than the --color-*-deep tokens: the band
+ * carries white body copy, and the display versions of those greens and
+ * blues only reach ~3.5:1 against white. Every stop here clears 5.8:1.
+ */
+@utility brand-band {
+  background-image: linear-gradient(
+    118deg,
+    #35701f 0%,
+    #14706c 48%,
+    #106a91 100%
+  );
 }
 
 @utility eyebrow {

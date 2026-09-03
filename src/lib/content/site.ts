@@ -6,7 +6,7 @@ export const company = {
   tagline: "Software solutions, growth marketing & applied AI",
   email: "info@nectarray.com",
   phone: "+91 93815 02998",
-  location: "Hyderabad, India — working worldwide",
+  location: "Bengaluru, India — working worldwide",
 
   /**
    * Profiles the studio actually owns.
@@ -49,10 +49,6 @@ export const nav: Link[] = [
 ];
 
 export const hero = {
-  // Brand and city sit in the first line a visitor reads. For a coined name
-  // Google does not yet recognise, having it adjacent to a real place helps
-  // tie the two together as one entity.
-  eyebrow: "NectArray · Hyderabad · Est. 2026",
   headline: ["We build the software,", "and the demand for it."],
   lede: "NectArray is a four-in-one studio: we engineer web products, ship AI agents that actually do work, run the paid and organic marketing that fills them, and train the next set of engineers who build them.",
   primaryCta: { label: "Start a project", href: "/contact" },

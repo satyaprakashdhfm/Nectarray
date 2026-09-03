@@ -49,8 +49,7 @@ src/
 │   ├── layout/                 Header, Footer, Logo, PageCta
 │   ├── sections/               One file per content block, reused across routes
 │   └── ui/                     Button, Icon, Reveal, SectionHead
-├── hooks/                      useInView, useHasScrolled, useLockBodyScroll,
-│                               useEscapeKey
+├── hooks/                      useInView, useLockBodyScroll, useEscapeKey
 ├── lib/
 │   ├── analytics.ts            GA4 + GTM ids, trackEvent
 │   ├── content/                ALL site copy (see below)
@@ -111,13 +110,27 @@ Tokens are defined once in the `@theme` block of `src/app/globals.css` and
 consumed as Tailwind utilities (`bg-canvas`, `text-ink-soft`, `border-line`).
 
 The palette is sampled from the logo: `--color-brand` is the mark's circuit
-blue, `--color-leaf` its green, `--color-amber` its radiating rays. The
-`ink-gradient` utility paints headline accent words with the green-to-blue
-wordmark gradient.
+blue, `--color-leaf` its green, `--color-amber` its radiating rays, and
+`--color-teal` the midpoint of the wordmark gradient. Four accents for four
+practices — each one owns a card rule, icon chip, tag pill and hover colour,
+in that order.
+
+Each accent has three tones. Use `-deep` for anything carrying text or a
+glyph: the display tones sit around 2.5:1 against white and fail as
+foregrounds. Use `-wash` for tinted grounds.
+
+`ink-gradient` paints headline accent words with the wordmark gradient;
+`brand-band` is the same gradient as a _surface_, at darker stops that clear
+5.8:1 against white body copy.
+
+**Vertical rhythm.** The page alternates ground deliberately: night header →
+tinted hero → night marquee → recessed practices → full-colour CTA → night
+footer. Header and footer are one flat colour on every route, so nothing
+about them changes page to page.
 
 Custom utilities worth knowing: `shell` (page gutter), `display` /
 `display-serif` (the two headline voices), `card` / `card-hover`,
-`grid-paper`, `eyebrow`, `lede`.
+`grid-paper`, `brand-band`, `eyebrow`, `lede`.
 
 ## Motion and accessibility
 
@@ -137,9 +150,10 @@ Custom utilities worth knowing: `shell` (page gutter), `display` /
   quotes and restore the import and the one line to bring the section back —
   the component and its styling are untouched.
 - **Contact details** — `company.phone` and `company.email` in `site.ts` are
-  real. The four social profiles are not yet created; each carries
-  `live: false`, which keeps it out of the footer and out of `sameAs`. Flip a
-  flag once the profile exists.
+  real. Of the four social profiles only LinkedIn is `live: true`; Instagram
+  and X do not exist yet, and the GitHub org is deliberately unlinked because
+  client work is private. `live: false` keeps a profile out of both the footer
+  and `sameAs`.
 - **No prices are published.** The engagement cards describe how we work, not
   what it costs; quotes go out after the discovery call.
 
