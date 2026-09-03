@@ -30,7 +30,9 @@ export const company = {
       live: false,
     },
     { label: "X", href: "https://x.com/nectarray", live: false },
-    { label: "GitHub", href: "https://github.com/nectarray", live: true },
+    // The org exists, but client work is private, so it would send visitors
+    // to an empty profile. Deliberately unlinked rather than not-yet-created.
+    { label: "GitHub", href: "https://github.com/nectarray", live: false },
   ],
 };
 
