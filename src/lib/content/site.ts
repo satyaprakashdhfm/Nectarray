@@ -30,7 +30,7 @@ export const company = {
       live: false,
     },
     { label: "X", href: "https://x.com/nectarray", live: false },
-    { label: "GitHub", href: "https://github.com/nectarray", live: false },
+    { label: "GitHub", href: "https://github.com/nectarray", live: true },
   ],
 };
 
