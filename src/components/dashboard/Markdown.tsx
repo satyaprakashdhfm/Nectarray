@@ -1,5 +1,33 @@
+import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+/**
+ * Slug for a heading, matched byte-for-byte by the table of contents.
+ *
+ * The TOC scans the raw markdown while the renderer sees React nodes, so
+ * both sides must agree on the rule — hence one exported function rather
+ * than two implementations that drift.
+ */
+export function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+/** Flattens heading children back to plain text so it can be slugged. */
+function toText(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean")
+    return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(toText).join("");
+  if (typeof node === "object" && "props" in node) {
+    return toText((node as { props: { children?: ReactNode } }).props.children);
+  }
+  return "";
+}
 
 /**
  * Renders course notes.
@@ -16,12 +44,18 @@ export function Markdown({ children }: { children: string }) {
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h2 className="display text-ink border-line mt-12 border-t pt-10 text-[1.625rem] first:mt-0 first:border-0 first:pt-0 sm:text-[1.875rem]">
+            <h2
+              id={slugify(toText(children))}
+              className="display text-ink border-line mt-12 scroll-mt-[140px] border-t pt-10 text-[1.625rem] first:mt-0 first:border-0 first:pt-0 sm:text-[1.875rem]"
+            >
               {children}
             </h2>
           ),
           h2: ({ children }) => (
-            <h3 className="display text-ink mt-10 text-[1.375rem]">
+            <h3
+              id={slugify(toText(children))}
+              className="display text-ink mt-10 scroll-mt-[140px] text-[1.375rem]"
+            >
               {children}
             </h3>
           ),
@@ -64,7 +98,9 @@ export function Markdown({ children }: { children: string }) {
               {children}
             </blockquote>
           ),
-          hr: () => <hr className="border-line-soft mt-10" />,
+          // The notes separate sections with ---, so the rule does the work and
+          // headings do not also draw one; two rules and a gap read as a bug.
+          hr: () => <hr className="border-line mt-12" />,
 
           // Wide result tables must scroll inside themselves, never push the
           // page sideways.

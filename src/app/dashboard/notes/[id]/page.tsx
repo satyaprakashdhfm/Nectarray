@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
 import { Markdown } from "@/components/dashboard/Markdown";
+import { Toc } from "@/components/dashboard/Toc";
 import { createClient, getViewer } from "@/lib/supabase/server";
 
 export default async function LessonPage({
@@ -42,85 +43,81 @@ export default async function LessonPage({
   const next = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
 
   return (
-    <article className="min-w-0">
-      <Link
-        href="/dashboard/notes"
-        className="text-ink-soft hover:text-ink inline-flex items-center gap-2 text-[0.875rem] font-medium transition-colors"
-      >
-        <ArrowLeft className="size-4" strokeWidth={2} aria-hidden />
-        All notes
-      </Link>
-
-      <header className="border-line mt-6 border-b pb-8">
-        <p className="text-ink-faint font-mono text-[0.8125rem]">
-          {lesson.day_label}
-        </p>
-        <h1 className="display text-ink mt-2 text-[2rem] sm:text-[2.5rem]">
-          {lesson.title}
-        </h1>
-        {lesson.summary && <p className="lede mt-4">{lesson.summary}</p>}
-      </header>
-
-      <div className="mt-10">
-        {lesson.body_md ? (
-          <Markdown>{lesson.body_md}</Markdown>
-        ) : (
-          <p className="text-ink-faint text-[0.9375rem]">
-            This lesson has no written notes yet.
+    <div className="grid min-w-0 gap-10 xl:grid-cols-[1fr_14rem]">
+      <article className="min-w-0">
+        <header className="border-line border-b pb-8">
+          <p className="text-ink-faint font-mono text-[0.8125rem]">
+            {lesson.day_label}
           </p>
-        )}
-      </div>
+          <h1 className="display text-ink mt-2 text-[2rem] sm:text-[2.5rem]">
+            {lesson.title}
+          </h1>
+          {lesson.summary && <p className="lede mt-4">{lesson.summary}</p>}
+        </header>
 
-      {(prev || next) && (
-        <nav
-          aria-label="Lessons"
-          className="border-line mt-14 flex flex-col gap-3 border-t pt-8 sm:flex-row sm:justify-between"
-        >
-          {prev ? (
-            <Link
-              href={`/dashboard/notes/${prev.id}`}
-              className="card card-hover group flex items-center gap-3 p-4 sm:max-w-[48%]"
-            >
-              <ArrowLeft
-                className="text-ink-faint size-4 shrink-0"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <span className="min-w-0">
-                <span className="text-ink-faint block text-[0.75rem]">
-                  Previous
-                </span>
-                <span className="text-ink block truncate text-[0.9375rem] font-semibold">
-                  {prev.title}
-                </span>
-              </span>
-            </Link>
+        <div className="mt-10">
+          {lesson.body_md ? (
+            <Markdown>{lesson.body_md}</Markdown>
           ) : (
-            <span />
+            <p className="text-ink-faint text-[0.9375rem]">
+              This lesson has no written notes yet.
+            </p>
           )}
+        </div>
 
-          {next && (
-            <Link
-              href={`/dashboard/notes/${next.id}`}
-              className="card card-hover group flex items-center gap-3 p-4 text-right sm:max-w-[48%]"
-            >
-              <span className="min-w-0 flex-1">
-                <span className="text-ink-faint block text-[0.75rem]">
-                  Next
+        {(prev || next) && (
+          <nav
+            aria-label="Lessons"
+            className="border-line mt-14 flex flex-col gap-3 border-t pt-8 sm:flex-row sm:justify-between"
+          >
+            {prev ? (
+              <Link
+                href={`/dashboard/notes/${prev.id}`}
+                className="card card-hover group flex items-center gap-3 p-4 sm:max-w-[48%]"
+              >
+                <ArrowLeft
+                  className="text-ink-faint size-4 shrink-0"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <span className="min-w-0">
+                  <span className="text-ink-faint block text-[0.75rem]">
+                    Previous
+                  </span>
+                  <span className="text-ink block truncate text-[0.9375rem] font-semibold">
+                    {prev.title}
+                  </span>
                 </span>
-                <span className="text-ink block truncate text-[0.9375rem] font-semibold">
-                  {next.title}
+              </Link>
+            ) : (
+              <span />
+            )}
+
+            {next && (
+              <Link
+                href={`/dashboard/notes/${next.id}`}
+                className="card card-hover group flex items-center gap-3 p-4 text-right sm:max-w-[48%]"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="text-ink-faint block text-[0.75rem]">
+                    Next
+                  </span>
+                  <span className="text-ink block truncate text-[0.9375rem] font-semibold">
+                    {next.title}
+                  </span>
                 </span>
-              </span>
-              <ArrowRight
-                className="text-ink-faint size-4 shrink-0"
-                strokeWidth={2}
-                aria-hidden
-              />
-            </Link>
-          )}
-        </nav>
-      )}
-    </article>
+                <ArrowRight
+                  className="text-ink-faint size-4 shrink-0"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+              </Link>
+            )}
+          </nav>
+        )}
+      </article>
+
+      <Toc source={lesson.body_md ?? ""} />
+    </div>
   );
 }

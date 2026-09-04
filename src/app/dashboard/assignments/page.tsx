@@ -50,7 +50,7 @@ export default async function AssignmentsPage({
   const solved = (progress ?? []).map((row) => row.question_id as string);
 
   return (
-    <>
+    <div className="shell py-8 lg:py-10">
       <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
         Assignments
       </h1>
@@ -102,6 +102,6 @@ export default async function AssignmentsPage({
         questions={(questions ?? []) as Question[]}
         solved={solved}
       />
-    </>
+    </div>
   );
 }

@@ -47,12 +47,13 @@ export default async function DashboardLayout({
         </div>
       </header>
 
-      <div className="shell grid gap-8 py-8 lg:grid-cols-[16rem_1fr] lg:gap-10 lg:py-10">
-        <DashboardNav />
-        <main id="main" className="min-w-0">
-          {children}
-        </main>
-      </div>
+      <DashboardNav />
+
+      {/* No shell here: the notes section supplies its own full-width docs
+          grid, and pages that want the normal gutter apply it themselves. */}
+      <main id="main" className="min-w-0">
+        {children}
+      </main>
     </div>
   );
 }

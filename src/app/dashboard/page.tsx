@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   } | null;
 
   return (
-    <>
+    <div className="shell py-8 lg:py-10">
       <Heading name={profile?.first_name} />
 
       {/* Live class ------------------------------------------------------ */}
@@ -88,7 +88,7 @@ export default async function DashboardPage() {
           ))}
         </ul>
       </section>
-    </>
+    </div>
   );
 }
 

@@ -12,7 +12,7 @@ export default function SupportPage() {
   ];
 
   return (
-    <>
+    <div className="shell py-8 lg:py-10">
       <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
         Support
       </h1>
@@ -46,6 +46,6 @@ export default function SupportPage() {
           ))}
         </ul>
       </div>
-    </>
+    </div>
   );
 }
