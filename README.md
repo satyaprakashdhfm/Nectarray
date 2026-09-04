@@ -45,6 +45,8 @@ src/
 │   ├── engagements/page.tsx
 │   └── contact/page.tsx
 ├── components/
+│   ├── academy/                The course page: hero, nav, about, offerings,
+│   │                           curriculum, FAQ, multi-step enrolment form
 │   ├── layout/                 Header, Footer, Logo, PageCta
 │   ├── sections/               One file per content block, reused across routes
 │   └── ui/                     Button, Icon, Reveal, SectionHead
@@ -69,15 +71,15 @@ public/
 
 ### Routes
 
-| Route          | Content                                                   |
-| -------------- | --------------------------------------------------------- |
-| `/`            | Hero, the four practice cards, closing CTA                |
-| `/marketing`   | Growth & marketing channels                               |
-| `/software`    | Software & web services, default stack                    |
-| `/agentic-ai`  | Long-form: 5 capability families, MCP servers, evals, FAQ |
-| `/academy`     | The Python, SQL & data science cohort                     |
-| `/engagements` | Three engagement models + the four-step process           |
-| `/contact`     | Contact form + FAQ                                        |
+| Route          | Content                                                             |
+| -------------- | ------------------------------------------------------------------- |
+| `/`            | Hero, the four practice cards, closing CTA                          |
+| `/marketing`   | Growth & marketing channels                                         |
+| `/software`    | Software & web services, default stack                              |
+| `/agentic-ai`  | Long-form: 5 capability families, MCP servers, evals, FAQ           |
+| `/academy`     | Course page: enrol, about, offerings, 45-day curriculum, FAQ, apply |
+| `/engagements` | Three engagement models + the four-step process                     |
+| `/contact`     | Contact form + FAQ                                                  |
 
 ### Sections as pages
 

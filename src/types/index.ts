@@ -44,6 +44,22 @@ export type Fact = {
   value: string;
 };
 
+/** One dated row inside a curriculum module. */
+export type CurriculumTopic = {
+  days: string;
+  title: string;
+  body: string;
+};
+
+/** One of the three parts of the placement programme. */
+export type CurriculumModule = {
+  n: string;
+  title: string;
+  days: string;
+  summary: string;
+  topics: CurriculumTopic[];
+};
+
 export type Testimonial = {
   quote: string;
   name: string;
