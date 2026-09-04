@@ -151,7 +151,7 @@ export type SoftwareBuild = IconCard & {
  *
  * Every company in the world has a domain, and half the software an Indian
  * business actually runs — Petpooja, Vyapar, Marg, Shiprocket — is in no icon
- * set at all. components/software/BrandLogo.tsx is the only thing that turns
+ * set at all. components/ui/BrandLogo.tsx is the only thing that turns
  * this into a URL, so moving to self-hosted logos later is a one-line change
  * in one file.
  */

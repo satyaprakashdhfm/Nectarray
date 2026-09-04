@@ -6,6 +6,7 @@
  * This is the long-form page built around them.
  */
 import type { Faq, IconCard, Link, Step } from "@/types";
+import type { BrandGroup } from "./practices";
 
 export const marketingPage: {
   meta: { title: string; description: string };
@@ -25,6 +26,12 @@ export const marketingPage: {
     lede: string;
     items: IconCard[];
     honesty: { title: string; body: string };
+  };
+  platforms: {
+    eyebrow: string;
+    title: string;
+    lede: string;
+    groups: BrandGroup[];
   };
   process: { eyebrow: string; title: string; steps: Step[] };
   faqs: Faq[];
@@ -169,6 +176,60 @@ export const marketingPage: {
       title: "What this is, and what it is not",
       body: "Nobody can guarantee you a mention in ChatGPT, Gemini or AI Overviews. There is no placement to buy, no submission form, and any agency promising you a spot is selling something it does not control — the model decides, and it changes. What this work does is remove the reasons you get overlooked or described wrongly: it makes your site readable to these systems, your identity unambiguous, your claims corroborated elsewhere, and your pages the clearest available answer to the questions your buyers actually ask. That improves your chances of being discovered, cited and recommended. Then we monitor what the assistants say about you, so you can see whether it is working rather than take our word for it.",
     },
+  },
+
+  platforms: {
+    eyebrow: "Platforms",
+    title: "The consoles we are actually in every week",
+    lede: "Not a logo wall for its own sake — this is where the work happens, and where you will be given access rather than a screenshot of it. Every account stays in your name.",
+    groups: [
+      {
+        label: "Paid & social",
+        brands: [
+          { name: "Meta Ads", domain: "meta.com" },
+          { name: "Instagram", domain: "instagram.com" },
+          { name: "Facebook", domain: "facebook.com" },
+          { name: "Google Ads", domain: "ads.google.com" },
+          { name: "YouTube", domain: "youtube.com" },
+          { name: "LinkedIn", domain: "linkedin.com" },
+          { name: "X", domain: "x.com" },
+        ],
+      },
+      {
+        label: "Measurement",
+        brands: [
+          { name: "Google Analytics", domain: "analytics.google.com" },
+          { name: "Tag Manager", domain: "tagmanager.google.com" },
+          { name: "Search Console", domain: "search.google.com" },
+          { name: "Meta Pixel", domain: "developers.facebook.com" },
+          { name: "Looker Studio", domain: "looker.com" },
+          { name: "Hotjar", domain: "hotjar.com" },
+        ],
+      },
+      {
+        label: "Commerce & listings",
+        brands: [
+          { name: "Shopify", domain: "shopify.com" },
+          { name: "Amazon Ads", domain: "advertising.amazon.in" },
+          { name: "Flipkart", domain: "flipkart.com" },
+          { name: "Business Profile", domain: "business.google.com" },
+          { name: "Zomato", domain: "zomato.com" },
+          { name: "Swiggy", domain: "swiggy.com" },
+        ],
+      },
+      {
+        label: "Lifecycle & AI search",
+        note: "Where the message goes out, and where the answers now come from.",
+        brands: [
+          { name: "WhatsApp Business", domain: "business.whatsapp.com" },
+          { name: "Mailchimp", domain: "mailchimp.com" },
+          { name: "ChatGPT", domain: "openai.com" },
+          { name: "Gemini", domain: "gemini.google.com" },
+          { name: "Perplexity", domain: "perplexity.ai" },
+          { name: "Claude", domain: "anthropic.com" },
+        ],
+      },
+    ],
   },
 
   process: {

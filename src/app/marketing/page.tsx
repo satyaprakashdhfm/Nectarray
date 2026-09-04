@@ -3,12 +3,14 @@ import { Plus, ShieldCheck } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Marketing } from "@/components/sections/Marketing";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { company, marketingPage } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const { hero, brand, aiSearch, process, faqs, cta, meta } = marketingPage;
+const { hero, brand, aiSearch, platforms, process, faqs, cta, meta } =
+  marketingPage;
 
 /**
  * One accent: the mark's circuit blue. Weight comes from navy, not from a
@@ -313,6 +315,66 @@ export default function MarketingPage() {
                     </div>
                   </div>
                 </Reveal>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Platforms ────────────────────────────────────────────── */}
+        <section className="py-20 sm:py-24">
+          <div className="shell-wide">
+            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+              <div className="lg:sticky lg:top-28 lg:self-start">
+                <Reveal>
+                  <Eyebrow>{platforms.eyebrow}</Eyebrow>
+                </Reveal>
+                <Reveal delay={70}>
+                  <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
+                    {platforms.title}
+                  </h2>
+                </Reveal>
+                <Reveal delay={130}>
+                  <p className="text-ink-soft mt-5 text-[0.9375rem] leading-relaxed">
+                    {platforms.lede}
+                  </p>
+                </Reveal>
+              </div>
+
+              {/* Real marks, the way the integrations grid on /software is
+                  drawn. A buyer recognises the Meta or Zomato logo faster
+                  than they read the words next to it. */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {platforms.groups.map((group, i) => (
+                  <Reveal key={group.label} delay={(i % 2) * 60}>
+                    <div className="card h-full p-5">
+                      <h3 className="text-ink text-[0.9375rem] font-semibold tracking-tight">
+                        {group.label}
+                      </h3>
+                      {group.note && (
+                        <p className="text-ink-soft mt-1.5 text-[0.8125rem] leading-[1.55]">
+                          {group.note}
+                        </p>
+                      )}
+                      <ul className="mt-4 flex flex-wrap gap-1.5">
+                        {group.brands.map((brand) => (
+                          <li
+                            key={brand.name}
+                            className="border-line bg-canvas flex items-center gap-1.5 rounded-md border px-2 py-1"
+                          >
+                            <BrandLogo
+                              name={brand.name}
+                              domain={brand.domain}
+                              className="size-3.5"
+                            />
+                            <span className="text-ink-soft text-[0.75rem] font-medium whitespace-nowrap">
+                              {brand.name}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Reveal>
+                ))}
               </div>
             </div>
           </div>

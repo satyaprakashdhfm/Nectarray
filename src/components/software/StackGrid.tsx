@@ -1,4 +1,4 @@
-import { BrandLogo } from "@/components/software/BrandLogo";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { headGap, sectionPad, wideShell } from "@/components/software/layout";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";

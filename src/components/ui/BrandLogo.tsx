@@ -13,9 +13,9 @@ import { cn } from "@/lib/utils";
  * convincing to someone running a restaurant or a warehouse. Every company
  * has a domain, so one rule covers all of them.
  *
- * This is the only function that knows how a logo becomes a URL. Moving to
- * self-hosted logos later — or to a different provider — is a change here
- * and nowhere else.
+ * This is the only function that knows how a logo becomes a URL, for every
+ * page that shows one. Moving to self-hosted logos later — or to a
+ * different provider — is a change here and nowhere else.
  *
  * Plain <img>, not next/image, on purpose: an external host has to be
  * declared in `images.remotePatterns` before next/image will touch it, and

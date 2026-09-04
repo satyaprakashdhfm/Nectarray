@@ -221,29 +221,39 @@ export const agenticAiPage = {
     groups: [
       {
         label: "Agent frameworks",
-        items: [
-          "Vercel AI SDK",
-          "Claude Agent SDK",
-          "LangGraph",
-          "OpenAI Agents SDK",
+        brands: [
+          { name: "Vercel AI SDK", domain: "ai-sdk.dev" },
+          { name: "Claude Agent SDK", domain: "anthropic.com" },
+          { name: "LangGraph", domain: "langchain.com" },
+          { name: "OpenAI Agents SDK", domain: "openai.com" },
         ],
       },
       {
         label: "Context & retrieval",
-        items: [
-          "Model Context Protocol",
-          "pgvector",
-          "Pinecone",
-          "Unstructured",
+        brands: [
+          { name: "Model Context Protocol", domain: "modelcontextprotocol.io" },
+          { name: "pgvector", domain: "postgresql.org" },
+          { name: "Pinecone", domain: "pinecone.io" },
+          { name: "Unstructured", domain: "unstructured.io" },
         ],
       },
       {
         label: "Orchestration",
-        items: ["Temporal", "Inngest", "n8n", "Vercel Cron"],
+        brands: [
+          { name: "Temporal", domain: "temporal.io" },
+          { name: "Inngest", domain: "inngest.com" },
+          { name: "n8n", domain: "n8n.io" },
+          { name: "Vercel Cron", domain: "vercel.com" },
+        ],
       },
       {
         label: "Evals & tracing",
-        items: ["LangSmith", "Braintrust", "OpenTelemetry", "Sentry"],
+        brands: [
+          { name: "LangSmith", domain: "smith.langchain.com" },
+          { name: "Braintrust", domain: "braintrust.dev" },
+          { name: "OpenTelemetry", domain: "opentelemetry.io" },
+          { name: "Sentry", domain: "sentry.io" },
+        ],
       },
     ],
   },

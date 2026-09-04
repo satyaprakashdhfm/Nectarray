@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { agenticAiPage, company } from "@/lib/content";
@@ -319,13 +320,23 @@ export default function AgenticAiPage() {
                   <div key={group.label}>
                     <dt className="eyebrow mb-3">{group.label}</dt>
                     <dd>
+                      {/* Real marks rather than mono type, the way the stack
+                          on /software is drawn. A buyer recognises the
+                          Anthropic or Temporal logo faster than it reads. */}
                       <ul className="flex flex-wrap gap-1.5">
-                        {group.items.map((item) => (
+                        {group.brands.map((brand) => (
                           <li
-                            key={item}
-                            className="border-line bg-canvas text-ink-soft rounded-lg border px-2.5 py-1.5 font-mono text-[0.75rem]"
+                            key={brand.name}
+                            className="border-line bg-canvas flex items-center gap-2 rounded-lg border px-2.5 py-1.5"
                           >
-                            {item}
+                            <BrandLogo
+                              name={brand.name}
+                              domain={brand.domain}
+                              className="size-4"
+                            />
+                            <span className="text-ink-soft text-[0.8125rem] font-medium whitespace-nowrap">
+                              {brand.name}
+                            </span>
                           </li>
                         ))}
                       </ul>
