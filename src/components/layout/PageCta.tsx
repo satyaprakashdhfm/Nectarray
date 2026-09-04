@@ -8,9 +8,10 @@ import { company } from "@/lib/content";
  * the contact form is no longer a scroll away — this is what carries the
  * reader to /contact from wherever they finished reading.
  *
- * It is the one full-colour surface on the site: the page runs light, the
- * footer runs night, and this sits between them as the moment the brand
- * gradient stops being an accent and becomes the whole ground.
+ * Deliberately light. A full-colour band here sat directly above the night
+ * footer and the two fought each other — two heavy surfaces stacked with no
+ * relief between them. The footer carries the dark end of the page on its
+ * own; this stays white and lets the colour come from the accents.
  */
 export function PageCta({
   title = "Tell us what you are building.",
@@ -20,10 +21,11 @@ export function PageCta({
   body?: string;
 }) {
   return (
-    <section className="brand-band relative overflow-hidden py-20 text-white sm:py-24">
+    <section className="border-line bg-surface relative overflow-hidden border-t py-20 sm:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-        <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.07)_1px,transparent_1px)] [mask-image:radial-gradient(110%_75%_at_50%_0%,#000_25%,transparent_80%)] [background-size:46px_46px]" />
-        <div className="absolute -top-32 -right-24 size-[30rem] rounded-full bg-white/10 blur-[120px]" />
+        <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(100%_70%_at_50%_0%,#000_25%,transparent_78%)] opacity-50" />
+        <div className="bg-brand/12 absolute -top-40 -left-24 size-[26rem] rounded-full blur-[120px]" />
+        <div className="bg-leaf/14 absolute -right-24 -bottom-40 size-[26rem] rounded-full blur-[120px]" />
       </div>
 
       <div className="shell text-center">
@@ -34,16 +36,14 @@ export function PageCta({
         </Reveal>
 
         <Reveal delay={80}>
-          <p className="mx-auto mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-white/85 md:text-[1.1875rem]">
-            {body}
-          </p>
+          <p className="lede mx-auto mt-5 max-w-2xl">{body}</p>
         </Reveal>
 
         <Reveal delay={150}>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link
               href="/contact"
-              className="group text-ink hover:bg-night inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors hover:text-white"
+              className="group bg-ink hover:bg-brand-deep inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[0.9375rem] font-semibold text-white transition-colors"
             >
               Start a project
               <ArrowRight
@@ -54,7 +54,7 @@ export function PageCta({
             </Link>
             <a
               href={`mailto:${company.email}`}
-              className="inline-flex items-center rounded-full border border-white/35 px-6 py-3.5 text-[0.9375rem] font-semibold text-white transition-colors hover:border-white hover:bg-white/10"
+              className="border-line bg-canvas text-ink hover:border-brand hover:text-brand-deep inline-flex items-center rounded-full border px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
             >
               {company.email}
             </a>

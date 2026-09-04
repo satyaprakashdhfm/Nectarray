@@ -166,7 +166,9 @@ export function buildStructuredData() {
         hasCourseInstance: {
           "@type": "CourseInstance",
           courseMode: "Online",
-          courseWorkload: "P7D",
+          // Effort per week, not elapsed time — P7D claimed seven days of
+          // work a week. The cohort runs 6–8 hrs/week over 12 weeks.
+          courseWorkload: "PT7H",
           instructor: { "@id": orgId },
         },
       },

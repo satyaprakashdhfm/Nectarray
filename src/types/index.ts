@@ -63,13 +63,6 @@ export type Faq = {
   a: string;
 };
 
-export type WorkItem = {
-  tag: string;
-  title: string;
-  body: string;
-  status: string;
-};
-
 export type TagGroup = {
   label: string;
   items: string[];

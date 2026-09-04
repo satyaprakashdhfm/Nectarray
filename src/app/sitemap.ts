@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/software", 0.9],
     ["/agentic-ai", 0.9],
     ["/academy", 0.9],
-    ["/work", 0.7],
     ["/engagements", 0.7],
     ["/contact", 0.8],
   ];

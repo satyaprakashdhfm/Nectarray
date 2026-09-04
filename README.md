@@ -2,7 +2,7 @@
 
 Marketing site for NectArray, covering the four practices: growth marketing,
 software engineering, agentic AI, and the Academy. One route per practice,
-plus work, engagements and contact.
+plus engagements and contact.
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4. Statically
 rendered apart from one route handler for the contact form.
@@ -42,7 +42,6 @@ src/
 │   ├── software/page.tsx
 │   ├── agentic-ai/page.tsx     Long-form service page, dark treatment
 │   ├── academy/page.tsx
-│   ├── work/page.tsx
 │   ├── engagements/page.tsx
 │   └── contact/page.tsx
 ├── components/
@@ -77,7 +76,6 @@ public/
 | `/software`    | Software & web services, default stack                    |
 | `/agentic-ai`  | Long-form: 5 capability families, MCP servers, evals, FAQ |
 | `/academy`     | The Python, SQL & data science cohort                     |
-| `/work`        | Selected work                                             |
 | `/engagements` | Three engagement models + the four-step process           |
 | `/contact`     | Contact form + FAQ                                        |
 
@@ -99,7 +97,7 @@ hard-code marketing text, so content edits do not touch component code.
 | `site.ts`       | Company details, nav, hero, trust chips, tech marquee    |
 | `practices.ts`  | The four practice cards + marketing, software, AI detail |
 | `academy.ts`    | The Academy and the Python/SQL/Data Science cohort       |
-| `engagement.ts` | Process, work, testimonials, pricing, FAQs, contact      |
+| `engagement.ts` | Process, testimonials, pricing, FAQs, contact            |
 
 Everything is typed against `src/types`, so a missing field is a build error
 rather than a blank space on the page.
@@ -124,9 +122,10 @@ foregrounds. Use `-wash` for tinted grounds.
 5.8:1 against white body copy.
 
 **Vertical rhythm.** The page alternates ground deliberately: night header →
-tinted hero → night marquee → recessed practices → full-colour CTA → night
-footer. Header and footer are one flat colour on every route, so nothing
-about them changes page to page.
+tinted hero → night marquee → recessed practices → white CTA → night footer.
+Header and footer are one flat colour on every route, so nothing about them
+changes page to page. The CTA stays light on purpose: a full-colour band there
+sat directly above the night footer and the two heavy surfaces fought.
 
 Custom utilities worth knowing: `shell` (page gutter), `display` /
 `display-serif` (the two headline voices), `card` / `card-hover`,

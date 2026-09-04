@@ -1,5 +1,5 @@
 /** How we work, what we are building, and what it costs. */
-import type { Cta, Faq, Plan, Step, Testimonial, WorkItem } from "@/types";
+import type { Cta, Faq, Plan, Step, Testimonial } from "@/types";
 
 export const process: {
   eyebrow: string;
@@ -34,45 +34,6 @@ export const process: {
   ],
 };
 
-export const work: {
-  eyebrow: string;
-  title: string;
-  lede: string;
-  items: WorkItem[];
-  cta: Cta;
-} = {
-  eyebrow: "Selected work",
-  title: "What we are building.",
-  lede: "NectArray is a new studio and we would rather show you real work than stock screenshots. These are the engagements currently in flight — case studies land here as they go live.",
-  items: [
-    {
-      tag: "Software",
-      title: "Multi-tenant booking platform",
-      body: "Scheduling, payments and a client portal for a services business replacing three disconnected tools.",
-      status: "In build",
-    },
-    {
-      tag: "Agentic AI",
-      title: "Support agent over 1,200 product SKUs",
-      body: "Retrieval-grounded WhatsApp and web assistant with human escalation and full conversation analytics.",
-      status: "In build",
-    },
-    {
-      tag: "Marketing",
-      title: "D2C paid media rebuild",
-      body: "Meta and Google accounts restructured, server-side tracking installed, creative testing loop running weekly.",
-      status: "Live",
-    },
-    {
-      tag: "Academy",
-      title: "Python, SQL & Data Science — Cohort 01",
-      body: "Sixteen-week live programme with capstone projects and placement support.",
-      status: "Enrolling",
-    },
-  ],
-  cta: { label: "Discuss your project", href: "/contact" },
-};
-
 export const testimonials: Testimonial[] = [
   {
     quote:
@@ -88,7 +49,7 @@ export const testimonials: Testimonial[] = [
   },
   {
     quote:
-      "I came in having never written a line of code. Sixteen weeks later I had a capstone project I could actually talk through in interviews.",
+      "I came in having never written a line of code. Twelve weeks later I had a capstone project I could actually talk through in interviews.",
     name: "Student name",
     role: "Academy, Cohort 01",
   },
@@ -135,8 +96,8 @@ export const pricing: {
       name: "Academy",
       body: "A seat in the live Python, SQL & Data Science programme. Instalments available.",
       features: [
-        "16 weeks of live instruction",
-        "Lifetime access to recordings",
+        "12 weeks of live instruction",
+        "Written notes and worked examples",
         "Capstone project and review",
         "Interview and résumé support",
         "Certificate on completion",

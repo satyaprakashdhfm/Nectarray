@@ -26,10 +26,10 @@ export const academy: {
     summary:
       "One programme, three disciplines, built in the order you actually need them: write Python, query data properly, then use both to answer real questions with real datasets.",
     facts: [
-      { label: "Duration", value: "16 weeks" },
-      { label: "Format", value: "Live online + recordings" },
+      { label: "Duration", value: "12 weeks" },
+      { label: "Format", value: "Live online, hands-on" },
       { label: "Commitment", value: "6–8 hrs / week" },
-      { label: "Cohort size", value: "Capped at 25" },
+      { label: "Cohort size", value: "Capped at 5" },
     ],
     modules: [
       {
