@@ -2,33 +2,15 @@
 --  NectArray Academy — initial schema
 --  Run once in Supabase → SQL Editor → New query → Run.
 --  Safe to re-run: every statement is guarded.
+--
+--  ORDER MATTERS. Tables come first, then the helper functions that query
+--  them, then the policies that call those functions. A `language sql`
+--  function body is parsed and validated at CREATE time, so defining
+--  is_admin() before public.profiles exists fails outright.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
---  Helpers
---
---  Both are SECURITY DEFINER so they read their tables with RLS bypassed.
---  Without that, a policy on `profiles` that itself queries `profiles` would
---  recurse infinitely and every query would fail.
--- -----------------------------------------------------------------------------
-
-create or replace function public.is_admin()
-returns boolean language sql stable security definer set search_path = public as $$
-  select exists (
-    select 1 from public.profiles where id = auth.uid() and role = 'admin'
-  );
-$$;
-
-create or replace function public.is_enrolled()
-returns boolean language sql stable security definer set search_path = public as $$
-  select exists (
-    select 1 from public.enrolments
-    where user_id = auth.uid() and status in ('enrolled', 'completed')
-  );
-$$;
-
--- -----------------------------------------------------------------------------
---  profiles — one row per auth user
+--  1. Tables
 -- -----------------------------------------------------------------------------
 
 create table if not exists public.profiles (
@@ -41,33 +23,6 @@ create table if not exists public.profiles (
   created_at  timestamptz not null default now()
 );
 
--- Populate the profile when the auth user is created, so there is never a
--- signed-in user without one.
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  insert into public.profiles (id, email, first_name, last_name, phone)
-  values (
-    new.id,
-    new.email,
-    new.raw_user_meta_data ->> 'first_name',
-    new.raw_user_meta_data ->> 'last_name',
-    new.raw_user_meta_data ->> 'phone'
-  )
-  on conflict (id) do nothing;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-
--- -----------------------------------------------------------------------------
---  cohorts
--- -----------------------------------------------------------------------------
-
 create table if not exists public.cohorts (
   id         uuid primary key default gen_random_uuid(),
   name       text not null,
@@ -79,10 +34,6 @@ create table if not exists public.cohorts (
   created_at timestamptz not null default now()
 );
 
--- -----------------------------------------------------------------------------
---  enrolments — the gate between "signed up" and "can see the course"
--- -----------------------------------------------------------------------------
-
 create table if not exists public.enrolments (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users on delete cascade,
@@ -93,10 +44,6 @@ create table if not exists public.enrolments (
   created_at timestamptz not null default now(),
   unique (user_id, cohort_id)
 );
-
--- -----------------------------------------------------------------------------
---  Course content
--- -----------------------------------------------------------------------------
 
 create table if not exists public.modules (
   id       uuid primary key default gen_random_uuid(),
@@ -142,11 +89,8 @@ create table if not exists public.submissions (
   created_at    timestamptz not null default now()
 );
 
-create index if not exists submissions_user_idx on public.submissions (user_id, created_at desc);
-
--- -----------------------------------------------------------------------------
---  Practice — the SQL playground and the Python problem sheet
--- -----------------------------------------------------------------------------
+create index if not exists submissions_user_idx
+  on public.submissions (user_id, created_at desc);
 
 create table if not exists public.practice_questions (
   id              uuid primary key default gen_random_uuid(),
@@ -169,8 +113,54 @@ create table if not exists public.practice_progress (
   primary key (user_id, question_id)
 );
 
+-- -----------------------------------------------------------------------------
+--  2. Helper functions
+--
+--  SECURITY DEFINER on purpose: they read their tables with RLS bypassed.
+--  Without that, a policy on `profiles` that itself queries `profiles` would
+--  recurse infinitely and every query against the table would fail.
+-- -----------------------------------------------------------------------------
+
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+create or replace function public.is_enrolled()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.enrolments
+    where user_id = auth.uid() and status in ('enrolled', 'completed')
+  );
+$$;
+
+-- Populate the profile when the auth user is created, so there is never a
+-- signed-in user without one.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, email, first_name, last_name, phone)
+  values (
+    new.id,
+    new.email,
+    new.raw_user_meta_data ->> 'first_name',
+    new.raw_user_meta_data ->> 'last_name',
+    new.raw_user_meta_data ->> 'phone'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
 -- =============================================================================
---  Row-level security
+--  3. Row-level security
 --
 --  Every table is deny-by-default. The anon key in the browser is therefore
 --  harmless on its own: it can only ever see what a policy below allows.
@@ -195,6 +185,20 @@ drop policy if exists profiles_update_own on public.profiles;
 create policy profiles_update_own on public.profiles
   for update using (id = auth.uid() or public.is_admin())
   with check (id = auth.uid() or public.is_admin());
+
+-- Column privileges, not RLS, are what stop a student writing their own role.
+--
+-- The policy above lets a user update their own row, and an UPDATE policy's
+-- WITH CHECK sees only the NEW row — it cannot compare against the OLD one,
+-- so it cannot express "every column but this one". Without the revoke below,
+-- `update profiles set role = 'admin' where id = auth.uid()` succeeds and the
+-- student owns the whole course. Verified: it did.
+--
+-- Role changes are therefore a service-role operation (the SQL editor, or a
+-- server route using SUPABASE_SERVICE_ROLE_KEY), never something the browser
+-- can perform with the anon key.
+revoke update on public.profiles from anon, authenticated;
+grant update (first_name, last_name, phone) on public.profiles to authenticated;
 
 -- cohorts ----------------------------------------------------------------
 drop policy if exists cohorts_read on public.cohorts;
@@ -287,7 +291,7 @@ create policy progress_own on public.practice_progress
   with check (user_id = auth.uid());
 
 -- =============================================================================
---  Seed — the three modules and the first cohort
+--  4. Seed — the three modules and the first cohort
 -- =============================================================================
 
 insert into public.modules (slug, title, summary, position) values
