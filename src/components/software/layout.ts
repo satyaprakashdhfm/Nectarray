@@ -7,10 +7,9 @@
  * while a third of the screen sat empty on either side. So this page opts
  * into a wider measure and a smaller gutter.
  *
- * Kept as shared constants rather than a new global utility because nothing
- * outside this page should inherit them — `shell` stays the site default.
- * The repo already uses this pattern for repeated class strings (see the
- * `field` constants in the admin pages).
+ * The gutter itself is now the `shell-wide` utility in globals.css, since
+ * the agentic AI and marketing pages wanted the same measure. What stays
+ * local here is the vertical rhythm, which is still specific to this page.
  */
 
 /**
@@ -21,7 +20,7 @@
  * to read as the navigation being inset rather than the content being wide.
  * This buys back most of the empty margin without that.
  */
-export const wideShell = "mx-auto w-full max-w-[92rem] px-4 sm:px-6 lg:px-8";
+export const wideShell = "shell-wide";
 
 /**
  * Section rhythm, roughly half the vertical air of the marketing sections.

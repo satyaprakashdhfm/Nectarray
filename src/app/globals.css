@@ -287,6 +287,25 @@ body {
   }
 }
 
+/* The same gutter, opened up.
+   For pages whose body is a catalogue rather than prose — dense grids of
+   cards and chips, which at `shell`'s 80rem wrapped into tall columns while
+   a third of a wide screen sat empty either side. Stops at 92rem because the
+   header and footer are fixed at `shell` on every route, and much past this
+   reads as the navigation being inset rather than the content being wide. */
+@utility shell-wide {
+  width: 100%;
+  max-width: 92rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (min-width: 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 2rem;
+  }
+}
+
 /* Big bold headline, the reference site's dominant voice */
 @utility display {
   font-family: var(--font-sans);

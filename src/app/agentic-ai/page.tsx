@@ -84,6 +84,15 @@ function StructuredData() {
  * The grounds alternate the way the rest of the site does: tinted hero,
  * white capabilities, recessed engineering, white stack, recessed process,
  * white FAQ, then the closing band.
+ *
+ * Laid out across the page rather than down it. This was a column of
+ * full-width blocks — five capability families each taking a whole screen,
+ * so on a wide monitor a short paragraph sat stranded in the middle of a lot
+ * of nothing and the scrollbar did the work. The families are now a tile
+ * grid on the wider `shell-wide` gutter, short enough to take in at a
+ * glance: what the family is, and the names of the things inside it. The
+ * sentence explaining each one is still in the page's Service schema, and
+ * belongs in the conversation rather than on a card.
  */
 export default function AgenticAiPage() {
   return (
@@ -104,7 +113,7 @@ export default function AgenticAiPage() {
             <div className="bg-leaf/16 absolute top-20 -right-28 size-[30rem] rounded-full blur-[140px]" />
           </div>
 
-          <div className="shell py-20 sm:py-24 lg:py-28">
+          <div className="shell-wide py-20 sm:py-24 lg:py-28">
             <Reveal>
               <p className="eyebrow">{hero.eyebrow}</p>
             </Reveal>
@@ -163,58 +172,58 @@ export default function AgenticAiPage() {
           id="capabilities"
           className="border-line scroll-mt-24 border-t py-20 sm:py-24"
         >
-          <div className="shell">
+          <div className="shell-wide">
             <Reveal>
               <h2 className="display text-ink max-w-3xl text-[2rem] sm:text-[2.6rem]">
                 Five kinds of work we build agents for
               </h2>
             </Reveal>
 
-            <div className="mt-14 space-y-4">
+            <ul className="mt-10 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {families.map((family, i) => (
-                <Reveal key={family.id} delay={(i % 3) * 70}>
+                <Reveal as="li" key={family.id} delay={(i % 3) * 60}>
                   <article
                     id={family.id}
-                    className="card scroll-mt-24 p-7 sm:p-9"
+                    className="card card-hover flex h-full scroll-mt-24 flex-col p-6"
                   >
-                    <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
-                      <header>
-                        <div className="flex items-center gap-3">
-                          <span className="bg-brand-wash text-brand-deep grid size-11 place-items-center rounded-xl">
-                            <Icon name={family.icon} className="size-5" />
-                          </span>
-                          <span className="text-ink-faint font-mono text-[0.72rem]">
-                            {family.index}
-                          </span>
-                        </div>
-                        <h3 className="display text-ink mt-5 text-[1.6rem] sm:text-[1.9rem]">
-                          {family.title}
-                        </h3>
-                        <p className="text-ink-soft mt-3.5 text-[0.9375rem] leading-relaxed">
-                          {family.summary}
-                        </p>
-                      </header>
-
-                      <ul className="divide-line-soft divide-y">
-                        {family.items.map((item, index) => (
-                          <li
-                            key={item.name}
-                            className={index === 0 ? "pb-4" : "py-4 last:pb-0"}
-                          >
-                            <h4 className="text-ink text-[0.9375rem] font-semibold">
-                              {item.name}
-                            </h4>
-                            <p className="text-ink-soft mt-1.5 text-[0.875rem] leading-relaxed">
-                              {item.body}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-brand-wash text-brand-deep grid size-10 place-items-center rounded-xl">
+                        <Icon name={family.icon} className="size-[1.125rem]" />
+                      </span>
+                      <span className="text-ink-faint font-mono text-[0.72rem]">
+                        {family.index}
+                      </span>
                     </div>
+
+                    <h3 className="text-ink mt-4 text-[1.0625rem] font-semibold tracking-tight">
+                      {family.title}
+                    </h3>
+                    <p className="text-ink-soft mt-2 text-[0.875rem] leading-[1.55]">
+                      {family.summary}
+                    </p>
+
+                    {/* Names only. The sentence on each one is still in the
+                        Service schema above, and a card that lists five of
+                        them with a paragraph each is the wall this replaced. */}
+                    <ul className="border-line-soft mt-4 flex flex-1 flex-col justify-end gap-2 border-t pt-4">
+                      {family.items.map((item) => (
+                        <li
+                          key={item.name}
+                          className="text-ink-soft flex items-start gap-2 text-[0.8125rem] leading-snug"
+                        >
+                          <Icon
+                            name="check"
+                            className="text-leaf-deep mt-[0.15rem] size-3.5 shrink-0"
+                            strokeWidth={2.75}
+                          />
+                          {item.name}
+                        </li>
+                      ))}
+                    </ul>
                   </article>
                 </Reveal>
               ))}
-            </div>
+            </ul>
           </div>
         </section>
 
@@ -225,7 +234,7 @@ export default function AgenticAiPage() {
             aria-hidden
           />
 
-          <div className="shell">
+          <div className="shell-wide">
             <Reveal>
               <p className="eyebrow">{engineering.eyebrow}</p>
             </Reveal>
@@ -260,7 +269,7 @@ export default function AgenticAiPage() {
 
         {/* ── Stack ────────────────────────────────────────────────── */}
         <section className="py-20 sm:py-24">
-          <div className="shell grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+          <div className="shell-wide grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
             <Reveal>
               <div>
                 <h2 className="display text-ink text-[1.9rem] sm:text-[2.25rem]">
@@ -303,7 +312,7 @@ export default function AgenticAiPage() {
             aria-hidden
           />
 
-          <div className="shell">
+          <div className="shell-wide">
             <Reveal>
               <p className="eyebrow">{process.eyebrow}</p>
             </Reveal>
@@ -335,7 +344,7 @@ export default function AgenticAiPage() {
 
         {/* ── FAQ ──────────────────────────────────────────────────── */}
         <section className="py-20 sm:py-24">
-          <div className="shell grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div className="shell-wide grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
             <Reveal>
               <h2 className="display text-ink text-[2rem] sm:text-[2.5rem] lg:sticky lg:top-28">
                 Questions we get
@@ -344,13 +353,16 @@ export default function AgenticAiPage() {
               </h2>
             </Reveal>
 
-            <div>
+            {/* Two columns on a wide screen: one tall stack of accordions
+                left most of the width empty. `name` is dropped with it —
+                an exclusive group that snaps a row shut in the other column
+                reads as a bug when both are on screen at once. */}
+            <div className="grid gap-x-10 lg:grid-cols-2">
               {faqs.map((faq, i) => (
                 <Reveal key={faq.q} delay={i * 50}>
                   <details
-                    name="ai-faq"
                     open={i === 0}
-                    className="group border-line border-b py-1 first:border-t"
+                    className="group border-line border-b py-1 first:border-t lg:first:border-t-0"
                   >
                     <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-5 [&::-webkit-details-marker]:hidden">
                       <h3 className="text-ink group-hover:text-brand-deep text-[1.0625rem] font-semibold tracking-tight transition-colors">

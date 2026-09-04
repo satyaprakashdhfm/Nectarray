@@ -20,7 +20,7 @@ export function Marketing({ asPage = false }: { asPage?: boolean } = {}) {
         aria-hidden
       />
 
-      <div className="shell">
+      <div className="shell-wide">
         <SectionHead
           as={asPage ? "h1" : "h2"}
           eyebrow={marketing.eyebrow}
@@ -33,7 +33,7 @@ export function Marketing({ asPage = false }: { asPage?: boolean } = {}) {
           lede={marketing.lede}
         />
 
-        <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
+        <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4">
           {marketing.channels.map((channel, i) => (
             <Reveal as="li" key={channel.title} delay={(i % 4) * 70}>
               <article className="card card-hover h-full p-6">
