@@ -86,18 +86,62 @@ INSERT INTO payments VALUES
 `;
 
 /** Shown beside the editor so a student never has to guess column names. */
-export const PRACTICE_TABLES = [
-  { name: "courses", columns: "course_id, course_name, duration_days, fee" },
+/**
+ * The schema panel's model of the same tables.
+ *
+ * Typed per column rather than as one comma-joined string, so the panel can
+ * show what the reference site shows — name on the left, type on the right —
+ * and mark the keys. Kept beside the DDL above so the two cannot drift.
+ */
+export type PracticeColumn = {
+  name: string;
+  type: string;
+  key?: "pk" | "fk";
+};
+
+export const PRACTICE_TABLES: {
+  name: string;
+  columns: PracticeColumn[];
+}[] = [
+  {
+    name: "courses",
+    columns: [
+      { name: "course_id", type: "INT", key: "pk" },
+      { name: "course_name", type: "TEXT" },
+      { name: "duration_days", type: "INT" },
+      { name: "fee", type: "INT" },
+    ],
+  },
   {
     name: "students",
-    columns: "student_id, name, city, age, course_id, marks, joined_on",
+    columns: [
+      { name: "student_id", type: "INT", key: "pk" },
+      { name: "name", type: "TEXT" },
+      { name: "city", type: "TEXT" },
+      { name: "age", type: "INT" },
+      { name: "course_id", type: "INT", key: "fk" },
+      { name: "marks", type: "INT" },
+      { name: "joined_on", type: "DATE" },
+    ],
   },
   {
     name: "employees",
-    columns: "emp_id, emp_name, manager_id, salary, department",
+    columns: [
+      { name: "emp_id", type: "INT", key: "pk" },
+      { name: "emp_name", type: "TEXT" },
+      { name: "manager_id", type: "INT", key: "fk" },
+      { name: "salary", type: "INT" },
+      { name: "department", type: "TEXT" },
+    ],
   },
   {
     name: "payments",
-    columns: "payment_id, student_id, amount, paid_on, method",
+    columns: [
+      { name: "payment_id", type: "INT", key: "pk" },
+      { name: "student_id", type: "INT", key: "fk" },
+      { name: "amount", type: "INT" },
+      { name: "paid_on", type: "DATE" },
+      { name: "method", type: "TEXT" },
+    ],
   },
 ];

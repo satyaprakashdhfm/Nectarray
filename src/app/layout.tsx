@@ -104,6 +104,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${fallbackSans.variable} ${fallbackSerif.variable}`}
+      /*
+       * Two scripts deliberately write to this element before React arrives —
+       * the reveal flag below and the theme flag in the signed-in area — so
+       * the server HTML and the hydrating client HTML are *meant* to differ
+       * here. Without this React logged a hydration mismatch on every page,
+       * which is noise that hides the mismatches worth reading.
+       */
+      suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: revealFlag }} />

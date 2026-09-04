@@ -10,8 +10,15 @@ declare module "sql.js" {
     values: SqlValue[][];
   }
 
+  /** A compiled statement. Only what the playground calls is declared. */
+  export interface Statement {
+    getColumnNames(): string[];
+    free(): boolean;
+  }
+
   export interface Database {
     exec(sql: string): QueryResult[];
+    prepare(sql: string): Statement;
     close(): void;
   }
 
