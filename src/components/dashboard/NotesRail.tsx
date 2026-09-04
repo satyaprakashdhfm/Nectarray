@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import type { TocEntry } from "@/lib/toc";
+import { useLessonToc } from "@/components/dashboard/lesson-toc";
 import { cn } from "@/lib/utils";
 
 export type RailLesson = {
   id: string;
-  day_label: string;
   title: string;
   position: number;
 };
@@ -33,15 +32,13 @@ export type RailModule = {
  * Which course is open follows the lesson you are reading, so arriving from
  * a link never leaves the rail pointing somewhere else.
  */
-export function NotesRail({
-  modules,
-  toc,
-}: {
-  modules: RailModule[];
-  toc: TocEntry[];
-}) {
+export function NotesRail({ modules }: { modules: RailModule[] }) {
   const pathname = usePathname();
   const params = useSearchParams();
+
+  // Published by the lesson page, because this component's layout does not
+  // re-render when you move between lessons. See lesson-toc.tsx.
+  const toc = useLessonToc();
 
   const lessonId = pathname.startsWith("/dashboard/notes/")
     ? pathname.slice("/dashboard/notes/".length)
@@ -59,23 +56,35 @@ export function NotesRail({
     <div className="lg:border-line lg:sticky lg:top-[125px] lg:h-[calc(100vh-125px)] lg:overflow-y-auto lg:border-r lg:pr-5 lg:pb-16">
       {/* Course switch */}
       {modules.length > 1 && (
-        <div className="border-line bg-mist flex gap-1 rounded-xl border p-1">
-          {modules.map((module) => (
-            <Link
-              key={module.slug}
-              href={`/dashboard/notes?module=${module.slug}`}
-              prefetch={false}
-              aria-current={module.slug === active?.slug ? "true" : undefined}
-              className={cn(
-                "flex-1 rounded-lg px-3 py-2 text-center text-[0.875rem] font-medium transition-colors",
-                module.slug === active?.slug
-                  ? "bg-surface text-ink shadow-sm"
-                  : "text-ink-soft hover:text-ink",
-              )}
-            >
-              {module.short}
-            </Link>
-          ))}
+        <div
+          role="tablist"
+          aria-label="Courses"
+          className="border-line bg-mist flex gap-1 rounded-xl border p-1"
+        >
+          {modules.map((module) => {
+            const current = module.slug === active?.slug;
+            return (
+              <Link
+                key={module.slug}
+                href={`/dashboard/notes?module=${module.slug}`}
+                prefetch={false}
+                role="tab"
+                aria-selected={current}
+                className={cn(
+                  // The unselected tabs used to differ from the selected one
+                  // by a hairline shadow, which on a light panel is no
+                  // difference at all: you could not tell which course you
+                  // were in without reading the lesson list.
+                  "flex-1 rounded-lg px-2 py-2 text-center text-[0.8125rem] font-semibold transition-colors",
+                  current
+                    ? "bg-ink text-cta-fg shadow-sm"
+                    : "text-ink-faint hover:bg-surface hover:text-ink",
+                )}
+              >
+                {module.short}
+              </Link>
+            );
+          })}
         </div>
       )}
 
@@ -84,29 +93,23 @@ export function NotesRail({
           <p className="eyebrow mt-6 mb-3">{active.title}</p>
           <ul className="border-line-soft space-y-0.5 border-l">
             {active.lessons.map((lesson) => {
-              const href = `/dashboard/notes/${lesson.id}`;
               const current = lesson.id === lessonId;
               return (
                 <li key={lesson.id}>
                   <Link
-                    href={href}
+                    href={`/dashboard/notes/${lesson.id}`}
                     // Fourteen lessons in view meant fourteen speculative
                     // renders of a 40 KB page nobody asked for.
                     prefetch={false}
                     aria-current={current ? "page" : undefined}
                     className={cn(
-                      "-ml-px flex flex-col border-l-2 py-2 pl-4 transition-colors",
+                      "-ml-px block border-l-2 py-2 pl-4 text-[0.875rem] leading-snug transition-colors",
                       current
-                        ? "border-brand text-ink bg-brand-wash/40 rounded-r-md"
+                        ? "border-brand text-ink bg-brand-wash/40 rounded-r-md font-semibold"
                         : "text-ink-soft hover:border-line hover:text-ink border-transparent",
                     )}
                   >
-                    <span className="text-ink-faint font-mono text-[0.6875rem]">
-                      {lesson.day_label}
-                    </span>
-                    <span className="text-[0.875rem] leading-snug font-medium">
-                      {lesson.title}
-                    </span>
+                    {lesson.title}
                   </Link>
 
                   {/* The open lesson's sections, one level in. */}
@@ -117,8 +120,10 @@ export function NotesRail({
                           <a
                             href={`#${entry.id}`}
                             className={cn(
-                              "text-ink-soft hover:border-brand hover:text-ink -ml-px block border-l-2 border-transparent py-[0.3rem] text-[0.8125rem] leading-snug transition-colors",
-                              entry.level === 2 ? "pl-7" : "pl-4",
+                              "hover:border-brand hover:text-ink -ml-px block border-l-2 border-transparent leading-snug transition-colors",
+                              entry.level === 1
+                                ? "text-ink-soft py-[0.3rem] pl-4 text-[0.8125rem]"
+                                : "text-ink-faint py-[0.25rem] pl-7 text-[0.75rem]",
                             )}
                           >
                             {entry.text}

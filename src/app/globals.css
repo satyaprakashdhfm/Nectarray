@@ -459,3 +459,294 @@ body {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Course notes (see components/dashboard/Markdown.tsx)
+
+   A lesson is one to two thousand elements of prose, and until now every one
+   of them carried its own Tailwind class string — around ninety characters
+   per paragraph, list and table cell, sent twice over the wire because a
+   server-rendered page ships both the HTML and the data to rehydrate it. On
+   the longest SQL lesson that was tens of kilobytes of repeated attribute
+   before a single word of the actual notes. One style sheet says it once,
+   and the article ships as bare tags.
+
+   Prose is capped at a readable measure; everything else is not. These notes
+   are mostly wide artefacts — result tables, terminal output, long fenced
+   blocks — and squeezing those into a text column to keep paragraphs
+   comfortable wastes the half of a desktop screen they would happily use.
+-------------------------------------------------------------------------- */
+
+.notes {
+  --measure: 74ch;
+}
+
+.notes > :first-child {
+  margin-top: 0;
+}
+
+.notes h2,
+.notes h3 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.032em;
+  line-height: 1.12;
+  text-wrap: balance;
+  color: var(--color-ink);
+  scroll-margin-top: 140px;
+}
+
+.notes h2 {
+  margin-top: 3.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--color-line);
+  font-size: 1.625rem;
+}
+
+@media (min-width: 640px) {
+  .notes h2 {
+    font-size: 1.875rem;
+  }
+}
+
+/* The first section opens the article; it needs no rule above it. */
+.notes h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.notes h3 {
+  margin-top: 2.75rem;
+  font-size: 1.375rem;
+}
+
+.notes h4 {
+  margin-top: 2rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  scroll-margin-top: 140px;
+}
+
+.notes h5 {
+  margin-top: 1.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  scroll-margin-top: 140px;
+}
+
+.notes p,
+.notes ul,
+.notes ol {
+  margin-top: 1rem;
+  max-width: var(--measure);
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--color-ink-soft);
+}
+
+.notes ul,
+.notes ol {
+  padding-left: 1.25rem;
+  line-height: 1.75;
+}
+
+.notes ul {
+  list-style: disc;
+}
+.notes ol {
+  list-style: decimal;
+}
+.notes li::marker {
+  color: var(--color-ink-faint);
+}
+.notes li + li {
+  margin-top: 0.5rem;
+}
+
+/* A nested list belongs to the line above it, not to the paragraph flow. */
+.notes li > ul,
+.notes li > ol {
+  margin-top: 0.5rem;
+}
+
+.notes a {
+  color: var(--color-brand-deep);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.notes strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.notes em {
+  font-style: italic;
+}
+
+/* Inline code, as against a fenced block — that has its own component. */
+.notes :not(pre) > code {
+  border: 1px solid var(--color-line);
+  background-color: var(--color-mist);
+  color: var(--color-ink);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.85em;
+}
+
+.notes blockquote {
+  margin-top: 1.25rem;
+  max-width: var(--measure);
+  border-left: 3px solid var(--color-brand);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background-color: color-mix(
+    in srgb,
+    var(--color-brand-wash) 40%,
+    transparent
+  );
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  color: var(--color-ink-soft);
+}
+
+/* The notes separate sections with ---, so the rule does that work and the
+   headings do not also draw one; two rules and a gap read as a bug. */
+.notes hr {
+  margin-top: 3rem;
+  border-color: var(--color-line);
+}
+
+/* Wide result tables scroll inside themselves, never pushing the page
+   sideways. */
+.notes .table-scroll {
+  margin-top: 1.25rem;
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+}
+
+.notes table {
+  width: 100%;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.notes thead {
+  background-color: var(--color-mist);
+  border-bottom: 1px solid var(--color-line-soft);
+}
+
+.notes th {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.notes td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-line-soft);
+  color: var(--color-ink-soft);
+  vertical-align: top;
+}
+
+.notes tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Fenced code (see components/dashboard/CodeBlock.tsx)
+
+   Always dark, in either theme. A code block is a quotation from a terminal
+   or an editor, and both of those are dark for every student in the cohort;
+   a light block in a light page reads as more prose rather than as something
+   you are meant to copy and run.
+-------------------------------------------------------------------------- */
+
+.code-block {
+  margin-top: 1.25rem;
+  border: 1px solid var(--color-night-line);
+  background-color: var(--color-night);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.5rem 0.4rem 1rem;
+  border-bottom: 1px solid var(--color-night-line);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.code-lang {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.code-copy:hover {
+  color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.code-copy svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.code-block pre {
+  overflow-x: auto;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.code-block code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+/* Comment, string, number, keyword. One letter each because a long lesson
+   carries several thousand of these spans. */
+.t-c {
+  color: #7b8f9e;
+  font-style: italic;
+}
+.t-s {
+  color: #9ae6a4;
+}
+.t-n {
+  color: #f0b37e;
+}
+.t-k {
+  color: #7cc4f8;
+}

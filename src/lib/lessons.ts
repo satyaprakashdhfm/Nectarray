@@ -29,28 +29,26 @@ export const getLesson = cache(async (id: string): Promise<Lesson | null> => {
 });
 
 /**
- * The lesson id in a `/dashboard/notes/<id>` path, or null anywhere else.
+ * Strips a lesson body's opening H1 when it is just the title again.
  *
- * Guarded by a UUID shape so a future sibling route — `/dashboard/notes/new`,
- * say — cannot be mistaken for a lesson and sent to the database.
- */
-export function lessonIdFromPath(pathname: string | null): string | null {
-  if (!pathname) return null;
-  const match = /^\/dashboard\/notes\/([0-9a-f-]{36})\/?$/i.exec(pathname);
-  return match ? match[1] : null;
-}
-
-/**
- * Strips the leading H1 from a lesson body.
- *
- * Every imported note opens with its own title, and the page renders that
- * title above the body already — so the reader met "Day 1 - Python
+ * Every imported Python note opens with its own title, and the page renders
+ * that title above the body already — so the reader met "Day 1 - Python
  * Programming Fundamentals" twice, once as the page heading and again as the
  * first line of the article, with a rule between them.
  *
- * Only a heading appearing before any other content is removed; an H1 further
- * down is a real section and stays.
+ * It has to be the title though, not merely the first heading. The SQL notes
+ * open on a real section — "MySQL - Database and Table Basics" under a lesson
+ * called "Database Objects" — and removing that took a section of the course
+ * away along with its place in the contents.
  */
-export function stripLeadingHeading(markdown: string): string {
-  return markdown.replace(/^\s*#\s+[^\n]*\n+/, "");
+export function stripLeadingHeading(markdown: string, title: string): string {
+  const match = /^\s*#\s+([^\n]*)\n+/.exec(markdown);
+  if (!match) return markdown;
+
+  const squash = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const heading = squash(match[1]);
+  const wanted = squash(title);
+
+  if (!wanted || !heading.includes(wanted)) return markdown;
+  return markdown.slice(match[0].length);
 }

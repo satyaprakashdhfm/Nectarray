@@ -15,12 +15,6 @@ import {
  */
 export async function middleware(request: NextRequest) {
   /*
-   * A layout cannot see which child route is rendering — that is the one
-   * thing App Router does not hand down. Forwarding the path as a header is
-   * the supported way to tell it, and the notes shell needs it so the rail
-   * can show the open lesson's own contents beside the lesson list.
-   */
-  /*
    * The id, once we have validated it. Every dashboard page then skips its own
    * getUser() — which is a network call to the auth server, not a local check,
    * so it was costing a second full round trip on every navigation, and a
@@ -36,7 +30,6 @@ export async function middleware(request: NextRequest) {
   // header, so snapshotting once would drop a refreshed session token.
   const forward = () => {
     const headers = new Headers(request.headers);
-    headers.set("x-pathname", request.nextUrl.pathname);
     headers.delete("x-user-id");
     if (userId) headers.set("x-user-id", userId);
     return NextResponse.next({ request: { headers } });

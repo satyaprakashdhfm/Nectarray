@@ -1,9 +1,6 @@
 import { Suspense } from "react";
-import { headers } from "next/headers";
 import { NotesRail, type RailModule } from "@/components/dashboard/NotesRail";
-import { getLesson, lessonIdFromPath } from "@/lib/lessons";
 import { createClient, getAccess } from "@/lib/supabase/server";
-import { tocEntries } from "@/lib/toc";
 
 /**
  * Short tab labels. The full module title is the heading above the lesson
@@ -22,6 +19,12 @@ const SHORT: Record<string, string> = {
  * The rail is fetched here rather than in each page, so switching lessons
  * re-renders only the article — the rail keeps its scroll position instead
  * of jumping back to the top on every navigation.
+ *
+ * The contents of the open lesson are deliberately *not* worked out here.
+ * A layout is not re-rendered when you move between sibling routes, so
+ * anything derived from the current path is frozen at whichever lesson you
+ * opened first — which is exactly how the rail came to list Day 1's sections
+ * underneath Day 7. The lesson page publishes them instead.
  */
 export default async function NotesLayout({
   children,
@@ -37,15 +40,10 @@ export default async function NotesLayout({
   }
 
   const supabase = await createClient();
-  const [{ data }, headerList] = await Promise.all([
-    supabase
-      .from("modules")
-      .select(
-        "id, slug, title, position, lessons(id, day_label, title, position)",
-      )
-      .order("position"),
-    headers(),
-  ]);
+  const { data } = await supabase
+    .from("modules")
+    .select("id, slug, title, position, lessons(id, title, position)")
+    .order("position");
 
   /*
    * Modules with nothing published are dropped rather than shown empty.
@@ -61,16 +59,10 @@ export default async function NotesLayout({
       lessons: [...module.lessons].sort((a, b) => a.position - b.position),
     }));
 
-  // A layout cannot see its child's params, so the open lesson comes from the
-  // path header the middleware forwards. The fetch is shared with the page.
-  const lessonId = lessonIdFromPath(headerList.get("x-pathname"));
-  const lesson = lessonId ? await getLesson(lessonId) : null;
-  const toc = lesson?.body_md ? tocEntries(lesson.body_md) : [];
-
   return (
     <div className="mx-auto grid w-full max-w-[110rem] gap-8 px-5 py-8 md:px-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-12 lg:py-10 xl:px-10">
       <Suspense fallback={<div />}>
-        <NotesRail modules={modules} toc={toc} />
+        <NotesRail modules={modules} />
       </Suspense>
       <div className="min-w-0">{children}</div>
     </div>

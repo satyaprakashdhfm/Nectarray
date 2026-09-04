@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
+import { LessonToc } from "@/components/dashboard/lesson-toc";
 import { Markdown } from "@/components/dashboard/Markdown";
 import { getLesson, stripLeadingHeading } from "@/lib/lessons";
 import { createClient, getAccess } from "@/lib/supabase/server";
+import { tocEntries } from "@/lib/toc";
 
 export default async function LessonPage({
   params,
@@ -16,7 +18,6 @@ export default async function LessonPage({
 
   const { id } = await params;
 
-  // Shared with the layout, which already fetched this row to build the rail.
   const lesson = await getLesson(id);
 
   // RLS returns nothing rather than refusing, so "not visible to you" and
@@ -36,15 +37,23 @@ export default async function LessonPage({
   const prev = index > 0 ? list[index - 1] : null;
   const next = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
 
-  const body = lesson.body_md ? stripLeadingHeading(lesson.body_md) : "";
+  const body = lesson.body_md
+    ? stripLeadingHeading(lesson.body_md, lesson.title)
+    : "";
+
+  /*
+   * The contents are worked out here, beside the body they describe, and
+   * handed to the rail in the layout. The layout cannot do it itself: it is
+   * not re-rendered when you move from one lesson to the next.
+   */
+  const toc = tocEntries(body);
 
   return (
     <article className="min-w-0 pb-16">
+      <LessonToc entries={toc} />
+
       <header className="border-line border-b pb-8">
-        <p className="text-ink-faint font-mono text-[0.8125rem]">
-          {lesson.day_label}
-        </p>
-        <h1 className="display text-ink mt-2 text-[2rem] sm:text-[2.5rem]">
+        <h1 className="display text-ink text-[2rem] sm:text-[2.5rem]">
           {lesson.title}
         </h1>
         {lesson.summary && <p className="lede mt-4">{lesson.summary}</p>}
