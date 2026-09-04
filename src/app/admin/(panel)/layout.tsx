@@ -3,6 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/layout/Logo";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
+import {
+  ThemeCleanup,
+  ThemeScript,
+  ThemeToggle,
+} from "@/components/dashboard/Theme";
 import { isAllowedAdminEmail } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -49,6 +54,8 @@ export default async function AdminPanelLayout({
 
   return (
     <div className="bg-mist min-h-screen">
+      <ThemeScript />
+      <ThemeCleanup />
       <header className="border-night-line bg-night sticky top-0 z-50 border-b">
         <div className="shell flex h-[72px] items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -67,6 +74,7 @@ export default async function AdminPanelLayout({
             >
               Main site
             </Link>
+            <ThemeToggle />
             <SignOutButton redirectTo="/admin/login" />
           </div>
         </div>

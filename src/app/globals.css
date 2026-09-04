@@ -87,8 +87,73 @@
   --color-night: #0b1720; /* dark section ground */
   --color-night-soft: #14232e;
   --color-night-line: #223644;
+}
 
-  /* Motion ---------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Signed-in theme
+   --------------------------------------------------------------------------
+   The dashboard and admin run dark by default; the marketing site stays
+   light. Rather than a second set of class names, this redefines the same
+   tokens under a data attribute — so every component that already says
+   bg-canvas / text-ink / border-line flips with no change to its markup.
+
+   Applied to <html> by components/dashboard/Theme.tsx, which also removes it
+   on the way back out to the marketing pages.
+-------------------------------------------------------------------------- */
+
+[data-ui-theme="dark"] {
+  --color-canvas: #0b1720;
+  --color-surface: #13212c;
+  --color-mist: #0f1c25;
+  --color-line: #22323f;
+  --color-line-soft: #1a2731;
+
+  --color-ink: #eef3f6;
+  --color-ink-soft: #a3b4c1;
+  --color-ink-faint: #6b7f8f;
+
+  /* Washes carry text, so on a dark ground they become tints of the accent
+     rather than near-white pastels. */
+  --color-brand-wash: #0e2a3a;
+  --color-leaf-wash: #142a18;
+  --color-amber-wash: #2d2012;
+  --color-teal-wash: #0f2b29;
+
+  /* The -deep tones were picked for contrast against white and go muddy on
+     a dark ground; the display tones are the readable ones here. */
+  --color-brand-deep: #4cc0f0;
+  --color-leaf-deep: #7ed957;
+  --color-amber-deep: #f5a44a;
+  --color-teal-deep: #35cfc7;
+}
+
+[data-ui-theme="dark"] .card {
+  box-shadow: none;
+  border-color: var(--color-line);
+}
+
+[data-ui-theme="dark"] .card-hover:hover {
+  box-shadow: none;
+  border-color: color-mix(in srgb, var(--color-brand) 40%, transparent);
+}
+
+/* The grid-paper ground is drawn in ink, which is now light. */
+[data-ui-theme="dark"] .grid-paper {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, #ffffff 6%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, #ffffff 6%, transparent) 1px,
+      transparent 1px
+    );
+}
+
+@theme {
+  /* Motion ------------------------------------------------------------- */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

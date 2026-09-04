@@ -3,6 +3,11 @@ import Link from "next/link";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { Logo } from "@/components/layout/Logo";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
+import {
+  ThemeCleanup,
+  ThemeScript,
+  ThemeToggle,
+} from "@/components/dashboard/Theme";
 import { getViewer } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -21,6 +26,8 @@ export default async function DashboardLayout({
 
   return (
     <div className="bg-mist min-h-screen">
+      <ThemeScript />
+      <ThemeCleanup />
       <header className="border-night-line bg-night sticky top-0 z-50 border-b">
         <div className="shell flex h-[72px] items-center justify-between gap-6">
           <Logo markClassName="size-9" wordClassName="text-[1.25rem]" />
@@ -34,6 +41,7 @@ export default async function DashboardLayout({
             >
               Main site
             </Link>
+            <ThemeToggle />
             <SignOutButton />
           </div>
         </div>
