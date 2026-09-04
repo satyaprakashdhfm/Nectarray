@@ -725,7 +725,10 @@ export const software: {
     title: "Tell us what you are building.",
     lead: "A short note is enough. You will get a written scope and a fixed price against it — no retainer, and no discovery fee.",
     body: "Send a short note and you will get a written scope and a fixed price against it — no retainer, no discovery fee, and a straight answer if we are not the right people for the job. Then take that number to anyone else you are considering: that comparison is the entire pitch, and it is the reason most of our work comes from people who did exactly that.",
-    cta: { label: "Start a project", href: "/contact" },
+    // Deep-links to the form, not the top of /contact: that page opens on
+    // the same dark ground and the same contact details as the footer, so
+    // landing above the form reads as having gone nowhere.
+    cta: { label: "Start a project", href: "/contact#enquiry" },
   },
 };
 

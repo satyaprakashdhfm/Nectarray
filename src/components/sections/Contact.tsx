@@ -150,9 +150,20 @@ export function Contact({ asPage = false }: { asPage?: boolean } = {}) {
 
         {/* Form ----------------------------------------------------------- */}
         <Reveal delay={120}>
+          {/*
+           * `id` so a CTA elsewhere can land on the form itself rather than
+           * at the top of this page. This section shares its ground and its
+           * email/phone/location list with the footer, so arriving at the top
+           * of it reads as having been dumped in a footer — the form is the
+           * part that makes it obvious something happened.
+           *
+           * scroll-mt clears the fixed 72px header, which would otherwise
+           * cover the first field.
+           */}
           <form
+            id="enquiry"
             onSubmit={handleSubmit}
-            className="border-night-line bg-night-soft/70 rounded-2xl border p-7 backdrop-blur sm:p-9"
+            className="border-night-line bg-night-soft/70 scroll-mt-[88px] rounded-2xl border p-7 backdrop-blur sm:p-9"
           >
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
