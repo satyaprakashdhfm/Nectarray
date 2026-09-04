@@ -4,7 +4,9 @@ import { AcademyFaq } from "@/components/academy/AcademyFaq";
 import { AcademyNav } from "@/components/academy/AcademyNav";
 import { Curriculum } from "@/components/academy/Curriculum";
 import { EnrolForm } from "@/components/academy/EnrolForm";
-import { EnrolHero } from "@/components/academy/EnrolHero";
+import { AcademyHero } from "@/components/academy/AcademyHero";
+import { FloatingActions } from "@/components/academy/FloatingActions";
+import { StudentVoices } from "@/components/academy/StudentVoices";
 import { Offerings } from "@/components/academy/Offerings";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
@@ -26,16 +28,18 @@ export default function AcademyPage() {
   return (
     <>
       <Header />
-      <main id="main" className="pt-[72px]">
-        <EnrolHero />
+      <main id="main" className="academy-ground pt-[72px]">
+        <AcademyHero />
         <AcademyNav />
         <AboutCourse />
         <Offerings />
         <Curriculum />
+        <StudentVoices />
         <AcademyFaq />
         <EnrolForm />
       </main>
       <Footer />
+      <FloatingActions />
     </>
   );
 }

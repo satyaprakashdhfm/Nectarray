@@ -1,6 +1,30 @@
 /** NectArray Academy and its flagship programme. */
 import type { Cta, CurriculumModule, Fact, Faq, IconCard, Link } from "@/types";
 
+/**
+ * One card in the offerings carousel: the feature, a line saying what it is,
+ * and the two or three concrete things it means in practice.
+ */
+export type OfferingCard = IconCard & { points: string[] };
+
+/**
+ * Student quotes for the academy page.
+ *
+ * Deliberately empty. The section renders nothing while it is, which is the
+ * correct thing for it to do — a testimonial nobody said is worse than no
+ * testimonials, and it is the one part of a course page a visitor is right
+ * to read sceptically. Paste real ones in as students give them.
+ */
+export type StudentQuote = {
+  name: string;
+  place: string;
+  course: string;
+  rating: number;
+  quote: string;
+};
+
+export const studentQuotes: StudentQuote[] = [];
+
 export const academy: {
   eyebrow: string;
   title: string;
@@ -14,7 +38,7 @@ export const academy: {
     curriculumPdf: string;
     facts: Fact[];
     about: { title: string; paragraphs: string[]; highlights: string[] };
-    offerings: IconCard[];
+    offerings: OfferingCard[];
     curriculum: CurriculumModule[];
     outcomes: string[];
     forWho: string[];
@@ -65,31 +89,61 @@ export const academy: {
         icon: "graduation",
         title: "Live sessions, not recordings",
         body: "Every class is taught live and you can interrupt it. This is training, not a video library — the value is in the back-and-forth when your code does not do what you expected.",
+        points: [
+          "Ask a question the moment it comes up",
+          "Code reviewed on screen, in the session",
+          "Recordings after, so a missed class is not a lost one",
+        ],
       },
       {
         icon: "code",
         title: "Assignments read and scored",
         body: "Submit your solution and get it back scored out of ten on correctness, readability and whether it would survive a code review — with the specific lines that cost you marks.",
+        points: [
+          "Scored on correctness, readability and review-worthiness",
+          "The specific lines that cost you marks",
+          "Resubmit once you have fixed them",
+        ],
       },
       {
         icon: "database",
         title: "A SQL playground in the browser",
         body: "Questions ordered easy to hard against a real database you query in the page. Write it, run it, see the rows, get told if the answer matches. No installs before you start.",
+        points: [
+          "A real database you query in the page",
+          "Questions ordered easy to hard",
+          "Your answer checked against the rows, not the wording",
+        ],
       },
       {
         icon: "target",
         title: "A Python problem sheet that stops",
         body: "Arrays, strings and dictionaries, easy to hard, each linked to LeetCode. Deliberately not a full DSA grind — enough pattern fluency to pass a screen, not six months of graph theory.",
+        points: [
+          "Arrays, strings, dictionaries — the interview core",
+          "Judged on hidden tests, LeetCode-style",
+          "Enough to pass a screen, not six months of graph theory",
+        ],
       },
       {
         icon: "notebook",
         title: "Documentation-grade notes",
         body: "Every day has written notes with runnable examples and real output, not slides. They are the reference you go back to in your first job, not something you throw away after the exam.",
+        points: [
+          "Written notes for every day, with runnable examples",
+          "Real output beside the code, not slides",
+          "Yours to keep, and to use in your first job",
+        ],
       },
       {
         icon: "briefcase",
         title: "Placement preparation built in",
         body: "Résumé and ATS, GitHub portfolio, LinkedIn and outreach strategy, HR rounds, and a technical mock interview with structured written feedback.",
+        points: [
+          "Resume and ATS, GitHub portfolio, LinkedIn",
+          "HR rounds and outreach that gets replies",
+          "A technical mock interview with written feedback",
+        ],
       },
     ],
 
