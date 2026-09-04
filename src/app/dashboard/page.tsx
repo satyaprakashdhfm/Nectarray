@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, PenSquare, Video } from "lucide-react";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
+import { cohortRoom } from "@/lib/meeting";
 import { createClient, getAccess } from "@/lib/supabase/server";
 import { displayName } from "@/lib/utils";
 
@@ -30,8 +31,10 @@ export default async function DashboardPage() {
 
   const cohort = enrolment?.cohorts as {
     name?: string;
-    meet_url?: string;
+    meet_url?: string | null;
+    room_slug?: string | null;
   } | null;
+  const room = cohort ? cohortRoom(cohort) : null;
 
   const supabase = await createClient();
   const [{ data: modules }, { data: questions }, { data: progress }] =
@@ -79,15 +82,15 @@ export default async function DashboardPage() {
             </p>
             <p className="display mt-2 text-[1.5rem]">Today&rsquo;s class</p>
             <p className="mt-1.5 text-[0.9375rem] text-white/60">
-              {cohort?.meet_url
-                ? "The room is always the same one — open it and wait, or join whoever is already there."
+              {room
+                ? "Always the same room. Open it and wait, or join whoever is already there."
                 : "No meeting link has been set for this cohort yet."}
             </p>
           </div>
 
-          {cohort?.meet_url && (
+          {room && (
             <a
-              href={cohort.meet_url}
+              href={room.url}
               target="_blank"
               rel="noreferrer noopener"
               className="text-night hover:bg-leaf inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
