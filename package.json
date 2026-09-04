@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "brand": "node scripts/prepare-brand-assets.cjs",
     "og": "node scripts/generate-og.cjs",
+    "hero": "node scripts/crop-hero.cjs",
     "build:tests": "python3 scripts/build-python-tests.py"
   },
   "dependencies": {

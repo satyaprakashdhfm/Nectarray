@@ -9,23 +9,23 @@ import { academy } from "@/lib/content";
 const initials = ["A", "R", "S", "K"];
 
 /**
- * The hero artwork.
+ * The hero artwork: 1584x1376, so the box below carries its exact ratio and
+ * nothing is cropped a second time.
  *
- * Cropped to a square and anchored right, because that is the only part of
- * the supplied banner we can use: the artwork — desk, monitors, agent graph
- * — occupies its right ~45%, and its left half is a headline, a strapline
- * and a "100+ Students" badge baked into the pixels.
+ * Cut from the right-hand 51% of the supplied 3084x1376 banner, whose left
+ * half was a headline, a strapline and a "100+ Students" badge baked into
+ * the pixels. None of that could appear here — it reads "Nectarcourses",
+ * which is not this company; it would repeat the h1 immediately beside it in
+ * a typeface we do not use, cannot restyle and no crawler can read; and
+ * "100+ Students" contradicts the claim the rest of the page rests on, which
+ * is a group small enough that every submission is read individually.
  *
- * That baked text cannot be shown. It reads "Nectarcourses", which is not
- * this company; it repeats the h1 sitting next to it, in a typeface we do
- * not use and cannot restyle; and "100+ Students" contradicts the whole
- * pitch of the programme, which is five seats and every submission read
- * individually.
+ * Cropping the file rather than masking it with CSS means that text is
+ * absent from what ships, so no later reframing can bring it back. It also
+ * took the asset from 6.4 MB of PNG to 234 KB of JPEG, most of that from
+ * dropping half the pixels we were never going to show.
  *
- * To reframe it: the aspect ratio is what decides how much shows, since
- * `cover` anchored right reveals `aspect / 2.24` of the width. Square gives
- * the right 45%, starting past the last of the baked text. Anything wider
- * than roughly 1.05:1 pulls that strapline back into frame.
+ * Re-cut it with scripts/crop-hero.cjs if the framing needs to change.
  */
 const HERO_ART = "/academy-hero.jpg";
 
@@ -135,7 +135,7 @@ export function AcademyHero() {
               />
               <article className="border-night-line bg-night relative overflow-hidden rounded-[1.75rem] border text-white shadow-[0_30px_70px_-30px_rgba(11,23,32,0.55)]">
                 {/* Artwork ------------------------------------------- */}
-                <div className="relative aspect-square w-full overflow-hidden">
+                <div className="relative aspect-[1584/1376] w-full overflow-hidden">
                   {/* Behind the image, so the panel still reads as a designed
                       surface while it loads rather than as a hole. */}
                   <div
@@ -163,7 +163,7 @@ export function AcademyHero() {
                     fill
                     sizes="(min-width: 1024px) 46vw, (min-width: 640px) 90vw, 100vw"
                     loading="eager"
-                    className="relative object-cover object-right"
+                    className="relative object-cover"
                   />
 
                   {/* Scrim, so the badge and the line over the desk keep
