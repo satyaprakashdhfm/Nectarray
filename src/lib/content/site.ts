@@ -50,7 +50,7 @@ export const nav: Link[] = [
 export const hero = {
   headline: ["We build the software,", "and the demand for it."],
   lede: "NectArray is a four-in-one studio: we engineer web products, ship AI agents that actually do work, run the paid and organic marketing that fills them, and train the next set of engineers who build them.",
-  primaryCta: { label: "Start a project", href: "/contact" },
+  primaryCta: { label: "Start a project", href: "/contact#enquiry" },
   secondaryCta: { label: "See what we do", href: "#services" },
   microNote: "No pitch deck. One call, and a straight answer on what you need.",
   stats: [

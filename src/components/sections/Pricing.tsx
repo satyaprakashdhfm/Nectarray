@@ -100,7 +100,7 @@ export function Pricing({ asPage = false }: { asPage?: boolean } = {}) {
 
                 <div className="relative mt-8">
                   <Button
-                    href="/contact"
+                    href="/contact#enquiry"
                     variant={plan.featured ? "onDark" : "secondary"}
                     className="w-full"
                   >
