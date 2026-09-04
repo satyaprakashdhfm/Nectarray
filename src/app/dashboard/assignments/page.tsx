@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
 import {
-  PracticeSheet,
-  type Question,
-} from "@/components/dashboard/PracticeSheet";
+  PythonJudge,
+  type PyQuestion,
+} from "@/components/dashboard/PythonJudge";
 import {
   SqlPractice,
   type SqlQuestion,
@@ -63,7 +63,7 @@ export default async function AssignmentsPage({
     supabase
       .from("practice_questions")
       .select(
-        "id, track, topic, difficulty, position, title, prompt_md, hint_md, solution_sql, leetcode_url, mysql_note, expected_result",
+        "id, track, topic, difficulty, position, title, prompt_md, hint_md, solution_sql, leetcode_url, mysql_note, expected_result, has_judge",
       )
       .eq("track", track)
       .eq("is_published", true)
@@ -84,50 +84,34 @@ export default async function AssignmentsPage({
     .filter((id) => onThisTrack.has(id));
 
   /*
-   * SQL gets the whole viewport. It is a tool, not a page: a schema to read,
-   * a query to write and a result to compare, all wanted at once. Wrapping it
-   * in the usual 80rem gutter left it competing for a third of a desktop
-   * screen with empty margins on either side.
+   * Both tracks get the whole viewport. They are tools, not pages: something
+   * to read, something to write and a result to compare, all wanted at once.
+   * Wrapping either in the usual 80rem gutter left it competing for a third of
+   * a desktop screen with empty margins on either side.
    */
-  if (track === "sql") {
-    return (
-      <div className="flex h-[calc(100dvh-125px)] flex-col">
-        <div className="border-line bg-canvas flex shrink-0 items-center gap-4 border-b px-4 py-2.5">
-          <TrackTabs track={track} />
-          <p className="text-ink-faint hidden text-[0.8125rem] xl:block">
-            Written against the training database on the left. Run a query that
-            matches the expected output and it ticks itself off.
-          </p>
-        </div>
-        <div className="min-h-0 flex-1">
+  return (
+    <div className="flex h-[calc(100dvh-125px)] flex-col">
+      <div className="border-line bg-canvas flex shrink-0 items-center gap-4 border-b px-4 py-2.5">
+        <TrackTabs track={track} />
+        <p className="text-ink-faint hidden text-[0.8125rem] xl:block">
+          {track === "sql"
+            ? "Written against the training database on the left. Run a query that matches the expected output and it ticks itself off."
+            : "Write the solution and run it against the test cases. It executes in your browser — pass them all and it ticks itself off."}
+        </p>
+      </div>
+      <div className="min-h-0 flex-1">
+        {track === "sql" ? (
           <SqlPractice
             questions={(questions ?? []) as unknown as SqlQuestion[]}
             solved={solved}
           />
-        </div>
+        ) : (
+          <PythonJudge
+            questions={(questions ?? []) as unknown as PyQuestion[]}
+            solved={solved}
+          />
+        )}
       </div>
-    );
-  }
-
-  return (
-    <div className="shell py-8 lg:py-10">
-      <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
-        Assignments
-      </h1>
-      <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem] leading-relaxed">
-        Arrays, strings and dictionaries, easy to hard. Solve each one on
-        LeetCode, then upload your accepted submission here — deliberately not a
-        full DSA grind, just the patterns that actually come up in screens.
-      </p>
-
-      <div className="mt-6">
-        <TrackTabs track={track} />
-      </div>
-
-      <PracticeSheet
-        questions={(questions ?? []) as Question[]}
-        solved={solved}
-      />
     </div>
   );
 }

@@ -11,7 +11,10 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "brand": "node scripts/prepare-brand-assets.cjs",
-    "og": "node scripts/generate-og.cjs"
+    "og": "node scripts/generate-og.cjs",
+    "prebuild": "node scripts/copy-pyodide.cjs",
+    "postinstall": "node scripts/copy-pyodide.cjs",
+    "build:tests": "python3 scripts/build-python-tests.py"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.63",
@@ -38,6 +41,7 @@
     "eslint-config-next": "^16.3.3",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "pyodide": "^314.0.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3"
   }

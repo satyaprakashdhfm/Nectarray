@@ -14,3 +14,4 @@ yarn-error.log*
 next-env.d.ts
 shots/
 tsconfig.tsbuildinfo
+public/pyodide/
