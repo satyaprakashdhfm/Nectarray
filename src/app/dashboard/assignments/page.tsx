@@ -4,7 +4,10 @@ import {
   PracticeSheet,
   type Question,
 } from "@/components/dashboard/PracticeSheet";
-import { SqlPlayground } from "@/components/dashboard/SqlPlayground";
+import {
+  SqlPractice,
+  type SqlQuestion,
+} from "@/components/dashboard/SqlPractice";
 import { createClient, getViewer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +35,7 @@ export default async function AssignmentsPage({
     supabase
       .from("practice_questions")
       .select(
-        "id, track, topic, difficulty, position, title, prompt_md, hint_md, solution_sql, leetcode_url",
+        "id, track, topic, difficulty, position, title, prompt_md, hint_md, solution_sql, leetcode_url, mysql_note, expected_result",
       )
       .eq("track", track)
       .eq("is_published", true)
@@ -75,16 +78,17 @@ export default async function AssignmentsPage({
         </ul>
       </nav>
 
-      {track === "sql" && (
-        <div className="mt-6">
-          <SqlPlayground />
-        </div>
+      {track === "sql" ? (
+        <SqlPractice
+          questions={(questions ?? []) as unknown as SqlQuestion[]}
+          solved={solved}
+        />
+      ) : (
+        <PracticeSheet
+          questions={(questions ?? []) as Question[]}
+          solved={solved}
+        />
       )}
-
-      <PracticeSheet
-        questions={(questions ?? []) as Question[]}
-        solved={solved}
-      />
     </div>
   );
 }

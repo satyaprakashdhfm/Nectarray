@@ -102,22 +102,35 @@
 -------------------------------------------------------------------------- */
 
 [data-ui-theme="dark"] {
-  --color-canvas: #0b1720;
-  --color-surface: #13212c;
-  --color-mist: #0f1c25;
-  --color-line: #22323f;
-  --color-line-soft: #1a2731;
+  /*
+   * Neutral, not navy. The first pass reused the marketing site's --color-night
+   * (#0b1720), which is a deliberately blue ground built to sit under a
+   * gradient. Across a whole application it reads as a tint someone forgot to
+   * remove — every surface faintly blue, and the brand blue with nothing to
+   * separate it from its background. These are near-greys with a trace of
+   * warmth, so the accents are the only colour on screen.
+   */
+  --color-canvas: #0e0f11;
+  --color-surface: #17181c;
+  --color-mist: #131417;
+  --color-line: #292b31;
+  --color-line-soft: #1f2126;
 
-  --color-ink: #eef3f6;
-  --color-ink-soft: #a3b4c1;
-  --color-ink-faint: #6b7f8f;
+  --color-ink: #eceef1;
+  --color-ink-soft: #a6a9b2;
+  --color-ink-faint: #71747d;
+
+  /* The chrome follows the page, or the header stays navy over a grey app. */
+  --color-night: #0a0b0d;
+  --color-night-soft: #17181c;
+  --color-night-line: #292b31;
 
   /* Washes carry text, so on a dark ground they become tints of the accent
      rather than near-white pastels. */
-  --color-brand-wash: #0e2a3a;
-  --color-leaf-wash: #142a18;
-  --color-amber-wash: #2d2012;
-  --color-teal-wash: #0f2b29;
+  --color-brand-wash: #10222c;
+  --color-leaf-wash: #16241a;
+  --color-amber-wash: #261d12;
+  --color-teal-wash: #12241f;
 
   /* The -deep tones were picked for contrast against white and go muddy on
      a dark ground; the display tones are the readable ones here. */
