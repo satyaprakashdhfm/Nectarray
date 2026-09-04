@@ -96,3 +96,20 @@ export async function updateCohort(formData: FormData) {
   revalidatePath("/admin/cohort");
   revalidatePath("/dashboard");
 }
+
+/** Mints a code for a cohort. The database checks is_admin() again itself. */
+export async function generateCode(formData: FormData) {
+  const cohortId = String(formData.get("cohort_id") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
+  if (!cohortId) throw new Error("Pick a cohort.");
+
+  const supabase = await assertAdmin();
+  const { error } = await supabase.rpc("generate_enrolment_code", {
+    p_cohort_id: cohortId,
+    p_note: note === "" ? null : note,
+    p_expires_at: null,
+  });
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/codes");
+}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Clock, Mail } from "lucide-react";
+import { RedeemCode } from "@/components/dashboard/RedeemCode";
 import { company } from "@/lib/content";
 
 const COPY: Record<string, { title: string; body: string }> = {
@@ -59,6 +60,20 @@ export function EnrolmentGate({ status }: { status: string }) {
           {company.email}
         </a>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The gate plus the redeem box. `completed` and `enrolled` never reach here,
+ * and a withdrawn student is not offered a code — that would let a refunded
+ * seat be reopened with an old code.
+ */
+export function EnrolmentPanel({ status }: { status: string }) {
+  return (
+    <div className="space-y-5">
+      <EnrolmentGate status={status} />
+      {status !== "withdrawn" && <RedeemCode />}
     </div>
   );
 }

@@ -18,10 +18,13 @@ export function EnrolButton({
   label,
   className,
   withArrow = true,
+  fallbackHref = "#enrol",
 }: {
   label: string;
   className: string;
   withArrow?: boolean;
+  /** Where to send people while auth is unconfigured. */
+  fallbackHref?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -40,7 +43,7 @@ export function EnrolButton({
 
   if (!authEnabled) {
     return (
-      <Link href="#enrol" className={className}>
+      <Link href={fallbackHref} className={className}>
         {inner}
       </Link>
     );

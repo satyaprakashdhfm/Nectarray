@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { EnrolButton } from "@/components/auth/EnrolButton";
 import { Logo } from "@/components/layout/Logo";
 import { useEscapeKey, useLockBodyScroll } from "@/hooks";
 import { nav } from "@/lib/content";
@@ -42,6 +43,15 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Students already in a cohort need a door on every page, not only
+              on /academy. Kept visually secondary to the sales CTA. */}
+          <EnrolButton
+            label="Log in"
+            withArrow={false}
+            fallbackHref="/academy#enrol"
+            className="hidden rounded-full px-4 py-2.5 text-[0.9375rem] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:inline-flex"
+          />
+
           <Link
             href="/contact"
             className="text-night hover:bg-leaf hidden rounded-full bg-white px-5 py-2.5 text-[0.9375rem] font-semibold transition-colors sm:inline-flex"
@@ -89,6 +99,12 @@ export function Header() {
           >
             Book a call
           </Link>
+          <EnrolButton
+            label="Log in"
+            withArrow={false}
+            fallbackHref="/academy#enrol"
+            className="border-night-line mt-3 inline-flex justify-center rounded-full border px-5 py-3.5 text-center text-base font-medium text-white/80"
+          />
         </nav>
       </div>
     </header>

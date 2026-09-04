@@ -1,5 +1,5 @@
 import { Video } from "lucide-react";
-import { EnrolmentGate } from "@/components/dashboard/EnrolmentGate";
+import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
 import { academy } from "@/lib/content";
 import { getViewer } from "@/lib/supabase/server";
 
@@ -16,7 +16,7 @@ export default async function DashboardPage() {
       <>
         <Heading name={profile?.first_name} />
         <div className="mt-8">
-          <EnrolmentGate status={status} />
+          <EnrolmentPanel status={status} />
         </div>
       </>
     );

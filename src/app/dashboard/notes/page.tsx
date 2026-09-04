@@ -1,4 +1,4 @@
-import { EnrolmentGate } from "@/components/dashboard/EnrolmentGate";
+import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
 import { getViewer } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -6,7 +6,7 @@ export default async function NotesPage() {
   const { enrolment } = await getViewer();
   const status = enrolment?.status ?? "none";
   if (status !== "enrolled" && status !== "completed") {
-    return <EnrolmentGate status={status} />;
+    return <EnrolmentPanel status={status} />;
   }
 
   const supabase = await createClient();
