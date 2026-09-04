@@ -31,6 +31,7 @@ test can act as any user with `set local "request.jwt.claim.sub"`.
 | 3 | Student sets `profiles.role = 'admin'` | permission denied |
 | 4 | Non-enrolled student reads lessons/modules | 0 rows |
 | 5 | Student submits work pre-scored 10/10 | RLS violation |
+| 6 | Student smuggles `role:admin` through auth metadata | `role` stays `student` |
 
 Attack 3 is the one that actually got through the first time, and it is worth
 understanding why. The `profiles_update_own` policy lets a user update their
@@ -43,3 +44,10 @@ The fix is column-level privilege, not policy: `revoke update on profiles`,
 then grant update on `(first_name, last_name, phone)` only. Role changes are
 a service-role operation — the SQL editor, or a server route holding
 `SUPABASE_SERVICE_ROLE_KEY` — never something the browser can do.
+
+Attack 6 guards the second route to the same prize. `0002` syncs auth
+metadata into profiles through a SECURITY DEFINER trigger, which runs with
+RLS and column grants bypassed. A student controls their own metadata
+completely — `updateUser({data: {...}})` accepts anything — so if that
+trigger ever copied a `role` key across, attack 3 would be back through the
+side door. It writes name, phone and email, and nothing else.

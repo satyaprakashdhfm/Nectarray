@@ -56,3 +56,13 @@ begin;
   select count(*) as lessons_visible from public.lessons;
   select count(*) as modules_visible from public.modules;
 commit;
+
+\echo ''
+\echo '-- ATTACK 6: smuggle a role through auth metadata into profiles'
+\echo '   (the sync trigger in 0002 is SECURITY DEFINER, so it must never'
+\echo '    copy anything but name / phone / email. Expect role = student.)'
+update auth.users
+  set raw_user_meta_data = '{"role":"admin","first_name":"Hacker"}'::jsonb
+  where id = '11111111-1111-1111-1111-111111111111';
+select first_name, role from public.profiles
+  where id = '11111111-1111-1111-1111-111111111111';
