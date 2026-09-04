@@ -25,6 +25,15 @@ const sharp = require("sharp");
 const ROOT = path.join(__dirname, "..");
 const OUT_DIR = path.join(ROOT, "public", "software");
 
+/**
+ * The navy every card is tinted to.
+ *
+ * Muted rather than the brand blue itself: these are photographs behind
+ * body copy, not accents, and at full saturation the grid started competing
+ * with the chips and the headings on top of it.
+ */
+const DUOTONE = { r: 40, g: 78, b: 130 };
+
 /** Card width is ~460 CSS px at three columns, so this covers 2x. */
 const TARGET_WIDTH = 1200;
 const ASPECT = 16 / 9;
@@ -65,6 +74,18 @@ async function main() {
     const target = path.join(OUT_DIR, `${slug}.jpg`);
     const info = await sharp(source)
       .resize(width, height, { fit: "cover", position: "centre" })
+      // Duotoned to one navy, because the six sources do not agree on colour
+      // temperature: two are near-black, two are blue, one is warm orange.
+      // Side by side in a grid they read as six unrelated pictures rather
+      // than a set.
+      //
+      // `tint` alone, with no `greyscale` in front of it. sharp orders its
+      // own pipeline rather than following call order, and greyscale runs
+      // after tint — so asking for both returns a plain grey image with the
+      // navy quietly discarded. tint already maps onto luminance, which is
+      // the duotone we wanted.
+      .tint(DUOTONE)
+      .modulate({ brightness: 0.94 })
       .jpeg({ quality: 80, mozjpeg: true })
       .toFile(target);
 
