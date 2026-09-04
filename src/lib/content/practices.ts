@@ -136,6 +136,12 @@ export type SoftwareBuild = IconCard & {
    * read "bespoke solutions for every business" and have to guess.
    */
   domains: string[];
+  /**
+   * A 3D render for the category, as a path into Microsoft's Fluent
+   * Emoji set. components/software/CategoryMark.tsx is the only thing
+   * that turns it into a URL.
+   */
+  image: string;
   /** Only where another route explains the thing properly. */
   more?: Link;
 };
@@ -193,6 +199,7 @@ export const software: {
     {
       icon: "layout",
       title: "Portfolio & Profile Sites",
+      image: "Identification card/3D/identification_card_3d.png",
       body: "The site that makes a real business look like one: who you are, what you do, proof that you do it, and one obvious way to get in touch. Edited by you afterwards, not by a support ticket.",
       domains: [
         "Doctors & clinics",
@@ -218,6 +225,7 @@ export const software: {
     {
       icon: "cart",
       title: "E-commerce, Any Category",
+      image: "Shopping cart/3D/shopping_cart_3d.png",
       body: "Shopify when the platform is the sensible answer, a custom storefront when it is not. Catalogue, cart, checkout, coupons, returns, invoices and the shipping label at the end of it — the whole path, not the pretty half.",
       domains: [
         "Fashion & apparel",
@@ -243,6 +251,7 @@ export const software: {
     {
       icon: "gauge",
       title: "Dashboards & Internal Tools",
+      image: "Bar chart/3D/bar_chart_3d.png",
       body: "The screen that replaces the spreadsheet the whole company secretly runs on. Roles, approvals, audit trails, exports and reports that reconcile — built for the people who have to use it all day.",
       domains: [
         "Logistics & fleet",
@@ -264,6 +273,7 @@ export const software: {
     {
       icon: "layers",
       title: "Web Applications & Platforms",
+      image: "Gear/3D/gear_3d.png",
       body: "Products rather than pages: accounts, permissions, payments, multi-tenancy, notifications and the twenty unglamorous things a demo never shows you. This is the half of the work that decides whether the thing survives its first hundred users.",
       domains: [
         "Booking & appointments",
@@ -283,6 +293,7 @@ export const software: {
     {
       icon: "bot",
       title: "Agentic AI, Inside the Product",
+      image: "Robot/3D/robot_3d.png",
       body: "Not a chatbot in the corner — agents with tools and permissions that read your data and take real actions. Including the ones we build for engineering teams: assistants that review code, write the tests, run the migration and document what they changed.",
       domains: [
         "Support & sales agents",
@@ -303,6 +314,7 @@ export const software: {
     {
       icon: "smartphone",
       title: "Mobile-First & Mobile Apps",
+      image: "Mobile phone/3D/mobile_phone_3d.png",
       body: "Designed at 360px and up, because that is where your customers actually are. Installable web apps where a store listing is overhead, and real iOS and Android builds where the camera, GPS or offline use make it the only honest option.",
       domains: [
         "Delivery & live tracking",

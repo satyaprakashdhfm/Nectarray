@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
+import { headGap, sectionPad, wideShell } from "@/components/software/layout";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { software } from "@/lib/content";
@@ -20,9 +21,9 @@ export function WhyUs() {
   return (
     <section
       id="why-us"
-      className="bg-mist border-line border-t py-24 sm:py-28"
+      className={`bg-mist border-line border-t ${sectionPad}`}
     >
-      <div className="shell">
+      <div className={wideShell}>
         <SectionHead
           eyebrow={why.eyebrow}
           title={
@@ -34,17 +35,17 @@ export function WhyUs() {
           lede={why.lede}
         />
 
-        <ul className="mt-14 grid gap-5 lg:mt-16 lg:grid-cols-3">
+        <ul className={`grid gap-4 md:grid-cols-2 xl:grid-cols-3 ${headGap}`}>
           {why.points.map((point, i) => (
             <Reveal as="li" key={point.title} delay={(i % 3) * 80}>
-              <article className="card h-full p-7">
+              <article className="card h-full p-5">
                 <span className="bg-leaf-wash text-leaf-deep grid size-11 place-items-center rounded-xl">
                   <Icon name={point.icon} className="size-5" />
                 </span>
-                <h3 className="text-ink mt-6 text-[1.0625rem] font-semibold tracking-tight">
+                <h3 className="text-ink mt-4 text-[1rem] font-semibold tracking-tight">
                   {point.title}
                 </h3>
-                <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
+                <p className="text-ink-soft mt-2 text-[0.875rem] leading-[1.6]">
                   {point.body}
                 </p>
               </article>
@@ -53,13 +54,13 @@ export function WhyUs() {
         </ul>
 
         <Reveal delay={120}>
-          <div className="brand-band mt-5 overflow-hidden rounded-2xl p-8 sm:p-10">
+          <div className="brand-band mt-4 overflow-hidden rounded-2xl p-6 sm:p-8">
             <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
               <div>
-                <h3 className="display text-[1.625rem] text-white sm:text-[1.875rem]">
+                <h3 className="display text-[1.375rem] text-white sm:text-[1.625rem]">
                   {why.closer.title}
                 </h3>
-                <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-white/85">
+                <p className="mt-2.5 max-w-2xl text-[0.875rem] leading-relaxed text-white/85">
                   {why.closer.body}
                 </p>
               </div>
