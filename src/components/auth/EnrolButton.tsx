@@ -28,6 +28,7 @@ export function EnrolButton({
   withArrow = true,
   fallbackHref = "#enrol",
   signedInLabel = "Dashboard",
+  hideWhenSignedIn = false,
 }: {
   label: string;
   className: string;
@@ -36,6 +37,11 @@ export function EnrolButton({
   fallbackHref?: string;
   /** Shown once we know the browser holds a session. */
   signedInLabel?: string;
+  /**
+   * Render nothing once signed in, for a second copy of this button that
+   * would otherwise say "Dashboard" alongside the header's.
+   */
+  hideWhenSignedIn?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const signedIn = useSignedIn();
@@ -62,6 +68,7 @@ export function EnrolButton({
   }
 
   if (signedIn === "in") {
+    if (hideWhenSignedIn) return null;
     return (
       <Link href="/dashboard" className={className}>
         {inner(signedInLabel)}

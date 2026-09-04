@@ -30,8 +30,17 @@ export function AcademyNav() {
           </ul>
         </nav>
 
+        {/*
+         * Stands down once signed in. Both this and the site header render an
+         * EnrolButton, and both default to "Dashboard" for a signed-in
+         * visitor — so an enrolled student got the same pill twice, in two
+         * sticky bars stacked on each other. The header's copy is the one
+         * that belongs on every route; this one exists to convert a visitor
+         * who is not signed in yet.
+         */}
         <EnrolButton
           label={academy.course.cta.label}
+          hideWhenSignedIn
           withArrow={false}
           className="bg-ink hover:bg-brand-deep hidden shrink-0 rounded-full px-5 py-2 text-[0.875rem] font-semibold text-white transition-colors sm:inline-flex"
         />

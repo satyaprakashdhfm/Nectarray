@@ -1,4 +1,4 @@
-import { ChevronDown, Download } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { academy } from "@/lib/content";
@@ -23,7 +23,7 @@ const accents = [
  * summary and the topic count say what is behind each.
  */
 export function Curriculum() {
-  const { curriculum, curriculumPdf } = academy.course;
+  const { curriculum } = academy.course;
 
   return (
     <section id="curriculum" className="bg-surface py-20 sm:py-24 lg:py-28">
@@ -99,17 +99,6 @@ export function Curriculum() {
             );
           })}
         </div>
-
-        <Reveal delay={140}>
-          <a
-            href={curriculumPdf}
-            download
-            className="border-line bg-canvas text-ink hover:border-brand hover:text-brand-deep mt-10 inline-flex items-center gap-2.5 rounded-full border px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
-          >
-            <Download className="size-4" strokeWidth={2} aria-hidden />
-            Download the full curriculum
-          </a>
-        </Reveal>
       </div>
     </section>
   );

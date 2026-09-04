@@ -35,7 +35,6 @@ export const academy: {
     title: string;
     summary: string;
     breadcrumb: Link[];
-    curriculumPdf: string;
     facts: Fact[];
     about: { title: string; paragraphs: string[]; highlights: string[] };
     offerings: OfferingCard[];
@@ -61,7 +60,6 @@ export const academy: {
       { label: "Academy", href: "/academy" },
       { label: "Python, SQL & Data Science", href: "/academy" },
     ],
-    curriculumPdf: "/nectarray-placement-curriculum.pdf",
     facts: [
       { label: "Duration", value: "12 weeks" },
       { label: "Format", value: "Live online, hands-on" },
@@ -87,12 +85,12 @@ export const academy: {
     offerings: [
       {
         icon: "graduation",
-        title: "Live sessions, not recordings",
-        body: "Every class is taught live and you can interrupt it. This is training, not a video library — the value is in the back-and-forth when your code does not do what you expected.",
+        title: "Live, interactive sessions",
+        body: "Every class is taught live, in a group of five, and you are meant to interrupt it. You ask as you go, your code gets looked at on the spot, and the session moves at the pace of the room — that back-and-forth is where the learning actually happens.",
         points: [
           "Ask a question the moment it comes up",
           "Code reviewed on screen, in the session",
-          "Recordings after, so a missed class is not a lost one",
+          "Recorded afterwards, so you can revisit any session",
         ],
       },
       {
@@ -327,8 +325,8 @@ export const academy: {
         a: "No. It starts at what a programming language is. What you do need is the 6–8 hours a week — the programme is paced for someone doing the practice, and it does not work as something you watch.",
       },
       {
-        q: "Is this recorded, or live?",
-        a: "Live. Every session is taught in real time and you are expected to interrupt it. There is no video library, deliberately: the value is in getting your specific mistake looked at while you still remember what you were thinking.",
+        q: "Are the classes live?",
+        a: "Yes — every session is taught in real time, in a group of five, and you are expected to interrupt it. You get your own mistake looked at while you still remember what you were thinking. Sessions are recorded afterwards too, so a class you cannot make is still there to catch up on.",
       },
       {
         q: "Why so few places?",
@@ -337,10 +335,6 @@ export const academy: {
       {
         q: "How are assignments assessed?",
         a: "You submit your solution and get it back scored out of ten — on whether it is correct, whether it is readable, and whether it would survive a review. You see which lines cost you marks, not just a number.",
-      },
-      {
-        q: "Is this a DSA course?",
-        a: "No, and on purpose. The problem sheet covers arrays, strings and dictionaries in Python, easy to hard, which is what actually comes up in screens for these roles. If you want six months of graph theory this is the wrong programme.",
       },
       {
         q: "What happens when the programme ends?",
