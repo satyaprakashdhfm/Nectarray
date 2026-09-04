@@ -9,6 +9,7 @@ import {
   ThemeToggle,
 } from "@/components/dashboard/Theme";
 import { getViewer } from "@/lib/supabase/server";
+import { displayName } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Dashboard — NectArray Academy",
@@ -22,7 +23,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { profile } = await getViewer();
-  const name = profile?.first_name ?? "there";
+  const name = displayName(profile?.first_name) || "there";
 
   return (
     <div className="bg-mist min-h-screen">

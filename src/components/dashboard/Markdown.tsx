@@ -38,6 +38,15 @@ function toText(node: ReactNode): string {
  * headings used as numbered section markers. GFM is on for the tables.
  */
 export function Markdown({ children }: { children: string }) {
+  /*
+   * Prose is capped at a readable measure; everything else is not.
+   *
+   * These notes are mostly wide artefacts — SQL result tables, terminal
+   * output, long fenced blocks — and squeezing those into a text column to
+   * keep paragraphs comfortable wastes the half of a desktop screen they
+   * would happily use. So the limit goes on the paragraphs and lists that
+   * need it, and headings, tables and code run the full width of the page.
+   */
   return (
     <div className="max-w-none">
       <ReactMarkdown
@@ -66,17 +75,17 @@ export function Markdown({ children }: { children: string }) {
           ),
           h4: ({ children }) => <h5 className="eyebrow mt-7">{children}</h5>,
           p: ({ children }) => (
-            <p className="text-ink-soft mt-4 text-[0.9375rem] leading-[1.75]">
+            <p className="text-ink-soft mt-4 max-w-[74ch] text-[0.9375rem] leading-[1.75]">
               {children}
             </p>
           ),
           ul: ({ children }) => (
-            <ul className="text-ink-soft marker:text-ink-faint mt-4 list-disc space-y-2 pl-5 text-[0.9375rem] leading-[1.7]">
+            <ul className="text-ink-soft marker:text-ink-faint mt-4 max-w-[74ch] list-disc space-y-2 pl-5 text-[0.9375rem] leading-[1.7]">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="text-ink-soft marker:text-ink-faint mt-4 list-decimal space-y-2 pl-5 text-[0.9375rem] leading-[1.7]">
+            <ol className="text-ink-soft marker:text-ink-faint mt-4 max-w-[74ch] list-decimal space-y-2 pl-5 text-[0.9375rem] leading-[1.7]">
               {children}
             </ol>
           ),
@@ -94,7 +103,7 @@ export function Markdown({ children }: { children: string }) {
             <strong className="text-ink font-semibold">{children}</strong>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-brand bg-brand-wash/40 text-ink-soft mt-5 border-l-[3px] py-1 pl-5 text-[0.9375rem] italic">
+            <blockquote className="border-brand bg-brand-wash/40 text-ink-soft mt-5 max-w-[74ch] border-l-[3px] py-1 pl-5 text-[0.9375rem] italic">
               {children}
             </blockquote>
           ),

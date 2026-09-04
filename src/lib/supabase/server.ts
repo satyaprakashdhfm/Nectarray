@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { authEnabled } from "./config";
@@ -35,10 +36,16 @@ export async function createClient() {
 /**
  * The signed-in user, their profile and their enrolment status in one call.
  *
+ * Wrapped in React's `cache` so it runs **once per request** no matter how
+ * many components ask. A lesson page asks three times — layout, page, and the
+ * rail — and each call was previously a full round trip to Supabase for
+ * `getUser()` plus two queries. On a Vercel function that is nine network
+ * hops to render one page, which is most of where the wait came from.
+ *
  * Returns nulls rather than throwing when auth is not configured, so pages
  * can render a signed-out state instead of erroring during setup.
  */
-export async function getViewer() {
+export const getViewer = cache(async () => {
   if (!authEnabled) return { user: null, profile: null, enrolment: null };
 
   const supabase = await createClient();
@@ -59,4 +66,20 @@ export async function getViewer() {
   ]);
 
   return { user, profile, enrolment };
+});
+
+/**
+ * Whether the viewer can open course material.
+ *
+ * Every gated page asked this the same way and got it subtly different; one
+ * helper keeps "enrolled" meaning one thing.
+ */
+export async function getAccess() {
+  const viewer = await getViewer();
+  const status = viewer.enrolment?.status ?? "none";
+  return {
+    ...viewer,
+    status,
+    active: status === "enrolled" || status === "completed",
+  };
 }

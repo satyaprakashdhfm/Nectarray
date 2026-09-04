@@ -14,16 +14,30 @@ import {
  * has to happen here because a server component cannot write cookies.
  */
 export async function middleware(request: NextRequest) {
-  if (!authEnabled) return NextResponse.next();
+  /*
+   * A layout cannot see which child route is rendering — that is the one
+   * thing App Router does not hand down. Forwarding the path as a header is
+   * the supported way to tell it, and the notes shell needs it so the rail
+   * can show the open lesson's own contents beside the lesson list.
+   */
+  // Read fresh each time: `request.cookies.set` writes through to the cookie
+  // header, so snapshotting once would drop a refreshed session token.
+  const forward = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-pathname", request.nextUrl.pathname);
+    return NextResponse.next({ request: { headers } });
+  };
 
-  let response = NextResponse.next({ request });
+  if (!authEnabled) return forward();
+
+  let response = forward();
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (toSet) => {
         toSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = forward();
         toSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         );
@@ -63,8 +77,18 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except static assets and image optimisation.
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf|woff2?)$).*)",
-  ],
+  /*
+   * Only the two signed-in areas.
+   *
+   * This used to match every route, which meant a visitor reading the home
+   * page paid for a round trip to Supabase before a single byte came back —
+   * `getUser()` validates against the auth server rather than trusting the
+   * cookie, so it is a real network call, not a local check. Marketing pages
+   * have nothing to guard and no session to refresh: the browser client
+   * refreshes its own token, and the header reads sign-in state client-side.
+   *
+   * Everything behind a door still gets refreshed on every request, which is
+   * the only place it was ever doing any work.
+   */
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };

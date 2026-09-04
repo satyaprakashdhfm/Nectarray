@@ -84,6 +84,7 @@ export function EnrolHero() {
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <EnrolButton
                   label={course.cta.label}
+                  signedInLabel="Go to your dashboard"
                   className="group bg-ink hover:bg-brand-deep inline-flex items-center gap-2 rounded-full px-7 py-4 text-[0.9375rem] font-semibold text-white transition-colors"
                 />
 

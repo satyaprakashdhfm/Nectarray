@@ -5,32 +5,44 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { authEnabled } from "@/lib/supabase/client";
+import { useSignedIn } from "@/lib/supabase/session";
 
 /**
  * The single entry point into the programme.
  *
- * While Supabase is unconfigured there is nothing to sign in to, so this
- * degrades to an anchor down to the application form rather than opening a
- * login box that cannot work. Once the environment variables are set it
- * becomes the real modal, with no other change anywhere.
+ * Three behaviours, one button:
+ *
+ *   not configured — an anchor to the application form, because opening a
+ *                    login box with nothing behind it helps nobody
+ *   signed out     — the auth modal
+ *   signed in      — a link straight to the dashboard
+ *
+ * That last case is the one that used to be missing. A student who signed in,
+ * clicked back to the marketing site and then wanted to return was shown
+ * "Log in" again, as though the session had been dropped — and pressing it
+ * opened a login box for an account they were already using.
  */
 export function EnrolButton({
   label,
   className,
   withArrow = true,
   fallbackHref = "#enrol",
+  signedInLabel = "Dashboard",
 }: {
   label: string;
   className: string;
   withArrow?: boolean;
   /** Where to send people while auth is unconfigured. */
   fallbackHref?: string;
+  /** Shown once we know the browser holds a session. */
+  signedInLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const signedIn = useSignedIn();
 
-  const inner = (
+  const inner = (text: string) => (
     <>
-      {label}
+      {text}
       {withArrow && (
         <ArrowRight
           className="size-4 transition-transform duration-300 group-hover:translate-x-1"
@@ -44,7 +56,15 @@ export function EnrolButton({
   if (!authEnabled) {
     return (
       <Link href={fallbackHref} className={className}>
-        {inner}
+        {inner(label)}
+      </Link>
+    );
+  }
+
+  if (signedIn === "in") {
+    return (
+      <Link href="/dashboard" className={className}>
+        {inner(signedInLabel)}
       </Link>
     );
   }
@@ -52,7 +72,7 @@ export function EnrolButton({
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className}>
-        {inner}
+        {inner(label)}
       </button>
       {open && <AuthModal onClose={() => setOpen(false)} />}
     </>
