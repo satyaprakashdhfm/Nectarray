@@ -55,7 +55,7 @@ export const academy: {
     tag: "Applications open",
     title: "Python, SQL & Data Science",
     summary:
-      "A 45-day placement programme for people moving into data science and AI. Python, then SQL, then the parts of getting hired that nobody teaches — built as practice you do, not lectures you sit through.",
+      "A placement programme for people moving into data science and AI. Python, then SQL, then the parts of getting hired that nobody teaches — built as practice you do, not lectures you sit through.",
     breadcrumb: [
       { label: "Home", href: "/" },
       { label: "Academy", href: "/academy" },
@@ -63,7 +63,7 @@ export const academy: {
     ],
     curriculumPdf: "/nectarray-placement-curriculum.pdf",
     facts: [
-      { label: "Duration", value: "45 days · 12 weeks" },
+      { label: "Duration", value: "12 weeks" },
       { label: "Format", value: "Live online, hands-on" },
       { label: "Commitment", value: "6–8 hrs / week" },
       { label: "Group size", value: "Deliberately small" },
@@ -73,7 +73,7 @@ export const academy: {
       title: "About the programme",
       paragraphs: [
         "Most courses hand you twenty hours of video and call it teaching. This is the other thing: you write code every session, you get it read by someone who has shipped code for a living, and you are told plainly what is wrong with it.",
-        "The order is deliberate. Python first, because everything downstream assumes it. SQL second, because the job is mostly asking data questions and the people who can do that cleanly are rarer than you would think. Then five days on the part that actually converts skill into an offer — how the industry is structured, what a résumé is scanned for, and what happens in a technical round.",
+        "The order is deliberate. Python first, because everything downstream assumes it. SQL second, because the job is mostly asking data questions and the people who can do that cleanly are rarer than you would think. Then the part that actually converts skill into an offer — how the industry is structured, what a résumé is scanned for, and what happens in a technical round.",
         "It is built for the two people who keep asking us for it: someone starting out who wants to enter data science or agentic AI and does not know where the floor is, and someone already working who wants to switch domains and needs to be interview-ready without quitting their job first.",
       ],
       highlights: [
@@ -128,9 +128,9 @@ export const academy: {
       {
         icon: "notebook",
         title: "Documentation-grade notes",
-        body: "Every day has written notes with runnable examples and real output, not slides. They are the reference you go back to in your first job, not something you throw away after the exam.",
+        body: "Every session has written notes with runnable examples and real output, not slides. They are the reference you go back to in your first job, not something you throw away after the exam.",
         points: [
-          "Written notes for every day, with runnable examples",
+          "Written notes for every session, with runnable examples",
           "Real output beside the code, not slides",
           "Yours to keep, and to use in your first job",
         ],
@@ -276,7 +276,7 @@ export const academy: {
         title: "Placement Readiness & Career Strategy",
         days: "5 days",
         summary:
-          "The part that turns the previous 40 days into an offer. Nobody teaches this and it is usually what is missing.",
+          "The part that turns all of it into an offer. Nobody teaches this and it is usually what is missing.",
         topics: [
           {
             days: "Day 1",
@@ -324,7 +324,7 @@ export const academy: {
     faqs: [
       {
         q: "Do I need to know how to code already?",
-        a: "No. Day 1 starts at what a programming language is. What you do need is the 6–8 hours a week — the programme is paced for someone doing the practice, and it does not work as something you watch.",
+        a: "No. It starts at what a programming language is. What you do need is the 6–8 hours a week — the programme is paced for someone doing the practice, and it does not work as something you watch.",
       },
       {
         q: "Is this recorded, or live?",
@@ -343,8 +343,8 @@ export const academy: {
         a: "No, and on purpose. The problem sheet covers arrays, strings and dictionaries in Python, easy to hard, which is what actually comes up in screens for these roles. If you want six months of graph theory this is the wrong programme.",
       },
       {
-        q: "What happens after the 45 days?",
-        a: "You keep the notes and the practice environment. Day 45 ends with a technical mock interview and a written roadmap specific to where you are and what you are targeting.",
+        q: "What happens when the programme ends?",
+        a: "You keep the notes and the practice environment. It ends with a technical mock interview and a written roadmap specific to where you are and what you are targeting.",
       },
     ],
 

@@ -127,9 +127,7 @@ export function AcademyHero() {
                   </span>
 
                   <p className="display mt-6 text-[1.75rem] leading-tight">
-                    45 days.
-                    <br />
-                    <span className="text-leaf">Three modules.</span>
+                    <span className="text-leaf">Taught live.</span>
                     <br />
                     One small group.
                   </p>

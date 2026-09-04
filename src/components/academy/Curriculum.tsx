@@ -10,12 +10,17 @@ const accents = [
 ];
 
 /**
- * The 45 days, module by module.
+ * The programme, module by module.
  *
  * Built on native <details>, so it opens without JavaScript, is keyboard
  * operable for free, and is searchable by the browser's own find-in-page.
- * The first module starts open because an accordion that is entirely shut
- * reads as an empty section.
+ *
+ * Every module starts closed. The first one used to open itself, which put
+ * twenty-two rows of Python between the top of the section and the two
+ * modules underneath it — so the reader scrolled past a list they had not
+ * asked for to find out that SQL and placement existed at all. Closed, the
+ * three of them fit on one screen and you open the one you came for; the
+ * summary and the topic count say what is behind each.
  */
 export function Curriculum() {
   const { curriculum, curriculumPdf } = academy.course;
@@ -27,10 +32,10 @@ export function Curriculum() {
           eyebrow="Curriculum"
           title={
             <>
-              Forty-five days, <em>in order.</em>
+              The whole programme, <em>in order.</em>
             </>
           }
-          lede="Python first because everything assumes it, SQL second because the job is mostly asking data questions, then the five days that turn both into an offer."
+          lede="Python first because everything assumes it, SQL second because the job is mostly asking data questions, then the part that turns both into an offer."
         />
 
         <div className="mt-12 space-y-4 lg:mt-14">
@@ -38,10 +43,7 @@ export function Curriculum() {
             const accent = accents[i % accents.length];
             return (
               <Reveal key={module.n} delay={i * 90}>
-                <details
-                  open={i === 0}
-                  className="group card relative overflow-hidden"
-                >
+                <details className="group card relative overflow-hidden">
                   <span
                     className={`absolute inset-y-0 left-0 w-1 ${accent.rule}`}
                     aria-hidden
@@ -60,7 +62,7 @@ export function Curriculum() {
                         <span
                           className={`rounded-full px-3 py-1 text-[0.75rem] font-semibold ${accent.chip}`}
                         >
-                          {module.days}
+                          {module.topics.length} topics
                         </span>
                       </span>
                       <span className="text-ink-soft mt-2 block text-[0.9375rem] leading-relaxed">
@@ -79,19 +81,14 @@ export function Curriculum() {
                     <ul>
                       {module.topics.map((topic) => (
                         <li
-                          key={topic.days + topic.title}
-                          className="border-line-soft grid gap-1 border-b py-4 last:border-0 sm:grid-cols-[7rem_1fr] sm:gap-6"
+                          key={topic.title}
+                          className="border-line-soft border-b py-4 last:border-0"
                         >
-                          <span className="text-ink-faint pt-0.5 font-mono text-[0.8125rem]">
-                            {topic.days}
+                          <span className="text-ink block text-[0.9375rem] font-semibold">
+                            {topic.title}
                           </span>
-                          <span>
-                            <span className="text-ink block text-[0.9375rem] font-semibold">
-                              {topic.title}
-                            </span>
-                            <span className="text-ink-soft mt-1 block text-[0.9rem] leading-relaxed">
-                              {topic.body}
-                            </span>
+                          <span className="text-ink-soft mt-1 block text-[0.9rem] leading-relaxed">
+                            {topic.body}
                           </span>
                         </li>
                       ))}
