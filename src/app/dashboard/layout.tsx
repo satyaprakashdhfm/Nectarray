@@ -1,0 +1,50 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { DashboardNav } from "@/components/dashboard/DashboardNav";
+import { Logo } from "@/components/layout/Logo";
+import { SignOutButton } from "@/components/dashboard/SignOutButton";
+import { getViewer } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Dashboard — NectArray Academy",
+  robots: { index: false, follow: false },
+};
+
+/** Signed-in area. The middleware has already turned away anonymous users. */
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { profile } = await getViewer();
+  const name = profile?.first_name ?? "there";
+
+  return (
+    <div className="bg-mist min-h-screen">
+      <header className="border-night-line bg-night sticky top-0 z-50 border-b">
+        <div className="shell flex h-[72px] items-center justify-between gap-6">
+          <Logo markClassName="size-9" wordClassName="text-[1.25rem]" />
+          <div className="flex items-center gap-4">
+            <span className="hidden text-[0.875rem] text-white/60 sm:inline">
+              Hi, {name}
+            </span>
+            <Link
+              href="/"
+              className="hidden text-[0.875rem] text-white/60 transition-colors hover:text-white sm:inline"
+            >
+              Main site
+            </Link>
+            <SignOutButton />
+          </div>
+        </div>
+      </header>
+
+      <div className="shell grid gap-8 py-8 lg:grid-cols-[16rem_1fr] lg:gap-10 lg:py-10">
+        <DashboardNav />
+        <main id="main" className="min-w-0">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
