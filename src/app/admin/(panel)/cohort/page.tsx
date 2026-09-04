@@ -85,7 +85,7 @@ export default async function AdminCohortPage() {
 
             <button
               type="submit"
-              className="bg-ink hover:bg-brand-deep mt-7 rounded-full px-6 py-3 text-[0.9375rem] font-semibold text-white transition-colors"
+              className="bg-ink hover:bg-brand-deep text-cta-fg mt-7 rounded-full px-6 py-3 text-[0.9375rem] font-semibold transition-colors"
             >
               Save cohort
             </button>

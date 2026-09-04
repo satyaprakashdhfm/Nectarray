@@ -223,7 +223,7 @@ function Row({
             checked={solved}
             onChange={onToggle}
             aria-label={`Mark ${question.title} as solved`}
-            className="accent-leaf-deep size-4 cursor-pointer"
+            className="check shrink-0"
           />
         </td>
 

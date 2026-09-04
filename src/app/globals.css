@@ -84,6 +84,13 @@
   --color-teal-deep: #17827e;
   --color-teal-wash: #e4f6f5;
 
+  /*
+   * Text on a solid --color-ink button. In light mode ink is near-black so
+   * this is white; in dark mode ink is near-white, and white on white is
+   * how the Run button became invisible.
+   */
+  --color-cta-fg: #ffffff;
+
   --color-night: #0b1720; /* dark section ground */
   --color-night-soft: #14232e;
   --color-night-line: #223644;
@@ -110,11 +117,13 @@
    * separate it from its background. These are near-greys with a trace of
    * warmth, so the accents are the only colour on screen.
    */
-  --color-canvas: #0e0f11;
-  --color-surface: #17181c;
-  --color-mist: #131417;
-  --color-line: #292b31;
-  --color-line-soft: #1f2126;
+  --color-canvas: #0b0c0e;
+  --color-surface: #16181d;
+  --color-mist: #101216;
+  --color-line: #2b2e35;
+  --color-line-soft: #212429;
+
+  --color-cta-fg: #0b0c0e;
 
   --color-ink: #eceef1;
   --color-ink-soft: #a6a9b2;
@@ -141,7 +150,10 @@
 }
 
 [data-ui-theme="dark"] .card {
-  box-shadow: none;
+  /* A one-pixel highlight along the top edge. On a dark ground a shadow
+     does nothing — light has to come from somewhere — so the lift comes
+     from the edge catching it instead. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   border-color: var(--color-line);
 }
 
@@ -213,6 +225,48 @@ body {
   outline: 2px solid var(--color-brand);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+/* A checkbox that belongs to the theme.
+   The browser default paints an opaque white box, which on a dark ground is
+   the brightest thing on the page and pulls the eye away from the row it
+   belongs to. */
+@utility check {
+  appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.3rem;
+  border: 1.5px solid var(--color-line);
+  background-color: var(--color-canvas);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    border-color: var(--color-leaf-deep);
+  }
+
+  &::before {
+    content: "";
+    width: 0.6rem;
+    height: 0.6rem;
+    transform: scale(0);
+    transition: transform 0.15s var(--ease-out-quint);
+    box-shadow: inset 1rem 1rem var(--color-cta-fg);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+  }
+
+  &:checked {
+    background-color: var(--color-leaf-deep);
+    border-color: var(--color-leaf-deep);
+  }
+
+  &:checked::before {
+    transform: scale(1);
+  }
 }
 
 /* --------------------------------------------------------------------------

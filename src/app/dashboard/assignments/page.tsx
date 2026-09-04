@@ -43,7 +43,17 @@ export default async function AssignmentsPage({
     supabase.from("practice_progress").select("question_id"),
   ]);
 
-  const solved = (progress ?? []).map((row) => row.question_id as string);
+  /*
+   * Progress is stored per question, so it spans both tracks. Narrow it to
+   * the questions actually on this page — otherwise the Python sheet counted
+   * SQL solves in its total while the easy/medium/hard breakdown, which only
+   * looks at questions it can see, stayed at zero. One solved SQL question
+   * showed up as "1 / 54" over three zeroes.
+   */
+  const onThisTrack = new Set((questions ?? []).map((row) => row.id as string));
+  const solved = (progress ?? [])
+    .map((row) => row.question_id as string)
+    .filter((id) => onThisTrack.has(id));
 
   return (
     <div className="shell py-8 lg:py-10">
@@ -67,7 +77,7 @@ export default async function AssignmentsPage({
                 className={cn(
                   "inline-flex rounded-full px-4 py-2 text-[0.875rem] font-medium transition-colors",
                   track === entry.id
-                    ? "bg-ink text-white"
+                    ? "bg-ink text-cta-fg"
                     : "text-ink-soft hover:bg-mist hover:text-ink",
                 )}
               >

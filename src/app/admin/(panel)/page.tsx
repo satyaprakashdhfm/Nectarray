@@ -138,7 +138,7 @@ export default async function AdminStudentsPage() {
                           </select>
                           <button
                             type="submit"
-                            className="bg-ink hover:bg-brand-deep rounded-lg px-4 py-2 text-[0.875rem] font-semibold text-white transition-colors"
+                            className="bg-ink hover:bg-brand-deep text-cta-fg rounded-lg px-4 py-2 text-[0.875rem] font-semibold transition-colors"
                           >
                             Save
                           </button>

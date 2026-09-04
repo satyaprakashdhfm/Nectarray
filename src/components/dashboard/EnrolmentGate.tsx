@@ -47,7 +47,7 @@ export function EnrolmentGate({ status }: { status: string }) {
         {status === "none" && (
           <Link
             href="/academy#enrol"
-            className="bg-ink hover:bg-brand-deep inline-flex rounded-full px-6 py-3 text-[0.9375rem] font-semibold text-white transition-colors"
+            className="bg-ink hover:bg-brand-deep text-cta-fg inline-flex rounded-full px-6 py-3 text-[0.9375rem] font-semibold transition-colors"
           >
             Apply for a seat
           </Link>

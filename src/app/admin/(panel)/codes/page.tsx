@@ -62,7 +62,7 @@ export default async function AdminCodesPage() {
           </div>
           <button
             type="submit"
-            className="bg-ink hover:bg-brand-deep rounded-xl px-6 py-3 text-[0.9375rem] font-semibold text-white transition-colors"
+            className="bg-ink hover:bg-brand-deep text-cta-fg rounded-xl px-6 py-3 text-[0.9375rem] font-semibold transition-colors"
           >
             Generate
           </button>

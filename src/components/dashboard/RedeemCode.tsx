@@ -83,7 +83,7 @@ export function RedeemCode() {
         <button
           type="submit"
           disabled={busy || code.trim() === ""}
-          className="bg-ink hover:bg-brand-deep disabled:hover:bg-ink inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-6 py-3 text-[0.9375rem] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+          className="bg-ink text-cta-fg hover:bg-brand-deep disabled:hover:bg-ink inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-6 py-3 text-[0.9375rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy && <Loader2 className="size-4 animate-spin" aria-hidden />}
           {busy ? "Checking…" : "Redeem"}
