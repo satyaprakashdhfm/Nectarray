@@ -3,7 +3,16 @@ import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { hero, pillars } from "@/lib/content";
 
-/** Alternating tilt for the stacked practice cards. */
+/**
+ * Alternating tilt for the stacked practice cards.
+ *
+ * The stack is top-aligned rather than centred, and the cards are tighter
+ * than they were, so all four sit above the fold on a laptop. That matters
+ * for more than tidiness: each card is a `Reveal`, so the staggered rise
+ * only plays on first paint if they are already on screen. Centred against
+ * the taller copy column they started below it, and the animation was
+ * something you had to scroll down to trigger.
+ */
 const tilts = ["-rotate-2", "rotate-1", "-rotate-1", "rotate-2"];
 
 /**
@@ -34,7 +43,7 @@ export function Hero() {
         <div className="bg-teal/20 absolute bottom-0 left-1/4 size-[26rem] rounded-full blur-[120px]" />
       </div>
 
-      <div className="shell grid items-center gap-16 pt-8 pb-20 sm:pt-10 sm:pb-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-12 lg:pb-28">
+      <div className="shell grid gap-10 pt-8 pb-16 sm:pt-10 sm:pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:gap-12 lg:pt-12 lg:pb-24">
         {/* ---------------------------------------------------------------- */}
         <div>
           <Reveal>
@@ -46,7 +55,7 @@ export function Hero() {
           </Reveal>
 
           <Reveal delay={80}>
-            <p className="lede mt-7 max-w-xl">{hero.lede}</p>
+            <p className="lede mt-6 max-w-xl">{hero.lede}</p>
           </Reveal>
 
           <Reveal delay={150}>
@@ -67,7 +76,7 @@ export function Hero() {
           </Reveal>
 
           <Reveal delay={270}>
-            <dl className="border-line mt-12 grid max-w-lg grid-cols-3 gap-6 border-t pt-8">
+            <dl className="border-line mt-9 grid max-w-lg grid-cols-3 gap-6 border-t pt-7">
               {hero.stats.map((stat) => (
                 <div key={stat.label}>
                   <dt className="sr-only">{stat.label}</dt>
@@ -88,17 +97,17 @@ export function Hero() {
         {/* ---------------------------------------------------------------- */}
         {/* Stacked, slightly tilted cards — one per practice */}
         <div className="relative lg:pl-6">
-          <ul className="space-y-3.5 sm:space-y-4">
+          <ul className="space-y-2.5 sm:space-y-3">
             {pillars.map((pillar, i) => (
-              <Reveal as="li" key={pillar.id} delay={140 + i * 90}>
+              <Reveal as="li" key={pillar.id} delay={120 + i * 110}>
                 <a
                   href={pillar.href}
-                  className={`card card-hover group flex items-start gap-4 bg-gradient-to-br p-5 sm:gap-5 sm:p-6 ${accents[i].tint} to-surface ${tilts[i]} hover:rotate-0`}
+                  className={`card card-hover group flex items-start gap-3.5 bg-gradient-to-br p-4 sm:gap-4 sm:p-5 ${accents[i].tint} to-surface ${tilts[i]} hover:rotate-0`}
                 >
                   <span
-                    className={`grid size-11 shrink-0 place-items-center rounded-xl text-white ${accents[i].chip}`}
+                    className={`grid size-10 shrink-0 place-items-center rounded-xl text-white ${accents[i].chip}`}
                   >
-                    <Icon name={pillar.icon} className="size-5" />
+                    <Icon name={pillar.icon} className="size-[1.125rem]" />
                   </span>
 
                   <span className="min-w-0 flex-1">
@@ -110,7 +119,7 @@ export function Hero() {
                         {pillar.title}
                       </span>
                     </span>
-                    <span className="text-ink-soft mt-1.5 block text-[0.9rem] leading-relaxed">
+                    <span className="text-ink-soft mt-1 block text-[0.8125rem] leading-[1.5]">
                       {pillar.summary}
                     </span>
                   </span>

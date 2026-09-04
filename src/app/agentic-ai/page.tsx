@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Plus } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -9,8 +8,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { agenticAiPage, company } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const { hero, families, engineering, stack, process, faqs, cta, meta } =
-  agenticAiPage;
+const { hero, families, engineering, stack, cta, meta } = agenticAiPage;
 
 /**
  * One accent: the mark's circuit blue. Weight comes from navy, not from a
@@ -84,14 +82,6 @@ function StructuredData() {
             })),
           ),
         },
-      },
-      {
-        "@type": "FAQPage",
-        mainEntity: faqs.map((faq) => ({
-          "@type": "Question",
-          name: faq.q,
-          acceptedAnswer: { "@type": "Answer", text: faq.a },
-        })),
       },
     ],
   };
@@ -326,41 +316,55 @@ export default function AgenticAiPage() {
           </div>
         </section>
 
-        {/* ── Stack ────────────────────────────────────────────────── */}
-        <section className="py-20 sm:py-24">
-          <div className="shell-wide grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
-            <Reveal>
-              <div>
-                <h2 className="display text-ink text-[1.9rem] sm:text-[2.25rem]">
+        {/* ── Stack — the frameworks, and the page's dark moment ──── */}
+        {/*
+         * Promoted, for two reasons. It is the section a technical buyer
+         * actually reads — "do you know my tooling" — and with the process
+         * band gone it is the only place left for the navy the rest of the
+         * page is punctuated with.
+         *
+         * White chips on that navy rather than translucent ones: a favicon
+         * is drawn to sit on white, and several of these marks are black or
+         * near-black. On a dark chip Vercel and OpenAI simply disappear.
+         */}
+        <section
+          id="stack"
+          className="border-night-line bg-night scroll-mt-24 border-y py-20 text-white sm:py-24"
+        >
+          <div className="shell-wide">
+            <div className="max-w-3xl">
+              <Reveal>
+                <h2 className="display text-[2rem] text-white sm:text-[2.6rem]">
                   {stack.title}
                 </h2>
-                <p className="text-ink-soft mt-4 text-[0.9375rem] leading-relaxed">
+              </Reveal>
+              <Reveal delay={80}>
+                <p className="mt-5 text-[1.0625rem] leading-relaxed text-white/70">
                   {stack.body}
                 </p>
-              </div>
-            </Reveal>
+              </Reveal>
+            </div>
 
-            <Reveal delay={100}>
-              <dl className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
-                {stack.groups.map((group) => (
-                  <div key={group.label}>
-                    <dt className="eyebrow mb-3">{group.label}</dt>
-                    <dd>
-                      {/* Real marks rather than mono type, the way the stack
-                          on /software is drawn. A buyer recognises the
-                          Anthropic or Temporal logo faster than it reads. */}
-                      <ul className="flex flex-wrap gap-1.5">
+            <dl className="mt-12 grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+              {stack.groups.map((group, i) => (
+                <Reveal key={group.label} delay={(i % 4) * 70}>
+                  <div>
+                    <dt className="text-brand text-[0.75rem] font-semibold tracking-[0.16em] uppercase">
+                      {group.label}
+                    </dt>
+                    <dd className="mt-4">
+                      <ul className="flex flex-wrap gap-2">
                         {group.brands.map((brand) => (
                           <li
                             key={brand.name}
-                            className="border-line bg-canvas flex items-center gap-2 rounded-lg border px-2.5 py-1.5"
+                            className="bg-surface flex items-center gap-2.5 rounded-xl px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
                           >
                             <BrandLogo
                               name={brand.name}
                               domain={brand.domain}
-                              className="size-4"
+                              className="size-6"
                             />
-                            <span className="text-ink-soft text-[0.8125rem] font-medium whitespace-nowrap">
+                            <span className="text-ink text-[0.875rem] font-semibold whitespace-nowrap">
                               {brand.name}
                             </span>
                           </li>
@@ -368,87 +372,9 @@ export default function AgenticAiPage() {
                       </ul>
                     </dd>
                   </div>
-                ))}
-              </dl>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ── Process — the page's one full-colour band ────────────── */}
-        <section className="border-night-line bg-night border-y py-20 sm:py-24">
-          <div className="shell-wide">
-            <Reveal>
-              <p className="flex items-center gap-2.5 text-[0.75rem] font-semibold tracking-[0.16em] text-white/55 uppercase">
-                <span className="bg-brand h-px w-6" aria-hidden />
-                {process.eyebrow}
-              </p>
-            </Reveal>
-            <Reveal delay={70}>
-              <h2 className="display mt-5 text-[2rem] text-white sm:text-[2.6rem]">
-                {process.title}
-              </h2>
-            </Reveal>
-
-            <ol className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {process.steps.map((step, i) => (
-                <Reveal as="li" key={step.n} delay={i * 70}>
-                  <div className="border-night-line bg-night-soft h-full rounded-2xl border p-5">
-                    <span className="bg-brand-deep grid size-8 place-items-center rounded-full font-mono text-[0.72rem] font-semibold text-white">
-                      {step.n}
-                    </span>
-                    <h3 className="mt-4 text-[0.9375rem] font-semibold text-white">
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-[0.8125rem] leading-[1.55] text-white/70">
-                      {step.body}
-                    </p>
-                  </div>
                 </Reveal>
               ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* ── FAQ ──────────────────────────────────────────────────── */}
-        <section className="py-20 sm:py-24">
-          <div className="shell-wide grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-            <Reveal>
-              <h2 className="display text-ink text-[2rem] sm:text-[2.5rem] lg:sticky lg:top-28">
-                Questions we get
-                <br />
-                <span className="ink-gradient">before we start.</span>
-              </h2>
-            </Reveal>
-
-            {/* Two columns on a wide screen: one tall stack of accordions
-                left most of the width empty. `name` is dropped with it —
-                an exclusive group that snaps a row shut in the other column
-                reads as a bug when both are on screen at once. */}
-            <div className="grid gap-x-10 lg:grid-cols-2">
-              {faqs.map((faq, i) => (
-                <Reveal key={faq.q} delay={i * 50}>
-                  <details
-                    open={i === 0}
-                    className="group border-line border-b py-1 first:border-t lg:first:border-t-0"
-                  >
-                    <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-5 [&::-webkit-details-marker]:hidden">
-                      <h3 className="text-ink group-hover:text-brand-deep text-[1.0625rem] font-semibold tracking-tight transition-colors">
-                        {faq.q}
-                      </h3>
-                      <span
-                        className="border-line bg-surface text-ink-soft group-open:border-brand group-open:bg-brand mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border transition-all duration-300 group-open:rotate-45 group-open:text-white"
-                        aria-hidden
-                      >
-                        <Plus className="size-4" strokeWidth={2.25} />
-                      </span>
-                    </summary>
-                    <p className="text-ink-soft max-w-2xl pr-12 pb-6 text-[0.9375rem] leading-relaxed">
-                      {faq.a}
-                    </p>
-                  </details>
-                </Reveal>
-              ))}
-            </div>
+            </dl>
           </div>
         </section>
 
