@@ -28,7 +28,7 @@ export default function AcademyPage() {
   return (
     <>
       <Header />
-      <main id="main" className="academy-ground pt-[72px]">
+      <main id="main" className="pt-[72px]">
         <AcademyHero />
         <AcademyNav />
         <AboutCourse />

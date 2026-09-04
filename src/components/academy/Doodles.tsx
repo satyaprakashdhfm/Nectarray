@@ -59,31 +59,3 @@ export function Squiggle({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-
-/** The looping dashed arrow that points back at the headline. */
-export function LoopArrow({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 220 130"
-      className={className}
-      aria-hidden
-      focusable="false"
-    >
-      <g
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeDasharray="1 11"
-      >
-        <path d="M212 118c-30 12-52-2-46-24 5-19 34-14 30 6-4 22-40 30-72 22-34-9-56-38-118-46" />
-      </g>
-      <path
-        d="M6 76 18 68l-2 14z"
-        fill="currentColor"
-        stroke="none"
-        aria-hidden
-      />
-    </svg>
-  );
-}

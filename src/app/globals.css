@@ -751,43 +751,6 @@ body {
   color: #7cc4f8;
 }
 
-/* --------------------------------------------------------------------------
-   NectArray Academy — the course page's own ground
-
-   Warmer than the rest of the site on purpose. The studio pages are cool
-   white and blue because they are addressed to companies; the academy is
-   addressed to a student deciding where to spend three months of evenings,
-   and a cream page with a contour pattern under it reads as somewhere to
-   sit down rather than a brochure. Only /academy wears it — the palette is
-   redefined on this scope, so every `bg-surface` and `border-line` inside
-   re-tints without a single component knowing about it.
--------------------------------------------------------------------------- */
-
-.academy-ground {
-  --color-canvas: #fdfaec;
-  --color-surface: #fffdf4;
-  --color-mist: #f8f2dc;
-  --color-line: #ecdfbc;
-  --color-line-soft: #f3e9cf;
-
-  position: relative;
-  isolation: isolate;
-  background-color: var(--color-canvas);
-}
-
-/* The contour lines. One tile, repeating; it has to sit behind everything
-   including the sections that paint their own background, hence the -z-10 on
-   an absolutely positioned layer rather than a background on the element. */
-.academy-ground::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -10;
-  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='600'%20height='600'%20viewBox='0%200%20600%20600'%3E%3Cg%20fill='none'%20stroke='%23e6dab4'%20stroke-width='1.3'%3E%3Cpath%20d='M0%2037.5%20Q75%207.5%20150%2037.5%20T300%2037.5%20T450%2037.5%20T600%2037.5'/%3E%3Cpath%20d='M0%20112.5%20Q100%20136.5%20200%20112.5%20T400%20112.5%20T600%20112.5'/%3E%3Cpath%20d='M0%20187.5%20Q60%20167.5%20120%20187.5%20T240%20187.5%20T360%20187.5%20T480%20187.5%20T600%20187.5'/%3E%3Cpath%20d='M0%20262.5%20Q75%20232.5%20150%20262.5%20T300%20262.5%20T450%20262.5%20T600%20262.5'/%3E%3Cpath%20d='M0%20337.5%20Q100%20361.5%20200%20337.5%20T400%20337.5%20T600%20337.5'/%3E%3Cpath%20d='M0%20412.5%20Q60%20392.5%20120%20412.5%20T240%20412.5%20T360%20412.5%20T480%20412.5%20T600%20412.5'/%3E%3Cpath%20d='M0%20487.5%20Q75%20457.5%20150%20487.5%20T300%20487.5%20T450%20487.5%20T600%20487.5'/%3E%3Cpath%20d='M0%20562.5%20Q100%20586.5%20200%20562.5%20T400%20562.5%20T600%20562.5'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 600px 600px;
-  opacity: 0.85;
-}
-
 /* A horizontal strip of cards that scrolls by the page. The bar itself is
    noise next to a pair of arrows and a row of numbers. */
 .no-scrollbar {

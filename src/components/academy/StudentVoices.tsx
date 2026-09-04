@@ -51,15 +51,15 @@ export function StudentVoices() {
     >
       <div className="shell">
         <Reveal>
-          <p className="text-amber-deep flex items-center justify-center gap-2 text-[1.25rem] font-semibold sm:text-[1.5rem]">
-            <Sparkle className="size-5" />
+          <p className="text-brand-deep flex items-center justify-center gap-2 text-[1.25rem] font-semibold sm:text-[1.5rem]">
+            <Sparkle className="text-leaf size-5" />
             Testimonials
           </p>
           <h2
             id="voices-title"
             className="display text-ink mt-2 text-center text-[2.25rem] sm:text-[2.75rem]"
           >
-            What our <span className="text-brand-deep">students say</span>
+            What our <span className="ink-gradient">students say</span>
           </h2>
         </Reveal>
 

@@ -105,6 +105,20 @@ export default function RootLayout({
       lang="en"
       className={`${fallbackSans.variable} ${fallbackSerif.variable}`}
       /*
+       * globals.css sets `scroll-behavior: smooth` so that in-page anchors
+       * glide rather than jump. Without this attribute that setting also
+       * applies to the App Router's own scrolling on a route change — and
+       * the router does not scroll once, it walks the new page trying
+       * candidates (footer, then the section above it, then <main>) and
+       * scrolls to each. Instantly that is invisible; smoothly it is four
+       * animations racing, and you land wherever the last one was pointing,
+       * which on a long page is the footer.
+       *
+       * The attribute is Next's documented opt-in: it keeps smooth scrolling
+       * for anchors and forces `auto` for the duration of a navigation.
+       */
+      data-scroll-behavior="smooth"
+      /*
        * Two scripts deliberately write to this element before React arrives —
        * the reveal flag below and the theme flag in the signed-in area — so
        * the server HTML and the hydrating client HTML are *meant* to differ

@@ -6,30 +6,30 @@ import { academy } from "@/lib/content";
 
 /** The four brand accents, cycled so no two adjacent cards share one. */
 const accents = [
-  "bg-amber-wash text-amber-deep",
   "bg-brand-wash text-brand-deep",
   "bg-leaf-wash text-leaf-deep",
   "bg-teal-wash text-teal-deep",
+  "bg-amber-wash text-amber-deep",
 ];
 
 export function Offerings() {
   return (
     <section
       id="offerings"
-      className="relative py-20 sm:py-24 lg:py-28"
+      className="border-line bg-mist relative border-y py-20 sm:py-24 lg:py-28"
       aria-labelledby="offerings-title"
     >
       <div className="shell">
         <Reveal>
-          <p className="text-amber-deep flex items-center justify-center gap-2 text-[1.25rem] font-semibold sm:text-[1.5rem]">
-            <Sparkle className="size-5" />
+          <p className="text-brand-deep flex items-center justify-center gap-2 text-[1.25rem] font-semibold sm:text-[1.5rem]">
+            <Sparkle className="text-leaf size-5" />
             Exclusive course offerings
           </p>
           <h2
             id="offerings-title"
             className="display text-ink mt-2 text-center text-[2.25rem] sm:text-[2.75rem]"
           >
-            Our <span className="text-amber-deep">Offerings</span>
+            Our <span className="ink-gradient">Offerings</span>
           </h2>
           <p className="lede mx-auto mt-5 max-w-2xl text-center">
             Six things this programme does that a recorded course cannot, and
@@ -66,7 +66,7 @@ export function Offerings() {
                           className="text-ink-soft flex gap-2.5 text-[0.875rem] leading-relaxed"
                         >
                           <span
-                            className="border-amber-deep mt-[0.45rem] size-1.5 shrink-0 rounded-full border-[1.5px]"
+                            className="border-brand-deep mt-[0.45rem] size-1.5 shrink-0 rounded-full border-[1.5px]"
                             aria-hidden
                           />
                           {point}
