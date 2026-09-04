@@ -13,7 +13,7 @@ import { hero, pillars } from "@/lib/content";
  * the taller copy column they started below it, and the animation was
  * something you had to scroll down to trigger.
  */
-const tilts = ["-rotate-2", "rotate-1", "-rotate-1", "rotate-2"];
+const tilts = ["-rotate-1", "rotate-1", "-rotate-1", "rotate-1"];
 
 /**
  * One accent per practice, in wordmark order: amber, blue, green, teal.
@@ -97,7 +97,7 @@ export function Hero() {
         {/* ---------------------------------------------------------------- */}
         {/* Stacked, slightly tilted cards — one per practice */}
         <div className="relative lg:pl-6">
-          <ul className="space-y-2.5 sm:space-y-3">
+          <ul className="space-y-4 sm:space-y-5">
             {pillars.map((pillar, i) => (
               <Reveal as="li" key={pillar.id} delay={120 + i * 110}>
                 <a
