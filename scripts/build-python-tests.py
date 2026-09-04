@@ -22,9 +22,9 @@ import traceback
 HERE = pathlib.Path(__file__).parent
 sys.path.insert(0, str(HERE / "python_judge"))
 
-# Served statically: the browser fetches it once when the Python track
-# opens, and it never touches the database.
-OUT = HERE.parent / "public" / "python-tests.json"
+# Server-side only. Serving this to the browser would hand every student the
+# expected output of every case, which is the one thing a judge must not do.
+OUT = HERE.parent / "content" / "python-tests.json"
 
 import arrays  # noqa: E402
 import strings  # noqa: E402
@@ -105,11 +105,10 @@ def main():
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     # Compact: this ships to every student's browser.
-    OUT.write_text(json.dumps(problems, separators=(",", ":"), sort_keys=True))
+    OUT.write_text(json.dumps(problems, indent=1, sort_keys=True) + "\n")
     print(
         f"Wrote {OUT.relative_to(HERE.parent)} — "
-        f"{len(problems)} problems, {total_cases} cases, "
-        f"{OUT.stat().st_size // 1024} KB."
+        f"{len(problems)} problems, {total_cases} cases."
     )
 
     slugs = sorted(p["slug"] for p in problems)

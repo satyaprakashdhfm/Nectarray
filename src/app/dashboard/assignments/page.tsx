@@ -4,6 +4,7 @@ import {
   PythonJudge,
   type PyQuestion,
 } from "@/components/dashboard/PythonJudge";
+import { briefs } from "@/lib/python-tests";
 import {
   SqlPractice,
   type SqlQuestion,
@@ -71,6 +72,10 @@ export default async function AssignmentsPage({
     supabase.from("practice_progress").select("question_id"),
   ]);
 
+  // Starter code and a few sample cases per problem. The expectations behind
+  // the rest of the cases stay on the server.
+  const problemBriefs = track === "python" ? await briefs() : {};
+
   /*
    * Progress is stored per question, so it spans both tracks. Narrow it to
    * the questions actually on this page — otherwise the Python sheet counted
@@ -108,6 +113,7 @@ export default async function AssignmentsPage({
         ) : (
           <PythonJudge
             questions={(questions ?? []) as unknown as PyQuestion[]}
+            briefs={problemBriefs}
             solved={solved}
           />
         )}
