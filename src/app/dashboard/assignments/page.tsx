@@ -4,6 +4,7 @@ import {
   PracticeSheet,
   type Question,
 } from "@/components/dashboard/PracticeSheet";
+import { SqlPlayground } from "@/components/dashboard/SqlPlayground";
 import { createClient, getViewer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -11,14 +12,6 @@ const TRACKS = [
   { id: "python", label: "Python problems" },
   { id: "sql", label: "SQL questions" },
 ] as const;
-
-/** The practice database SQL questions are written against. */
-const SCHEMA = [
-  "courses(course_id, course_name, duration_days, fee)",
-  "students(student_id, name, city, age, course_id, marks, joined_on)",
-  "employees(emp_id, emp_name, manager_id, salary, department)",
-  "payments(payment_id, student_id, amount, paid_on, method)",
-];
 
 export default async function AssignmentsPage({
   searchParams,
@@ -83,18 +76,8 @@ export default async function AssignmentsPage({
       </nav>
 
       {track === "sql" && (
-        <div className="card mt-6 p-5 sm:p-6">
-          <h2 className="eyebrow">The practice database</h2>
-          <ul className="mt-4 space-y-1.5">
-            {SCHEMA.map((table) => (
-              <li
-                key={table}
-                className="text-ink-soft font-mono text-[0.8125rem]"
-              >
-                {table}
-              </li>
-            ))}
-          </ul>
+        <div className="mt-6">
+          <SqlPlayground />
         </div>
       )}
 
