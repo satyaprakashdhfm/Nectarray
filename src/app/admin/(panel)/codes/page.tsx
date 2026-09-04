@@ -33,7 +33,7 @@ export default async function AdminCodesPage() {
               className="text-ink mb-2 block text-[0.8125rem] font-semibold"
               htmlFor="cohort"
             >
-              Cohort
+              Class
             </label>
             <select id="cohort" name="cohort_id" className={field}>
               {(cohorts ?? []).map((c) => (

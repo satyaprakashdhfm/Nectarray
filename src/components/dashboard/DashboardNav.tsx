@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, LifeBuoy, PenSquare } from "lucide-react";
+import {
+  BookOpen,
+  FolderGit2,
+  LayoutDashboard,
+  LifeBuoy,
+  PenSquare,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/notes", label: "Notes", icon: BookOpen },
   { href: "/dashboard/assignments", label: "Assignments", icon: PenSquare },
+  { href: "/dashboard/projects", label: "Projects", icon: FolderGit2 },
   { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
 ];
 

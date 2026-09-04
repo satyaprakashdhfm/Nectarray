@@ -33,7 +33,7 @@ const GOALS = [
 ];
 
 const TIMELINES = [
-  "Next cohort, as soon as possible",
+  "As soon as possible",
   "Within the next month",
   "In two to three months",
   "Still deciding",
@@ -138,14 +138,14 @@ export function EnrolForm() {
                     Not sure if it is <em>for you?</em>
                   </>
                 }
-                lede="Answer three short questions and we will tell you honestly whether this cohort fits — including if it does not."
+                lede="Answer three short questions and we will tell you honestly whether the programme fits — including if it does not."
               />
 
               <ul className="mt-10 space-y-3">
                 {[
                   "We reply within one business day",
                   "No sales call unless you ask for one",
-                  "Five seats, so we say no more often than yes",
+                  "Few places, so we say no more often than yes",
                 ].map((point) => (
                   <li key={point} className="flex gap-3">
                     <Check

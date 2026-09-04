@@ -1,4 +1,4 @@
-/** NectArray Academy and its flagship cohort. */
+/** NectArray Academy and its flagship programme. */
 import type { Cta, CurriculumModule, Fact, Faq, IconCard, Link } from "@/types";
 
 export const academy: {
@@ -25,10 +25,10 @@ export const academy: {
 } = {
   eyebrow: "04 — NectArray Academy",
   title: "We teach the stack we ship with.",
-  lede: "Our flagship programme takes you from no code at all to reading, writing and defending real Python and SQL — taught live, in cohorts of five, by engineers who do this work for clients every week.",
+  lede: "Our flagship programme takes you from no code at all to reading, writing and defending real Python and SQL — taught live, in a small group, by engineers who do this work for clients every week.",
   course: {
-    badge: "Flagship cohort",
-    tag: "Cohort 01 · Applications open",
+    badge: "Flagship programme",
+    tag: "Applications open",
     title: "Python, SQL & Data Science",
     summary:
       "A 45-day placement programme for people moving into data science and AI. Python, then SQL, then the parts of getting hired that nobody teaches — built as practice you do, not lectures you sit through.",
@@ -42,7 +42,7 @@ export const academy: {
       { label: "Duration", value: "45 days · 12 weeks" },
       { label: "Format", value: "Live online, hands-on" },
       { label: "Commitment", value: "6–8 hrs / week" },
-      { label: "Cohort size", value: "Capped at 5" },
+      { label: "Group size", value: "Deliberately small" },
     ],
 
     about: {
@@ -53,7 +53,7 @@ export const academy: {
         "It is built for the two people who keep asking us for it: someone starting out who wants to enter data science or agentic AI and does not know where the floor is, and someone already working who wants to switch domains and needs to be interview-ready without quitting their job first.",
       ],
       highlights: [
-        "Five seats a cohort, so every submission is read individually",
+        "A small group, so every submission is read individually",
         "Practice-first — you write more than you watch",
         "Every assignment reviewed and scored, not just marked done",
         "Written notes and worked examples you keep for good",
@@ -277,8 +277,8 @@ export const academy: {
         a: "Live. Every session is taught in real time and you are expected to interrupt it. There is no video library, deliberately: the value is in getting your specific mistake looked at while you still remember what you were thinking.",
       },
       {
-        q: "Why only five seats?",
-        a: "Because every assignment is read individually and scored with specific feedback. That does not scale, and we would rather run more cohorts than dilute one.",
+        q: "Why so few places?",
+        a: "Because every assignment is read individually and scored with specific feedback. That does not scale, and we would rather run more groups than dilute one.",
       },
       {
         q: "How are assignments assessed?",
@@ -297,7 +297,7 @@ export const academy: {
     cta: { label: "Enrol now", href: "#enrol" },
   },
   moreSoon:
-    "Cohorts in web development and applied AI engineering are in the works — ask to be told first.",
+    "Web development and applied AI engineering are in the works — ask to be told first.",
 };
 
 /** The in-page anchors the academy sub-nav scrolls between. */

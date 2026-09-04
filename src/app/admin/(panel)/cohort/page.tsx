@@ -17,10 +17,10 @@ export default async function AdminCohortPage() {
   return (
     <>
       <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
-        Cohort
+        Class
       </h1>
       <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem] leading-relaxed">
-        Every cohort already has a class room, and the{" "}
+        The class already has a room, and the{" "}
         <strong className="text-ink">Join class</strong> button on each
         student&rsquo;s dashboard opens it.
       </p>
@@ -46,7 +46,7 @@ export default async function AdminCohortPage() {
                     />
                     {room.custom
                       ? "Using your own meeting link"
-                      : "This cohort's room"}
+                      : "The class room"}
                   </p>
                   <a
                     href={room.url}
@@ -137,7 +137,7 @@ export default async function AdminCohortPage() {
                 type="submit"
                 className="bg-ink hover:bg-brand-deep text-cta-fg mt-7 rounded-full px-6 py-3 text-[0.9375rem] font-semibold transition-colors"
               >
-                Save cohort
+                Save
               </button>
             </form>
           );

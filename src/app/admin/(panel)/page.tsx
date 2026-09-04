@@ -59,7 +59,7 @@ const day = (value: string | null | undefined) =>
  *
  * One row per person rather than one screen per person: who they are, which
  * code let them in, how far through each track they are, what they paid.
- * Running a cohort of five means answering those four questions constantly,
+ * Teaching a small group means answering those four questions constantly,
  * and they were spread across three pages and the database.
  */
 export default async function AdminStudentsPage() {
@@ -143,7 +143,7 @@ export default async function AdminStudentsPage() {
         Students
       </h1>
       <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem]">
-        Signing up creates an account, not a seat. Move someone to{" "}
+        Signing up creates an account, not a place. Move someone to{" "}
         <strong className="text-ink">enrolled</strong> and the course opens for
         them.
       </p>
@@ -312,7 +312,7 @@ export default async function AdminStudentsPage() {
                         </form>
                       ) : (
                         <span className="text-ink-faint mt-2 block text-[0.8125rem]">
-                          No cohort exists
+                          No class exists
                         </span>
                       )}
                     </td>

@@ -11,9 +11,9 @@ import { Header } from "@/components/layout/Header";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Python, SQL & Data Science — 45-day placement cohort | NectArray",
+  title: "Python, SQL & Data Science — 45-day placement programme | NectArray",
   description:
-    "A 45-day live placement programme in Python, SQL and data science. Cohorts of five, assignments reviewed and scored, and five days on getting hired. Built for people moving into data science and AI.",
+    "A 45-day live placement programme in Python, SQL and data science. A small group, assignments reviewed and scored, and five days on getting hired. Built for people moving into data science and AI.",
   path: "/academy",
 });
 

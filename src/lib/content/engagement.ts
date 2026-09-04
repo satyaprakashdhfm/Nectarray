@@ -51,7 +51,7 @@ export const testimonials: Testimonial[] = [
     quote:
       "I came in having never written a line of code. Twelve weeks later I had a capstone project I could actually talk through in interviews.",
     name: "Student name",
-    role: "Academy, Cohort 01",
+    role: "Academy",
   },
 ];
 

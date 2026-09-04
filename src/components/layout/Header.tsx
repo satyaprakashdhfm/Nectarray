@@ -43,7 +43,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {/* Students already in a cohort need a door on every page, not only
+          {/* Students already enrolled need a door on every page, not only
               on /academy. Kept visually secondary to the sales CTA. */}
           <EnrolButton
             label="Log in"

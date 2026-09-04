@@ -101,7 +101,7 @@ export function EnrolHero() {
 
             <Reveal delay={250}>
               <p className="text-ink-faint mt-5 text-[0.875rem]">
-                Five seats per cohort. Applications are read in the order they
+                Places are limited. Applications are read in the order they
                 arrive.
               </p>
             </Reveal>

@@ -6,7 +6,7 @@ import { company } from "@/lib/content";
 const COPY: Record<string, { title: string; body: string }> = {
   none: {
     title: "You have not applied yet",
-    body: "Your account exists, but there is no application against a cohort. Apply and we will read it ourselves — five seats means we reply to every one.",
+    body: "Your account exists, but you have not applied for a place yet. Apply and we will read it ourselves — we reply to every one.",
   },
   applied: {
     title: "Your application is with us",
@@ -18,14 +18,14 @@ const COPY: Record<string, { title: string; body: string }> = {
   },
   withdrawn: {
     title: "This enrolment is closed",
-    body: "Your seat in this cohort is no longer active. If that looks wrong, write to us and we will sort it out.",
+    body: "Your place is no longer active. If that looks wrong, write to us and we will sort it out.",
   },
 };
 
 /**
  * What a signed-in-but-not-enrolled student sees instead of the course.
  *
- * Signing up creates an account, not a seat. Five seats sell out, and the
+ * Signing up creates an account, not a place. Places run out, and the
  * material is the product — so the dashboard shows status until an admin
  * moves the enrolment to 'enrolled'.
  */

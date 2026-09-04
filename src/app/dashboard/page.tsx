@@ -78,13 +78,13 @@ export default async function DashboardPage() {
         <div className="relative flex flex-wrap items-center justify-between gap-5">
           <div>
             <p className="text-[0.6875rem] font-semibold tracking-[0.14em] text-white/40 uppercase">
-              {cohort?.name ?? "Your cohort"}
+              Live class
             </p>
             <p className="display mt-2 text-[1.5rem]">Today&rsquo;s class</p>
             <p className="mt-1.5 text-[0.9375rem] text-white/60">
               {room
                 ? "Always the same room. Open it and wait, or join whoever is already there."
-                : "No meeting link has been set for this cohort yet."}
+                : "No meeting link has been set yet."}
             </p>
           </div>
 

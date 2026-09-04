@@ -52,7 +52,7 @@ export async function setEnrolmentStatus(formData: FormData) {
 export async function createEnrolment(formData: FormData) {
   const userId = String(formData.get("user_id") ?? "");
   const cohortId = String(formData.get("cohort_id") ?? "");
-  if (!userId || !cohortId) throw new Error("Missing student or cohort.");
+  if (!userId || !cohortId) throw new Error("Missing student or class.");
 
   const supabase = await assertAdmin();
   const { error } = await supabase
@@ -65,7 +65,7 @@ export async function createEnrolment(formData: FormData) {
 
 export async function updateCohort(formData: FormData) {
   const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("Missing cohort.");
+  if (!id) throw new Error("Missing class.");
 
   const meetUrl = String(formData.get("meet_url") ?? "").trim();
   const seatsRaw = String(formData.get("seats") ?? "").trim();
@@ -102,7 +102,7 @@ export async function updateCohort(formData: FormData) {
 export async function generateCode(formData: FormData) {
   const cohortId = String(formData.get("cohort_id") ?? "");
   const note = String(formData.get("note") ?? "").trim();
-  if (!cohortId) throw new Error("Pick a cohort.");
+  if (!cohortId) throw new Error("Pick a class.");
 
   const supabase = await assertAdmin();
   const { error } = await supabase.rpc("generate_enrolment_code", {
