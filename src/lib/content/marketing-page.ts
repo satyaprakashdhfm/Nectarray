@@ -21,6 +21,7 @@ export const marketingPage: {
     eyebrow: string;
     headline: [string, string];
     lede: string;
+    panel: { badge: string; lines: [string, string] };
     primaryCta: Link;
     secondaryCta: Link;
     stats: { value: string; label: string }[];
@@ -55,6 +56,11 @@ export const marketingPage: {
     eyebrow: "01 — Growth & Marketing",
     headline: ["Demand, not just", "impressions."],
     lede: "Paid media, organic content, creators, and the newest channel nobody has a playbook for yet — what an AI assistant says when someone asks it to recommend a business like yours. Run by the same team that builds the site the traffic lands on, so nothing gets thrown over a wall.",
+    /** Overlaid on the hero panel, the way /academy badges its card. */
+    panel: {
+      badge: "The channel map",
+      lines: ["Every channel.", "Measured properly."] as [string, string],
+    },
     primaryCta: { label: "Get a plan", href: "/contact#enquiry" },
     secondaryCta: { label: "See the channels", href: "#channels" },
     stats: [

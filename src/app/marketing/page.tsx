@@ -229,43 +229,71 @@ export default function MarketingPage() {
                     </a>
                   </div>
                 </Reveal>
-
-                <Reveal delay={300}>
-                  <dl className="border-line mt-10 grid max-w-lg grid-cols-3 gap-6 border-t pt-7">
-                    {hero.stats.map((stat) => (
-                      <div key={stat.label}>
-                        <dt className="sr-only">{stat.label}</dt>
-                        <dd>
-                          <span className="display ink-gradient block text-[1.75rem] leading-none sm:text-[2rem]">
-                            {stat.value}
-                          </span>
-                          <span className="text-ink-soft mt-2 block text-[0.8125rem] leading-snug">
-                            {stat.label}
-                          </span>
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                </Reveal>
               </div>
 
+              {/*
+               * Composed the way /academy's hero card is, rather than being a picture
+               * in a border. A bare 16:9 image is much shorter than the copy beside
+               * it, so it floated mid-column with dead air above and below. Badged,
+               * captioned, and closed with the numbers, the panel fills its side and
+               * reads as designed.
+               *
+               * The numbers moved in here out of the copy column for the same reason:
+               * they were what made that side the taller of the two.
+               */}
               <Reveal delay={150}>
                 <div className="relative">
                   <div
                     className="from-brand/25 to-leaf/20 absolute -inset-6 -z-10 rounded-full bg-gradient-to-br blur-3xl"
                     aria-hidden
                   />
-                  <div className="border-night-line bg-night relative aspect-[16/9] overflow-hidden rounded-[1.75rem] border shadow-[0_30px_70px_-30px_rgba(11,23,32,0.55)]">
-                    <Image
-                      src="/hero/marketing-hero.jpg"
-                      alt=""
-                      aria-hidden
-                      fill
-                      sizes="(min-width: 1024px) 46vw, 92vw"
-                      loading="eager"
-                      className="object-cover"
-                    />
-                  </div>
+                  <article className="border-night-line bg-night relative overflow-hidden rounded-[1.75rem] border text-white shadow-[0_30px_70px_-30px_rgba(11,23,32,0.55)]">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden">
+                      <Image
+                        src="/hero/marketing-hero.jpg"
+                        alt=""
+                        aria-hidden
+                        fill
+                        sizes="(min-width: 1024px) 46vw, 92vw"
+                        loading="eager"
+                        className="object-cover"
+                      />
+                      {/* Scrim, so the badge and the line over it hold their contrast
+                          whatever the artwork is doing underneath. */}
+                      <div
+                        className="from-night/95 via-night/40 absolute inset-0 bg-gradient-to-t to-transparent"
+                        aria-hidden
+                      />
+
+                      <span className="bg-night/70 text-brand ring-brand/30 absolute top-5 left-5 inline-flex items-center rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase ring-1 backdrop-blur">
+                        {hero.panel.badge}
+                      </span>
+
+                      <p className="display absolute bottom-5 left-5 text-[1.375rem] leading-tight sm:text-[1.625rem]">
+                        <span className="text-brand">
+                          {hero.panel.lines[0]}
+                        </span>
+                        <br />
+                        {hero.panel.lines[1]}
+                      </p>
+                    </div>
+
+                    <dl className="border-night-line grid grid-cols-3 gap-x-5 gap-y-4 border-t p-6 sm:p-7">
+                      {hero.stats.map((stat) => (
+                        <div key={stat.label}>
+                          <dt className="sr-only">{stat.label}</dt>
+                          <dd>
+                            <span className="display block text-[1.5rem] leading-none text-white sm:text-[1.75rem]">
+                              {stat.value}
+                            </span>
+                            <span className="mt-2 block text-[0.75rem] leading-snug text-white/55">
+                              {stat.label}
+                            </span>
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </article>
                 </div>
               </Reveal>
             </div>

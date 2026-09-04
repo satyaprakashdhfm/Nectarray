@@ -22,6 +22,11 @@ export const agenticAiPage = {
       { value: "MCP", label: "Native, not bolted on" },
       { value: "100%", label: "Yours to host and own" },
     ],
+    /** Overlaid on the hero panel, the way /academy badges its card. */
+    panel: {
+      badge: "The tooling",
+      lines: ["Built on harnesses.", "Not from scratch."] as [string, string],
+    },
     primaryCta: { label: "Scope an agent", href: "/contact#enquiry" },
     secondaryCta: { label: "See what we build", href: "#capabilities" },
   },
