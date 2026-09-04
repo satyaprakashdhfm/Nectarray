@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { EnrolButton } from "@/components/auth/EnrolButton";
 import { PlusPair, Sparkle, Squiggle } from "@/components/academy/Doodles";
 import { Icon } from "@/components/ui/Icon";
@@ -6,6 +7,27 @@ import { academy } from "@/lib/content";
 
 /** Stand-ins for the faces of a cohort we are not going to photograph. */
 const initials = ["A", "R", "S", "K"];
+
+/**
+ * The hero artwork.
+ *
+ * Cropped to a square and anchored right, because that is the only part of
+ * the supplied banner we can use: the artwork — desk, monitors, agent graph
+ * — occupies its right ~45%, and its left half is a headline, a strapline
+ * and a "100+ Students" badge baked into the pixels.
+ *
+ * That baked text cannot be shown. It reads "Nectarcourses", which is not
+ * this company; it repeats the h1 sitting next to it, in a typeface we do
+ * not use and cannot restyle; and "100+ Students" contradicts the whole
+ * pitch of the programme, which is five seats and every submission read
+ * individually.
+ *
+ * To reframe it: the aspect ratio is what decides how much shows, since
+ * `cover` anchored right reveals `aspect / 2.24` of the width. Square gives
+ * the right 45%, starting past the last of the baked text. Anything wider
+ * than roughly 1.05:1 pulls that strapline back into frame.
+ */
+const HERO_ART = "/academy-hero.jpg";
 
 /**
  * The top of the academy page.
@@ -111,40 +133,71 @@ export function AcademyHero() {
                 className="from-amber/25 to-brand/20 absolute -inset-6 -z-10 rounded-full bg-gradient-to-br blur-3xl"
                 aria-hidden
               />
-              <article className="border-night-line bg-night relative overflow-hidden rounded-[1.75rem] border p-8 text-white shadow-[0_30px_70px_-30px_rgba(11,23,32,0.55)] sm:p-10">
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  aria-hidden
-                >
-                  <div className="bg-leaf/20 absolute -top-24 -right-16 size-72 rounded-full blur-[90px]" />
-                  <div className="bg-brand/25 absolute -bottom-28 -left-16 size-72 rounded-full blur-[90px]" />
-                </div>
+              <article className="border-night-line bg-night relative overflow-hidden rounded-[1.75rem] border text-white shadow-[0_30px_70px_-30px_rgba(11,23,32,0.55)]">
+                {/* Artwork ------------------------------------------- */}
+                <div className="relative aspect-square w-full overflow-hidden">
+                  {/* Behind the image, so the panel still reads as a designed
+                      surface while it loads rather than as a hole. */}
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    aria-hidden
+                  >
+                    <div className="bg-leaf/20 absolute -top-24 -right-16 size-72 rounded-full blur-[90px]" />
+                    <div className="bg-brand/25 absolute -bottom-28 -left-16 size-72 rounded-full blur-[90px]" />
+                  </div>
 
-                <div className="relative">
-                  <span className="bg-leaf/15 text-leaf inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase">
+                  {/*
+                   * Decorative: everything it depicts is stated in words in
+                   * the column beside it, so alt text would only read the h1
+                   * out a second time.
+                   *
+                   * eager rather than `preload` — Next 16 deprecated
+                   * `priority`, and its own guidance is that eager is the
+                   * right tool unless the image is definitely the LCP
+                   * element. Here the display headline almost certainly is.
+                   */}
+                  <Image
+                    src={HERO_ART}
+                    alt=""
+                    aria-hidden
+                    fill
+                    sizes="(min-width: 1024px) 46vw, (min-width: 640px) 90vw, 100vw"
+                    loading="eager"
+                    className="relative object-cover object-right"
+                  />
+
+                  {/* Scrim, so the badge and the line over the desk keep
+                      their contrast whatever sits behind them. */}
+                  <div
+                    className="from-night/95 via-night/40 pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent"
+                    aria-hidden
+                  />
+
+                  <span className="bg-night/70 text-leaf ring-leaf/25 absolute top-5 left-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase ring-1 backdrop-blur">
                     <Icon name="graduation" className="size-3.5" />
                     {course.badge}
                   </span>
 
-                  <p className="display mt-6 text-[1.75rem] leading-tight">
+                  <p className="display absolute bottom-5 left-5 text-[1.5rem] leading-tight sm:text-[1.75rem]">
                     <span className="text-leaf">Taught live.</span>
                     <br />
                     One small group.
                   </p>
-
-                  <dl className="border-night-line mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t pt-8">
-                    {course.facts.map((fact) => (
-                      <div key={fact.label}>
-                        <dt className="text-[0.6875rem] font-semibold tracking-[0.14em] text-white/40 uppercase">
-                          {fact.label}
-                        </dt>
-                        <dd className="mt-1.5 text-[1.0625rem] font-semibold">
-                          {fact.value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
                 </div>
+
+                {/* Facts --------------------------------------------- */}
+                <dl className="border-night-line grid grid-cols-2 gap-x-6 gap-y-5 border-t p-7 sm:p-8">
+                  {course.facts.map((fact) => (
+                    <div key={fact.label}>
+                      <dt className="text-[0.6875rem] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                        {fact.label}
+                      </dt>
+                      <dd className="mt-1.5 text-[1.0625rem] font-semibold">
+                        {fact.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
               </article>
             </div>
           </Reveal>
