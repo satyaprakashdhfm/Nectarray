@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Plus, ShieldCheck } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
@@ -33,10 +34,23 @@ const BRAND = {
   chip: "bg-brand-deep",
 };
 
-/** Eyebrow with the accent rule the SectionHead component draws. */
-function Eyebrow({ children }: { children: string }) {
+/**
+ * Eyebrow with the accent rule the SectionHead component draws.
+ *
+ * `onDark` because the hero sits on the artwork now, and the `eyebrow`
+ * utility hard-codes ink-faint, which disappears against it.
+ */
+function Eyebrow({
+  children,
+  onDark = false,
+}: {
+  children: string;
+  onDark?: boolean;
+}) {
   return (
-    <p className="eyebrow flex items-center gap-2.5">
+    <p
+      className={`eyebrow flex items-center gap-2.5 ${onDark ? "text-white/60" : ""}`}
+    >
       <span className="bg-brand h-px w-6" aria-hidden />
       {children}
     </p>
@@ -94,7 +108,7 @@ function Tile({
   item,
   accent,
 }: {
-  item: { icon: string; title: string; body: string };
+  item: { icon: string; title: string; body: string; domain?: string };
   accent: typeof BRAND;
 }) {
   return (
@@ -105,11 +119,24 @@ function Tile({
         className={`absolute inset-x-0 top-0 h-1 ${accent.rule}`}
         aria-hidden
       />
-      <span
-        className={`grid size-9 place-items-center rounded-lg text-white ${accent.chip}`}
-      >
-        <Icon name={item.icon} className="size-[1.0625rem]" />
-      </span>
+      {/* A real mark where the service is a product — ChatGPT, Gemini,
+          Perplexity, YouTube — and the accent chip where it is a discipline
+          with no logo to show for it. */}
+      {item.domain ? (
+        <span className="border-line bg-canvas grid size-9 place-items-center rounded-lg border">
+          <BrandLogo
+            name={item.title}
+            domain={item.domain}
+            className="size-[1.125rem]"
+          />
+        </span>
+      ) : (
+        <span
+          className={`grid size-9 place-items-center rounded-lg text-white ${accent.chip}`}
+        >
+          <Icon name={item.icon} className="size-[1.0625rem]" />
+        </span>
+      )}
       <h3 className="text-ink mt-4 text-[0.9375rem] font-semibold tracking-tight">
         {item.title}
       </h3>
@@ -143,26 +170,39 @@ export default function MarketingPage() {
 
       <main id="main" className="pt-[72px]">
         {/* ── Hero ─────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden">
-          <div
-            className="pointer-events-none absolute inset-0 -z-10"
-            aria-hidden
-          >
-            <div className="from-brand-wash via-canvas to-mist absolute inset-0 bg-gradient-to-br" />
-            <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(120%_80%_at_50%_0%,#000_30%,transparent_78%)]" />
-            <div className="bg-brand/20 absolute -top-24 -left-32 size-[34rem] rounded-full blur-[140px]" />
-            <div className="bg-brand/16 absolute top-20 -right-28 size-[30rem] rounded-full blur-[140px]" />
+        {/*
+         * The hero runs on the artwork, so it is the one dark section on the
+         * page. The picture is the channel map this practice works across —
+         * the same platforms the Platforms section lists by name — which is
+         * what lets it be a background rather than decoration.
+         *
+         * Scrimmed flat rather than weighted to one side, unlike the agentic
+         * hero: this hero is two columns, with the lede and the numbers out
+         * on the right, so there is no side that can be left bright.
+         */}
+        <section className="bg-night relative overflow-hidden text-white">
+          <div className="pointer-events-none absolute inset-0" aria-hidden>
+            <Image
+              src="/hero/marketing-hero.jpg"
+              alt=""
+              fill
+              sizes="100vw"
+              loading="eager"
+              className="object-cover object-center"
+            />
+            <div className="bg-night/80 absolute inset-0" />
+            <div className="from-night absolute inset-0 bg-gradient-to-t to-transparent" />
           </div>
 
-          <div className="shell-wide py-20 sm:py-24 lg:py-28">
+          <div className="shell-wide relative pt-10 pb-20 sm:pt-12 sm:pb-24 lg:pt-14 lg:pb-28">
             <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-16">
               <div>
                 <Reveal>
-                  <Eyebrow>{hero.eyebrow}</Eyebrow>
+                  <Eyebrow onDark>{hero.eyebrow}</Eyebrow>
                 </Reveal>
 
                 <Reveal delay={80}>
-                  <h1 className="display text-ink mt-6 text-[2.5rem] leading-[1.02] sm:text-[3.4rem] lg:text-[4rem]">
+                  <h1 className="display mt-6 text-[2.5rem] leading-[1.02] text-white sm:text-[3.4rem] lg:text-[4rem]">
                     {hero.headline[0]}
                     <br />
                     <span className="ink-gradient">{hero.headline[1]}</span>
@@ -173,13 +213,13 @@ export default function MarketingPage() {
                   <div className="mt-9 flex flex-wrap items-center gap-3">
                     <a
                       href={hero.primaryCta.href}
-                      className="bg-ink text-cta-fg hover:bg-brand-deep rounded-full px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
+                      className="text-night hover:bg-brand rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors hover:text-white"
                     >
                       {hero.primaryCta.label}
                     </a>
                     <a
                       href={hero.secondaryCta.href}
-                      className="border-line bg-canvas text-ink hover:border-brand hover:text-brand-deep rounded-full border px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
+                      className="rounded-full border border-white/25 px-6 py-3.5 text-[0.9375rem] font-semibold text-white transition-colors hover:border-white/60"
                     >
                       {hero.secondaryCta.label}
                     </a>
@@ -191,11 +231,11 @@ export default function MarketingPage() {
                   stacking under a headline that is already tall. */}
               <div>
                 <Reveal delay={150}>
-                  <p className="lede">{hero.lede}</p>
+                  <p className="lede text-white/70">{hero.lede}</p>
                 </Reveal>
 
                 <Reveal delay={300}>
-                  <dl className="border-line mt-8 grid grid-cols-3 gap-6 border-t pt-7">
+                  <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-white/15 pt-7">
                     {hero.stats.map((stat) => (
                       <div key={stat.label}>
                         <dt className="sr-only">{stat.label}</dt>
@@ -203,7 +243,7 @@ export default function MarketingPage() {
                           <span className="display ink-gradient block text-[1.75rem] leading-none sm:text-[2rem]">
                             {stat.value}
                           </span>
-                          <span className="text-ink-soft mt-2 block text-[0.8125rem] leading-snug">
+                          <span className="mt-2 block text-[0.8125rem] leading-snug text-white/60">
                             {stat.label}
                           </span>
                         </dd>

@@ -18,7 +18,7 @@ const initials = ["A", "R", "S", "K"];
  * which is not this company; it would repeat the h1 immediately beside it in
  * a typeface we do not use, cannot restyle and no crawler can read; and
  * "100+ Students" contradicts the claim the rest of the page rests on, which
- * is a group small enough that every submission is read individually.
+ * is a group in which every submission is read individually.
  *
  * Cropping the file rather than masking it with CSS means that text is
  * absent from what ships, so no later reframing can bring it back. It also
@@ -52,7 +52,7 @@ export function AcademyHero() {
         <div className="bg-leaf/22 absolute -right-24 bottom-0 size-[26rem] rounded-full blur-[120px]" />
       </div>
 
-      <div className="shell relative py-14 sm:py-20 lg:py-24">
+      <div className="shell relative pt-8 pb-14 sm:pt-10 sm:pb-20 lg:pt-12 lg:pb-24">
         <Sparkle className="text-leaf absolute top-10 left-[46%] size-6 sm:size-7" />
         <PlusPair className="text-brand/70 absolute top-24 right-[8%] hidden w-11 lg:block" />
         <PlusPair className="text-leaf/80 absolute right-[3%] bottom-24 hidden w-10 lg:block" />
@@ -81,8 +81,8 @@ export function AcademyHero() {
 
             <Reveal delay={130}>
               <p className="text-brand-deep mt-6 max-w-xl text-[1.25rem] leading-[1.4] font-semibold sm:text-[1.4375rem]">
-                Python, SQL and data science — taught live, in a group small
-                enough that we read every line you write.
+                Python, SQL and data science — taught live, in a group where we
+                read every line you write.
               </p>
             </Reveal>
 
@@ -119,8 +119,10 @@ export function AcademyHero() {
                   ))}
                 </div>
                 <p className="text-ink-soft text-[0.9375rem]">
-                  <span className="text-ink font-semibold">Small batches</span>{" "}
-                  — every submission read individually.
+                  <span className="text-ink font-semibold">
+                    Every submission read
+                  </span>{" "}
+                  — individually, by the engineer who set it.
                 </p>
               </div>
             </Reveal>
@@ -181,7 +183,7 @@ export function AcademyHero() {
                   <p className="display absolute bottom-5 left-5 text-[1.5rem] leading-tight sm:text-[1.75rem]">
                     <span className="text-leaf">Taught live.</span>
                     <br />
-                    One small group.
+                    One focused group.
                   </p>
                 </div>
 

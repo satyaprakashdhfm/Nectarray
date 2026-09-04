@@ -55,8 +55,8 @@ export const hero = {
   microNote: "No pitch deck. One call, and a straight answer on what you need.",
   stats: [
     { value: "4", label: "Practices under one roof" },
-    { value: "2–6", label: "Weeks to first launch" },
-    { value: "100%", label: "Senior-built, no handoffs" },
+    { value: "160+", label: "Integrations we work with" },
+    { value: "25+", label: "Platforms and consoles" },
   ],
 };
 

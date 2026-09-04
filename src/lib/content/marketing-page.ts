@@ -8,6 +8,13 @@
 import type { Faq, IconCard, Link, Step } from "@/types";
 import type { BrandGroup } from "./practices";
 
+/**
+ * A service tile. `domain` only where the service is itself a product —
+ * the tile then shows that product's mark instead of a lucide glyph, and
+ * the ones that are disciplines rather than brands keep the glyph.
+ */
+type Tile = IconCard & { domain?: string };
+
 export const marketingPage: {
   meta: { title: string; description: string };
   hero: {
@@ -19,12 +26,12 @@ export const marketingPage: {
     stats: { value: string; label: string }[];
   };
   families: { eyebrow: string; title: string; lede: string };
-  brand: { eyebrow: string; title: string; lede: string; items: IconCard[] };
+  brand: { eyebrow: string; title: string; lede: string; items: Tile[] };
   aiSearch: {
     eyebrow: string;
     title: string;
     lede: string;
-    items: IconCard[];
+    items: Tile[];
     honesty: { title: string; body: string };
   };
   platforms: {
@@ -51,9 +58,9 @@ export const marketingPage: {
     primaryCta: { label: "Get a plan", href: "/contact#enquiry" },
     secondaryCta: { label: "See the channels", href: "#channels" },
     stats: [
+      { value: "8", label: "Channels run in-house" },
+      { value: "25+", label: "Platforms and consoles" },
       { value: "4", label: "Practices under one roof" },
-      { value: "1", label: "Team for build and demand" },
-      { value: "0", label: "Channels we run on faith" },
     ],
   },
 
@@ -86,6 +93,7 @@ export const marketingPage: {
       {
         icon: "message",
         title: "YouTube",
+        domain: "youtube.com",
         body: "Long-form that still earns search traffic two years later, plus the Shorts cut from the same shoot.",
       },
       {
@@ -129,21 +137,25 @@ export const marketingPage: {
       {
         icon: "search",
         title: "ChatGPT visibility",
+        domain: "openai.com",
         body: "Making your site and your claims legible to what ChatGPT browses and cites, and checking what it currently says.",
       },
       {
         icon: "globe",
         title: "Google AI Overviews & AI Mode",
+        domain: "google.com",
         body: "Structuring pages so the answer to a real question is on one, clearly, in the form these summaries lift.",
       },
       {
         icon: "sparkles",
         title: "Gemini visibility",
+        domain: "gemini.google.com",
         body: "The same groundwork against Gemini, which leans harder on your Business Profile and corroborating sources.",
       },
       {
         icon: "bot",
         title: "Perplexity & other AI search",
+        domain: "perplexity.ai",
         body: "Citation-led engines reward pages that answer precisely and say where the numbers came from.",
       },
       {

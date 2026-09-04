@@ -15,7 +15,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Python, SQL & Data Science — live placement programme | NectArray",
   description:
-    "A live placement programme in Python, SQL and data science. A small group, assignments reviewed and scored, and a block on getting hired. Built for people moving into data science and AI.",
+    "A live placement programme in Python, SQL and data science. Assignments reviewed and scored, and a block on getting hired. Built for people moving into data science and AI.",
   path: "/academy",
 });
 

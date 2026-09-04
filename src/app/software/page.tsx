@@ -12,7 +12,7 @@ export const metadata: Metadata = pageMetadata({
   title:
     "Software & web development — websites, e-commerce, dashboards and apps",
   description:
-    "Portfolio and business sites, e-commerce in any category, dashboards and internal tools, agentic AI and mobile apps. Integrated with Shiprocket, Petpooja, WhatsApp, Razorpay, Tally and anything else with an API — built by a small senior team for a fraction of agency cost.",
+    "Portfolio and business sites, e-commerce in any category, dashboards and internal tools, agentic AI and mobile apps. Integrated with Shiprocket, Petpooja, WhatsApp, Razorpay, Tally and anything else with an API — built by senior engineers for a fraction of agency cost.",
   path: "/software",
 });
 

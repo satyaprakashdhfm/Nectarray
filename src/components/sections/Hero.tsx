@@ -34,7 +34,7 @@ export function Hero() {
         <div className="bg-teal/20 absolute bottom-0 left-1/4 size-[26rem] rounded-full blur-[120px]" />
       </div>
 
-      <div className="shell grid items-center gap-16 py-20 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:py-28">
+      <div className="shell grid items-center gap-16 pt-8 pb-20 sm:pt-10 sm:pb-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-12 lg:pb-28">
         {/* ---------------------------------------------------------------- */}
         <div>
           <Reveal>

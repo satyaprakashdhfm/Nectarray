@@ -68,7 +68,12 @@ export const marketing: {
   eyebrow: string;
   title: string;
   lede: string;
-  channels: IconCard[];
+  /**
+   * `logos` names the platforms the card actually covers. Several cover
+   * more than one, so it is a list — a single mark cannot stand for
+   * "Amazon and Flipkart" without misleading someone.
+   */
+  channels: (IconCard & { logos: Brand[] })[];
   note: string;
 } = {
   eyebrow: "01 — Growth & Marketing",
@@ -78,41 +83,73 @@ export const marketing: {
     {
       icon: "target",
       title: "Meta Ads",
+      logos: [
+        { name: "Meta", domain: "meta.com" },
+        { name: "Instagram", domain: "instagram.com" },
+        { name: "Facebook", domain: "facebook.com" },
+      ],
       body: "Facebook and Instagram campaigns — full-funnel structure, creative testing at volume, Advantage+ where it earns its place, and Conversions API so iOS traffic stops disappearing.",
     },
     {
       icon: "search",
       title: "Google Ads",
+      logos: [
+        { name: "Google Ads", domain: "ads.google.com" },
+        { name: "YouTube", domain: "youtube.com" },
+      ],
       body: "Search, Performance Max, Shopping, YouTube and Demand Gen. Tight keyword and negative hygiene, landing pages built by our own engineers, bidding tuned to margin rather than clicks.",
     },
     {
       icon: "globe",
       title: "SEO & Content",
+      logos: [
+        { name: "Google", domain: "google.com" },
+        { name: "Search Console", domain: "search.google.com" },
+      ],
       body: "Technical audits, site architecture, programmatic pages, local and Maps optimisation, plus a genuine editorial calendar — not 500-word filler.",
     },
     {
       icon: "share",
       title: "Social & Content Management",
+      logos: [
+        { name: "Instagram", domain: "instagram.com" },
+        { name: "LinkedIn", domain: "linkedin.com" },
+        { name: "YouTube", domain: "youtube.com" },
+      ],
       body: "Instagram, LinkedIn and YouTube handled end to end: monthly calendar, shoots, reels and short-form edits, carousels, captions, scheduling, community replies and reporting.",
     },
     {
       icon: "briefcase",
       title: "LinkedIn & B2B",
+      logos: [{ name: "LinkedIn", domain: "linkedin.com" }],
       body: "For longer sales cycles: LinkedIn Ads, founder-led content, lead-gen forms and outbound sequences that feed a CRM instead of a spreadsheet.",
     },
     {
       icon: "message",
       title: "WhatsApp & Lifecycle",
+      logos: [
+        { name: "WhatsApp Business", domain: "business.whatsapp.com" },
+        { name: "Mailchimp", domain: "mailchimp.com" },
+      ],
       body: "WhatsApp Business API, email and SMS flows — abandoned cart, onboarding, win-back and retention journeys wired to your store or CRM.",
     },
     {
       icon: "chart",
       title: "Analytics & CRO",
+      logos: [
+        { name: "Google Analytics", domain: "analytics.google.com" },
+        { name: "Tag Manager", domain: "tagmanager.google.com" },
+      ],
       body: "GA4 and GTM done correctly, server-side tracking, offline conversion imports, dashboards you actually read, and A/B tests on the pages that carry the revenue.",
     },
     {
       icon: "cart",
       title: "Marketplace & Commerce",
+      logos: [
+        { name: "Amazon", domain: "amazon.in" },
+        { name: "Flipkart", domain: "flipkart.com" },
+        { name: "Shopify", domain: "shopify.com" },
+      ],
       body: "Amazon and Flipkart ad management, listing and catalogue optimisation, and feed management for Shopping campaigns.",
     },
   ],
@@ -684,13 +721,13 @@ export const software: {
   why: {
     eyebrow: "Why NectArray",
     title:
-      "A small team, a fraction of the cost, and no agency layer in between.",
+      "Senior engineers, a fraction of the cost, and no agency layer in between.",
     lede: "Put our quote next to an agency's for the same scope and the gap is not a discount — it is everything you were being charged for that was never engineering.",
     points: [
       {
         icon: "code",
         title: "The people on the call write the code",
-        body: "No account manager relaying your requirements to someone you never meet, and no junior quietly doing the work under a senior's name. Small enough that you know exactly who built each part, and can ask them about it.",
+        body: "No account manager relaying your requirements to someone you never meet, and no junior quietly doing the work under a senior's name. You know exactly who built each part, and you can ask them about it directly.",
       },
       {
         icon: "target",

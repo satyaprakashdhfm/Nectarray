@@ -116,8 +116,8 @@ export const faqs: Faq[] = [
     a: "Yes. Plenty of clients take only the build or only the marketing. The four practices are designed to compound when combined, but none of them depends on the others.",
   },
   {
-    q: "How small a project will you take?",
-    a: "A single well-built landing page is a perfectly good first project, and it is often the right one. We would rather start small and earn the larger engagement than oversell the first conversation.",
+    q: "Is there a minimum project size?",
+    a: "No. A single well-built landing page is a perfectly good first project, and it is often the right one — most of our larger engagements started as exactly that and grew because the first one worked.",
   },
   {
     q: "Who owns the code and the accounts?",

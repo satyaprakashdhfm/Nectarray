@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
@@ -37,9 +38,24 @@ export function Marketing({ asPage = false }: { asPage?: boolean } = {}) {
           {marketing.channels.map((channel, i) => (
             <Reveal as="li" key={channel.title} delay={(i % 4) * 70}>
               <article className="card card-hover h-full p-6">
-                <span className="bg-brand-deep grid size-11 place-items-center rounded-xl text-white">
-                  <Icon name={channel.icon} className="size-5" />
-                </span>
+                {/* The platforms themselves, rather than a glyph standing in
+                    for them. A buyer scanning for "Flipkart" is looking for
+                    the mark, not a shopping-trolley outline. */}
+                <ul className="flex flex-wrap items-center gap-1.5">
+                  {channel.logos.map((brand) => (
+                    <li
+                      key={brand.name}
+                      className="border-line bg-canvas grid size-9 place-items-center rounded-lg border"
+                      title={brand.name}
+                    >
+                      <BrandLogo
+                        name={brand.name}
+                        domain={brand.domain}
+                        className="size-[1.125rem]"
+                      />
+                    </li>
+                  ))}
+                </ul>
                 <h3 className="text-ink mt-5 text-[1.0625rem] font-semibold tracking-tight">
                   {channel.title}
                 </h3>

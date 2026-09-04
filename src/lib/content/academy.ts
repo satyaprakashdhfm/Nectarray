@@ -64,7 +64,7 @@ export const academy: {
       { label: "Duration", value: "12 weeks" },
       { label: "Format", value: "Live online, hands-on" },
       { label: "Commitment", value: "6–8 hrs / week" },
-      { label: "Group size", value: "Deliberately small" },
+      { label: "Group size", value: "Capped by design" },
     ],
 
     about: {
@@ -75,7 +75,7 @@ export const academy: {
         "It is built for the two people who keep asking us for it: someone starting out who wants to enter data science or agentic AI and does not know where the floor is, and someone already working who wants to switch domains and needs to be interview-ready without quitting their job first.",
       ],
       highlights: [
-        "A small group, so every submission is read individually",
+        "Every submission read individually, with the lines that cost you marks named",
         "Practice-first — you write more than you watch",
         "Every assignment reviewed and scored, not just marked done",
         "Written notes and worked examples you keep for good",

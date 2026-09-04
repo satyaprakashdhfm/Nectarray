@@ -60,7 +60,7 @@ export function Practices() {
           eyebrow="What we do"
           title={
             <>
-              Four practices. <em>One team.</em>
+              Four practices, <em>end to end.</em>
             </>
           }
           lede="Agencies usually pick a lane. We deliberately did not — because the website, the campaign pointing at it, the agent answering on it and the people who can build the next one are the same problem wearing four hats."

@@ -26,8 +26,8 @@ export function WhyUs() {
           eyebrow={why.eyebrow}
           title={
             <>
-              A small team, <em>a fraction of the cost,</em> and no agency layer
-              in between.
+              Senior engineers, <em>a fraction of the cost,</em> and no agency
+              layer in between.
             </>
           }
           lede={why.lede}
