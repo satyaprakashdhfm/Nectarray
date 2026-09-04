@@ -20,11 +20,25 @@ export async function middleware(request: NextRequest) {
    * the supported way to tell it, and the notes shell needs it so the rail
    * can show the open lesson's own contents beside the lesson list.
    */
+  /*
+   * The id, once we have validated it. Every dashboard page then skips its own
+   * getUser() — which is a network call to the auth server, not a local check,
+   * so it was costing a second full round trip on every navigation, and a
+   * third on a lesson page where the layout asks as well.
+   *
+   * It is only a shortcut past re-validation. Row-level security still scopes
+   * every query by the real token in the cookie, so a forged id reads nothing;
+   * and the header is set, never appended, so a browser cannot supply one.
+   */
+  let userId: string | null = null;
+
   // Read fresh each time: `request.cookies.set` writes through to the cookie
   // header, so snapshotting once would drop a refreshed session token.
   const forward = () => {
     const headers = new Headers(request.headers);
     headers.set("x-pathname", request.nextUrl.pathname);
+    headers.delete("x-user-id");
+    if (userId) headers.set("x-user-id", userId);
     return NextResponse.next({ request: { headers } });
   };
 
@@ -50,6 +64,14 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Rebuild the response now that the id is known, so it carries the header.
+  if (user) {
+    userId = user.id;
+    const withId = forward();
+    response.cookies.getAll().forEach((cookie) => withId.cookies.set(cookie));
+    response = withId;
+  }
 
   const { pathname } = request.nextUrl;
 

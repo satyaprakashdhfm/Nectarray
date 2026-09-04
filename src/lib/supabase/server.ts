@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { authEnabled } from "./config";
 
@@ -49,17 +49,26 @@ export const getViewer = cache(async () => {
   if (!authEnabled) return { user: null, profile: null, enrolment: null };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { user: null, profile: null, enrolment: null };
+
+  /*
+   * The middleware validated the session moments ago and forwarded the id.
+   * Calling getUser() again here would be a second round trip to the auth
+   * server for an answer we already have — and on a lesson page, with the
+   * layout and the page both asking, it was the largest single cost of a
+   * navigation.
+   */
+  const forwarded = (await headers()).get("x-user-id");
+  const id = forwarded ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+  if (!id) return { user: null, profile: null, enrolment: null };
+
+  const user = { id };
 
   const [{ data: profile }, { data: enrolment }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("enrolments")
       .select("*, cohorts(*)")
-      .eq("user_id", user.id)
+      .eq("user_id", id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),

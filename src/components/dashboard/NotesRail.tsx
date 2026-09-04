@@ -64,6 +64,7 @@ export function NotesRail({
             <Link
               key={module.slug}
               href={`/dashboard/notes?module=${module.slug}`}
+              prefetch={false}
               aria-current={module.slug === active?.slug ? "true" : undefined}
               className={cn(
                 "flex-1 rounded-lg px-3 py-2 text-center text-[0.875rem] font-medium transition-colors",
@@ -89,6 +90,9 @@ export function NotesRail({
                 <li key={lesson.id}>
                   <Link
                     href={href}
+                    // Fourteen lessons in view meant fourteen speculative
+                    // renders of a 40 KB page nobody asked for.
+                    prefetch={false}
                     aria-current={current ? "page" : undefined}
                     className={cn(
                       "-ml-px flex flex-col border-l-2 py-2 pl-4 transition-colors",
