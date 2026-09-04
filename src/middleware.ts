@@ -38,14 +38,25 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isPrivate =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
 
-  if (isPrivate && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/academy";
-    url.searchParams.set("signin", "1");
-    return NextResponse.redirect(url);
+  // The two areas have separate doors. /admin/login is the admin one, so it
+  // has to stay reachable while signed out.
+  const isAdminArea =
+    pathname.startsWith("/admin") && !pathname.startsWith("/admin/login");
+
+  if (!user) {
+    if (isAdminArea) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    if (pathname.startsWith("/dashboard")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/academy";
+      url.searchParams.set("signin", "1");
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
