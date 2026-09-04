@@ -188,7 +188,20 @@ export const software: {
     title: string;
     lede: string;
     points: IconCard[];
-    closer: { title: string; body: string };
+  };
+  /**
+   * The one ask on the page, shown twice — once above the catalogue and once
+   * closing it. Same offer both times, so a reader who is already convinced
+   * never has to scroll past four sections to find the button.
+   */
+  quote: {
+    eyebrow: string;
+    title: string;
+    /** One line, for the band at the top. */
+    lead: string;
+    /** The full pitch, for the band that closes the page. */
+    body: string;
+    cta: Link;
   };
 } = {
   eyebrow: "02 — Software & Web",
@@ -705,10 +718,14 @@ export const software: {
         body: "One WhatsApp group or one call, with the engineers in it. You see working software as it is built rather than a status report about it, so nothing is a surprise at handover.",
       },
     ],
-    closer: {
-      title: "Get a quote you can compare",
-      body: "Tell us what you need and you will get a written scope and a fixed price against it. Take that number to anyone else you are considering — that comparison is the entire pitch, and it is the reason most of our work comes from people who did exactly that.",
-    },
+  },
+
+  quote: {
+    eyebrow: "Get a quote",
+    title: "Tell us what you are building.",
+    lead: "A short note is enough. You will get a written scope and a fixed price against it — no retainer, and no discovery fee.",
+    body: "Send a short note and you will get a written scope and a fixed price against it — no retainer, no discovery fee, and a straight answer if we are not the right people for the job. Then take that number to anyone else you are considering: that comparison is the entire pitch, and it is the reason most of our work comes from people who did exactly that.",
+    cta: { label: "Start a project", href: "/contact" },
   },
 };
 

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { PageCta } from "@/components/layout/PageCta";
 import { Software } from "@/components/sections/Software";
 import { Integrations } from "@/components/software/Integrations";
+import { QuoteSection } from "@/components/software/QuoteCta";
 import { StackGrid } from "@/components/software/StackGrid";
 import { WhyUs } from "@/components/software/WhyUs";
 import { pageMetadata } from "@/lib/seo";
@@ -24,8 +24,15 @@ export const metadata: Metadata = pageMetadata({
  *   what it is built on → and we know your platform down to the service
  *   why us             → and it costs a fraction of the alternative
  *
- * The closing CTA stays last, so the price comparison is the final claim
- * before the reader is asked for anything.
+ * The quote block appears twice — compact above the catalogue and in full
+ * closing the page. Someone who arrived already knowing what they want
+ * should not have to read four sections of chips to find the button, and
+ * someone who read all of it should not have to scroll back up.
+ *
+ * It replaces the shared PageCta here rather than sitting above it: the two
+ * were asking for the same thing in different words, one after the other,
+ * which reads as neither being the real one. PageCta is untouched and still
+ * closes every other route.
  */
 export default function SoftwarePage() {
   return (
@@ -37,10 +44,7 @@ export default function SoftwarePage() {
         <StackGrid />
         <WhyUs />
       </main>
-      <PageCta
-        title="Tell us what you are building."
-        body="Send a short note and you will get a written scope and a fixed price against it — no retainer, no discovery fee, and a straight answer if we are not the right people for the job."
-      />
+      <QuoteSection />
       <Footer />
     </>
   );

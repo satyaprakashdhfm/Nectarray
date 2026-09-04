@@ -2,10 +2,10 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CategoryMark } from "@/components/software/CategoryMark";
 import { headGap, sectionPad, wideShell } from "@/components/software/layout";
+import { QuoteBand } from "@/components/software/QuoteCta";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { software } from "@/lib/content";
-import { cn } from "@/lib/utils";
 
 /**
  * What we build, as a showcase rather than a service list.
@@ -40,7 +40,12 @@ export function Software({ asPage = false }: { asPage?: boolean } = {}) {
           lede={software.lede}
         />
 
-        <ul className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-3", headGap)}>
+        {/* The ask, up front. Repeated in full at the foot of the page. */}
+        <Reveal delay={160} className={headGap}>
+          <QuoteBand compact />
+        </Reveal>
+
+        <ul className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {software.services.map((service, i) => (
             <Reveal as="li" key={service.title} delay={(i % 3) * 70}>
               <article className="card card-hover flex h-full flex-col overflow-hidden p-5">

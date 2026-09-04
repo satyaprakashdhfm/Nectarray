@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
 import { headGap, sectionPad, wideShell } from "@/components/software/layout";
 import { Reveal } from "@/components/ui/Reveal";
@@ -52,33 +50,6 @@ export function WhyUs() {
             </Reveal>
           ))}
         </ul>
-
-        <Reveal delay={120}>
-          <div className="brand-band mt-4 overflow-hidden rounded-2xl p-6 sm:p-8">
-            <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
-              <div>
-                <h3 className="display text-[1.375rem] text-white sm:text-[1.625rem]">
-                  {why.closer.title}
-                </h3>
-                <p className="mt-2.5 max-w-2xl text-[0.875rem] leading-relaxed text-white/85">
-                  {why.closer.body}
-                </p>
-              </div>
-
-              <Link
-                href="/contact"
-                className="text-ink group inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors hover:bg-white/90 lg:self-auto"
-              >
-                Get a quote
-                <ArrowRight
-                  className="size-4 transition-transform duration-300 group-hover:translate-x-1"
-                  strokeWidth={2.25}
-                  aria-hidden
-                />
-              </Link>
-            </div>
-          </div>
-        </Reveal>
       </div>
     </section>
   );
