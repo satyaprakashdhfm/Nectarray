@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Download } from "lucide-react";
+import { Download } from "lucide-react";
+import { EnrolButton } from "@/components/auth/EnrolButton";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { academy } from "@/lib/content";
@@ -81,17 +82,10 @@ export function EnrolHero() {
 
             <Reveal delay={190}>
               <div className="mt-9 flex flex-wrap items-center gap-3">
-                <Link
-                  href={course.cta.href}
+                <EnrolButton
+                  label={course.cta.label}
                   className="group bg-ink hover:bg-brand-deep inline-flex items-center gap-2 rounded-full px-7 py-4 text-[0.9375rem] font-semibold text-white transition-colors"
-                >
-                  {course.cta.label}
-                  <ArrowRight
-                    className="size-4 transition-transform duration-300 group-hover:translate-x-1"
-                    strokeWidth={2.25}
-                    aria-hidden
-                  />
-                </Link>
+                />
 
                 <a
                   href={course.curriculumPdf}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EnrolButton } from "@/components/auth/EnrolButton";
 import { academy, academyNav } from "@/lib/content";
 
 /**
@@ -29,12 +30,11 @@ export function AcademyNav() {
           </ul>
         </nav>
 
-        <Link
-          href={academy.course.cta.href}
+        <EnrolButton
+          label={academy.course.cta.label}
+          withArrow={false}
           className="bg-ink hover:bg-brand-deep hidden shrink-0 rounded-full px-5 py-2 text-[0.875rem] font-semibold text-white transition-colors sm:inline-flex"
-        >
-          {academy.course.cta.label}
-        </Link>
+        />
       </div>
     </div>
   );
