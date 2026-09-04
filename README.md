@@ -40,7 +40,7 @@ src/
 │   ├── api/contact/route.ts    Contact form endpoint (Resend)
 │   ├── marketing/page.tsx
 │   ├── software/page.tsx
-│   ├── agentic-ai/page.tsx     Long-form service page, dark treatment
+│   ├── agentic-ai/page.tsx     Long-form service page
 │   ├── academy/page.tsx
 │   ├── engagements/page.tsx
 │   └── contact/page.tsx
