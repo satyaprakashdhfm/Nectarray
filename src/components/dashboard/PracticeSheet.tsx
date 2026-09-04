@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useOptimistic, useState, useTransition } from "react";
-import { ChevronDown, ExternalLink, Lightbulb } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useCallback, useMemo, useState } from "react";
+import { Check, ChevronDown, ExternalLink, Lightbulb } from "lucide-react";
+import { ProofUpload } from "@/components/dashboard/ProofUpload";
 import { cn } from "@/lib/utils";
 
 export type Question = {
@@ -39,44 +39,12 @@ export function PracticeSheet({
   questions: Question[];
   solved: string[];
 }) {
-  const [, startTransition] = useTransition();
-  const [solvedState, setSolvedState] = useState<string[]>(initialSolved);
-
-  // The checkbox flips immediately; the write catches up. A practice sheet
-  // that pauses on every tick feels broken even when it is working.
-  const [solved, addOptimistic] = useOptimistic(
-    solvedState,
-    (current: string[], id: string) =>
-      current.includes(id)
-        ? current.filter((entry) => entry !== id)
-        : [...current, id],
-  );
-
+  const [solved, setSolved] = useState<string[]>(initialSolved);
   const solvedSet = useMemo(() => new Set(solved), [solved]);
 
-  function toggle(id: string) {
-    startTransition(async () => {
-      addOptimistic(id);
-      const supabase = createClient();
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      if (!userId) return;
-
-      if (solvedSet.has(id)) {
-        await supabase
-          .from("practice_progress")
-          .delete()
-          .eq("question_id", id)
-          .eq("user_id", userId);
-        setSolvedState((prev) => prev.filter((entry) => entry !== id));
-      } else {
-        await supabase
-          .from("practice_progress")
-          .upsert({ question_id: id, user_id: userId });
-        setSolvedState((prev) => [...prev, id]);
-      }
-    });
-  }
+  const markSolved = useCallback((id: string) => {
+    setSolved((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  }, []);
 
   const byDifficulty = useMemo(() => {
     const counts = { easy: [0, 0], medium: [0, 0], hard: [0, 0] };
@@ -114,7 +82,7 @@ export function PracticeSheet({
         <Ring pct={pct} />
         <div>
           <p className="text-[0.6875rem] font-semibold tracking-[0.14em] text-white/40 uppercase">
-            Overall progress
+            Verified
           </p>
           <p className="display mt-1 text-[1.75rem]">
             {done}
@@ -140,8 +108,14 @@ export function PracticeSheet({
         </ul>
       </div>
 
+      <p className="text-ink-soft mt-4 text-[0.875rem] leading-relaxed">
+        Solve each problem on LeetCode, then upload a screenshot of the accepted
+        submission. It is read and checked before it counts &mdash; the tick
+        means you solved it, not that you pressed something.
+      </p>
+
       {/* Topics ---------------------------------------------------------- */}
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-4">
         {topics.map(([topic, list], i) => {
           const topicDone = list.filter((q) => solvedSet.has(q.id)).length;
           return (
@@ -179,6 +153,7 @@ export function PracticeSheet({
                       <th>Done</th>
                       <th>Problem</th>
                       <th>Practice</th>
+                      <th>Proof</th>
                       <th>Difficulty</th>
                     </tr>
                   </thead>
@@ -188,7 +163,7 @@ export function PracticeSheet({
                         key={q.id}
                         question={q}
                         solved={solvedSet.has(q.id)}
-                        onToggle={() => toggle(q.id)}
+                        onSolved={() => markSolved(q.id)}
                       />
                     ))}
                   </tbody>
@@ -205,78 +180,78 @@ export function PracticeSheet({
 function Row({
   question,
   solved,
-  onToggle,
+  onSolved,
 }: {
   question: Question;
   solved: boolean;
-  onToggle: () => void;
+  onSolved: () => void;
 }) {
   const [showHint, setShowHint] = useState(false);
-  const [showSolution, setShowSolution] = useState(false);
 
   return (
     <>
       <tr className="border-line-soft border-b last:border-0">
-        <td className="w-12 py-4 pl-5 sm:pl-6">
-          <input
-            type="checkbox"
-            checked={solved}
-            onChange={onToggle}
-            aria-label={`Mark ${question.title} as solved`}
-            className="check shrink-0"
-          />
+        <td className="w-10 py-4 pl-5 sm:pl-6">
+          {/*
+           * A state, not a control. The tick is what the grader concluded, so
+           * there is nothing here to press — pressing it was the old way, and
+           * it made this a to-do list rather than a record.
+           */}
+          <span
+            role="img"
+            aria-label={solved ? "Verified" : "Not yet verified"}
+            className={cn(
+              "grid size-[1.15rem] place-items-center rounded-[0.35rem] border",
+              solved
+                ? "bg-leaf-deep border-leaf-deep text-white"
+                : "border-line",
+            )}
+          >
+            {solved && <Check className="size-3" strokeWidth={4} aria-hidden />}
+          </span>
         </td>
 
         <td className="py-4 pr-4">
           <span
             className={cn(
               "text-[0.9375rem] font-medium",
-              solved ? "text-ink-faint line-through" : "text-ink",
+              solved ? "text-ink-faint" : "text-ink",
             )}
           >
             {question.title}
           </span>
-          {question.prompt_md && question.track === "sql" && (
-            <span className="text-ink-soft mt-1 block text-[0.875rem]">
-              {question.prompt_md}
-            </span>
+          {question.hint_md && (
+            <button
+              type="button"
+              onClick={() => setShowHint((v) => !v)}
+              className="text-amber-deep ml-3 inline-flex items-center gap-1 text-[0.8125rem] font-semibold hover:underline"
+            >
+              <Lightbulb className="size-3" strokeWidth={2} aria-hidden />
+              Hint
+            </button>
           )}
         </td>
 
         <td className="py-4 pr-4 whitespace-nowrap">
-          {question.leetcode_url ? (
+          {question.leetcode_url && (
             <a
               href={question.leetcode_url}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-brand-deep inline-flex items-center gap-1.5 text-[0.875rem] font-semibold hover:underline"
+              className="text-ink-soft hover:text-ink inline-flex items-center gap-1.5 text-[0.875rem] font-semibold"
             >
               Solve
               <ExternalLink className="size-3.5" strokeWidth={2} aria-hidden />
             </a>
-          ) : (
-            <span className="flex gap-3">
-              {question.hint_md && (
-                <button
-                  type="button"
-                  onClick={() => setShowHint((v) => !v)}
-                  className="text-amber-deep inline-flex items-center gap-1.5 text-[0.875rem] font-semibold hover:underline"
-                >
-                  <Lightbulb className="size-3.5" strokeWidth={2} aria-hidden />
-                  Hint
-                </button>
-              )}
-              {question.solution_sql && (
-                <button
-                  type="button"
-                  onClick={() => setShowSolution((v) => !v)}
-                  className="text-ink-soft hover:text-ink text-[0.875rem] font-semibold"
-                >
-                  {showSolution ? "Hide" : "Solution"}
-                </button>
-              )}
-            </span>
           )}
+        </td>
+
+        <td className="py-4 pr-4">
+          <ProofUpload
+            questionId={question.id}
+            solved={solved}
+            onSolved={onSolved}
+          />
         </td>
 
         <td className="py-4 pr-5 text-right sm:pr-6">
@@ -291,20 +266,13 @@ function Row({
         </td>
       </tr>
 
-      {(showHint || showSolution) && (
+      {showHint && question.hint_md && (
         <tr className="border-line-soft border-b last:border-0">
-          <td colSpan={4} className="bg-mist px-5 pb-5 sm:px-6">
-            {showHint && question.hint_md && (
-              <p className="text-ink-soft pt-4 text-[0.875rem] leading-relaxed">
-                <span className="text-amber-deep font-semibold">Hint — </span>
-                {question.hint_md}
-              </p>
-            )}
-            {showSolution && question.solution_sql && (
-              <pre className="border-line bg-surface text-ink mt-4 overflow-x-auto rounded-xl border p-4 font-mono text-[0.8125rem] leading-relaxed">
-                {question.solution_sql}
-              </pre>
-            )}
+          <td colSpan={5} className="bg-mist px-5 pb-4 sm:px-6">
+            <p className="text-ink-soft pt-3 text-[0.875rem] leading-relaxed">
+              <span className="text-amber-deep font-semibold">Hint — </span>
+              {question.hint_md}
+            </p>
           </td>
         </tr>
       )}
