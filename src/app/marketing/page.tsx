@@ -10,6 +10,52 @@ import { siteUrl } from "@/lib/seo";
 
 const { hero, brand, aiSearch, process, faqs, cta, meta } = marketingPage;
 
+/**
+ * Accents, from the set in sections/Practices.tsx: one per practice, in
+ * wordmark order — amber, blue, green, teal.
+ *
+ * The pages were pale because every chip was a `-wash` behind a `-deep`
+ * glyph and every card was flat white, so a ten-tile grid came out as one
+ * shade of almost-nothing. This is the treatment the practice cards already
+ * use: a tint graded into the card, an accent rule along the top, and the
+ * chip solid in the deep tone with a white glyph.
+ *
+ * `-deep` on anything carrying a glyph or text, never the display tone —
+ * those sit near 2.5:1 on white and fail as foregrounds.
+ */
+type Accent = { tint: string; rule: string; chip: string };
+
+const AMBER: Accent = {
+  tint: "from-amber-wash",
+  rule: "bg-amber",
+  chip: "bg-amber-deep",
+};
+const BRAND: Accent = {
+  tint: "from-brand-wash",
+  rule: "bg-brand",
+  chip: "bg-brand-deep",
+};
+const LEAF: Accent = {
+  tint: "from-leaf-wash",
+  rule: "bg-leaf",
+  chip: "bg-leaf-deep",
+};
+const TEAL: Accent = {
+  tint: "from-teal-wash",
+  rule: "bg-teal",
+  chip: "bg-teal-deep",
+};
+
+/** Eyebrow with the accent rule the SectionHead component draws. */
+function Eyebrow({ children, rule }: { children: string; rule: string }) {
+  return (
+    <p className="eyebrow flex items-center gap-2.5">
+      <span className={`h-px w-6 ${rule}`} aria-hidden />
+      {children}
+    </p>
+  );
+}
+
 export const metadata: Metadata = {
   title: meta.title,
   description: meta.description,
@@ -72,12 +118,22 @@ function StructuredData() {
 /** A compact service tile. Enough to recognise the work, not to explain it. */
 function Tile({
   item,
+  accent,
 }: {
   item: { icon: string; title: string; body: string };
+  accent: Accent;
 }) {
   return (
-    <article className="card card-hover h-full p-5">
-      <span className="bg-brand-wash text-brand-deep grid size-9 place-items-center rounded-lg">
+    <article
+      className={`card card-hover to-surface relative h-full overflow-hidden bg-gradient-to-br p-5 pt-6 ${accent.tint}`}
+    >
+      <span
+        className={`absolute inset-x-0 top-0 h-1 ${accent.rule}`}
+        aria-hidden
+      />
+      <span
+        className={`grid size-9 place-items-center rounded-lg text-white ${accent.chip}`}
+      >
         <Icon name={item.icon} className="size-[1.0625rem]" />
       </span>
       <h3 className="text-ink mt-4 text-[0.9375rem] font-semibold tracking-tight">
@@ -128,7 +184,7 @@ export default function MarketingPage() {
             <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-16">
               <div>
                 <Reveal>
-                  <p className="eyebrow">{hero.eyebrow}</p>
+                  <Eyebrow rule="bg-amber">{hero.eyebrow}</Eyebrow>
                 </Reveal>
 
                 <Reveal delay={80}>
@@ -197,7 +253,7 @@ export default function MarketingPage() {
             <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
               <div className="lg:sticky lg:top-28 lg:self-start">
                 <Reveal>
-                  <p className="eyebrow">{brand.eyebrow}</p>
+                  <Eyebrow rule="bg-amber">{brand.eyebrow}</Eyebrow>
                 </Reveal>
                 <Reveal delay={70}>
                   <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
@@ -214,7 +270,7 @@ export default function MarketingPage() {
               <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {brand.items.map((item, i) => (
                   <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
-                    <Tile item={item} />
+                    <Tile item={item} accent={AMBER} />
                   </Reveal>
                 ))}
               </ul>
@@ -236,7 +292,7 @@ export default function MarketingPage() {
             <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
               <div className="lg:sticky lg:top-28 lg:self-start">
                 <Reveal>
-                  <p className="eyebrow">{aiSearch.eyebrow}</p>
+                  <Eyebrow rule="bg-teal">{aiSearch.eyebrow}</Eyebrow>
                 </Reveal>
                 <Reveal delay={70}>
                   <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
@@ -254,7 +310,7 @@ export default function MarketingPage() {
                 <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {aiSearch.items.map((item, i) => (
                     <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
-                      <Tile item={item} />
+                      <Tile item={item} accent={TEAL} />
                     </Reveal>
                   ))}
                 </ul>
@@ -265,9 +321,9 @@ export default function MarketingPage() {
                  * other agency in this category is selling.
                  */}
                 <Reveal delay={140}>
-                  <div className="border-line bg-canvas mt-4 rounded-2xl border p-6 sm:p-7">
+                  <div className="border-amber/35 bg-amber-wash mt-4 rounded-2xl border p-6 sm:p-7">
                     <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
-                      <span className="bg-amber-wash text-amber-deep grid size-11 shrink-0 place-items-center rounded-xl">
+                      <span className="bg-amber-deep grid size-11 shrink-0 place-items-center rounded-xl text-white">
                         <ShieldCheck
                           className="size-5"
                           strokeWidth={1.9}
@@ -290,14 +346,17 @@ export default function MarketingPage() {
           </div>
         </section>
 
-        {/* ── Process ──────────────────────────────────────────────── */}
-        <section className="py-20 sm:py-24">
+        {/* ── Process — the page's one full-colour band ────────────── */}
+        <section className="brand-band py-20 sm:py-24">
           <div className="shell-wide">
             <Reveal>
-              <p className="eyebrow">{process.eyebrow}</p>
+              <p className="flex items-center gap-2.5 text-[0.75rem] font-semibold tracking-[0.16em] text-white/70 uppercase">
+                <span className="h-px w-6 bg-white/50" aria-hidden />
+                {process.eyebrow}
+              </p>
             </Reveal>
             <Reveal delay={70}>
-              <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
+              <h2 className="display mt-5 text-[2rem] text-white sm:text-[2.5rem]">
                 {process.title}
               </h2>
             </Reveal>
@@ -305,14 +364,14 @@ export default function MarketingPage() {
             <ol className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {process.steps.map((step, i) => (
                 <Reveal as="li" key={step.n} delay={i * 60}>
-                  <div className="card h-full p-5">
-                    <span className="bg-ink text-cta-fg grid size-8 place-items-center rounded-full font-mono text-[0.72rem] font-semibold">
+                  <div className="h-full rounded-2xl border border-white/20 bg-white/10 p-5">
+                    <span className="text-ink grid size-8 place-items-center rounded-full bg-white font-mono text-[0.72rem] font-semibold">
                       {step.n}
                     </span>
-                    <h3 className="text-ink mt-4 text-[0.9375rem] font-semibold">
+                    <h3 className="mt-4 text-[0.9375rem] font-semibold text-white">
                       {step.title}
                     </h3>
-                    <p className="text-ink-soft mt-2 text-[0.8125rem] leading-[1.55]">
+                    <p className="mt-2 text-[0.8125rem] leading-[1.55] text-white/85">
                       {step.body}
                     </p>
                   </div>

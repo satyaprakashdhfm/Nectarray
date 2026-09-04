@@ -10,6 +10,52 @@ import { siteUrl } from "@/lib/seo";
 const { hero, families, engineering, stack, process, faqs, cta, meta } =
   agenticAiPage;
 
+/**
+ * Accents, from the set in sections/Practices.tsx: one per practice, in
+ * wordmark order — amber, blue, green, teal.
+ *
+ * The pages were pale because every chip was a `-wash` behind a `-deep`
+ * glyph and every card was flat white, so a ten-tile grid came out as one
+ * shade of almost-nothing. This is the treatment the practice cards already
+ * use: a tint graded into the card, an accent rule along the top, and the
+ * chip solid in the deep tone with a white glyph.
+ *
+ * `-deep` on anything carrying a glyph or text, never the display tone —
+ * those sit near 2.5:1 on white and fail as foregrounds.
+ */
+type Accent = { tint: string; rule: string; chip: string };
+
+const AMBER: Accent = {
+  tint: "from-amber-wash",
+  rule: "bg-amber",
+  chip: "bg-amber-deep",
+};
+const BRAND: Accent = {
+  tint: "from-brand-wash",
+  rule: "bg-brand",
+  chip: "bg-brand-deep",
+};
+const LEAF: Accent = {
+  tint: "from-leaf-wash",
+  rule: "bg-leaf",
+  chip: "bg-leaf-deep",
+};
+const TEAL: Accent = {
+  tint: "from-teal-wash",
+  rule: "bg-teal",
+  chip: "bg-teal-deep",
+};
+
+/** Eyebrow with the accent rule the SectionHead component draws. */
+function Eyebrow({ children, rule }: { children: string; rule: string }) {
+  return (
+    <p className="eyebrow flex items-center gap-2.5">
+      <span className={`h-px w-6 ${rule}`} aria-hidden />
+      {children}
+    </p>
+  );
+}
+
 export const metadata: Metadata = {
   title: meta.title,
   description: meta.description,
@@ -107,15 +153,15 @@ export default function AgenticAiPage() {
             className="pointer-events-none absolute inset-0 -z-10"
             aria-hidden
           >
-            <div className="from-brand-wash via-canvas to-leaf-wash absolute inset-0 bg-gradient-to-br" />
+            <div className="from-leaf-wash via-canvas to-brand-wash absolute inset-0 bg-gradient-to-br" />
             <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(120%_80%_at_50%_0%,#000_30%,transparent_78%)]" />
-            <div className="bg-brand/18 absolute -top-24 -left-32 size-[34rem] rounded-full blur-[140px]" />
-            <div className="bg-leaf/16 absolute top-20 -right-28 size-[30rem] rounded-full blur-[140px]" />
+            <div className="bg-leaf/22 absolute -top-24 -left-32 size-[34rem] rounded-full blur-[140px]" />
+            <div className="bg-brand/18 absolute top-20 -right-28 size-[30rem] rounded-full blur-[140px]" />
           </div>
 
           <div className="shell-wide py-20 sm:py-24 lg:py-28">
             <Reveal>
-              <p className="eyebrow">{hero.eyebrow}</p>
+              <Eyebrow rule="bg-leaf">{hero.eyebrow}</Eyebrow>
             </Reveal>
 
             <Reveal delay={80}>
@@ -184,10 +230,16 @@ export default function AgenticAiPage() {
                 <Reveal as="li" key={family.id} delay={(i % 3) * 60}>
                   <article
                     id={family.id}
-                    className="card card-hover flex h-full scroll-mt-24 flex-col p-6"
+                    className={`card card-hover to-surface relative flex h-full scroll-mt-24 flex-col overflow-hidden bg-gradient-to-br p-6 pt-7 ${LEAF.tint}`}
                   >
+                    <span
+                      className={`absolute inset-x-0 top-0 h-1 ${LEAF.rule}`}
+                      aria-hidden
+                    />
                     <div className="flex items-center gap-3">
-                      <span className="bg-brand-wash text-brand-deep grid size-10 place-items-center rounded-xl">
+                      <span
+                        className={`grid size-10 place-items-center rounded-xl text-white ${LEAF.chip}`}
+                      >
                         <Icon name={family.icon} className="size-[1.125rem]" />
                       </span>
                       <span className="text-ink-faint font-mono text-[0.72rem]">
@@ -236,7 +288,7 @@ export default function AgenticAiPage() {
 
           <div className="shell-wide">
             <Reveal>
-              <p className="eyebrow">{engineering.eyebrow}</p>
+              <Eyebrow rule="bg-brand">{engineering.eyebrow}</Eyebrow>
             </Reveal>
             <Reveal delay={70}>
               <h2 className="display text-ink mt-5 max-w-3xl text-[2rem] sm:text-[2.6rem]">
@@ -250,8 +302,16 @@ export default function AgenticAiPage() {
             <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {engineering.items.map((item, i) => (
                 <Reveal as="li" key={item.title} delay={(i % 3) * 70}>
-                  <article className="card card-hover h-full p-6">
-                    <span className="bg-brand-wash text-brand-deep grid size-10 place-items-center rounded-lg">
+                  <article
+                    className={`card card-hover to-surface relative h-full overflow-hidden bg-gradient-to-br p-6 pt-7 ${BRAND.tint}`}
+                  >
+                    <span
+                      className={`absolute inset-x-0 top-0 h-1 ${BRAND.rule}`}
+                      aria-hidden
+                    />
+                    <span
+                      className={`grid size-10 place-items-center rounded-lg text-white ${BRAND.chip}`}
+                    >
                       <Icon name={item.icon} className="size-[1.125rem]" />
                     </span>
                     <h3 className="text-ink mt-5 text-[1rem] font-semibold">
@@ -305,19 +365,17 @@ export default function AgenticAiPage() {
           </div>
         </section>
 
-        {/* ── Process ──────────────────────────────────────────────── */}
-        <section className="border-line bg-mist relative overflow-hidden border-y py-20 sm:py-24">
-          <div
-            className="grid-paper pointer-events-none absolute inset-0 -z-10 opacity-60"
-            aria-hidden
-          />
-
+        {/* ── Process — the page's one full-colour band ────────────── */}
+        <section className="brand-band py-20 sm:py-24">
           <div className="shell-wide">
             <Reveal>
-              <p className="eyebrow">{process.eyebrow}</p>
+              <p className="flex items-center gap-2.5 text-[0.75rem] font-semibold tracking-[0.16em] text-white/70 uppercase">
+                <span className="h-px w-6 bg-white/50" aria-hidden />
+                {process.eyebrow}
+              </p>
             </Reveal>
             <Reveal delay={70}>
-              <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.6rem]">
+              <h2 className="display mt-5 text-[2rem] text-white sm:text-[2.6rem]">
                 {process.title}
               </h2>
             </Reveal>
@@ -325,14 +383,14 @@ export default function AgenticAiPage() {
             <ol className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {process.steps.map((step, i) => (
                 <Reveal as="li" key={step.n} delay={i * 70}>
-                  <div className="card h-full p-6">
-                    <span className="bg-ink text-cta-fg grid size-8 place-items-center rounded-full font-mono text-[0.72rem] font-semibold">
+                  <div className="h-full rounded-2xl border border-white/20 bg-white/10 p-5">
+                    <span className="text-ink grid size-8 place-items-center rounded-full bg-white font-mono text-[0.72rem] font-semibold">
                       {step.n}
                     </span>
-                    <h3 className="text-ink mt-5 text-[0.9875rem] font-semibold">
+                    <h3 className="mt-4 text-[0.9375rem] font-semibold text-white">
                       {step.title}
                     </h3>
-                    <p className="text-ink-soft mt-2.5 text-[0.85rem] leading-relaxed">
+                    <p className="mt-2 text-[0.8125rem] leading-[1.55] text-white/85">
                       {step.body}
                     </p>
                   </div>
