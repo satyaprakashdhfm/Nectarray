@@ -37,7 +37,7 @@ export function Marketing({ asPage = false }: { asPage?: boolean } = {}) {
           {marketing.channels.map((channel, i) => (
             <Reveal as="li" key={channel.title} delay={(i % 4) * 70}>
               <article className="card card-hover h-full p-6">
-                <span className="from-leaf/18 to-brand/18 text-brand-deep grid size-11 place-items-center rounded-xl bg-gradient-to-br">
+                <span className="bg-brand-deep grid size-11 place-items-center rounded-xl text-white">
                   <Icon name={channel.icon} className="size-5" />
                 </span>
                 <h3 className="text-ink mt-5 text-[1.0625rem] font-semibold tracking-tight">
@@ -53,7 +53,7 @@ export function Marketing({ asPage = false }: { asPage?: boolean } = {}) {
 
         <Reveal delay={120}>
           <p className="text-ink-soft mt-10 flex items-center justify-center gap-2.5 text-center text-[0.9375rem]">
-            <Icon name="sparkles" className="text-amber-deep size-4 shrink-0" />
+            <Icon name="sparkles" className="text-brand-deep size-4 shrink-0" />
             {marketing.note}
           </p>
         </Reveal>

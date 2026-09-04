@@ -11,63 +11,35 @@ import { siteUrl } from "@/lib/seo";
 const { hero, brand, aiSearch, process, faqs, cta, meta } = marketingPage;
 
 /**
- * Accents, from the set in sections/Practices.tsx: one per practice, in
- * wordmark order — amber, blue, green, teal.
+ * One accent: the mark's circuit blue. Weight comes from navy, not from a
+ * second hue.
  *
- * The pages were pale because every chip was a `-wash` behind a `-deep`
- * glyph and every card was flat white, so a ten-tile grid came out as one
- * shade of almost-nothing. This is the treatment the practice cards already
- * use: a tint graded into the card, an accent rule along the top, and the
- * chip solid in the deep tone with a white glyph.
+ * Rotating four accents through these grids was tried and it looked cheap —
+ * amber and green tiles next to each other read as a template, not as this
+ * studio. /academy and /software get their colour a different way: mostly
+ * blue, with a panel or a band in the dark navy the header and footer are
+ * already drawn in. That is what is copied here.
  *
- * `-deep` on anything carrying a glyph or text, never the display tone —
- * those sit near 2.5:1 on white and fail as foregrounds.
+ * Card treatment is still the one from sections/Practices.tsx — a `-wash`
+ * tint graded into the card, an accent rule along the top, and the chip
+ * solid in the deep tone with a white glyph. `-deep` on anything carrying a
+ * glyph, never the display tone: those sit near 2.5:1 on white.
  */
-type Accent = { tint: string; rule: string; chip: string };
-
-const AMBER: Accent = {
-  tint: "from-amber-wash",
-  rule: "bg-amber",
-  chip: "bg-amber-deep",
-};
-const BRAND: Accent = {
+const BRAND = {
   tint: "from-brand-wash",
   rule: "bg-brand",
   chip: "bg-brand-deep",
 };
-const LEAF: Accent = {
-  tint: "from-leaf-wash",
-  rule: "bg-leaf",
-  chip: "bg-leaf-deep",
-};
-const TEAL: Accent = {
-  tint: "from-teal-wash",
-  rule: "bg-teal",
-  chip: "bg-teal-deep",
-};
 
 /** Eyebrow with the accent rule the SectionHead component draws. */
-function Eyebrow({ children, rule }: { children: string; rule: string }) {
+function Eyebrow({ children }: { children: string }) {
   return (
     <p className="eyebrow flex items-center gap-2.5">
-      <span className={`h-px w-6 ${rule}`} aria-hidden />
+      <span className="bg-brand h-px w-6" aria-hidden />
       {children}
     </p>
   );
 }
-
-export const metadata: Metadata = {
-  title: meta.title,
-  description: meta.description,
-  alternates: { canonical: "/marketing" },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/marketing`,
-    title: meta.title,
-    description: meta.description,
-    images: [{ url: "/og.png", width: 1200, height: 630 }],
-  },
-};
 
 /** Service + FAQ schema scoped to this page. */
 function StructuredData() {
@@ -121,7 +93,7 @@ function Tile({
   accent,
 }: {
   item: { icon: string; title: string; body: string };
-  accent: Accent;
+  accent: typeof BRAND;
 }) {
   return (
     <article
@@ -174,9 +146,9 @@ export default function MarketingPage() {
             className="pointer-events-none absolute inset-0 -z-10"
             aria-hidden
           >
-            <div className="from-amber-wash via-canvas to-brand-wash absolute inset-0 bg-gradient-to-br" />
+            <div className="from-brand-wash via-canvas to-mist absolute inset-0 bg-gradient-to-br" />
             <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(120%_80%_at_50%_0%,#000_30%,transparent_78%)]" />
-            <div className="bg-amber/18 absolute -top-24 -left-32 size-[34rem] rounded-full blur-[140px]" />
+            <div className="bg-brand/20 absolute -top-24 -left-32 size-[34rem] rounded-full blur-[140px]" />
             <div className="bg-brand/16 absolute top-20 -right-28 size-[30rem] rounded-full blur-[140px]" />
           </div>
 
@@ -184,7 +156,7 @@ export default function MarketingPage() {
             <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-16">
               <div>
                 <Reveal>
-                  <Eyebrow rule="bg-amber">{hero.eyebrow}</Eyebrow>
+                  <Eyebrow>{hero.eyebrow}</Eyebrow>
                 </Reveal>
 
                 <Reveal delay={80}>
@@ -253,7 +225,7 @@ export default function MarketingPage() {
             <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
               <div className="lg:sticky lg:top-28 lg:self-start">
                 <Reveal>
-                  <Eyebrow rule="bg-amber">{brand.eyebrow}</Eyebrow>
+                  <Eyebrow>{brand.eyebrow}</Eyebrow>
                 </Reveal>
                 <Reveal delay={70}>
                   <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
@@ -270,7 +242,7 @@ export default function MarketingPage() {
               <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {brand.items.map((item, i) => (
                   <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
-                    <Tile item={item} accent={AMBER} />
+                    <Tile item={item} accent={BRAND} />
                   </Reveal>
                 ))}
               </ul>
@@ -292,7 +264,7 @@ export default function MarketingPage() {
             <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
               <div className="lg:sticky lg:top-28 lg:self-start">
                 <Reveal>
-                  <Eyebrow rule="bg-teal">{aiSearch.eyebrow}</Eyebrow>
+                  <Eyebrow>{aiSearch.eyebrow}</Eyebrow>
                 </Reveal>
                 <Reveal delay={70}>
                   <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
@@ -310,7 +282,7 @@ export default function MarketingPage() {
                 <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {aiSearch.items.map((item, i) => (
                     <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
-                      <Tile item={item} accent={TEAL} />
+                      <Tile item={item} accent={BRAND} />
                     </Reveal>
                   ))}
                 </ul>
@@ -321,9 +293,9 @@ export default function MarketingPage() {
                  * other agency in this category is selling.
                  */}
                 <Reveal delay={140}>
-                  <div className="border-amber/35 bg-amber-wash mt-4 rounded-2xl border p-6 sm:p-7">
+                  <div className="border-night-line bg-night mt-4 rounded-2xl border p-6 text-white sm:p-7">
                     <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
-                      <span className="bg-amber-deep grid size-11 shrink-0 place-items-center rounded-xl text-white">
+                      <span className="bg-brand/15 text-brand grid size-11 shrink-0 place-items-center rounded-xl">
                         <ShieldCheck
                           className="size-5"
                           strokeWidth={1.9}
@@ -331,10 +303,10 @@ export default function MarketingPage() {
                         />
                       </span>
                       <div>
-                        <h3 className="text-ink text-[1.0625rem] font-semibold tracking-tight">
+                        <h3 className="text-[1.0625rem] font-semibold tracking-tight text-white">
                           {aiSearch.honesty.title}
                         </h3>
-                        <p className="text-ink-soft mt-2.5 text-[0.9375rem] leading-relaxed">
+                        <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-white/70">
                           {aiSearch.honesty.body}
                         </p>
                       </div>
@@ -347,11 +319,11 @@ export default function MarketingPage() {
         </section>
 
         {/* ── Process — the page's one full-colour band ────────────── */}
-        <section className="brand-band py-20 sm:py-24">
+        <section className="border-night-line bg-night border-y py-20 sm:py-24">
           <div className="shell-wide">
             <Reveal>
-              <p className="flex items-center gap-2.5 text-[0.75rem] font-semibold tracking-[0.16em] text-white/70 uppercase">
-                <span className="h-px w-6 bg-white/50" aria-hidden />
+              <p className="flex items-center gap-2.5 text-[0.75rem] font-semibold tracking-[0.16em] text-white/55 uppercase">
+                <span className="bg-brand h-px w-6" aria-hidden />
                 {process.eyebrow}
               </p>
             </Reveal>
@@ -364,14 +336,14 @@ export default function MarketingPage() {
             <ol className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {process.steps.map((step, i) => (
                 <Reveal as="li" key={step.n} delay={i * 60}>
-                  <div className="h-full rounded-2xl border border-white/20 bg-white/10 p-5">
-                    <span className="text-ink grid size-8 place-items-center rounded-full bg-white font-mono text-[0.72rem] font-semibold">
+                  <div className="border-night-line bg-night-soft h-full rounded-2xl border p-5">
+                    <span className="bg-brand-deep grid size-8 place-items-center rounded-full font-mono text-[0.72rem] font-semibold text-white">
                       {step.n}
                     </span>
                     <h3 className="mt-4 text-[0.9375rem] font-semibold text-white">
                       {step.title}
                     </h3>
-                    <p className="mt-2 text-[0.8125rem] leading-[1.55] text-white/85">
+                    <p className="mt-2 text-[0.8125rem] leading-[1.55] text-white/70">
                       {step.body}
                     </p>
                   </div>
@@ -429,7 +401,7 @@ export default function MarketingPage() {
             aria-hidden
           >
             <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(100%_70%_at_50%_0%,#000_25%,transparent_78%)] opacity-50" />
-            <div className="bg-amber/14 absolute -top-24 right-1/4 size-[26rem] rounded-full blur-[120px]" />
+            <div className="bg-brand/14 absolute -top-24 right-1/4 size-[26rem] rounded-full blur-[120px]" />
             <div className="bg-brand/14 absolute -bottom-32 left-1/4 size-[30rem] rounded-full blur-[120px]" />
           </div>
 
