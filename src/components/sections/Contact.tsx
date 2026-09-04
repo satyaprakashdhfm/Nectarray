@@ -86,7 +86,7 @@ export function Contact({ asPage = false }: { asPage?: boolean } = {}) {
         <div className="bg-brand/18 absolute -right-24 bottom-0 size-[30rem] rounded-full blur-[130px]" />
       </div>
 
-      <div className="shell grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div className="shell-wide grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div>
           <SectionHead
             as={asPage ? "h1" : "h2"}

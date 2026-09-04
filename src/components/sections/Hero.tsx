@@ -43,7 +43,7 @@ export function Hero() {
         <div className="bg-teal/20 absolute bottom-0 left-1/4 size-[26rem] rounded-full blur-[120px]" />
       </div>
 
-      <div className="shell grid gap-10 pt-8 pb-16 sm:pt-10 sm:pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:gap-12 lg:pt-12 lg:pb-24">
+      <div className="shell-wide grid gap-10 pt-8 pb-16 sm:pt-10 sm:pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:gap-12 lg:pt-12 lg:pb-24">
         {/* ---------------------------------------------------------------- */}
         <div>
           <Reveal>

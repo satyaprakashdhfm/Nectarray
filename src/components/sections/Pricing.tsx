@@ -21,7 +21,7 @@ export function Pricing({ asPage = false }: { asPage?: boolean } = {}) {
         aria-hidden
       />
 
-      <div className="shell">
+      <div className="shell-wide">
         <SectionHead
           as={asPage ? "h1" : "h2"}
           align="center"

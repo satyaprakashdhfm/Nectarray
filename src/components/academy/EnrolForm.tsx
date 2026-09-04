@@ -122,7 +122,7 @@ export function EnrolForm() {
 
   return (
     <section id="enrol" className="bg-surface py-20 sm:py-24 lg:py-28">
-      <div className="shell">
+      <div className="shell-wide">
         <div className="border-line grid overflow-hidden rounded-[1.5rem] border lg:grid-cols-[0.85fr_1.15fr]">
           {/* Left panel --------------------------------------------------- */}
           <div className="from-brand-wash to-leaf-wash relative overflow-hidden bg-gradient-to-br p-8 sm:p-10">

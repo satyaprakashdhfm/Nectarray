@@ -19,7 +19,7 @@ export function Offerings() {
       className="border-line bg-mist relative border-y py-20 sm:py-24 lg:py-28"
       aria-labelledby="offerings-title"
     >
-      <div className="shell">
+      <div className="shell-wide">
         <Reveal>
           <p className="text-brand-deep flex items-center justify-center gap-2 text-[1.25rem] font-semibold sm:text-[1.5rem]">
             <Sparkle className="text-leaf size-5" />

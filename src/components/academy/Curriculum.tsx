@@ -27,7 +27,7 @@ export function Curriculum() {
 
   return (
     <section id="curriculum" className="bg-surface py-20 sm:py-24 lg:py-28">
-      <div className="shell">
+      <div className="shell-wide">
         <SectionHead
           eyebrow="Curriculum"
           title={

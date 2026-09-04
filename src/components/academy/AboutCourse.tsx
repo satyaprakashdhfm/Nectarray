@@ -8,7 +8,7 @@ export function AboutCourse() {
 
   return (
     <section id="overview" className="bg-surface py-20 sm:py-24 lg:py-28">
-      <div className="shell">
+      <div className="shell-wide">
         <div className="grid gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
           <div>
             <SectionHead

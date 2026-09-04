@@ -14,7 +14,7 @@ import { academy, academyNav } from "@/lib/content";
 export function AcademyNav() {
   return (
     <div className="border-line bg-surface/90 sticky top-[72px] z-40 border-y backdrop-blur-xl">
-      <div className="shell flex h-14 items-center justify-between gap-6">
+      <div className="shell-wide flex h-14 items-center justify-between gap-6">
         <nav aria-label="On this page">
           <ul className="flex items-center gap-1 overflow-x-auto">
             {academyNav.map((item) => (

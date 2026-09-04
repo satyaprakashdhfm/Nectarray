@@ -15,7 +15,7 @@ export function AcademyFaq() {
         aria-hidden
       />
 
-      <div className="shell">
+      <div className="shell-wide">
         <SectionHead
           eyebrow="FAQs"
           title={

@@ -16,7 +16,7 @@ export function AgenticAI() {
         <div className="bg-leaf/14 absolute -right-20 bottom-0 size-[28rem] rounded-full blur-[130px]" />
       </div>
 
-      <div className="shell">
+      <div className="shell-wide">
         <SectionHead
           onDark
           eyebrow={ai.eyebrow}

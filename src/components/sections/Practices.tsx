@@ -55,7 +55,7 @@ export function Practices() {
         aria-hidden
       />
 
-      <div className="shell">
+      <div className="shell-wide">
         <SectionHead
           eyebrow="What we do"
           title={

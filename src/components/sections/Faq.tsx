@@ -15,7 +15,7 @@ import { faqs } from "@/lib/content";
 export function Faq({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section id="faq" className="py-24 sm:py-28 lg:py-32">
-      <div className="shell grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+      <div className="shell-wide grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
         <SectionHead
           as={asPage ? "h1" : "h2"}
           eyebrow="Questions"

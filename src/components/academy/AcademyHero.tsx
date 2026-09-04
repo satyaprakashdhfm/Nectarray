@@ -52,7 +52,7 @@ export function AcademyHero() {
         <div className="bg-leaf/22 absolute -right-24 bottom-0 size-[26rem] rounded-full blur-[120px]" />
       </div>
 
-      <div className="shell relative pt-8 pb-14 sm:pt-10 sm:pb-20 lg:pt-12 lg:pb-24">
+      <div className="shell-wide relative pt-8 pb-14 sm:pt-10 sm:pb-20 lg:pt-12 lg:pb-24">
         <Sparkle className="text-leaf absolute top-10 left-[46%] size-6 sm:size-7" />
         <PlusPair className="text-brand/70 absolute top-24 right-[8%] hidden w-11 lg:block" />
         <PlusPair className="text-leaf/80 absolute right-[3%] bottom-24 hidden w-10 lg:block" />

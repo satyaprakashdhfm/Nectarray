@@ -10,7 +10,7 @@ import { process } from "@/lib/content";
 export function Process({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section id="process" className="py-24 sm:py-28 lg:py-32">
-      <div className="shell">
+      <div className="shell-wide">
         <SectionHead
           as={asPage ? "h1" : "h2"}
           eyebrow={process.eyebrow}

@@ -126,82 +126,104 @@ export default function AgenticAiPage() {
       <main id="main" className="pt-[72px]">
         {/* ── Hero ─────────────────────────────────────────────────── */}
         {/*
-         * The hero runs on the artwork, so it is the one dark section on the
-         * page. The picture is a wall of the tools this practice is built on
-         * — the same names the stack section lists further down — which is
-         * why it can be a background rather than decoration.
+         * The artwork sits in a panel beside the copy, the way /academy's
+         * hero holds its facts card — not as a full-bleed background behind
+         * white text, which is what this was.
          *
-         * Scrimmed twice: flat, to take the whole thing back, and then
-         * left-weighted, so the copy sits on near-solid navy while the logos
-         * stay legible out to the right. A wall of small bright marks is the
-         * worst possible ground for a 4rem headline without that.
+         * That version had two problems and this fixes both. It put a dark
+         * section directly above a white one with nothing to soften the
+         * seam, and the only way to make a 4rem headline readable over a
+         * wall of small bright logos was a scrim at 80%, which is to say
+         * showing a fifth of the picture. In a panel it renders at full
+         * strength and the page stays light throughout, so there is no
+         * transition left to solve.
          */}
-        <section className="bg-night relative overflow-hidden text-white">
-          <div className="pointer-events-none absolute inset-0" aria-hidden>
-            <Image
-              src="/hero/agentic-hero.jpg"
-              alt=""
-              fill
-              sizes="100vw"
-              loading="eager"
-              className="object-cover object-center"
-            />
-            <div className="bg-night/72 absolute inset-0" />
-            <div className="from-night via-night/85 absolute inset-0 bg-gradient-to-r to-transparent" />
-            <div className="from-night absolute inset-0 bg-gradient-to-t to-transparent" />
+        <section className="relative overflow-hidden">
+          <div
+            className="pointer-events-none absolute inset-0 -z-10"
+            aria-hidden
+          >
+            <div className="from-brand-wash via-canvas to-mist absolute inset-0 bg-gradient-to-br" />
+            <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(120%_80%_at_50%_0%,#000_30%,transparent_78%)]" />
+            <div className="bg-brand/20 absolute -top-24 -left-32 size-[34rem] rounded-full blur-[140px]" />
+            <div className="bg-brand/16 absolute top-20 -right-28 size-[30rem] rounded-full blur-[140px]" />
           </div>
 
-          <div className="shell-wide relative pt-10 pb-20 sm:pt-12 sm:pb-24 lg:pt-14 lg:pb-28">
-            <Reveal>
-              <Eyebrow onDark>{hero.eyebrow}</Eyebrow>
-            </Reveal>
+          <div className="shell-wide relative pt-10 pb-20 sm:pt-14 sm:pb-24 lg:pt-16 lg:pb-28">
+            <div className="grid gap-12 lg:grid-cols-[1fr_0.95fr] lg:items-center lg:gap-14">
+              <div>
+                <Reveal>
+                  <Eyebrow>{hero.eyebrow}</Eyebrow>
+                </Reveal>
 
-            <Reveal delay={80}>
-              <h1 className="display mt-7 max-w-4xl text-[2.5rem] leading-[1.02] text-white sm:text-[3.4rem] lg:text-[4.25rem]">
-                {hero.headline[0]}
-                <br />
-                <span className="ink-gradient">{hero.headline[1]}</span>
-              </h1>
-            </Reveal>
+                <Reveal delay={80}>
+                  <h1 className="display text-ink mt-6 text-[2.5rem] leading-[1.02] sm:text-[3.4rem] lg:text-[4rem]">
+                    {hero.headline[0]}
+                    <br />
+                    <span className="ink-gradient">{hero.headline[1]}</span>
+                  </h1>
+                </Reveal>
 
-            <Reveal delay={150}>
-              <p className="lede mt-7 max-w-2xl text-white/70">{hero.lede}</p>
-            </Reveal>
+                <Reveal delay={150}>
+                  <p className="lede mt-6 max-w-xl">{hero.lede}</p>
+                </Reveal>
 
-            <Reveal delay={220}>
-              <div className="mt-9 flex flex-wrap items-center gap-3">
-                <a
-                  href={hero.primaryCta.href}
-                  className="text-night hover:bg-brand rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors hover:text-white"
-                >
-                  {hero.primaryCta.label}
-                </a>
-                <a
-                  href={hero.secondaryCta.href}
-                  className="rounded-full border border-white/25 px-6 py-3.5 text-[0.9375rem] font-semibold text-white transition-colors hover:border-white/60"
-                >
-                  {hero.secondaryCta.label}
-                </a>
-              </div>
-            </Reveal>
-
-            <Reveal delay={300}>
-              <dl className="mt-14 grid max-w-xl grid-cols-3 gap-6 border-t border-white/15 pt-8">
-                {hero.stats.map((stat) => (
-                  <div key={stat.label}>
-                    <dt className="sr-only">{stat.label}</dt>
-                    <dd>
-                      <span className="display ink-gradient block text-[1.9rem] leading-none sm:text-[2.25rem]">
-                        {stat.value}
-                      </span>
-                      <span className="mt-2.5 block text-[0.8125rem] leading-snug text-white/60">
-                        {stat.label}
-                      </span>
-                    </dd>
+                <Reveal delay={220}>
+                  <div className="mt-9 flex flex-wrap items-center gap-3">
+                    <a
+                      href={hero.primaryCta.href}
+                      className="bg-ink text-cta-fg hover:bg-brand-deep rounded-full px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
+                    >
+                      {hero.primaryCta.label}
+                    </a>
+                    <a
+                      href={hero.secondaryCta.href}
+                      className="border-line bg-canvas text-ink hover:border-brand hover:text-brand-deep rounded-full border px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
+                    >
+                      {hero.secondaryCta.label}
+                    </a>
                   </div>
-                ))}
-              </dl>
-            </Reveal>
+                </Reveal>
+
+                <Reveal delay={300}>
+                  <dl className="border-line mt-10 grid max-w-lg grid-cols-3 gap-6 border-t pt-7">
+                    {hero.stats.map((stat) => (
+                      <div key={stat.label}>
+                        <dt className="sr-only">{stat.label}</dt>
+                        <dd>
+                          <span className="display ink-gradient block text-[1.75rem] leading-none sm:text-[2rem]">
+                            {stat.value}
+                          </span>
+                          <span className="text-ink-soft mt-2 block text-[0.8125rem] leading-snug">
+                            {stat.label}
+                          </span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </Reveal>
+              </div>
+
+              <Reveal delay={150}>
+                <div className="relative">
+                  <div
+                    className="from-brand/25 to-leaf/20 absolute -inset-6 -z-10 rounded-full bg-gradient-to-br blur-3xl"
+                    aria-hidden
+                  />
+                  <div className="border-night-line bg-night relative aspect-[16/9] overflow-hidden rounded-[1.75rem] border shadow-[0_30px_70px_-30px_rgba(11,23,32,0.55)]">
+                    <Image
+                      src="/hero/agentic-hero.jpg"
+                      alt=""
+                      aria-hidden
+                      fill
+                      sizes="(min-width: 1024px) 46vw, 92vw"
+                      loading="eager"
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+              </Reveal>
+            </div>
           </div>
         </section>
 
