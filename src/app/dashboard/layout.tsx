@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AccountMenu } from "@/components/dashboard/AccountMenu";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { Logo } from "@/components/layout/Logo";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
@@ -9,7 +10,6 @@ import {
   ThemeToggle,
 } from "@/components/dashboard/Theme";
 import { getViewer } from "@/lib/supabase/server";
-import { displayName } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Dashboard — NectArray Academy",
@@ -23,7 +23,6 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { profile } = await getViewer();
-  const name = displayName(profile?.first_name) || "there";
 
   return (
     <div className="bg-mist min-h-screen">
@@ -33,9 +32,17 @@ export default async function DashboardLayout({
         <div className="shell flex h-[72px] items-center justify-between gap-6">
           <Logo markClassName="size-9" wordClassName="text-[1.25rem]" />
           <div className="flex items-center gap-4">
-            <span className="hidden text-[0.875rem] text-white/60 sm:inline">
-              Hi, {name}
-            </span>
+            {/* The greeting was a dead label. Same spot, same name, but it
+                opens the account now — which is where a student looks for
+                it. */}
+            <AccountMenu
+              profile={{
+                first_name: profile?.first_name ?? null,
+                last_name: profile?.last_name ?? null,
+                phone: profile?.phone ?? null,
+                email: profile?.email ?? null,
+              }}
+            />
             <Link
               href="/"
               className="hidden text-[0.875rem] text-white/60 transition-colors hover:text-white sm:inline"
