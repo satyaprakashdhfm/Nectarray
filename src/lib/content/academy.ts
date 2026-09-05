@@ -106,36 +106,36 @@ export const academy: {
       {
         icon: "database",
         title: "A SQL playground in the browser",
-        body: "Questions ordered easy to hard against a real database you query in the page. Write it, run it, see the rows, get told if the answer matches. No installs before you start.",
+        body: "Questions ordered easy to hard against a real database you query in the page. Write it, run it, see the rows, and find out straight away whether the answer matches. It runs in the browser, so you are querying within a minute of arriving.",
         points: [
           "A real database you query in the page",
           "Questions ordered easy to hard",
-          "Your answer checked against the rows, not the wording",
+          "Checked against the rows your query returns",
         ],
       },
       {
         icon: "target",
-        title: "A Python problem sheet that stops",
-        body: "Arrays, strings and dictionaries, easy to hard, each linked to LeetCode. Deliberately not a full DSA grind — enough pattern fluency to pass a screen, not six months of graph theory.",
+        title: "Interview-focused Python practice",
+        body: "Arrays, strings and dictionaries, easy to hard, each linked to LeetCode and judged the way a screen judges: hidden tests, pass or fail. It is built around the patterns that actually come up, so every hour you put in is an hour that counts.",
         points: [
           "Arrays, strings, dictionaries — the interview core",
           "Judged on hidden tests, LeetCode-style",
-          "Enough to pass a screen, not six months of graph theory",
+          "Built around the patterns screens actually ask for",
         ],
       },
       {
         icon: "notebook",
         title: "Documentation-grade notes",
-        body: "Every session has written notes with runnable examples and real output, not slides. They are the reference you go back to in your first job, not something you throw away after the exam.",
+        body: "Every session has written notes with runnable examples and the real output printed beside them. They are written to be the reference you still open in your first job.",
         points: [
           "Written notes for every session, with runnable examples",
-          "Real output beside the code, not slides",
+          "Real output printed beside every example",
           "Yours to keep, and to use in your first job",
         ],
       },
       {
         icon: "bot",
-        title: "Agentic AI, not just notebooks",
+        title: "Agentic AI, the part teams hire for",
         body: "The last stretch goes past analysis into what teams are hiring for now: retrieval over your own documents, tool-calling agents, and the evaluation that tells you whether one is working.",
         points: [
           "Build a retrieval agent over a real document set",
