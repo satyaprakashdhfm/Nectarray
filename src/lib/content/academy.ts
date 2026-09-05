@@ -134,6 +134,16 @@ export const academy: {
         ],
       },
       {
+        icon: "bot",
+        title: "Agentic AI, not just notebooks",
+        body: "The last stretch goes past analysis into what teams are hiring for now: retrieval over your own documents, tool-calling agents, and the evaluation that tells you whether one is working.",
+        points: [
+          "Build a retrieval agent over a real document set",
+          "Wire an agent to tools it can actually call",
+          "Judge it with an eval set, not a vibe",
+        ],
+      },
+      {
         icon: "briefcase",
         title: "Placement preparation built in",
         body: "Résumé and ATS, GitHub portfolio, LinkedIn and outreach strategy, HR rounds, and a technical mock interview with structured written feedback.",
@@ -349,9 +359,41 @@ export const academy: {
 };
 
 /** The in-page anchors the academy sub-nav scrolls between. */
+/**
+ * Placement and career support.
+ *
+ * Its own block rather than a bullet inside the offerings, because for a
+ * career-change buyer it is the reason they are reading the page at all.
+ */
+export const placements: {
+  eyebrow: string;
+  title: string;
+  lede: string;
+  includes: { title: string; body: string }[];
+} = {
+  eyebrow: "Placements & career assistance",
+  title: "The part that turns the course into an offer",
+  lede: "Our placement cell is dedicated to helping you secure the job the programme was taken for, and we work with hiring partners to get your profile in front of them.",
+  includes: [
+    {
+      title: "Resume building & LinkedIn optimisation",
+      body: "Your CV rewritten for the roles you are actually applying to, and a profile that recruiters searching those roles will find.",
+    },
+    {
+      title: "Mock interviews with industry professionals",
+      body: "Technical and HR rounds run by engineers who sit on the other side of real interviews, with the feedback said plainly.",
+    },
+    {
+      title: "Job alerts & referrals",
+      body: "Openings that match your profile as they come up, and a referral into them wherever we have the relationship to make one.",
+    },
+  ],
+};
+
 export const academyNav: Link[] = [
   { label: "Overview", href: "#overview" },
   { label: "Offerings", href: "#offerings" },
   { label: "Curriculum", href: "#curriculum" },
+  { label: "Placements", href: "#placements" },
   { label: "FAQs", href: "#faqs" },
 ];

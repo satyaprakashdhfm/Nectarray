@@ -59,11 +59,6 @@ export function Curriculum() {
                         <span className="display text-ink text-[1.375rem] sm:text-[1.5rem]">
                           {module.title}
                         </span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-[0.75rem] font-semibold ${accent.chip}`}
-                        >
-                          {module.topics.length} topics
-                        </span>
                       </span>
                       <span className="text-ink-soft mt-2 block text-[0.9375rem] leading-relaxed">
                         {module.summary}

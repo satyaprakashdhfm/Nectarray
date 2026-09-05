@@ -35,6 +35,7 @@ export const marketingPage: {
     items: Tile[];
     honesty: { title: string; body: string };
   };
+  analytics: { eyebrow: string; title: string; lede: string; items: Tile[] };
   platforms: {
     eyebrow: string;
     title: string;
@@ -47,15 +48,15 @@ export const marketingPage: {
 } = {
   meta: {
     title:
-      "Growth marketing — paid media, content, creators and AI search visibility",
+      "Growth marketing — paid search, paid social, SEO, content, creators and AI search",
     description:
-      "Meta and Google Ads, SEO, social and short-form video, creator and influencer marketing, and optimising your brand to be found and cited by AI search. Run by the team that also builds the site it points at.",
+      "Paid search and paid social, SEO, short-form video, creator marketing, marketing mix modelling, and optimising your brand to be found and cited by AI search. Run by the team that also builds the site it points at.",
   },
 
   hero: {
     eyebrow: "01 — Growth & Marketing",
     headline: ["Demand, not just", "impressions."],
-    lede: "Paid media, organic content, creators, and the newest channel nobody has a playbook for yet — what an AI assistant says when someone asks it to recommend a business like yours. Run by the same team that builds the site the traffic lands on, so nothing gets thrown over a wall.",
+    lede: "Paid search, paid social, SEO, content and creators — measured with the analytics to say which of them actually moved revenue. Plus the newest channel nobody has a playbook for: what an AI assistant says when someone asks it to recommend a business like yours.",
     /** Overlaid on the hero panel, the way /academy badges its card. */
     panel: {
       badge: "The channel map",
@@ -194,6 +195,44 @@ export const marketingPage: {
       title: "What this is, and what it is not",
       body: "Nobody can guarantee you a mention in ChatGPT, Gemini or AI Overviews. There is no placement to buy, no submission form, and any agency promising you a spot is selling something it does not control — the model decides, and it changes. What this work does is remove the reasons you get overlooked or described wrongly: it makes your site readable to these systems, your identity unambiguous, your claims corroborated elsewhere, and your pages the clearest available answer to the questions your buyers actually ask. That improves your chances of being discovered, cited and recommended. Then we monitor what the assistants say about you, so you can see whether it is working rather than take our word for it.",
     },
+  },
+
+  analytics: {
+    eyebrow: "Measurement & data science",
+    title: "Which activity actually moved revenue",
+    lede: "Most agencies report the numbers the ad platforms hand them, and every platform claims the same sale. We bring data science to the question instead: modelling the whole mix, testing it, and telling you where the next rupee should go.",
+    items: [
+      {
+        icon: "chart",
+        title: "Marketing mix modelling",
+        body: "Models every channel together — including offline and brand spend the pixels never see — to show what each one really contributed.",
+      },
+      {
+        icon: "target",
+        title: "Incrementality testing",
+        body: "Geo and holdout tests that answer the only question that matters: would this sale have happened anyway?",
+      },
+      {
+        icon: "share",
+        title: "Attribution you can defend",
+        body: "One model applied across channels, so Meta and Google stop both claiming the same conversion and the totals reconcile.",
+      },
+      {
+        icon: "gauge",
+        title: "Budget allocation",
+        body: "The model turned into a spend plan: what to move, where, and the return to expect from the shift.",
+      },
+      {
+        icon: "workflow",
+        title: "Forecasting & scenarios",
+        body: "What a 30% budget increase is likely to return before you commit it, with the uncertainty stated rather than hidden.",
+      },
+      {
+        icon: "database",
+        title: "Cohorts, LTV & payback",
+        body: "What a customer is worth over time and how long they take to pay back, so acquisition targets come from margin rather than a guess.",
+      },
+    ],
   },
 
   platforms: {

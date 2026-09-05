@@ -66,7 +66,7 @@ export const trustChips = [
   "Fixed scope, fixed price",
   "You own the code",
   "Weekly demos",
-  "Launch in 2–6 weeks",
+  "Analytics that prove what worked",
   "Marketing + build under one roof",
   "No lock-in",
   "Reply within 1 business day",

@@ -8,7 +8,7 @@ export const pillars: Practice[] = [
     icon: "megaphone",
     title: "Growth & Marketing",
     summary:
-      "Paid media, organic content and the tracking that proves which of them worked.",
+      "Paid search, paid social, SEO and content — and the analytics that prove which of them worked.",
     points: [
       "Meta & Google Ads",
       "SEO & content",
@@ -23,7 +23,7 @@ export const pillars: Practice[] = [
     icon: "code",
     title: "Software & Web",
     summary:
-      "Marketing sites, web apps and internal tools — from a five-page launch site to a multi-tenant platform.",
+      "Websites, online stores, dashboards and mobile apps — from a simple site to the software your whole team works in.",
     points: [
       "Websites & landing pages",
       "Web applications",
@@ -38,7 +38,7 @@ export const pillars: Practice[] = [
     icon: "bot",
     title: "Agentic AI",
     summary:
-      "Chatbots, copilots and autonomous agents built on modern harnesses — wired into the systems you already run.",
+      "Chatbots, copilots and AI agents built for what your business actually needs — wired into the systems you already run.",
     points: [
       "Support & sales chatbots",
       "RAG over your docs",
@@ -243,7 +243,7 @@ export const software: {
 } = {
   eyebrow: "02 — Software & Web",
   title: "Whatever the business is, there is a build here for it.",
-  lede: "One page or one platform, we take it at any scale. Find the shape of what you need below, and the trade it gets built for — if your industry is not on a list, it is because the list ran out of room, not because we have not built it.",
+  lede: "A single page or software your whole company runs on — we take it at any size. Find the kind of thing you need below, and the trade it gets built for. If your industry is not on a list, the list ran out of room, not us.",
 
   services: [
     {

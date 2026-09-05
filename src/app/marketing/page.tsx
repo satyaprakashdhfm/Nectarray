@@ -10,8 +10,17 @@ import { Reveal } from "@/components/ui/Reveal";
 import { company, marketingPage } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const { hero, brand, aiSearch, platforms, process, faqs, cta, meta } =
-  marketingPage;
+const {
+  hero,
+  brand,
+  aiSearch,
+  analytics,
+  platforms,
+  process,
+  faqs,
+  cta,
+  meta,
+} = marketingPage;
 
 /**
  * One accent: the mark's circuit blue. Weight comes from navy, not from a
@@ -400,6 +409,37 @@ export default function MarketingPage() {
                   </div>
                 </Reveal>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Measurement & data science ───────────────────────────── */}
+        <section id="analytics" className="scroll-mt-24 py-20 sm:py-24">
+          <div className="shell-wide">
+            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+              <div className="lg:sticky lg:top-28 lg:self-start">
+                <Reveal>
+                  <Eyebrow>{analytics.eyebrow}</Eyebrow>
+                </Reveal>
+                <Reveal delay={70}>
+                  <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
+                    {analytics.title}
+                  </h2>
+                </Reveal>
+                <Reveal delay={130}>
+                  <p className="text-ink-soft mt-5 text-[0.9375rem] leading-relaxed">
+                    {analytics.lede}
+                  </p>
+                </Reveal>
+              </div>
+
+              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {analytics.items.map((item, i) => (
+                  <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
+                    <Tile item={item} accent={BRAND} />
+                  </Reveal>
+                ))}
+              </ul>
             </div>
           </div>
         </section>

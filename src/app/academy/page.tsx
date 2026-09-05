@@ -8,6 +8,7 @@ import { AcademyHero } from "@/components/academy/AcademyHero";
 import { FloatingActions } from "@/components/academy/FloatingActions";
 import { StudentVoices } from "@/components/academy/StudentVoices";
 import { Offerings } from "@/components/academy/Offerings";
+import { Placements } from "@/components/academy/Placements";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { pageMetadata } from "@/lib/seo";
@@ -34,6 +35,7 @@ export default function AcademyPage() {
         <AboutCourse />
         <Offerings />
         <Curriculum />
+        <Placements />
         <StudentVoices />
         <AcademyFaq />
         <EnrolForm />
