@@ -76,7 +76,7 @@ export const marketing: {
   channels: (IconCard & { logos: Brand[] })[];
   note: string;
 } = {
-  eyebrow: "01 — Growth & Marketing",
+  eyebrow: "Growth & Marketing",
   title: "Every channel that can send you a customer, run by one team.",
   lede: "Most agencies sell you one channel and call it strategy. We map where your buyers actually are, run those channels properly, and kill the ones that do not pay for themselves.",
   channels: [
@@ -241,7 +241,7 @@ export const software: {
     cta: Link;
   };
 } = {
-  eyebrow: "02 — Software & Web",
+  eyebrow: "Software & Web",
   title: "Whatever the business is, there is a build here for it.",
   lede: "A single page or software your whole company runs on — we take it at any size. Find the kind of thing you need below, and the trade it gets built for. If your industry is not on a list, the list ran out of room, not us.",
 
@@ -776,7 +776,7 @@ export const ai: {
   capabilities: IconCard[];
   harnesses: { title: string; body: string; items: string[] };
 } = {
-  eyebrow: "03 — Agentic AI",
+  eyebrow: "Agentic AI",
   title: "Agents that do the work, not demos that describe it.",
   lede: "A chatbot that answers questions is table stakes. We build agents with tools, memory and permissions — systems that read your data, take actions in your software, and hand off to a human when they should.",
   capabilities: [

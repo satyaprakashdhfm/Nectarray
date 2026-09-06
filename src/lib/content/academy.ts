@@ -46,7 +46,7 @@ export const academy: {
   };
   moreSoon: string;
 } = {
-  eyebrow: "04 — NectArray Academy",
+  eyebrow: "NectArray Academy",
   title: "We teach the stack we ship with.",
   lede: "Our flagship programme takes you from no code at all to reading, writing and defending real Python and SQL — taught live, in a small group, by engineers who do this work for clients every week.",
   course: {

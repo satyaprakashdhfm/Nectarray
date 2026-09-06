@@ -260,61 +260,75 @@ export default function AgenticAiPage() {
           <div className="shell-wide">
             <Reveal>
               <h2 className="display text-ink max-w-3xl text-[2rem] sm:text-[2.6rem]">
-                Five kinds of work we build agents for
+                The agents we build
               </h2>
             </Reveal>
 
-            <ul className="mt-10 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <Reveal delay={70}>
+              <p className="lede mt-5 max-w-2xl">
+                Three kinds of build, each with the parts we have already
+                solved. Pick the one that matches the work you want taken off
+                someone&rsquo;s desk.
+              </p>
+            </Reveal>
+
+            {/*
+             * One panel per build rather than a tile grid, because each of
+             * these is now described properly and a tile that lists six
+             * items as bare names tells a buyer nothing about any of them.
+             * The panel splits instead: what it is on the left, and what is
+             * in it across two columns on the right, so it still reads
+             * across the page and not only down it.
+             */}
+            <div className="mt-10 space-y-4">
               {families.map((family, i) => (
-                <Reveal as="li" key={family.id} delay={(i % 3) * 60}>
+                <Reveal key={family.id} delay={(i % 3) * 70}>
                   <article
                     id={family.id}
-                    className={`card card-hover to-surface relative flex h-full scroll-mt-24 flex-col overflow-hidden bg-gradient-to-br p-6 pt-7 ${BRAND.tint}`}
+                    className={`card to-surface relative scroll-mt-24 overflow-hidden bg-gradient-to-br p-6 pt-7 sm:p-8 sm:pt-9 ${BRAND.tint}`}
                   >
                     <span
                       className={`absolute inset-x-0 top-0 h-1 ${BRAND.rule}`}
                       aria-hidden
                     />
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`grid size-10 place-items-center rounded-xl text-white ${BRAND.chip}`}
-                      >
-                        <Icon name={family.icon} className="size-[1.125rem]" />
-                      </span>
-                      <span className="text-ink-faint font-mono text-[0.72rem]">
-                        {family.index}
-                      </span>
-                    </div>
 
-                    <h3 className="text-ink mt-4 text-[1.0625rem] font-semibold tracking-tight">
-                      {family.title}
-                    </h3>
-                    <p className="text-ink-soft mt-2 text-[0.875rem] leading-[1.55]">
-                      {family.summary}
-                    </p>
-
-                    {/* Names only. The sentence on each one is still in the
-                        Service schema above, and a card that lists five of
-                        them with a paragraph each is the wall this replaced. */}
-                    <ul className="border-line-soft mt-4 flex flex-1 flex-col justify-end gap-2 border-t pt-4">
-                      {family.items.map((item) => (
-                        <li
-                          key={item.name}
-                          className="text-ink-soft flex items-start gap-2 text-[0.8125rem] leading-snug"
+                    <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+                      <header>
+                        <span
+                          className={`grid size-11 place-items-center rounded-xl text-white ${BRAND.chip}`}
                         >
-                          <Icon
-                            name="check"
-                            className="text-brand-deep mt-[0.15rem] size-3.5 shrink-0"
-                            strokeWidth={2.75}
-                          />
-                          {item.name}
-                        </li>
-                      ))}
-                    </ul>
+                          <Icon name={family.icon} className="size-5" />
+                        </span>
+                        <h3 className="display text-ink mt-5 text-[1.5rem] sm:text-[1.75rem]">
+                          {family.title}
+                        </h3>
+                        <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
+                          {family.summary}
+                        </p>
+                      </header>
+
+                      <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+                        {family.items.map((item) => (
+                          <li key={item.name}>
+                            <h4 className="text-ink flex items-start gap-2 text-[0.9375rem] font-semibold">
+                              <Icon
+                                name="check"
+                                className="text-brand-deep mt-[0.2rem] size-3.5 shrink-0"
+                                strokeWidth={2.75}
+                              />
+                              {item.name}
+                            </h4>
+                            <p className="text-ink-soft mt-1.5 pl-[1.375rem] text-[0.8125rem] leading-[1.6]">
+                              {item.body}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </article>
                 </Reveal>
               ))}
-            </ul>
+            </div>
           </div>
         </section>
 

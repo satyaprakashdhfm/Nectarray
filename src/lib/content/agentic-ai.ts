@@ -14,9 +14,9 @@ export const agenticAiPage = {
   },
 
   hero: {
-    eyebrow: "Practice 03 · Agentic AI",
-    headline: ["Agents that do the work,", "not demos that describe it."],
-    lede: "A chatbot that answers questions is table stakes. We build agents with tools, memory and permissions — systems that read your data, take real actions in your software, and hand off to a human at the point they should.",
+    eyebrow: "Agentic AI",
+    headline: ["Agents that do the work,", "So your team can do more."],
+    lede: "We build agents with tools, memory and permissions — systems that read your data, take real actions in your software, and hand off to a human at the point they should.",
     stats: [
       { value: "4–8", label: "Weeks to a working agent" },
       { value: "MCP", label: "Native, not bolted on" },
@@ -27,7 +27,7 @@ export const agenticAiPage = {
       badge: "The tooling",
       lines: ["Built on harnesses.", "Not from scratch."] as [string, string],
     },
-    primaryCta: { label: "Scope an agent", href: "/contact#enquiry" },
+    primaryCta: { label: "Start an agent", href: "/contact#enquiry" },
     secondaryCta: { label: "See what we build", href: "#capabilities" },
   },
 
@@ -36,32 +36,36 @@ export const agenticAiPage = {
   --------------------------------------------------------------------- */
   families: [
     {
-      id: "chatbots",
+      id: "customer-care",
       index: "01",
       icon: "message",
-      title: "Conversational agents",
+      title: "Customer care agents",
       summary:
-        "The agents your customers and staff talk to. Grounded in your real content, so they answer from what you actually published rather than what the model guessed.",
+        "The agent your customers reach — on chat, on WhatsApp and on the phone. It answers from your own documentation, policies and catalogue, cites the page it took each answer from, opens and works tickets, and hands the conversation to a person the moment one is wanted. One agent, every channel, with the same knowledge behind all of them.",
       items: [
         {
-          name: "Customer support agent",
-          body: "Answers from your documentation, policies and catalogue, cites where it got each answer, and escalates to a human the moment confidence drops or the topic is one you flagged as off-limits.",
+          name: "Support agent on your site",
+          body: "Reads your documentation, policies and product catalogue, and answers from them with a link to the source. You mark the topics that always go to a human, and it routes those with the full conversation attached.",
         },
         {
-          name: "Sales & qualification agent",
-          body: "Asks the qualifying questions your team would ask, books a call on a real calendar, and writes the whole conversation into your CRM as a lead with the answers attached.",
+          name: "Voice agent on the phone",
+          body: "Takes inbound calls and makes outbound ones — bookings, reminders, order status, qualification. Every call arrives in your inbox afterwards as a recording, a transcript and a short summary of what was agreed.",
         },
         {
-          name: "WhatsApp business agent",
-          body: "The same agent on WhatsApp Business API, where most Indian customers actually are — order status, bookings, FAQs, with handover to a person in the same thread.",
+          name: "WhatsApp agent",
+          body: "The same agent on WhatsApp Business API, where most Indian customers already are. Order status, appointments, delivery updates and FAQs, and your team can take over the same thread mid-conversation.",
         },
         {
-          name: "Internal knowledge assistant",
-          body: "Staff-facing, over SOPs, contracts, past tickets and spreadsheets. Cuts the questions your senior people answer forty times a week.",
+          name: "Ticket raising and resolution",
+          body: "Opens the ticket itself, with the priority, the category and the customer's details already filled in from the conversation. It resolves what it can end to end, and tracks the rest to closure so nothing sits unanswered.",
         },
         {
-          name: "Voice agent",
-          body: "Inbound and outbound calls for bookings, reminders and qualification, with a transcript and summary in your inbox afterwards.",
+          name: "Sales and qualification",
+          body: "Asks the questions your team would ask, books the call on a real calendar, and writes the lead into your CRM with every answer attached, ready for someone to pick up.",
+        },
+        {
+          name: "Internal helpdesk",
+          body: "The staff-facing version, over your SOPs, contracts, past tickets and spreadsheets. It answers the questions your senior people currently answer forty times a week.",
         },
       ],
     },
@@ -71,27 +75,27 @@ export const agenticAiPage = {
       icon: "plug",
       title: "Custom MCP servers",
       summary:
-        "Model Context Protocol is how an AI client gets safe, typed access to a system. We build the server that exposes yours — once — and then every AI tool you use can work with your data.",
+        "Model Context Protocol is the standard way an AI client gets safe, typed access to a system. We build the server that exposes yours, once, and from then on every AI tool you adopt can work with your data through it — with the permissions and the audit trail enforced on the server where they hold.",
       items: [
         {
           name: "Your systems as tools",
-          body: "Your CRM, database, ticketing, inventory or internal APIs wrapped as MCP tools with proper schemas, so a model calls them correctly instead of guessing at your API.",
+          body: "Your CRM, database, ticketing, inventory and internal APIs wrapped as MCP tools with proper schemas, so a model calls them the way your own engineers would.",
         },
         {
-          name: "Scoped permissions",
-          body: "Per-user and per-role access enforced server-side, not in the prompt. A salesperson's agent sees their pipeline; it cannot see payroll.",
+          name: "Permissions on the server",
+          body: "Access decided per user and per role in the server itself. A salesperson's agent sees their own pipeline, and that is the whole of what it can reach.",
         },
         {
-          name: "Safe writes",
-          body: "Read tools run freely. Anything that changes state — refund, cancel, send — is separated, confirmed, rate-limited and written to an audit log you can query.",
+          name: "Writes that are deliberate",
+          body: "Reads run freely. Anything that changes state — a refund, a cancellation, a message going out — is a separate tool, confirmed before it runs, rate-limited, and written to an audit log you can query later.",
         },
         {
-          name: "Works with any client",
-          body: "Because it speaks MCP, the same server serves Claude, your own product, an internal tool or whatever client you adopt next. You build the integration once.",
+          name: "One integration, every client",
+          body: "Because it speaks MCP, the same server serves Claude, your own product, an internal tool, and whatever client you adopt next year. You build the integration once and reuse it.",
         },
         {
-          name: "Hosted or self-hosted",
-          body: "Run it on your own infrastructure if the data cannot leave, or let us host and operate it. Either way the code is yours.",
+          name: "Hosted wherever it belongs",
+          body: "Runs on your own infrastructure where the data has to stay inside it, or we host and operate it for you. The code is yours in both cases.",
         },
       ],
     },
@@ -101,79 +105,27 @@ export const agenticAiPage = {
       icon: "workflow",
       title: "Workflow agents",
       summary:
-        "Back-office work that is too judgement-heavy for a script and too repetitive for a person. These run on a schedule or a trigger, not in a chat window.",
+        "The back-office work that needs judgement on every item and happens hundreds of times a week. These run on a schedule or a trigger rather than in a chat window: they read what arrived, decide what it is, do the part that is mechanical, and put the rest in front of the right person with the context already gathered.",
       items: [
         {
           name: "Inbox triage and routing",
-          body: "Reads incoming mail, classifies it, drafts the reply, routes what needs a human to the right person with context attached.",
+          body: "Reads what comes in, classifies it, drafts the reply, and routes anything wanting a decision to the person who makes it, with the history attached.",
         },
         {
           name: "Lead enrichment",
-          body: "Takes a bare form submission, researches the company, scores it against your criteria and files it in the CRM ready to work.",
+          body: "Takes a bare form submission, researches the company behind it, scores it against your own criteria, and files it in the CRM ready to work.",
         },
         {
           name: "Document extraction",
-          body: "Invoices, purchase orders, KYC documents and contracts turned into structured records, with the uncertain fields flagged rather than quietly guessed.",
+          body: "Invoices, purchase orders, KYC documents and contracts turned into structured records. Fields it is confident about go straight through; the rest are flagged for a person to confirm.",
         },
         {
           name: "Reconciliation",
-          body: "Matches invoices to payments to purchase orders, and surfaces only the exceptions that genuinely need a person to look.",
+          body: "Matches invoices to payments to purchase orders across systems, and puts the handful of genuine exceptions in front of your accounts team.",
         },
         {
           name: "Scheduled reporting",
-          body: "Pulls the numbers, writes the commentary a human would write, and posts it where the team already looks.",
-        },
-      ],
-    },
-    {
-      id: "in-product",
-      index: "04",
-      icon: "sparkles",
-      title: "AI inside your product",
-      summary:
-        "Not a bot bolted to the corner of the screen — a feature of your software, built to the same standard as the rest of it.",
-      items: [
-        {
-          name: "Embedded copilot",
-          body: "An assistant that understands the screen the user is on and can act on their behalf, with streaming responses and a UI that reacts as tools run.",
-        },
-        {
-          name: "Semantic search",
-          body: "Search that finds the right record when the user does not know the exact words, sitting alongside your existing keyword search rather than replacing it.",
-        },
-        {
-          name: "Summaries and drafts",
-          body: "Threads, tickets, meetings and documents condensed, or first drafts generated, at the point in the flow where someone would otherwise start from a blank box.",
-        },
-        {
-          name: "Natural-language reporting",
-          body: "Users ask a question in plain words; the agent writes the query, runs it against your data and returns the answer with the numbers it used.",
-        },
-      ],
-    },
-    {
-      id: "crm",
-      index: "05",
-      icon: "chart",
-      title: "Customer management",
-      summary:
-        "Agents pointed at the relationship rather than the conversation — keeping your CRM honest without anyone having to maintain it.",
-      items: [
-        {
-          name: "Conversations into the CRM",
-          body: "Every chat, call and email logged against the right contact with a summary and next action, so the record is current without a person updating it.",
-        },
-        {
-          name: "Follow-up sequences",
-          body: "Drafts the follow-up your rep keeps meaning to send, at the moment it should go, for them to approve or send as-is.",
-        },
-        {
-          name: "Intent and churn signals",
-          body: "Watches support and usage patterns for the language that precedes a cancellation or a purchase, and flags the account while it still matters.",
-        },
-        {
-          name: "Deflection analytics",
-          body: "Shows which questions the agent answered, which it escalated and which it got wrong — which is also your roadmap for what to document next.",
+          body: "Pulls the numbers, writes the commentary a human would write about them, and posts it where the team already looks on the morning they need it.",
         },
       ],
     },

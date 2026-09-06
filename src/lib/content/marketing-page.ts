@@ -54,7 +54,7 @@ export const marketingPage: {
   },
 
   hero: {
-    eyebrow: "01 — Growth & Marketing",
+    eyebrow: "Growth & Marketing",
     headline: ["Demand, not just", "impressions."],
     lede: "Paid search, paid social, SEO, content and creators — measured with the analytics to say which of them actually moved revenue. Plus the newest channel nobody has a playbook for: what an AI assistant says when someone asks it to recommend a business like yours.",
     /** Overlaid on the hero panel, the way /academy badges its card. */
