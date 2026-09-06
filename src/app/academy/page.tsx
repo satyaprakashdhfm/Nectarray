@@ -7,6 +7,7 @@ import { EnrolForm } from "@/components/academy/EnrolForm";
 import { AcademyHero } from "@/components/academy/AcademyHero";
 import { FloatingActions } from "@/components/academy/FloatingActions";
 import { StudentVoices } from "@/components/academy/StudentVoices";
+import { TeachingScope } from "@/components/academy/TeachingScope";
 import { Offerings } from "@/components/academy/Offerings";
 import { Placements } from "@/components/academy/Placements";
 import { Footer } from "@/components/layout/Footer";
@@ -32,6 +33,7 @@ export default function AcademyPage() {
       <main id="main" className="pt-[72px]">
         <AcademyHero />
         <AcademyNav />
+        <TeachingScope />
         <AboutCourse />
         <Offerings />
         <Curriculum />

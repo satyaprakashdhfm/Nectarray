@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { trackEvent } from "@/lib/analytics";
@@ -55,6 +55,7 @@ export function EnrolForm() {
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [reply, setReply] = useState("");
 
   const [background, setBackground] = useState("");
   const [experience, setExperience] = useState("");
@@ -108,6 +109,34 @@ export function EnrolForm() {
         method: "academy_form",
       });
       setStatus("sent");
+
+      /*
+       * The answer is fetched after the enquiry is safely away, not as part
+       * of sending it. A model call is the slowest and least reliable step
+       * here, and an applicant whose form failed because an assistant timed
+       * out is a lead lost for no reason. The confirmation is already on
+       * screen; this fills in underneath it when it arrives.
+       */
+      void fetch("/api/academy-fit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          background,
+          experience,
+          goal,
+          timeline,
+        }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.reply) setReply(data.reply as string);
+        })
+        .catch(() => {
+          // Silent by design. They have their confirmation either way.
+        });
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "That did not go through.",
@@ -187,6 +216,25 @@ export function EnrolForm() {
                   business day — usually with a question or two about where you
                   are starting from.
                 </p>
+
+                {/* The answer to the question they actually filled this in to
+                    ask: does this programme fit what I am after. Appears when
+                    it arrives; its absence is never an error state. */}
+                {reply && (
+                  <div className="border-line bg-mist mt-7 max-w-md rounded-2xl border p-5 text-left">
+                    <p className="eyebrow flex items-center gap-2">
+                      <Sparkles
+                        className="text-brand-deep size-3.5"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      On your answers
+                    </p>
+                    <p className="text-ink-soft mt-2.5 text-[0.9375rem] leading-relaxed">
+                      {reply}
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <>

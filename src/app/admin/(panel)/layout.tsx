@@ -21,6 +21,7 @@ const TABS = [
   { href: "/admin/codes", label: "Codes" },
   { href: "/admin/cohort", label: "Class" },
   { href: "/admin/lessons", label: "Lessons" },
+  { href: "/admin/enquiries", label: "Enquiries" },
 ];
 
 /**
