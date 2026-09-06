@@ -281,6 +281,70 @@ export const academy: {
       },
       {
         n: "03",
+        title: "Data Science & Agentic AI",
+        days: "11 days",
+        summary:
+          "The half teams are hiring for: pandas and models first, then agents that retrieve, remember, call real tools and get judged against an evaluation set.",
+        topics: [
+          {
+            days: "Day 1",
+            title: "NumPy and pandas",
+            body: "Arrays, DataFrames, vectorised thinking, grouping and joining — the two libraries everything else sits on.",
+          },
+          {
+            days: "Day 2",
+            title: "Cleaning real data",
+            body: "Types that lie, dates that ambiguate, near-duplicate text, missing values, and the assertions that catch them.",
+          },
+          {
+            days: "Day 3",
+            title: "Machine learning in one pass",
+            body: "scikit-learn's four methods, honest splits, pipelines that prevent leakage, and choosing a metric you can defend.",
+          },
+          {
+            days: "Day 4",
+            title: "Deep learning, NLP and embeddings",
+            body: "Networks and transformers briefly; tokens and embeddings properly, because everything after this depends on them.",
+          },
+          {
+            days: "Day 5",
+            title: "What an agent actually is",
+            body: "The loop, tool definitions as prompts, and the five ways agents fail in production.",
+          },
+          {
+            days: "Day 6",
+            title: "Retrieval-augmented generation",
+            body: "Chunking, embeddings, pgvector, hybrid search, reranking, citations, and measuring recall rather than eyeballing it.",
+          },
+          {
+            days: "Day 7",
+            title: "LangChain and LangGraph",
+            body: "Chains where a line is enough; state, nodes, edges, checkpointers and human-in-the-loop where it is not.",
+          },
+          {
+            days: "Day 8",
+            title: "Memory, sessions and users",
+            body: "Working, session and long-term memory as three separate problems, with the context budget they have to fit.",
+          },
+          {
+            days: "Day 9",
+            title: "MCP — the Model Context Protocol",
+            body: "Tools, resources and prompts; stdio and Streamable HTTP; writing a server, and the security that goes with one.",
+          },
+          {
+            days: "Day 10",
+            title: "The framework landscape",
+            body: "LangGraph, OpenAI Agents SDK, Vercel AI SDK, AutoGen, Semantic Kernel, Azure AI Foundry — and when each earns its place.",
+          },
+          {
+            days: "Day 11",
+            title: "Shipping an agent",
+            body: "Evaluation sets, guardrails, retries, cost control, observability and streaming — the work that makes a demo a product.",
+          },
+        ],
+      },
+      {
+        n: "04",
         title: "Placement Readiness & Career Strategy",
         days: "5 days",
         summary:
