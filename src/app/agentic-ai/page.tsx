@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { IndustryTabs } from "@/components/agentic/IndustryTabs";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { agenticAiPage, company } from "@/lib/content";
@@ -266,8 +267,8 @@ export default function AgenticAiPage() {
 
             <Reveal delay={70}>
               <p className="lede mt-5 max-w-2xl">
-                Three kinds of build, each with the parts we have already
-                solved. Pick the one that matches the work you want taken off
+                Two kinds of build, each with the parts we have already solved.
+                Pick the one that matches the work you want taken off
                 someone&rsquo;s desk.
               </p>
             </Reveal>
@@ -329,6 +330,39 @@ export default function AgenticAiPage() {
                 </Reveal>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* ── What it looks like in a business ─────────────────────── */}
+        <section
+          id="industries"
+          className="border-line bg-mist relative scroll-mt-24 overflow-hidden border-y py-20 sm:py-24"
+        >
+          <div
+            className="grid-paper pointer-events-none absolute inset-0 -z-10 opacity-60"
+            aria-hidden
+          />
+
+          <div className="shell-wide">
+            <Reveal>
+              <h2 className="display text-ink max-w-3xl text-[2rem] sm:text-[2.6rem]">
+                What that looks like on a Tuesday
+              </h2>
+            </Reveal>
+
+            <Reveal delay={70}>
+              <p className="lede mt-5 max-w-2xl">
+                The same two builds, in four businesses. Each tab is one real
+                job of work: what you ask for, what it is plugged into, and the
+                view whoever owns that job opens afterwards.
+              </p>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <div className="mt-10">
+                <IndustryTabs />
+              </div>
+            </Reveal>
           </div>
         </section>
 

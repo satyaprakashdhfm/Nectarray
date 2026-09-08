@@ -8,9 +8,9 @@ import type { IconCard, Step } from "@/types";
 
 export const agenticAiPage = {
   meta: {
-    title: "Agentic AI — chatbots, workflow agents and custom MCP servers",
+    title: "Agentic AI — customer care agents and custom MCP servers",
     description:
-      "NectArray builds AI agents that do work: support and sales chatbots grounded in your own data, back-office workflow agents, in-product copilots, and custom MCP servers that expose your systems as tools.",
+      "NectArray builds AI agents that do work: support and sales agents grounded in your own data, on chat, WhatsApp and the phone, and custom MCP servers that expose your systems as tools.",
   },
 
   hero: {
@@ -32,7 +32,7 @@ export const agenticAiPage = {
   },
 
   /* ---------------------------------------------------------------------
-     The five families of work, each with concrete deliverables
+     The families of work, each with concrete deliverables
   --------------------------------------------------------------------- */
   families: [
     {
@@ -99,35 +99,330 @@ export const agenticAiPage = {
         },
       ],
     },
+  ],
+
+  /* ---------------------------------------------------------------------
+     What it looks like in an actual business
+
+     The two families above say what we build. These say what it does on a
+     Tuesday, which is the question a buyer is really asking — so each tab
+     is one real job of work, the systems it is plugged into, and the view
+     the person who owns that job would open afterwards.
+
+     The screens are illustrations of the shape of the output, not
+     screenshots of anyone's data.
+  --------------------------------------------------------------------- */
+  industries: [
     {
-      id: "workflows",
-      index: "03",
-      icon: "workflow",
-      title: "Workflow agents",
-      summary:
-        "The back-office work that needs judgement on every item and happens hundreds of times a week. These run on a schedule or a trigger rather than in a chat window: they read what arrived, decide what it is, do the part that is mechanical, and put the rest in front of the right person with the context already gathered.",
-      items: [
-        {
-          name: "Inbox triage and routing",
-          body: "Reads what comes in, classifies it, drafts the reply, and routes anything wanting a decision to the person who makes it, with the history attached.",
-        },
-        {
-          name: "Lead enrichment",
-          body: "Takes a bare form submission, researches the company behind it, scores it against your own criteria, and files it in the CRM ready to work.",
-        },
-        {
-          name: "Document extraction",
-          body: "Invoices, purchase orders, KYC documents and contracts turned into structured records. Fields it is confident about go straight through; the rest are flagged for a person to confirm.",
-        },
-        {
-          name: "Reconciliation",
-          body: "Matches invoices to payments to purchase orders across systems, and puts the handful of genuine exceptions in front of your accounts team.",
-        },
-        {
-          name: "Scheduled reporting",
-          body: "Pulls the numbers, writes the commentary a human would write about them, and posts it where the team already looks on the morning they need it.",
-        },
+      id: "financial-services",
+      label: "Financial services",
+      icon: "chart",
+      title: "Close the books without the Tuesday scramble",
+      body: "The agent reads your ledger and your gateway settlements, reconciles one against the other, and tells you what your cash actually is today rather than what the balance says. The exceptions come to you already investigated.",
+      points: [
+        "Cleared cash separated from money still in transit",
+        "Overdue receivables ranked by what they would close",
+        "A reminder drafted per invoice, for you to send",
       ],
+      prompt:
+        "Pull our cash position from the books and reconcile it against gateway settlements. Rank the overdue invoices that would close the gap, and draft a reminder for each.",
+      connectors: ["Tally / Zoho Books", "Razorpay"],
+      screen: {
+        file: "Cash-position.xlsx",
+        columns: ["Account", "Balance", "As of", "Note"],
+        rows: [
+          {
+            cells: [
+              "Operating current a/c",
+              "₹62,34,018",
+              "15 Oct",
+              "Primary — HDFC",
+            ],
+          },
+          {
+            cells: ["Fixed deposit", "₹30,25,000", "15 Oct", "90-day reserve"],
+          },
+          {
+            cells: [
+              "Gateway — settled",
+              "₹4,12,044",
+              "15 Oct",
+              "Withdrawable now",
+            ],
+          },
+          {
+            cells: [
+              "Gateway — in transit",
+              "₹18,45,000",
+              "15 Oct",
+              "T+2 — see Settlements",
+            ],
+            tone: "muted",
+          },
+          {
+            cells: [
+              "Cleared cash today",
+              "₹96,71,062",
+              "",
+              "Excludes in transit",
+            ],
+            tone: "total",
+          },
+          {
+            cells: [
+              "Projected by 22 Oct",
+              "₹1,15,16,062",
+              "",
+              "Includes in transit",
+            ],
+            tone: "total",
+          },
+          {
+            cells: [
+              "Vendor run due 18 Oct",
+              "−₹84,50,000",
+              "18 Oct",
+              "Net of TDS",
+            ],
+            tone: "bad",
+          },
+          {
+            cells: [
+              "Gap vs reserve target",
+              "+₹66,062",
+              "",
+              "Tight — transit must clear",
+            ],
+            tone: "warn",
+          },
+          {
+            cells: [
+              "Gap if transit excluded",
+              "−₹17,78,938",
+              "",
+              "Collect receivables as backstop",
+            ],
+            tone: "bad",
+          },
+        ],
+        sheets: ["Cash position", "Settlements", "Overdue A/R"],
+      },
+    },
+    {
+      id: "small-business",
+      label: "Small business",
+      icon: "briefcase",
+      title: "Answer every enquiry, on the channel it arrived on",
+      body: "Most of what a small team answers all week is the same nine questions. The agent takes those on WhatsApp, chat and the phone, from your own catalogue and policies, books what needs booking, and sends you only the ones that want a decision.",
+      points: [
+        "Order, delivery and pricing questions answered from your data",
+        "Slots booked on the calendar your team already uses",
+        "Refunds and complaints handed to you with the full thread",
+      ],
+      prompt:
+        "Answer order and delivery questions on WhatsApp from our catalogue, book installation slots on the real calendar, and send me anything about a refund.",
+      connectors: ["WhatsApp Business", "Google Calendar"],
+      screen: {
+        file: "Enquiries — this week",
+        columns: ["Customer", "Channel", "Asked for", "Outcome"],
+        rows: [
+          {
+            cells: [
+              "Kavya R.",
+              "WhatsApp",
+              "Delivery date, order #4821",
+              "Answered",
+            ],
+            tone: "good",
+          },
+          {
+            cells: [
+              "Sunrise Traders",
+              "Web chat",
+              "Bulk pricing, 200 units",
+              "Quote sent",
+            ],
+            tone: "good",
+          },
+          {
+            cells: [
+              "Imran S.",
+              "Phone",
+              "Reschedule installation",
+              "Booked — Thu 11:00",
+            ],
+            tone: "good",
+          },
+          {
+            cells: [
+              "Deepa M.",
+              "WhatsApp",
+              "Refund, damaged item",
+              "Passed to you",
+            ],
+            tone: "warn",
+          },
+          {
+            cells: ["Nithin P.", "Web chat", "GST invoice copy", "Sent"],
+            tone: "good",
+          },
+          {
+            cells: ["Handled without you", "82 of 91", "", "Last 7 days"],
+            tone: "total",
+          },
+          {
+            cells: [
+              "Waiting on a person",
+              "9",
+              "",
+              "Each with the thread attached",
+            ],
+            tone: "total",
+          },
+        ],
+        sheets: ["Enquiries", "Bookings", "Handovers"],
+      },
+    },
+    {
+      id: "healthcare",
+      label: "Healthcare",
+      icon: "shield",
+      title: "Run the front desk, not the consultation",
+      body: "Scheduling, reminders, and the paperwork around a visit — deliberately nothing clinical. The agent confirms tomorrow's list, offers cancelled slots down the waitlist in order, and flags the patients whose insurance approval has not come back.",
+      points: [
+        "Confirmations and reminders before every appointment",
+        "Cancelled slots refilled from the waitlist automatically",
+        "Pre-authorisation chased and escalated when it stalls",
+      ],
+      prompt:
+        "Confirm tomorrow's appointments over WhatsApp, offer cancelled slots to the waitlist in order, and flag anyone whose insurance pre-authorisation is still pending.",
+      connectors: ["Practice management system", "WhatsApp Business"],
+      screen: {
+        file: "Front desk — Monday",
+        columns: ["Time", "Patient", "Reason", "Status"],
+        rows: [
+          {
+            cells: ["09:15", "A. Menon", "Follow-up, post-op", "Confirmed"],
+            tone: "good",
+          },
+          {
+            cells: ["09:45", "S. Iqbal", "New patient", "Confirmed"],
+            tone: "good",
+          },
+          {
+            cells: ["10:30", "R. Pillai", "Report review", "Reminded twice"],
+            tone: "muted",
+          },
+          {
+            cells: [
+              "11:00",
+              "Waitlist",
+              "Cancellation offered",
+              "Slot refilled",
+            ],
+            tone: "good",
+          },
+          {
+            cells: [
+              "11:30",
+              "T. Rao",
+              "Pre-auth outstanding",
+              "Passed to front desk",
+            ],
+            tone: "warn",
+          },
+          {
+            cells: ["Reminders sent", "48", "", "24 hours and 2 hours before"],
+            tone: "total",
+          },
+          {
+            cells: [
+              "No-shows this week",
+              "3 of 96",
+              "",
+              "Was 11 the week before",
+            ],
+            tone: "total",
+          },
+        ],
+        sheets: ["Schedule", "Waitlist", "Pre-auth"],
+      },
+    },
+    {
+      id: "retail",
+      label: "Retail & e-commerce",
+      icon: "cart",
+      title: "Keep the order questions off your inbox",
+      body: "Where is it, can I return it, why was I charged that. The agent answers all three from your store and your courier, books the pickup when a return is approved, and escalates the ones where a person has to make a call.",
+      points: [
+        "Order status and tracking answered from the store itself",
+        "Approved returns booked with the courier, end to end",
+        "Pricing and goodwill decisions escalated, never guessed",
+      ],
+      prompt:
+        "Answer order status and return questions from the store, book courier pickups for approved returns, and escalate anything about pricing to me.",
+      connectors: ["Shopify", "Shiprocket"],
+      screen: {
+        file: "Orders — last 30 days",
+        columns: ["Order", "Question", "What the agent did", "Result"],
+        rows: [
+          {
+            cells: [
+              "#4821",
+              "Where is my order",
+              "Gave live tracking and ETA",
+              "Closed",
+            ],
+            tone: "good",
+          },
+          {
+            cells: [
+              "#4790",
+              "Delivery running late",
+              "Told them, before they asked twice",
+              "No ticket",
+            ],
+            tone: "good",
+          },
+          {
+            cells: [
+              "#4744",
+              "Return, wrong size",
+              "Booked courier pickup",
+              "Closed",
+            ],
+            tone: "good",
+          },
+          {
+            cells: [
+              "#4712",
+              "Price differs from the ad",
+              "Escalated with screenshots",
+              "Passed to you",
+            ],
+            tone: "warn",
+          },
+          {
+            cells: [
+              "Tickets deflected",
+              "71%",
+              "",
+              "Of everything that came in",
+            ],
+            tone: "total",
+          },
+          {
+            cells: [
+              "First reply",
+              "9 seconds",
+              "",
+              "Was a little over 4 hours",
+            ],
+            tone: "total",
+          },
+        ],
+        sheets: ["Orders", "Returns", "Escalations"],
+      },
     },
   ],
 
