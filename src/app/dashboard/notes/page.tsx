@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
-import { createClient, getAccess } from "@/lib/supabase/server";
+import { asc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { lessons, modules } from "@/lib/db/schema";
+import { getAccess } from "@/lib/auth/access";
 
 /**
  * The notes index does not exist as a page any more — it opens the first
@@ -21,19 +24,21 @@ export default async function NotesPage({
 
   const { module: wanted } = await searchParams;
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("modules")
-    .select("slug, position, lessons(id, position)")
-    .order("position");
+  /*
+   * The first lesson of the chosen course, or of the first course that has
+   * one. The join drops any module with nothing published, so a course that
+   * has not started yet cannot be landed on.
+   */
+  const rows = await db
+    .select({ slug: modules.slug, lessonId: lessons.id })
+    .from(modules)
+    .innerJoin(lessons, eq(lessons.moduleId, modules.id))
+    .orderBy(asc(modules.position), asc(lessons.position));
 
-  const modules = (data ?? []).filter((m) => m.lessons.length > 0);
-  const chosen = modules.find((m) => m.slug === wanted) ?? modules[0];
-  const first = [...(chosen?.lessons ?? [])].sort(
-    (a, b) => a.position - b.position,
-  )[0];
+  const first =
+    rows.find((row) => row.slug === wanted)?.lessonId ?? rows[0]?.lessonId;
 
-  if (first) redirect(`/dashboard/notes/${first.id}`);
+  if (first) redirect(`/dashboard/notes/${first}`);
 
   return (
     <div className="card p-8 text-center">

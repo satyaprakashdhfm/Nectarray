@@ -2,21 +2,20 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, PenSquare, Video } from "lucide-react";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
 import { cohortRoom } from "@/lib/meeting";
-import { createClient, getAccess } from "@/lib/supabase/server";
+import { asc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  lessons,
+  modules as modulesTable,
+  practiceProgress,
+  practiceQuestions,
+} from "@/lib/db/schema";
+import { getAccess } from "@/lib/auth/access";
 import { displayName } from "@/lib/utils";
 
-type ModuleRow = {
-  id: string;
-  slug: string;
-  title: string;
-  summary: string | null;
-  position: number;
-  lessons: { id: string; position: number }[];
-};
-
 export default async function DashboardPage() {
-  const { profile, enrolment, active, status } = await getAccess();
-  const name = displayName(profile?.first_name);
+  const { user, enrolment, active, status } = await getAccess();
+  const name = displayName(user?.firstName);
 
   if (!active) {
     return (
@@ -29,30 +28,49 @@ export default async function DashboardPage() {
     );
   }
 
-  const cohort = enrolment?.cohorts as {
-    name?: string;
-    meet_url?: string | null;
-    room_slug?: string | null;
-  } | null;
-  const room = cohort ? cohortRoom(cohort) : null;
+  const room = enrolment
+    ? cohortRoom({
+        meet_url: enrolment.meetUrl,
+        room_slug: enrolment.roomSlug,
+      })
+    : null;
 
-  const supabase = await createClient();
-  const [{ data: modules }, { data: questions }, { data: progress }] =
-    await Promise.all([
-      supabase
-        .from("modules")
-        .select("id, slug, title, summary, position, lessons(id, position)")
-        .order("position"),
-      supabase
-        .from("practice_questions")
-        .select("id, track")
-        .eq("is_published", true),
-      supabase.from("practice_progress").select("question_id"),
-    ]);
+  const [moduleRows, lessonRows, questions, progress] = await Promise.all([
+    db
+      .select({
+        id: modulesTable.id,
+        title: modulesTable.title,
+        summary: modulesTable.summary,
+        position: modulesTable.position,
+      })
+      .from(modulesTable)
+      .orderBy(asc(modulesTable.position)),
+    // Every published lesson, which is thirty-odd rows — cheaper to group in
+    // memory than to ask Postgres for a count and a first id per module.
+    db
+      .select({
+        id: lessons.id,
+        moduleId: lessons.moduleId,
+      })
+      .from(lessons)
+      .orderBy(asc(lessons.position)),
+    db
+      .select({ id: practiceQuestions.id, track: practiceQuestions.track })
+      .from(practiceQuestions)
+      .where(eq(practiceQuestions.isPublished, true)),
+    user
+      ? db
+          .select({ questionId: practiceProgress.questionId })
+          .from(practiceProgress)
+          .where(eq(practiceProgress.userId, user.id))
+      : Promise.resolve([]),
+  ]);
 
-  const solvedIds = new Set((progress ?? []).map((row) => row.question_id));
-  const track = (name: string) => {
-    const rows = (questions ?? []).filter((q) => q.track === name);
+  // Scoped to this student explicitly. Row-level security used to do that;
+  // without it, an unscoped read would count everybody's solved questions.
+  const solvedIds = new Set(progress.map((row) => row.questionId));
+  const track = (which: string) => {
+    const rows = questions.filter((q) => q.track === which);
     return {
       done: rows.filter((q) => solvedIds.has(q.id)).length,
       total: rows.length,
@@ -61,9 +79,16 @@ export default async function DashboardPage() {
   const python = track("python");
   const sql = track("sql");
 
-  const taught = ((modules ?? []) as ModuleRow[]).filter(
-    (m) => m.lessons.length > 0,
-  );
+  /*
+   * A module with nothing published is not shown at all — an empty card that
+   * opens nothing is worse than no card.
+   */
+  const taught = moduleRows
+    .map((module) => ({
+      ...module,
+      lessons: lessonRows.filter((lesson) => lesson.moduleId === module.id),
+    }))
+    .filter((module) => module.lessons.length > 0);
 
   return (
     <div className="shell py-8 lg:py-10">
@@ -130,9 +155,7 @@ export default async function DashboardPage() {
 
         <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {taught.map((module) => {
-            const first = [...module.lessons].sort(
-              (a, b) => a.position - b.position,
-            )[0];
+            const first = module.lessons[0];
             return (
               <li key={module.id}>
                 {/*

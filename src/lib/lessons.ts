@@ -1,15 +1,9 @@
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { lessons, type Lesson } from "@/lib/db/schema";
 
-export type Lesson = {
-  id: string;
-  module_id: string;
-  day_label: string;
-  title: string;
-  summary: string | null;
-  body_md: string | null;
-  position: number;
-};
+export type { Lesson };
 
 /**
  * One lesson, fetched at most once per request.
@@ -19,13 +13,12 @@ export type Lesson = {
  * alone that is the same 40 KB row pulled twice over the same request.
  */
 export const getLesson = cache(async (id: string): Promise<Lesson | null> => {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("lessons")
-    .select("id, module_id, day_label, title, summary, body_md, position")
-    .eq("id", id)
-    .maybeSingle();
-  return (data as Lesson | null) ?? null;
+  const [row] = await db
+    .select()
+    .from(lessons)
+    .where(eq(lessons.id, id))
+    .limit(1);
+  return row ?? null;
 });
 
 /**

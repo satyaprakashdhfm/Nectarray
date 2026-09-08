@@ -19,6 +19,18 @@ import { sessions, users, type User } from "@/lib/db/schema";
  */
 
 const COOKIE = "na_session";
+/**
+ * A second cookie, readable by scripts, holding nothing but the fact that
+ * the first one exists.
+ *
+ * The marketing pages are static and must stay that way — a server-side
+ * session lookup there would turn a cached page into a function call per
+ * visitor. The header and the enrol button only need to know which label to
+ * show, so they read this. It carries no identity and grants nothing: forging
+ * it changes a word on a button and gets no further, because everything that
+ * matters is checked against the real cookie on the server.
+ */
+const HINT = "na_signed_in";
 const LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 
 const hash = (token: string) =>
@@ -46,14 +58,20 @@ export async function startSession(
     userAgent: userAgent?.slice(0, 400) ?? null,
   });
 
+  await writeCookies(token, expiresAt);
+}
+
+/** The pair: the session itself, and the hint the client scripts can read. */
+async function writeCookies(token: string, expiresAt: Date): Promise<void> {
   const jar = await cookies();
-  jar.set(COOKIE, token, {
-    httpOnly: true,
+  const shared = {
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "lax" as const,
     path: "/",
     expires: expiresAt,
-  });
+  };
+  jar.set(COOKIE, token, { ...shared, httpOnly: true });
+  jar.set(HINT, "1", { ...shared, httpOnly: false });
 }
 
 /**
@@ -97,15 +115,7 @@ async function extend(token: string): Promise<void> {
     .update(sessions)
     .set({ expiresAt })
     .where(eq(sessions.tokenHash, hash(token)));
-
-  const jar = await cookies();
-  jar.set(COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: expiresAt,
-  });
+  await writeCookies(token, expiresAt);
 }
 
 /** Ends this session everywhere it counts: the row goes, then the cookie. */
@@ -116,6 +126,7 @@ export async function endSession(): Promise<void> {
     await db.delete(sessions).where(eq(sessions.tokenHash, hash(token)));
   }
   jar.delete(COOKIE);
+  jar.delete(HINT);
 }
 
 /**

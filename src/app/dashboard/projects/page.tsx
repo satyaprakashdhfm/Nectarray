@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, Check, FolderGit2 } from "lucide-react";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
-import { createClient, getAccess } from "@/lib/supabase/server";
+import { asc, desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { projectSubmissions, projects as projectsTable } from "@/lib/db/schema";
+import { getAccess } from "@/lib/auth/access";
 import { cn } from "@/lib/utils";
 
 type Project = {
@@ -13,7 +16,7 @@ type Project = {
 };
 
 export default async function ProjectsPage() {
-  const { active, status } = await getAccess();
+  const { user, active, status } = await getAccess();
   if (!active) {
     return (
       <div className="shell py-8 lg:py-10">
@@ -22,17 +25,31 @@ export default async function ProjectsPage() {
     );
   }
 
-  const supabase = await createClient();
-  const [{ data: projects }, { data: submissions }] = await Promise.all([
-    supabase
-      .from("projects")
-      .select("id, slug, position, title, summary")
-      .eq("is_published", true)
-      .order("position"),
-    supabase
-      .from("project_submissions")
-      .select("project_id, status, score, created_at")
-      .order("created_at", { ascending: false }),
+  const [projects, submissions] = await Promise.all([
+    db
+      .select({
+        id: projectsTable.id,
+        slug: projectsTable.slug,
+        position: projectsTable.position,
+        title: projectsTable.title,
+        summary: projectsTable.summary,
+      })
+      .from(projectsTable)
+      .where(eq(projectsTable.isPublished, true))
+      .orderBy(asc(projectsTable.position)),
+    // This student's own submissions, explicitly.
+    user
+      ? db
+          .select({
+            project_id: projectSubmissions.projectId,
+            status: projectSubmissions.status,
+            score: projectSubmissions.score,
+            created_at: projectSubmissions.createdAt,
+          })
+          .from(projectSubmissions)
+          .where(eq(projectSubmissions.userId, user.id))
+          .orderBy(desc(projectSubmissions.createdAt))
+      : Promise.resolve([]),
   ]);
 
   // The most recent submission per project is the one that counts.

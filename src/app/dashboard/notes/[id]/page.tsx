@@ -5,7 +5,10 @@ import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
 import { LessonToc } from "@/components/dashboard/lesson-toc";
 import { Markdown } from "@/components/dashboard/Markdown";
 import { getLesson, stripLeadingHeading } from "@/lib/lessons";
-import { createClient, getAccess } from "@/lib/supabase/server";
+import { asc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { lessons } from "@/lib/db/schema";
+import { getAccess } from "@/lib/auth/access";
 import { tocEntries } from "@/lib/toc";
 
 export default async function LessonPage({
@@ -20,25 +23,21 @@ export default async function LessonPage({
 
   const lesson = await getLesson(id);
 
-  // RLS returns nothing rather than refusing, so "not visible to you" and
-  // "does not exist" arrive the same way — 404 is the honest answer to both.
   if (!lesson) notFound();
 
   // Neighbours for the prev/next pager, within the same module.
-  const supabase = await createClient();
-  const { data: siblings } = await supabase
-    .from("lessons")
-    .select("id, title, position")
-    .eq("module_id", lesson.module_id)
-    .order("position");
+  const list = await db
+    .select({ id: lessons.id, title: lessons.title })
+    .from(lessons)
+    .where(eq(lessons.moduleId, lesson.moduleId))
+    .orderBy(asc(lessons.position));
 
-  const list = siblings ?? [];
   const index = list.findIndex((entry) => entry.id === lesson.id);
   const prev = index > 0 ? list[index - 1] : null;
   const next = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
 
-  const body = lesson.body_md
-    ? stripLeadingHeading(lesson.body_md, lesson.title)
+  const body = lesson.bodyMd
+    ? stripLeadingHeading(lesson.bodyMd, lesson.title)
     : "";
 
   /*

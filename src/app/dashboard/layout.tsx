@@ -9,7 +9,7 @@ import {
   ThemeScript,
   ThemeToggle,
 } from "@/components/dashboard/Theme";
-import { getViewer } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/auth/access";
 
 export const metadata: Metadata = {
   title: "Dashboard — NectArray Academy",
@@ -22,7 +22,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { profile } = await getViewer();
+  const { user } = await getViewer();
 
   return (
     <div className="bg-mist min-h-screen">
@@ -37,10 +37,10 @@ export default async function DashboardLayout({
                 it. */}
             <AccountMenu
               profile={{
-                first_name: profile?.first_name ?? null,
-                last_name: profile?.last_name ?? null,
-                phone: profile?.phone ?? null,
-                email: profile?.email ?? null,
+                first_name: user?.firstName ?? null,
+                last_name: user?.lastName ?? null,
+                phone: user?.phone ?? null,
+                email: user?.email ?? null,
               }}
             />
             <Link

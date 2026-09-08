@@ -28,6 +28,7 @@ export type Viewer = {
     status: string;
     cohortId: string;
     meetUrl: string | null;
+    roomSlug: string | null;
     cohortName: string | null;
   } | null;
 };
@@ -49,6 +50,7 @@ export const getViewer = cache(async (): Promise<Viewer> => {
       status: enrolments.status,
       cohortId: enrolments.cohortId,
       meetUrl: cohorts.meetUrl,
+      roomSlug: cohorts.roomSlug,
       cohortName: cohorts.name,
     })
     .from(enrolments)

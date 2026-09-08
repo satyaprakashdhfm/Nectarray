@@ -9,7 +9,10 @@ import {
   SqlPractice,
   type SqlQuestion,
 } from "@/components/dashboard/SqlPractice";
-import { createClient, getAccess } from "@/lib/supabase/server";
+import { and, asc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { practiceProgress, practiceQuestions } from "@/lib/db/schema";
+import { getAccess } from "@/lib/auth/access";
 import { cn } from "@/lib/utils";
 
 const TRACKS = [
@@ -47,7 +50,7 @@ export default async function AssignmentsPage({
 }: {
   searchParams: Promise<{ track?: string }>;
 }) {
-  const { active, status } = await getAccess();
+  const { user, active, status } = await getAccess();
   if (!active) {
     return (
       <div className="shell py-8 lg:py-10">
@@ -59,23 +62,44 @@ export default async function AssignmentsPage({
   const { track: requested } = await searchParams;
   const track = requested === "sql" ? "sql" : "python";
 
-  const supabase = await createClient();
-  const [{ data: questions }, { data: progress }] = await Promise.all([
-    supabase
-      .from("practice_questions")
-      .select(
-        /*
-         * No expected_result here. The answers to the SQL questions come
-         * to 110 KB of JSON, and sending all of them so that one of them can
-         * be compared is most of the weight of this page. The workspace
-         * fetches the one it needs when the student presses Run.
-         */
-        "id, track, topic, difficulty, position, title, prompt_md, hint_md, solution_sql, leetcode_url, mysql_note, has_judge",
+  const [questions, progress] = await Promise.all([
+    /*
+     * No expected_result here. The answers to the SQL questions come to
+     * 110 KB of JSON, and sending all of them so that one of them can be
+     * compared is most of the weight of this page. The workspace fetches the
+     * one it needs when the student presses Run.
+     */
+    db
+      .select({
+        id: practiceQuestions.id,
+        track: practiceQuestions.track,
+        topic: practiceQuestions.topic,
+        difficulty: practiceQuestions.difficulty,
+        position: practiceQuestions.position,
+        title: practiceQuestions.title,
+        prompt_md: practiceQuestions.promptMd,
+        hint_md: practiceQuestions.hintMd,
+        solution_sql: practiceQuestions.solutionSql,
+        leetcode_url: practiceQuestions.leetcodeUrl,
+        mysql_note: practiceQuestions.mysqlNote,
+        has_judge: practiceQuestions.hasJudge,
+      })
+      .from(practiceQuestions)
+      .where(
+        and(
+          eq(practiceQuestions.track, track),
+          eq(practiceQuestions.isPublished, true),
+        ),
       )
-      .eq("track", track)
-      .eq("is_published", true)
-      .order("position"),
-    supabase.from("practice_progress").select("question_id"),
+      .orderBy(asc(practiceQuestions.position)),
+    // Scoped to this student. Row-level security used to do that; an
+    // unscoped read here would tick off everybody else's solved questions.
+    user
+      ? db
+          .select({ questionId: practiceProgress.questionId })
+          .from(practiceProgress)
+          .where(eq(practiceProgress.userId, user.id))
+      : Promise.resolve([]),
   ]);
 
   // Starter code and a few sample cases per problem. The expectations behind
@@ -89,9 +113,9 @@ export default async function AssignmentsPage({
    * looks at questions it can see, stayed at zero. One solved SQL question
    * showed up as "1 / 54" over three zeroes.
    */
-  const onThisTrack = new Set((questions ?? []).map((row) => row.id as string));
-  const solved = (progress ?? [])
-    .map((row) => row.question_id as string)
+  const onThisTrack = new Set(questions.map((row) => row.id));
+  const solved = progress
+    .map((row) => row.questionId)
     .filter((id) => onThisTrack.has(id));
 
   /*
@@ -113,12 +137,12 @@ export default async function AssignmentsPage({
       <div className="min-h-0 flex-1">
         {track === "sql" ? (
           <SqlPractice
-            questions={(questions ?? []) as unknown as SqlQuestion[]}
+            questions={questions as unknown as SqlQuestion[]}
             solved={solved}
           />
         ) : (
           <PythonJudge
-            questions={(questions ?? []) as unknown as PyQuestion[]}
+            questions={questions as unknown as PyQuestion[]}
             briefs={problemBriefs}
             solved={solved}
           />

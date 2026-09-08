@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import { NotesRail, type RailModule } from "@/components/dashboard/NotesRail";
-import { createClient, getAccess } from "@/lib/supabase/server";
+import { asc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { lessons, modules as modulesTable } from "@/lib/db/schema";
+import { getAccess } from "@/lib/auth/access";
 
 /**
  * Short tab labels. The full module title is the heading above the lesson
@@ -39,25 +42,53 @@ export default async function NotesLayout({
     return <div className="shell py-8 lg:py-10">{children}</div>;
   }
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("modules")
-    .select("id, slug, title, position, lessons(id, title, position)")
-    .order("position");
+  /*
+   * One query with the lessons nested, rather than a query per module. The
+   * rail wants the whole tree and there are four modules, so a join and a
+   * regroup beats five round trips.
+   */
+  const rows = await db
+    .select({
+      id: modulesTable.id,
+      slug: modulesTable.slug,
+      title: modulesTable.title,
+      position: modulesTable.position,
+      lessonId: lessons.id,
+      lessonTitle: lessons.title,
+      lessonPosition: lessons.position,
+    })
+    .from(modulesTable)
+    .innerJoin(lessons, eq(lessons.moduleId, modulesTable.id))
+    .orderBy(asc(modulesTable.position), asc(lessons.position));
 
   /*
-   * Modules with nothing published are dropped rather than shown empty.
+   * The join drops modules with nothing published, which is what we want.
    * "Placement Readiness" had no lessons and no short label, so it fell
    * through to the tab bar's else-branch and rendered a *second* tab reading
    * "SQL" — three tabs, two of them claiming to be the same course.
    */
-  const modules: RailModule[] = ((data ?? []) as RailModule[])
-    .filter((module) => module.lessons.length > 0)
-    .map((module) => ({
-      ...module,
-      short: SHORT[module.slug] ?? module.title.split(" ")[0],
-      lessons: [...module.lessons].sort((a, b) => a.position - b.position),
-    }));
+  const byModule = new Map<string, RailModule>();
+  for (const row of rows) {
+    let module = byModule.get(row.id);
+    if (!module) {
+      module = {
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+        position: row.position,
+        short: SHORT[row.slug] ?? row.title.split(" ")[0],
+        lessons: [],
+      };
+      byModule.set(row.id, module);
+    }
+    module.lessons.push({
+      id: row.lessonId,
+      title: row.lessonTitle,
+      position: row.lessonPosition,
+    });
+  }
+
+  const modules: RailModule[] = [...byModule.values()];
 
   return (
     <div className="mx-auto grid w-full max-w-[110rem] gap-8 px-5 py-8 md:px-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-12 lg:py-10 xl:px-10">
