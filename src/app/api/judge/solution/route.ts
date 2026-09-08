@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProblem } from "@/lib/python-tests";
-import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth/session";
 
 /**
  * The reference solution for one problem, on request.
@@ -13,10 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }

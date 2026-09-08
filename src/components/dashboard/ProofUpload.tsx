@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { Check, Loader2, Upload, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Stage =
@@ -41,37 +40,21 @@ export function ProofUpload({
       return;
     }
 
-    setStage({ at: "working", note: "Uploading…" });
+    setStage({ at: "working", note: "Checking your submission…" });
     try {
-      const supabase = createClient();
-      const { data: auth } = await supabase.auth.getUser();
-      const userId = auth.user?.id;
-      if (!userId) throw new Error("Your session expired. Sign in again.");
-
-      // The first path segment must be the user's own id — the storage policy
-      // checks exactly that, so a mistake here fails closed rather than
-      // writing into somebody else's folder.
-      const extension = file.name.split(".").pop()?.toLowerCase() ?? "png";
-      const path = `${userId}/${questionId}/${Date.now()}.${extension}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("submissions")
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (uploadError) throw new Error(uploadError.message);
-
-      const { data: attempt, error: insertError } = await supabase
-        .from("practice_attempts")
-        .insert({ user_id: userId, question_id: questionId, image_path: path })
-        .select("id")
-        .single();
-      if (insertError) throw new Error(insertError.message);
-
-      setStage({ at: "working", note: "Checking your submission…" });
+      /*
+       * Straight to the grader. This used to be three round trips — upload to
+       * a bucket, insert a row pointing at it, then ask for it to be read —
+       * and the file was read once, seconds later, and never again. One
+       * request now, and nothing is kept but the verdict.
+       */
+      const body = new FormData();
+      body.append("questionId", questionId);
+      body.append("image", file);
 
       const response = await fetch("/api/verify-submission", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attemptId: attempt.id }),
+        body,
       });
       const result = (await response.json()) as {
         accepted?: boolean;

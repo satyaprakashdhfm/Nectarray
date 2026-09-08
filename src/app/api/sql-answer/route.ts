@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAccess } from "@/lib/supabase/server";
+import { getAccess } from "@/lib/auth/access";
 import { sqlAnswer } from "@/lib/sql-answers";
 
 /**

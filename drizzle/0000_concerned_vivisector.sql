@@ -97,7 +97,6 @@ CREATE TABLE "practice_attempts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"question_id" uuid NOT NULL,
-	"image_path" text NOT NULL,
 	"status" text DEFAULT 'pending' NOT NULL,
 	"feedback" text,
 	"model" text,

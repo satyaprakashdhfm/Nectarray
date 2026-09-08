@@ -279,6 +279,16 @@ export const practiceProgress = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.questionId] })],
 );
 
+/**
+ * A student's screenshot of an accepted LeetCode submission, and what the
+ * grader made of it.
+ *
+ * The screenshot itself is not kept. It used to go into a storage bucket and
+ * be read back once, seconds later, by the grading call — so the bucket was a
+ * cupboard holding a few hundred pictures of other people's screens for no
+ * reason anybody could name. The image now goes straight to the grader in the
+ * request that uploads it, and what survives is the verdict.
+ */
 export const practiceAttempts = pgTable("practice_attempts", {
   id: uuid().primaryKey().defaultRandom(),
   userId: uuid("user_id")
@@ -287,7 +297,6 @@ export const practiceAttempts = pgTable("practice_attempts", {
   questionId: uuid("question_id")
     .notNull()
     .references(() => practiceQuestions.id, { onDelete: "cascade" }),
-  imagePath: text("image_path").notNull(),
   /** pending · accepted · rejected */
   status: text().notNull().default("pending"),
   feedback: text(),

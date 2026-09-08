@@ -69,9 +69,9 @@ export default async function NotesLayout({
    */
   const byModule = new Map<string, RailModule>();
   for (const row of rows) {
-    let module = byModule.get(row.id);
-    if (!module) {
-      module = {
+    let entry = byModule.get(row.id);
+    if (!entry) {
+      entry = {
         id: row.id,
         slug: row.slug,
         title: row.title,
@@ -79,9 +79,9 @@ export default async function NotesLayout({
         short: SHORT[row.slug] ?? row.title.split(" ")[0],
         lessons: [],
       };
-      byModule.set(row.id, module);
+      byModule.set(row.id, entry);
     }
-    module.lessons.push({
+    entry.lessons.push({
       id: row.lessonId,
       title: row.lessonTitle,
       position: row.lessonPosition,

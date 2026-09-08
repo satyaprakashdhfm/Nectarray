@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
+import { academyEnquiries } from "@/lib/db/schema";
 import { academy, placements } from "@/lib/content";
 
 /**
@@ -153,17 +154,21 @@ export async function POST(request: Request) {
   }
 
   /*
-   * Recorded with the service role. The table has no insert policy on
-   * purpose: the form is public, so granting `anon` insert would be an open
-   * write endpoint on a table of names, emails and phone numbers. Writing it
+   * Written from the server, which is the only thing that can write it. The
+   * form is public, so an insert the browser could make would be an open
+   * write endpoint on a table of names, emails and phone numbers. Doing it
    * here also means `fit` and `reply` can only be set by the thing that
    * produced them.
    */
-  const admin = createAdminClient();
-  if (admin) {
-    const { error } = await admin.from("academy_enquiries").insert({
-      ...enquiry,
+  try {
+    await db.insert(academyEnquiries).values({
+      name: enquiry.name,
+      email: enquiry.email,
       phone: enquiry.phone || null,
+      background: enquiry.background,
+      experience: enquiry.experience,
+      goal: enquiry.goal,
+      timeline: enquiry.timeline,
       fit,
       reply: reply || null,
       model: reply ? MODEL : null,
@@ -174,13 +179,10 @@ export async function POST(request: Request) {
         `Wants to start: ${enquiry.timeline}`,
       ].join("\n"),
     });
+  } catch (error) {
     // Logged, never surfaced: the applicant's reply must not fail because
     // our record-keeping did.
-    if (error) console.error("[academy-fit] could not record enquiry:", error);
-  } else {
-    console.error(
-      "[academy-fit] SUPABASE_SERVICE_ROLE_KEY is not set — enquiry not recorded",
-    );
+    console.error("[academy-fit] could not record enquiry:", error);
   }
 
   return NextResponse.json({ fit, reply });

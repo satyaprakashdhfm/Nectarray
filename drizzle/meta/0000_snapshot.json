@@ -1,5 +1,5 @@
 {
-  "id": "fd86549b-0ba2-4009-bd72-6175ce5a9a6c",
+  "id": "3175ff40-b2fc-40d1-bba5-a0af20f46c8c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -714,12 +714,6 @@
         "question_id": {
           "name": "question_id",
           "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "image_path": {
-          "name": "image_path",
-          "type": "text",
           "primaryKey": false,
           "notNull": true
         },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { db } from "@/lib/db";
+import { practiceProgress } from "@/lib/db/schema";
+import { currentUser } from "@/lib/auth/session";
 import { isCorrect } from "@/lib/judge";
 import { getProblem } from "@/lib/python-tests";
 
@@ -56,10 +57,7 @@ function rateLimited(userId: string): boolean {
 type Body = { questionId?: unknown; slug?: unknown; source?: unknown };
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
@@ -187,15 +185,11 @@ export async function POST(request: Request) {
         };
 
   if (accepted) {
-    const admin = createAdminClient();
-    if (admin) {
-      await admin
-        .from("practice_progress")
-        .upsert(
-          { user_id: user.id, question_id: questionId },
-          { onConflict: "user_id,question_id" },
-        );
-    }
+    // The row is (user, question); solving it twice is not an error.
+    await db
+      .insert(practiceProgress)
+      .values({ userId: user.id, questionId })
+      .onConflictDoNothing();
   }
 
   return NextResponse.json({

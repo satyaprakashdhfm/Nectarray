@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  practiceAttempts,
+  practiceProgress,
+  practiceQuestions,
+} from "@/lib/db/schema";
+import { currentUser } from "@/lib/auth/session";
 
 /**
  * Checks a student's proof that they solved a Python problem.
@@ -68,77 +74,73 @@ Be strict about 3 and fair about 2. If the image is cropped, blurred or unreadab
 
 Write "reason" to the student in the second person, plainly, saying what you saw and what to do next if it did not pass.`;
 
+const MAX_BYTES = 5 * 1024 * 1024;
+
 export async function POST(request: Request) {
   // Who is asking, from the session cookie — never from the body.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
-  const admin = createAdminClient();
-  if (!admin) {
-    return NextResponse.json(
-      {
-        error:
-          "Checking is not configured yet. Set SUPABASE_SERVICE_ROLE_KEY on the deployment.",
-      },
-      { status: 503 },
-    );
-  }
-
-  let attemptId: string;
+  /*
+   * The image arrives here rather than going to a bucket first.
+   *
+   * It used to be uploaded to storage, recorded as a path, and read back
+   * seconds later by this route — which left a cupboard of other people's
+   * screenshots on disk for no purpose anybody could name. It is read once,
+   * so it is sent once, and nothing keeps it.
+   */
+  let form: FormData;
   try {
-    const body = (await request.json()) as { attemptId?: unknown };
-    if (typeof body.attemptId !== "string" || !body.attemptId) throw new Error();
-    attemptId = body.attemptId;
+    form = await request.formData();
   } catch {
-    return NextResponse.json({ error: "Missing attempt." }, { status: 400 });
+    return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
 
-  // Read the attempt as the *admin*, then check it belongs to the caller.
-  // Trusting the id alone would let anyone grade anyone else's upload.
-  const { data: attempt } = await admin
-    .from("practice_attempts")
-    .select("id, user_id, question_id, image_path, status")
-    .eq("id", attemptId)
-    .maybeSingle();
+  const questionId = String(form.get("questionId") ?? "");
+  const image = form.get("image");
 
-  if (!attempt || attempt.user_id !== user.id) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  if (!questionId || !(image instanceof File)) {
+    return NextResponse.json({ error: "Missing the image." }, { status: 400 });
   }
-  if (attempt.status !== "pending") {
+  if (image.size > MAX_BYTES) {
     return NextResponse.json(
-      { error: "That attempt has already been checked." },
-      { status: 409 },
+      { error: "That image is over 5 MB." },
+      { status: 413 },
+    );
+  }
+  if (!image.type.startsWith("image/")) {
+    return NextResponse.json(
+      { error: "That is not an image." },
+      { status: 415 },
     );
   }
 
-  const { data: question } = await admin
-    .from("practice_questions")
-    .select("id, title, prompt_md, leetcode_url, track")
-    .eq("id", attempt.question_id)
-    .maybeSingle();
+  const [question] = await db
+    .select({
+      id: practiceQuestions.id,
+      title: practiceQuestions.title,
+      prompt_md: practiceQuestions.promptMd,
+      leetcode_url: practiceQuestions.leetcodeUrl,
+    })
+    .from(practiceQuestions)
+    .where(eq(practiceQuestions.id, questionId))
+    .limit(1);
 
   if (!question) {
     return NextResponse.json({ error: "Unknown question." }, { status: 404 });
   }
 
-  const { data: file, error: downloadError } = await admin.storage
-    .from("submissions")
-    .download(attempt.image_path);
+  // Recorded before the grading call, so an attempt that times out is still
+  // on file rather than vanishing.
+  const [attempt] = await db
+    .insert(practiceAttempts)
+    .values({ userId: user.id, questionId: question.id })
+    .returning({ id: practiceAttempts.id });
 
-  if (downloadError || !file) {
-    await fail(admin, attemptId, "The uploaded image could not be read.");
-    return NextResponse.json(
-      { error: "The uploaded image could not be read." },
-      { status: 400 },
-    );
-  }
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  const attemptId = attempt.id;
+  const bytes = new Uint8Array(await image.arrayBuffer());
 
   try {
     const { object } = await generateObject({
@@ -154,7 +156,11 @@ export async function POST(request: Request) {
                 .replace("{prompt}", question.prompt_md ?? "(none given)")
                 .replace("{url}", question.leetcode_url ?? "(none given)"),
             },
-            { type: "image", image: bytes, mediaType: file.type || "image/png" },
+            {
+              type: "image",
+              image: bytes,
+              mediaType: image.type || "image/png",
+            },
           ],
         },
       ],
@@ -163,24 +169,22 @@ export async function POST(request: Request) {
     const passed =
       object.isSubmissionScreenshot && object.problemMatches && object.accepted;
 
-    await admin
-      .from("practice_attempts")
-      .update({
+    await db
+      .update(practiceAttempts)
+      .set({
         status: passed ? "accepted" : "rejected",
         feedback: object.reason,
         model: MODEL,
-        reviewed_at: new Date().toISOString(),
+        reviewedAt: new Date(),
       })
-      .eq("id", attemptId);
+      .where(eq(practiceAttempts.id, attemptId));
 
     if (passed) {
       // Idempotent: re-proving a solved problem must not error.
-      await admin
-        .from("practice_progress")
-        .upsert(
-          { user_id: user.id, question_id: question.id },
-          { onConflict: "user_id,question_id" },
-        );
+      await db
+        .insert(practiceProgress)
+        .values({ userId: user.id, questionId: question.id })
+        .onConflictDoNothing();
     }
 
     return NextResponse.json({
@@ -192,7 +196,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "The checker did not respond.";
-    await fail(admin, attemptId, message);
+    await fail(attemptId, message);
     return NextResponse.json(
       { error: "The checker could not be reached. Try again in a moment." },
       { status: 502 },
@@ -200,17 +204,15 @@ export async function POST(request: Request) {
   }
 }
 
-type Admin = NonNullable<ReturnType<typeof createAdminClient>>;
-
 /** Records that a check could not be completed, so it is not left pending. */
-async function fail(admin: Admin, attemptId: string, message: string) {
-  await admin
-    .from("practice_attempts")
-    .update({
+async function fail(attemptId: string, message: string) {
+  await db
+    .update(practiceAttempts)
+    .set({
       status: "error",
       feedback: message.slice(0, 500),
       model: MODEL,
-      reviewed_at: new Date().toISOString(),
+      reviewedAt: new Date(),
     })
-    .eq("id", attemptId);
+    .where(eq(practiceAttempts.id, attemptId));
 }

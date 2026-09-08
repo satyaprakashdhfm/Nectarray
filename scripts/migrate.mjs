@@ -1,19 +1,20 @@
 /**
- * Creates the schema in Railway Postgres and copies the content out of Supabase.
+ * Brings the database up to what src/lib/db/schema.ts describes.
  *
- * Runs as a Railway pre-deploy command, because the deployment container is
- * the only place that can reach both databases — not a laptop, and not the
- * sandbox this was written in, whose egress proxy stalls a Postgres
- * connection before a byte of protocol is exchanged.
+ * Runs as a Railway pre-deploy command, so a schema change ships with the
+ * code that needs it and no deploy can come up against a database that has
+ * not caught up. If it fails the deploy fails, which is the behaviour you
+ * want: the old container keeps serving.
  *
- * Idempotent from end to end: the DDL is guarded and every insert ignores a
- * primary-key conflict, so running it again after a half-finished attempt
- * finishes the job rather than doubling it. It is meant to run two or three
- * times in total; the pre-deploy command comes off afterwards.
+ * Idempotent by construction rather than by a ledger of what has run. The
+ * generated CREATEs are rewritten to IF NOT EXISTS, and anything that cannot
+ * be expressed that way is written out by hand in FIXUPS below. That is the
+ * honest shape for a schema this size — a migration table would be a second
+ * source of truth to keep in step with the first.
  *
- * Ids are carried across unchanged. A lesson's id is in the URL a student has
- * open in another tab and in the answers file the SQL practice reads, so
- * minting new ones would break both for nothing.
+ * On the first run it also copies content out of Supabase, which is a
+ * one-time job: once SUPABASE_SERVICE_ROLE_KEY is gone from the environment
+ * it skips silently, and that is the signal the migration is finished.
  */
 
 import fs from "node:fs";
@@ -36,7 +37,7 @@ const TABLES = [
 ];
 
 if (!DATABASE_URL) {
-  console.error("[bootstrap] DATABASE_URL is not set");
+  console.error("[migrate] DATABASE_URL is not set");
   process.exit(1);
 }
 
@@ -50,7 +51,7 @@ const sql = postgres(DATABASE_URL, {
 async function applySchema() {
   const dir = "drizzle";
   if (!fs.existsSync(dir)) {
-    console.error("[bootstrap] no drizzle/ directory in the container");
+    console.error("[migrate] no drizzle/ directory in the container");
     return false;
   }
   const file = fs
@@ -59,7 +60,7 @@ async function applySchema() {
     .sort()
     .at(-1);
   if (!file) {
-    console.error("[bootstrap] no migration in drizzle/");
+    console.error("[migrate] no migration in drizzle/");
     return false;
   }
 
@@ -75,20 +76,30 @@ async function applySchema() {
         .replace("CREATE UNIQUE INDEX ", "CREATE UNIQUE INDEX IF NOT EXISTS "),
     );
 
+  /*
+   * Changes to an existing table, written to be safe to re-run. Drizzle
+   * generates ALTERs that assume they run exactly once; these do not.
+   */
+  const FIXUPS = [
+    // The screenshot is handed straight to the grader now and never stored,
+    // so the path to a file in a bucket that no longer exists went with it.
+    "ALTER TABLE practice_attempts DROP COLUMN IF EXISTS image_path",
+  ];
+
   let applied = 0;
-  for (const statement of statements) {
+  for (const statement of [...statements, ...FIXUPS]) {
     try {
       await sql.unsafe(statement);
       applied += 1;
     } catch (error) {
       // A foreign key that already exists is the shape a re-run takes.
       if (/already exists/i.test(String(error.message))) continue;
-      console.error("[bootstrap] schema failed on:", statement.slice(0, 90));
-      console.error("[bootstrap]", error.message);
+      console.error("[migrate] schema failed on:", statement.slice(0, 90));
+      console.error("[migrate]", error.message);
       return false;
     }
   }
-  console.log(`[bootstrap] schema: ${applied}/${statements.length} statements`);
+  console.log(`[migrate] schema: ${applied} statements applied`);
   return true;
 }
 
@@ -115,7 +126,7 @@ async function readTable(table) {
 
 async function copyContent() {
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    console.log("[bootstrap] no Supabase keys — skipping the copy");
+    console.log("[migrate] no Supabase keys — content copy already done");
     return;
   }
 
@@ -123,7 +134,7 @@ async function copyContent() {
     try {
       const rows = await readTable(table);
       if (rows.length === 0) {
-        console.log(`[bootstrap] ${table}: nothing to copy`);
+        console.log(`[migrate] ${table}: nothing to copy`);
         continue;
       }
 
@@ -154,10 +165,10 @@ async function copyContent() {
         written += result.count ?? 0;
       }
       console.log(
-        `[bootstrap] ${table}: ${written} inserted of ${cleaned.length} read`,
+        `[migrate] ${table}: ${written} inserted of ${cleaned.length} read`,
       );
     } catch (error) {
-      console.error(`[bootstrap] ${table} failed:`, error.message);
+      console.error(`[migrate] ${table} failed:`, error.message);
     }
   }
 }
@@ -172,7 +183,7 @@ async function report() {
            (select count(*) from enrolment_codes)    as codes,
            (select count(*) from users)              as users
   `;
-  console.log("[bootstrap] now holds:", JSON.stringify(counts));
+  console.log("[migrate] now holds:", JSON.stringify(counts));
 }
 
 const ok = await applySchema();

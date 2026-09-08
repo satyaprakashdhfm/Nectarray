@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { projectSubmissions, projects } from "@/lib/db/schema";
+import { currentUser } from "@/lib/auth/session";
 import { fetchRepo, parseRepoUrl } from "@/lib/github";
 
 /**
@@ -37,23 +39,9 @@ const Review = z.object({
 });
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  }
-
-  const admin = createAdminClient();
-  if (!admin) {
-    return NextResponse.json(
-      {
-        error:
-          "Reviewing is not configured yet. Set SUPABASE_SERVICE_ROLE_KEY on the deployment.",
-      },
-      { status: 503 },
-    );
   }
 
   let submissionId: string;
@@ -66,15 +54,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing submission." }, { status: 400 });
   }
 
-  const { data: submission } = await admin
-    .from("project_submissions")
-    .select("id, user_id, project_id, repo_url, status")
-    .eq("id", submissionId)
-    .maybeSingle();
+  /*
+   * Scoped to the person asking, in the query rather than after it. Looking
+   * it up by id alone and checking ownership afterwards is the same answer
+   * on a good day and a data leak on the day somebody forgets the check.
+   */
+  const [submission] = await db
+    .select({
+      id: projectSubmissions.id,
+      projectId: projectSubmissions.projectId,
+      repoUrl: projectSubmissions.repoUrl,
+      status: projectSubmissions.status,
+    })
+    .from(projectSubmissions)
+    .where(
+      and(
+        eq(projectSubmissions.id, submissionId),
+        eq(projectSubmissions.userId, user.id),
+      ),
+    )
+    .limit(1);
 
-  // Read as admin, then check ownership — trusting the id alone would let
-  // anyone trigger a review of anyone else's submission.
-  if (!submission || submission.user_id !== user.id) {
+  if (!submission) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   if (submission.status !== "pending") {
@@ -84,19 +85,24 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: project } = await admin
-    .from("projects")
-    .select("title, summary, brief_md, rubric_md")
-    .eq("id", submission.project_id)
-    .maybeSingle();
+  const [project] = await db
+    .select({
+      title: projects.title,
+      summary: projects.summary,
+      brief_md: projects.briefMd,
+      rubric_md: projects.rubricMd,
+    })
+    .from(projects)
+    .where(eq(projects.id, submission.projectId))
+    .limit(1);
 
   if (!project) {
     return NextResponse.json({ error: "Unknown project." }, { status: 404 });
   }
 
-  const repo = parseRepoUrl(submission.repo_url);
+  const repo = parseRepoUrl(submission.repoUrl);
   if (!repo) {
-    await fail(admin, submissionId, "That is not a GitHub repository URL.");
+    await fail(submissionId, "That is not a GitHub repository URL.");
     return NextResponse.json(
       { error: "That is not a GitHub repository URL." },
       { status: 400 },
@@ -111,7 +117,7 @@ export async function POST(request: Request) {
       error instanceof Error
         ? error.message
         : "The repository could not be read.";
-    await fail(admin, submissionId, message);
+    await fail(submissionId, message);
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
@@ -163,17 +169,17 @@ ${contents.files
 </repository>`,
     });
 
-    await admin
-      .from("project_submissions")
-      .update({
+    await db
+      .update(projectSubmissions)
+      .set({
         status: object.passed ? "passed" : "revise",
         score: Math.round(object.score),
-        feedback_md: renderFeedback(object),
+        feedbackMd: renderFeedback(object),
         model: MODEL,
-        files_seen: contents.files.length,
-        reviewed_at: new Date().toISOString(),
+        filesSeen: contents.files.length,
+        reviewedAt: new Date(),
       })
-      .eq("id", submissionId);
+      .where(eq(projectSubmissions.id, submissionId));
 
     return NextResponse.json({
       passed: object.passed,
@@ -184,7 +190,7 @@ ${contents.files
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "The reviewer did not respond.";
-    await fail(admin, submissionId, message);
+    await fail(submissionId, message);
     return NextResponse.json(
       { error: "The reviewer could not be reached. Try again in a moment." },
       { status: 502 },
@@ -204,16 +210,15 @@ function renderFeedback(review: z.infer<typeof Review>) {
   return lines.join("\n");
 }
 
-type Admin = NonNullable<ReturnType<typeof createAdminClient>>;
-
-async function fail(admin: Admin, id: string, message: string) {
-  await admin
-    .from("project_submissions")
-    .update({
+/** Records why a review could not be done, so the student is not left waiting. */
+async function fail(id: string, message: string) {
+  await db
+    .update(projectSubmissions)
+    .set({
       status: "error",
-      feedback_md: message.slice(0, 500),
+      feedbackMd: message.slice(0, 500),
       model: MODEL,
-      reviewed_at: new Date().toISOString(),
+      reviewedAt: new Date(),
     })
-    .eq("id", id);
+    .where(eq(projectSubmissions.id, id));
 }
