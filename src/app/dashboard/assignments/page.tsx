@@ -64,7 +64,13 @@ export default async function AssignmentsPage({
     supabase
       .from("practice_questions")
       .select(
-        "id, track, topic, difficulty, position, title, prompt_md, hint_md, solution_sql, leetcode_url, mysql_note, expected_result, has_judge",
+        /*
+         * No expected_result here. The answers to the SQL questions come
+         * to 110 KB of JSON, and sending all of them so that one of them can
+         * be compared is most of the weight of this page. The workspace
+         * fetches the one it needs when the student presses Run.
+         */
+        "id, track, topic, difficulty, position, title, prompt_md, hint_md, solution_sql, leetcode_url, mysql_note, has_judge",
       )
       .eq("track", track)
       .eq("is_published", true)

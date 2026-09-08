@@ -1,0 +1,542 @@
+[
+  {
+    "position": 1,
+    "difficulty": "easy",
+    "topic": "Filtering",
+    "title": "Male patients",
+    "prompt_md": "Show the first name, last name and gender of every patient whose gender is `'M'`.",
+    "hint_md": "A single equality in the WHERE clause is all this needs.",
+    "solution_sql": "SELECT first_name, last_name, gender FROM patients WHERE gender = 'M';",
+    "mysql_note": null
+  },
+  {
+    "position": 2,
+    "difficulty": "easy",
+    "topic": "NULL handling",
+    "title": "Patients with no allergies on record",
+    "prompt_md": "Show the first name and last name of the patients who have no allergies recorded \u2014 the column is `NULL` for them.",
+    "hint_md": "`= NULL` never matches anything. NULL is tested with IS NULL.",
+    "solution_sql": "SELECT first_name, last_name FROM patients WHERE allergies IS NULL;",
+    "mysql_note": null
+  },
+  {
+    "position": 3,
+    "difficulty": "easy",
+    "topic": "Pattern matching",
+    "title": "First names starting with C",
+    "prompt_md": "Show the first name of every patient whose name starts with the letter `'C'`.",
+    "hint_md": "LIKE with `%` standing in for any run of characters.",
+    "solution_sql": "SELECT first_name FROM patients WHERE first_name LIKE 'C%';",
+    "mysql_note": null
+  },
+  {
+    "position": 4,
+    "difficulty": "easy",
+    "topic": "Ranges",
+    "title": "Weight between 100 and 120",
+    "prompt_md": "Show the first name and last name of patients whose weight is within the range 100 to 120, inclusive.",
+    "hint_md": "BETWEEN includes both ends.",
+    "solution_sql": "SELECT first_name, last_name FROM patients WHERE weight BETWEEN 100 AND 120;",
+    "mysql_note": null
+  },
+  {
+    "position": 5,
+    "difficulty": "easy",
+    "topic": "Updating rows",
+    "title": "Fill in the missing allergies",
+    "prompt_md": "Update the `allergies` column in the patients table: where a patient's allergies are `NULL`, replace the value with `'NKA'` (no known allergies).\n\nThis one changes the data rather than reading it. The database is rebuilt before every run, so you can run it as often as you like.",
+    "hint_md": "UPDATE ... SET ... WHERE. Without the WHERE you would overwrite everybody.",
+    "solution_sql": "UPDATE patients SET allergies = 'NKA' WHERE allergies IS NULL;",
+    "mysql_note": null
+  },
+  {
+    "position": 6,
+    "difficulty": "easy",
+    "topic": "Text functions",
+    "title": "Full name in one column",
+    "prompt_md": "Show the first name and last name joined into a single column showing each patient's full name.",
+    "hint_md": "SQLite joins strings with `||`.",
+    "solution_sql": "SELECT first_name || ' ' || last_name AS full_name FROM patients;",
+    "mysql_note": "MySQL has no `||` for strings by default \u2014 use `CONCAT(first_name, ' ', last_name)`."
+  },
+  {
+    "position": 7,
+    "difficulty": "easy",
+    "topic": "Joins",
+    "title": "Patients with their full province name",
+    "prompt_md": "Show the first name, last name and the full province name of each patient \u2014 `'Ontario'` rather than `'ON'`.",
+    "hint_md": "`patients.province_id` matches `province_names.province_id`.",
+    "solution_sql": "SELECT p.first_name, p.last_name, pn.province_name\nFROM patients p\nJOIN province_names pn ON pn.province_id = p.province_id;",
+    "mysql_note": null
+  },
+  {
+    "position": 8,
+    "difficulty": "easy",
+    "topic": "Dates",
+    "title": "Patients born in 2010",
+    "prompt_md": "Show how many patients have a `birth_date` with 2010 as the birth year.",
+    "hint_md": "Pull the year out of the date, then count.",
+    "solution_sql": "SELECT COUNT(*) AS total_patients FROM patients WHERE strftime('%Y', birth_date) = '2010';",
+    "mysql_note": "MySQL writes this as `YEAR(birth_date) = 2010`."
+  },
+  {
+    "position": 9,
+    "difficulty": "easy",
+    "topic": "Subqueries",
+    "title": "The tallest patient",
+    "prompt_md": "Show the first name, last name and height of the patient with the greatest height.",
+    "hint_md": "A subquery finds the maximum; the outer query finds who has it.",
+    "solution_sql": "SELECT first_name, last_name, height FROM patients\nWHERE height = (SELECT MAX(height) FROM patients);",
+    "mysql_note": null
+  },
+  {
+    "position": 10,
+    "difficulty": "easy",
+    "topic": "Filtering",
+    "title": "A specific list of patients",
+    "prompt_md": "Show all columns for the patients whose `patient_id` is one of: 1, 45, 534, 879, 1000.",
+    "hint_md": "IN takes a list.",
+    "solution_sql": "SELECT * FROM patients WHERE patient_id IN (1, 45, 534, 879, 1000);",
+    "mysql_note": null
+  },
+  {
+    "position": 11,
+    "difficulty": "easy",
+    "topic": "Aggregates",
+    "title": "Total admissions",
+    "prompt_md": "Show the total number of admissions.",
+    "hint_md": null,
+    "solution_sql": "SELECT COUNT(*) AS total_admissions FROM admissions;",
+    "mysql_note": null
+  },
+  {
+    "position": 12,
+    "difficulty": "easy",
+    "topic": "Filtering",
+    "title": "Admitted and discharged the same day",
+    "prompt_md": "Show all the columns from `admissions` where the patient was admitted and discharged on the same day.",
+    "hint_md": "Two columns can be compared to each other, not only to a value.",
+    "solution_sql": "SELECT * FROM admissions WHERE admission_date = discharge_date;",
+    "mysql_note": null
+  },
+  {
+    "position": 13,
+    "difficulty": "easy",
+    "topic": "Aggregates",
+    "title": "How often patient 579 was admitted",
+    "prompt_md": "Show the patient id and the total number of admissions for `patient_id` 579.",
+    "hint_md": null,
+    "solution_sql": "SELECT patient_id, COUNT(*) AS total_admissions FROM admissions\nWHERE patient_id = 579 GROUP BY patient_id;",
+    "mysql_note": null
+  },
+  {
+    "position": 14,
+    "difficulty": "easy",
+    "topic": "Distinct",
+    "title": "Cities in Nova Scotia",
+    "prompt_md": "Based on the cities our patients live in, show the unique cities that are in `province_id` `'NS'`.",
+    "hint_md": null,
+    "solution_sql": "SELECT DISTINCT city FROM patients WHERE province_id = 'NS';",
+    "mysql_note": null
+  },
+  {
+    "position": 15,
+    "difficulty": "easy",
+    "topic": "Filtering",
+    "title": "Tall and heavy",
+    "prompt_md": "Find the first name, last name and birth date of patients whose height is greater than 160 and whose weight is greater than 70.",
+    "hint_md": null,
+    "solution_sql": "SELECT first_name, last_name, birth_date FROM patients\nWHERE height > 160 AND weight > 70;",
+    "mysql_note": null
+  },
+  {
+    "position": 16,
+    "difficulty": "easy",
+    "topic": "NULL handling",
+    "title": "Allergies in Hamilton",
+    "prompt_md": "List the first name, last name and allergies of patients whose allergies are not null and who are from the city of `'Hamilton'`.",
+    "hint_md": null,
+    "solution_sql": "SELECT first_name, last_name, allergies FROM patients\nWHERE allergies IS NOT NULL AND city = 'Hamilton';",
+    "mysql_note": null
+  },
+  {
+    "position": 17,
+    "difficulty": "medium",
+    "topic": "Dates",
+    "title": "Unique birth years",
+    "prompt_md": "Show the unique birth years from the patients table and order them ascending.",
+    "hint_md": null,
+    "solution_sql": "SELECT DISTINCT strftime('%Y', birth_date) AS birth_year FROM patients ORDER BY birth_year ASC;",
+    "mysql_note": "MySQL: `SELECT DISTINCT YEAR(birth_date) ...`."
+  },
+  {
+    "position": 18,
+    "difficulty": "medium",
+    "topic": "Grouping",
+    "title": "First names that occur exactly once",
+    "prompt_md": "Show the unique first names from the patients table which occur only once in the list.\n\nIf two or more people are named `'John'` then leave that name out. If exactly one person is named `'Leo'`, include it.",
+    "hint_md": "Group by the name, then filter the groups with HAVING.",
+    "solution_sql": "SELECT first_name FROM patients GROUP BY first_name HAVING COUNT(*) = 1;",
+    "mysql_note": null
+  },
+  {
+    "position": 19,
+    "difficulty": "medium",
+    "topic": "Pattern matching",
+    "title": "Names that start and end with S",
+    "prompt_md": "Show the `patient_id` and `first_name` of patients whose first name starts and ends with `'s'` and is at least 6 characters long.",
+    "hint_md": "LIKE handles both ends; LENGTH handles the size.",
+    "solution_sql": "SELECT patient_id, first_name FROM patients\nWHERE first_name LIKE 's%s' AND LENGTH(first_name) >= 6;",
+    "mysql_note": null
+  },
+  {
+    "position": 20,
+    "difficulty": "medium",
+    "topic": "Joins",
+    "title": "Patients diagnosed with dementia",
+    "prompt_md": "Show the `patient_id`, `first_name` and `last_name` of patients whose diagnosis is `'Dementia'`.\n\nThe diagnosis is stored in the admissions table.",
+    "hint_md": null,
+    "solution_sql": "SELECT p.patient_id, p.first_name, p.last_name\nFROM patients p JOIN admissions a ON a.patient_id = p.patient_id\nWHERE a.diagnosis = 'Dementia';",
+    "mysql_note": null
+  },
+  {
+    "position": 21,
+    "difficulty": "medium",
+    "topic": "Sorting",
+    "title": "Names by length, then alphabetically",
+    "prompt_md": "Display every patient's first name, ordered by the length of the name and then alphabetically.",
+    "hint_md": null,
+    "solution_sql": "SELECT first_name FROM patients ORDER BY LENGTH(first_name), first_name;",
+    "mysql_note": null
+  },
+  {
+    "position": 22,
+    "difficulty": "medium",
+    "topic": "Subqueries",
+    "title": "Male and female counts side by side",
+    "prompt_md": "Show the total number of male patients and the total number of female patients, both in the same row.",
+    "hint_md": "Two scalar subqueries in the SELECT list, or one SUM(CASE ...) each.",
+    "solution_sql": "SELECT\n  (SELECT COUNT(*) FROM patients WHERE gender = 'M') AS male_count,\n  (SELECT COUNT(*) FROM patients WHERE gender = 'F') AS female_count;",
+    "mysql_note": null
+  },
+  {
+    "position": 23,
+    "difficulty": "medium",
+    "topic": "Sorting",
+    "title": "Penicillin and morphine allergies",
+    "prompt_md": "Show the first name, last name and allergies of patients allergic to either `'Penicillin'` or `'Morphine'`. Order ascending by allergies, then first name, then last name.",
+    "hint_md": null,
+    "solution_sql": "SELECT first_name, last_name, allergies FROM patients\nWHERE allergies IN ('Penicillin', 'Morphine')\nORDER BY allergies, first_name, last_name;",
+    "mysql_note": null
+  },
+  {
+    "position": 24,
+    "difficulty": "medium",
+    "topic": "Grouping",
+    "title": "Readmitted for the same thing",
+    "prompt_md": "Show the `patient_id` and `diagnosis` of patients who have been admitted more than once for the same diagnosis.",
+    "hint_md": "Group by both columns together.",
+    "solution_sql": "SELECT patient_id, diagnosis FROM admissions\nGROUP BY patient_id, diagnosis HAVING COUNT(*) > 1;",
+    "mysql_note": null
+  },
+  {
+    "position": 25,
+    "difficulty": "medium",
+    "topic": "Grouping",
+    "title": "Patients per city",
+    "prompt_md": "Show the city and the total number of patients in that city. Order from most patients to fewest, then by city name ascending.",
+    "hint_md": null,
+    "solution_sql": "SELECT city, COUNT(*) AS num_patients FROM patients\nGROUP BY city ORDER BY num_patients DESC, city ASC;",
+    "mysql_note": null
+  },
+  {
+    "position": 26,
+    "difficulty": "medium",
+    "topic": "Set operations",
+    "title": "Everyone in the building",
+    "prompt_md": "Show the first name, last name and role of every person who is either a patient or a doctor. The role is either `'Patient'` or `'Doctor'`.",
+    "hint_md": "UNION ALL stacks two result sets that have the same shape.",
+    "solution_sql": "SELECT first_name, last_name, 'Patient' AS role FROM patients\nUNION ALL\nSELECT first_name, last_name, 'Doctor' AS role FROM doctors;",
+    "mysql_note": null
+  },
+  {
+    "position": 27,
+    "difficulty": "medium",
+    "topic": "Grouping",
+    "title": "Allergies by popularity",
+    "prompt_md": "Show all allergies ordered by how common they are, most first. Leave out `'NKA'` and NULL values.",
+    "hint_md": null,
+    "solution_sql": "SELECT allergies, COUNT(*) AS total_diagnosis FROM patients\nWHERE allergies IS NOT NULL AND allergies <> 'NKA'\nGROUP BY allergies ORDER BY total_diagnosis DESC;",
+    "mysql_note": null
+  },
+  {
+    "position": 28,
+    "difficulty": "medium",
+    "topic": "Dates",
+    "title": "Born in the seventies",
+    "prompt_md": "Show the first name, last name and birth date of every patient born in the 1970s. Sort from the earliest birth date.",
+    "hint_md": "Dates stored as `YYYY-MM-DD` sort and compare as text.",
+    "solution_sql": "SELECT first_name, last_name, birth_date FROM patients\nWHERE birth_date BETWEEN '1970-01-01' AND '1979-12-31'\nORDER BY birth_date ASC;",
+    "mysql_note": null
+  },
+  {
+    "position": 29,
+    "difficulty": "medium",
+    "topic": "Text functions",
+    "title": "SMITH,jane",
+    "prompt_md": "Display each patient's full name in a single column: last name in upper case first, then first name in lower case, separated by a comma. Order by first name descending.\n\nFor example: `SMITH,jane`",
+    "hint_md": null,
+    "solution_sql": "SELECT UPPER(last_name) || ',' || LOWER(first_name) AS new_name_format\nFROM patients ORDER BY first_name DESC;",
+    "mysql_note": "MySQL: `CONCAT(UPPER(last_name), ',', LOWER(first_name))`."
+  },
+  {
+    "position": 30,
+    "difficulty": "medium",
+    "topic": "Grouping",
+    "title": "Provinces by total height",
+    "prompt_md": "Show the province ids and the sum of their patients' heights, where that total is 7,000 or more.",
+    "hint_md": null,
+    "solution_sql": "SELECT province_id, SUM(height) AS sum_height FROM patients\nGROUP BY province_id HAVING SUM(height) >= 7000;",
+    "mysql_note": null
+  },
+  {
+    "position": 31,
+    "difficulty": "medium",
+    "topic": "Aggregates",
+    "title": "Weight spread among the Maronis",
+    "prompt_md": "Show the difference between the largest and the smallest weight among patients with the last name `'Maroni'`.",
+    "hint_md": null,
+    "solution_sql": "SELECT (MAX(weight) - MIN(weight)) AS weight_delta FROM patients WHERE last_name = 'Maroni';",
+    "mysql_note": null
+  },
+  {
+    "position": 32,
+    "difficulty": "medium",
+    "topic": "Dates",
+    "title": "Admissions by day of the month",
+    "prompt_md": "Show each day of the month that has admissions, and how many admission dates fell on it. Sort from the busiest day to the quietest.",
+    "hint_md": null,
+    "solution_sql": "SELECT CAST(strftime('%d', admission_date) AS INTEGER) AS day_number,\n       COUNT(*) AS number_of_admissions\nFROM admissions GROUP BY day_number ORDER BY number_of_admissions DESC;",
+    "mysql_note": "MySQL: `DAY(admission_date)`."
+  },
+  {
+    "position": 33,
+    "difficulty": "medium",
+    "topic": "Sorting",
+    "title": "Patient 542's latest admission",
+    "prompt_md": "Show all the columns for `patient_id` 542's most recent admission date.",
+    "hint_md": null,
+    "solution_sql": "SELECT * FROM admissions WHERE patient_id = 542 ORDER BY admission_date DESC LIMIT 1;",
+    "mysql_note": null
+  },
+  {
+    "position": 34,
+    "difficulty": "medium",
+    "topic": "Filtering",
+    "title": "Two criteria, either one",
+    "prompt_md": "Show the `patient_id`, `attending_doctor_id` and `diagnosis` for admissions that match one of two criteria:\n\n1. The `patient_id` is an odd number **and** the `attending_doctor_id` is 1, 5 or 19.\n2. The `attending_doctor_id` contains a 2 **and** the `patient_id` is 3 characters long.",
+    "hint_md": "Brackets matter here \u2014 AND binds tighter than OR.",
+    "solution_sql": "SELECT patient_id, attending_doctor_id, diagnosis FROM admissions\nWHERE (patient_id % 2 <> 0 AND attending_doctor_id IN (1, 5, 19))\n   OR (CAST(attending_doctor_id AS TEXT) LIKE '%2%'\n       AND LENGTH(CAST(patient_id AS TEXT)) = 3);",
+    "mysql_note": null
+  },
+  {
+    "position": 35,
+    "difficulty": "medium",
+    "topic": "Joins",
+    "title": "Admissions attended per doctor",
+    "prompt_md": "Show the first name, last name and the total number of admissions attended for each doctor. Every admission has been attended by a doctor.",
+    "hint_md": null,
+    "solution_sql": "SELECT d.first_name, d.last_name, COUNT(*) AS admissions_total\nFROM admissions a JOIN doctors d ON d.doctor_id = a.attending_doctor_id\nGROUP BY d.doctor_id, d.first_name, d.last_name;",
+    "mysql_note": null
+  },
+  {
+    "position": 36,
+    "difficulty": "medium",
+    "topic": "Joins",
+    "title": "Each doctor's first and last admission",
+    "prompt_md": "For each doctor, display their id, full name, and the first and last admission date they attended.",
+    "hint_md": null,
+    "solution_sql": "SELECT d.doctor_id,\n       d.first_name || ' ' || d.last_name AS full_name,\n       MIN(a.admission_date) AS first_admission_date,\n       MAX(a.admission_date) AS last_admission_date\nFROM doctors d JOIN admissions a ON a.attending_doctor_id = d.doctor_id\nGROUP BY d.doctor_id, full_name;",
+    "mysql_note": null
+  },
+  {
+    "position": 37,
+    "difficulty": "medium",
+    "topic": "Joins",
+    "title": "Patients per province",
+    "prompt_md": "Display the total number of patients for each province. Order by the count, descending.",
+    "hint_md": null,
+    "solution_sql": "SELECT pn.province_name, COUNT(*) AS patient_count\nFROM patients p JOIN province_names pn ON pn.province_id = p.province_id\nGROUP BY pn.province_name ORDER BY patient_count DESC;",
+    "mysql_note": null
+  },
+  {
+    "position": 38,
+    "difficulty": "medium",
+    "topic": "Joins",
+    "title": "Every admission, in full",
+    "prompt_md": "For every admission, display the patient's full name, their admission diagnosis, and the full name of the doctor who diagnosed it.",
+    "hint_md": "Two joins from the same table \u2014 admissions is the one in the middle.",
+    "solution_sql": "SELECT p.first_name || ' ' || p.last_name AS patient_name,\n       a.diagnosis,\n       d.first_name || ' ' || d.last_name AS doctor_name\nFROM admissions a\nJOIN patients p ON p.patient_id = a.patient_id\nJOIN doctors d ON d.doctor_id = a.attending_doctor_id;",
+    "mysql_note": null
+  },
+  {
+    "position": 39,
+    "difficulty": "medium",
+    "topic": "Grouping",
+    "title": "Patients who share a name",
+    "prompt_md": "Display the first name, last name and the number of duplicate patients, based on their first and last name together.",
+    "hint_md": null,
+    "solution_sql": "SELECT first_name, last_name, COUNT(*) AS num_of_duplicates\nFROM patients GROUP BY first_name, last_name HAVING COUNT(*) > 1;",
+    "mysql_note": null
+  },
+  {
+    "position": 40,
+    "difficulty": "medium",
+    "topic": "Conversions",
+    "title": "In feet and pounds",
+    "prompt_md": "Display each patient's full name, height in feet rounded to 1 decimal, weight in pounds rounded to 0 decimals, birth date, and gender written out in full.\n\nConvert cm to feet by dividing by 30.48. Convert kg to pounds by multiplying by 2.205.",
+    "hint_md": "CASE turns the single letter into a word.",
+    "solution_sql": "SELECT first_name || ' ' || last_name AS patient_name,\n       ROUND(height / 30.48, 1) AS height_feet,\n       ROUND(weight * 2.205, 0) AS weight_pounds,\n       birth_date,\n       CASE WHEN gender = 'M' THEN 'MALE' ELSE 'FEMALE' END AS gender_type\nFROM patients;",
+    "mysql_note": null
+  },
+  {
+    "position": 41,
+    "difficulty": "medium",
+    "topic": "Subqueries",
+    "title": "Never admitted",
+    "prompt_md": "Show the `patient_id`, `first_name` and `last_name` of patients who have no records in the admissions table.",
+    "hint_md": "NOT IN against a subquery, or a LEFT JOIN where the right side is NULL.",
+    "solution_sql": "SELECT patient_id, first_name, last_name FROM patients\nWHERE patient_id NOT IN (SELECT patient_id FROM admissions);",
+    "mysql_note": null
+  },
+  {
+    "position": 42,
+    "difficulty": "medium",
+    "topic": "Subqueries",
+    "title": "Busiest, quietest and average day",
+    "prompt_md": "Display a single row with `max_visits`, `min_visits` and `average_visits`, where the maximum, minimum and average number of admissions per day is calculated. Round the average to 2 decimal places.",
+    "hint_md": "Count per day first, then aggregate that result.",
+    "solution_sql": "SELECT MAX(daily) AS max_visits, MIN(daily) AS min_visits,\n       ROUND(AVG(daily), 2) AS average_visits\nFROM (SELECT COUNT(*) AS daily FROM admissions GROUP BY admission_date);",
+    "mysql_note": null
+  },
+  {
+    "position": 43,
+    "difficulty": "medium",
+    "topic": "Subqueries",
+    "title": "Everyone's latest visit",
+    "prompt_md": "Display every patient who has at least one admission, showing their most recent admission along with the patient's and the doctor's full names.",
+    "hint_md": "A correlated subquery: the inner query refers to the row the outer one is on.",
+    "solution_sql": "SELECT p.first_name || ' ' || p.last_name AS patient_name,\n       a.admission_date, a.diagnosis,\n       d.first_name || ' ' || d.last_name AS doctor_name\nFROM admissions a\nJOIN patients p ON p.patient_id = a.patient_id\nJOIN doctors d ON d.doctor_id = a.attending_doctor_id\nWHERE a.admission_date = (\n  SELECT MAX(x.admission_date) FROM admissions x WHERE x.patient_id = a.patient_id\n)\nORDER BY p.patient_id;",
+    "mysql_note": null
+  },
+  {
+    "position": 44,
+    "difficulty": "hard",
+    "topic": "Grouping",
+    "title": "Patients by weight group",
+    "prompt_md": "Group all the patients into weight groups and show the total number of patients in each. Order by the weight group descending.\n\nSomeone weighing 100 to 109 is in the 100 group, 110 to 119 in the 110 group, and so on.",
+    "hint_md": "Integer division throws away the units digit; multiplying puts the zero back.",
+    "solution_sql": "SELECT (weight / 10) * 10 AS weight_group, COUNT(*) AS patients_in_group\nFROM patients GROUP BY weight_group ORDER BY weight_group DESC;",
+    "mysql_note": null
+  },
+  {
+    "position": 45,
+    "difficulty": "hard",
+    "topic": "Conditionals",
+    "title": "Obesity flag",
+    "prompt_md": "Show `patient_id`, `weight`, `height` and `isObese` from the patients table, with `isObese` as a 0 or a 1.\n\nObese means weight(kg) / height(m)\u00b2 is 30 or more. Weight is in kg and height in cm.",
+    "hint_md": "Divide height by 100.0, not 100 \u2014 integer division would round it to 1 or 2.",
+    "solution_sql": "SELECT patient_id, weight, height,\n       CASE WHEN weight / ((height / 100.0) * (height / 100.0)) >= 30\n            THEN 1 ELSE 0 END AS isObese\nFROM patients;",
+    "mysql_note": null
+  },
+  {
+    "position": 46,
+    "difficulty": "hard",
+    "topic": "Joins",
+    "title": "Dementia patients seen by Lisa",
+    "prompt_md": "Show the `patient_id`, `first_name`, `last_name` and the attending doctor's specialty, for patients whose diagnosis is `'Dementia'` and whose doctor's first name is `'Lisa'`.",
+    "hint_md": "Three tables: patients to admissions to doctors.",
+    "solution_sql": "SELECT p.patient_id, p.first_name, p.last_name, d.specialty\nFROM patients p\nJOIN admissions a ON a.patient_id = p.patient_id\nJOIN doctors d ON d.doctor_id = a.attending_doctor_id\nWHERE a.diagnosis = 'Dementia' AND d.first_name = 'Lisa';",
+    "mysql_note": null
+  },
+  {
+    "position": 47,
+    "difficulty": "hard",
+    "topic": "Text functions",
+    "title": "Temporary passwords",
+    "prompt_md": "Patients who have been through admissions can see their medical documents on our site, and are given a temporary password after their first admission. Show the `patient_id` and `temp_password`.\n\nThe password is, in order: the patient id, the number of characters in the patient's last name, and the year of the patient's birth date.",
+    "hint_md": "DISTINCT, or the patients with several admissions appear more than once.",
+    "solution_sql": "SELECT DISTINCT p.patient_id,\n       CAST(p.patient_id AS TEXT) || CAST(LENGTH(p.last_name) AS TEXT)\n       || strftime('%Y', p.birth_date) AS temp_password\nFROM patients p JOIN admissions a ON a.patient_id = p.patient_id;",
+    "mysql_note": null
+  },
+  {
+    "position": 48,
+    "difficulty": "hard",
+    "topic": "Conditionals",
+    "title": "Admission cost by insurance",
+    "prompt_md": "Each admission costs $50 for patients without insurance and $10 for patients with it. Every patient with an even `patient_id` has insurance.\n\nGive each patient a `'Yes'` if they have insurance and a `'No'` if they do not, and add up the admission cost for each group.",
+    "hint_md": null,
+    "solution_sql": "SELECT CASE WHEN patient_id % 2 = 0 THEN 'Yes' ELSE 'No' END AS has_insurance,\n       SUM(CASE WHEN patient_id % 2 = 0 THEN 10 ELSE 50 END) AS cost_after_insurance\nFROM admissions GROUP BY has_insurance;",
+    "mysql_note": null
+  },
+  {
+    "position": 49,
+    "difficulty": "hard",
+    "topic": "Grouping",
+    "title": "Provinces with more men than women",
+    "prompt_md": "Show the provinces that have more patients identified as `'M'` than as `'F'`. Show only the full province name.",
+    "hint_md": "Count each gender inside the group with SUM(CASE ...).",
+    "solution_sql": "SELECT pn.province_name\nFROM patients p JOIN province_names pn ON pn.province_id = p.province_id\nGROUP BY pn.province_name\nHAVING SUM(CASE WHEN p.gender = 'M' THEN 1 ELSE 0 END)\n     > SUM(CASE WHEN p.gender = 'F' THEN 1 ELSE 0 END);",
+    "mysql_note": null
+  },
+  {
+    "position": 50,
+    "difficulty": "hard",
+    "topic": "Filtering",
+    "title": "Find this one patient",
+    "prompt_md": "We are looking for one specific patient. Pull all the columns for the patient who matches every one of the following:\n\n- their first name contains an `'r'` after the first two letters\n- they identify their gender as `'F'`\n- they were born in February, May or December\n- their weight is between 60kg and 80kg\n- their `patient_id` is an odd number\n- they are from the city `'Kingston'`",
+    "hint_md": "`'__%r%'` \u2014 two of anything, then an r somewhere after it.",
+    "solution_sql": "SELECT * FROM patients\nWHERE first_name LIKE '__%r%'\n  AND gender = 'F'\n  AND CAST(strftime('%m', birth_date) AS INTEGER) IN (2, 5, 12)\n  AND weight BETWEEN 60 AND 80\n  AND patient_id % 2 = 1\n  AND city = 'Kingston';",
+    "mysql_note": null
+  },
+  {
+    "position": 51,
+    "difficulty": "hard",
+    "topic": "Aggregates",
+    "title": "Percentage of male patients",
+    "prompt_md": "Show the percentage of patients who have `'M'` as their gender. Round to the nearest hundredth and show it in percent form.",
+    "hint_md": "Multiply by 100.0 rather than 100, or integer division gives you zero.",
+    "solution_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) / COUNT(*), 2)\n       || '%' AS percent_of_male_patients\nFROM patients;",
+    "mysql_note": null
+  },
+  {
+    "position": 52,
+    "difficulty": "hard",
+    "topic": "Window functions",
+    "title": "Admissions, and the change from the day before",
+    "prompt_md": "For each day, display the total number of admissions on that day and how much that changed from the previous date.",
+    "hint_md": "LAG looks at the previous row of the ordered result.",
+    "solution_sql": "SELECT admission_date, COUNT(*) AS admission_day,\n       COUNT(*) - LAG(COUNT(*)) OVER (ORDER BY admission_date)\n         AS admission_count_change\nFROM admissions GROUP BY admission_date ORDER BY admission_date;",
+    "mysql_note": null
+  },
+  {
+    "position": 53,
+    "difficulty": "hard",
+    "topic": "Sorting",
+    "title": "Ontario always first",
+    "prompt_md": "Sort the province names in ascending order, in such a way that the province `'Ontario'` is always on top.",
+    "hint_md": "A comparison is itself a value you can sort on: 1 for Ontario, 0 for everything else.",
+    "solution_sql": "SELECT province_name FROM province_names\nORDER BY (province_name = 'Ontario') DESC, province_name ASC;",
+    "mysql_note": null
+  },
+  {
+    "position": 54,
+    "difficulty": "hard",
+    "topic": "Window functions",
+    "title": "Each doctor's year by year",
+    "prompt_md": "We need a breakdown of the total number of admissions each doctor has started each year. Show the `doctor_id`, the doctor's full name, their specialty, the year, and the total admissions for that year.",
+    "hint_md": null,
+    "solution_sql": "SELECT d.doctor_id,\n       d.first_name || ' ' || d.last_name AS doctor_full_name,\n       d.specialty,\n       strftime('%Y', a.admission_date) AS selected_year,\n       COUNT(*) AS total_admissions\nFROM admissions a JOIN doctors d ON d.doctor_id = a.attending_doctor_id\nGROUP BY d.doctor_id, doctor_full_name, d.specialty, selected_year\nORDER BY d.doctor_id, selected_year;",
+    "mysql_note": null
+  }
+]
