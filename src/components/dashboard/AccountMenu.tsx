@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Loader2, UserRound } from "lucide-react";
 import { useEscapeKey } from "@/hooks";
-import { createClient } from "@/lib/supabase/client";
 import { displayName } from "@/lib/utils";
 
 type Profile = {
@@ -65,19 +64,19 @@ export function AccountMenu({ profile }: { profile: Profile }) {
     setSaved(false);
 
     try {
-      const supabase = createClient();
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) throw new Error("Your session expired. Sign in again.");
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          first_name: first.trim() || null,
-          last_name: last.trim() || null,
-          phone: phone.trim() || null,
-        })
-        .eq("id", auth.user.id);
-      if (updateError) throw new Error(updateError.message);
+      const response = await fetch("/api/auth/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: first.trim(),
+          lastName: last.trim(),
+          phone: phone.trim(),
+        }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error ?? "That could not be saved.");
+      }
 
       setSaved(true);
       // The header greeting and the dashboard heading are server-rendered

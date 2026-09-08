@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderGit2, Loader2, Send } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Stage =
@@ -45,24 +44,15 @@ export function ProjectSubmit({
 
     setStage({ at: "working", note: "Submitting…" });
     try {
-      const supabase = createClient();
-      const { data: auth } = await supabase.auth.getUser();
-      const userId = auth.user?.id;
-      if (!userId) throw new Error("Your session expired. Sign in again.");
-
-      const { data: submission, error } = await supabase
-        .from("project_submissions")
-        .insert({ project_id: projectId, user_id: userId, repo_url: url })
-        .select("id")
-        .single();
-      if (error) throw new Error(error.message);
-
       setStage({ at: "working", note: "Reading your repository…" });
 
+      // One request: the route records the submission against the session's
+      // own user and reviews it, so nothing here can claim to be somebody
+      // else.
       const response = await fetch("/api/review-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId: submission.id }),
+        body: JSON.stringify({ projectId, repoUrl: url }),
       });
       const result = (await response.json()) as {
         passed?: boolean;
@@ -145,7 +135,8 @@ export function ProjectSubmit({
           )}
         >
           <p className="text-[0.9375rem] font-semibold">
-            {stage.passed ? "Passed" : "Needs another pass"} — {stage.score} / 10
+            {stage.passed ? "Passed" : "Needs another pass"} — {stage.score} /
+            10
           </p>
           <div className="text-ink-soft mt-2 space-y-1.5 text-[0.875rem] leading-relaxed whitespace-pre-line">
             {stage.feedback}

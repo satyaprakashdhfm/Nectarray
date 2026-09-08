@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 type Result = { ok: boolean; error?: string };
 
@@ -27,14 +26,12 @@ export function RedeemCode() {
     setError("");
 
     try {
-      const supabase = createClient();
-      const { data, error: rpcError } = await supabase.rpc(
-        "redeem_enrolment_code",
-        { p_code: code },
-      );
-      if (rpcError) throw rpcError;
-
-      const result = data as Result;
+      const response = await fetch("/api/enrol/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const result = (await response.json()) as Result;
       if (!result?.ok) {
         setError(result?.error ?? "That did not work.");
         return;

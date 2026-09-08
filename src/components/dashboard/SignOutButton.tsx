@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 export function SignOutButton({
   redirectTo = "/academy",
@@ -15,7 +14,7 @@ export function SignOutButton({
 
   async function signOut() {
     setBusy(true);
-    await createClient().auth.signOut();
+    await fetch("/api/auth/signout", { method: "POST" });
     router.push(redirectTo);
     router.refresh();
   }

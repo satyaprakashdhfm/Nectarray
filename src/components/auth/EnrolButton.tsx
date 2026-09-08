@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { authEnabled } from "@/lib/supabase/client";
-import { useSignedIn } from "@/lib/supabase/session";
+import { useSignedIn } from "@/lib/auth/signed-in";
 
 /**
  * The single entry point into the programme.
@@ -26,15 +25,12 @@ export function EnrolButton({
   label,
   className,
   withArrow = true,
-  fallbackHref = "#enrol",
   signedInLabel = "Dashboard",
   hideWhenSignedIn = false,
 }: {
   label: string;
   className: string;
   withArrow?: boolean;
-  /** Where to send people while auth is unconfigured. */
-  fallbackHref?: string;
   /** Shown once we know the browser holds a session. */
   signedInLabel?: string;
   /**
@@ -58,14 +54,6 @@ export function EnrolButton({
       )}
     </>
   );
-
-  if (!authEnabled) {
-    return (
-      <Link href={fallbackHref} className={className}>
-        {inner(label)}
-      </Link>
-    );
-  }
 
   if (signedIn === "in") {
     if (hideWhenSignedIn) return null;

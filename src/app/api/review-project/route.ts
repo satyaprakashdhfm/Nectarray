@@ -44,63 +44,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
-  let submissionId: string;
+  let projectId = "";
+  let repoUrl = "";
   try {
-    const body = (await request.json()) as { submissionId?: unknown };
-    if (typeof body.submissionId !== "string" || !body.submissionId)
-      throw new Error();
-    submissionId = body.submissionId;
+    const body = (await request.json()) as Record<string, unknown>;
+    projectId = String(body.projectId ?? "");
+    repoUrl = String(body.repoUrl ?? "").trim();
   } catch {
+    return NextResponse.json({ error: "Bad request." }, { status: 400 });
+  }
+
+  if (!projectId || !repoUrl) {
     return NextResponse.json({ error: "Missing submission." }, { status: 400 });
-  }
-
-  /*
-   * Scoped to the person asking, in the query rather than after it. Looking
-   * it up by id alone and checking ownership afterwards is the same answer
-   * on a good day and a data leak on the day somebody forgets the check.
-   */
-  const [submission] = await db
-    .select({
-      id: projectSubmissions.id,
-      projectId: projectSubmissions.projectId,
-      repoUrl: projectSubmissions.repoUrl,
-      status: projectSubmissions.status,
-    })
-    .from(projectSubmissions)
-    .where(
-      and(
-        eq(projectSubmissions.id, submissionId),
-        eq(projectSubmissions.userId, user.id),
-      ),
-    )
-    .limit(1);
-
-  if (!submission) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
-  }
-  if (submission.status !== "pending") {
-    return NextResponse.json(
-      { error: "That submission has already been reviewed." },
-      { status: 409 },
-    );
   }
 
   const [project] = await db
     .select({
+      id: projects.id,
       title: projects.title,
       summary: projects.summary,
       brief_md: projects.briefMd,
       rubric_md: projects.rubricMd,
     })
     .from(projects)
-    .where(eq(projects.id, submission.projectId))
+    .where(and(eq(projects.id, projectId), eq(projects.isPublished, true)))
     .limit(1);
 
   if (!project) {
     return NextResponse.json({ error: "Unknown project." }, { status: 404 });
   }
 
-  const repo = parseRepoUrl(submission.repoUrl);
+  /*
+   * The submission is created here rather than by the browser, which no
+   * longer has a database credential — and this is the better place for it
+   * anyway: the row cannot be written with somebody else's user id, because
+   * the id comes from the session rather than from the request.
+   */
+  const [submission] = await db
+    .insert(projectSubmissions)
+    .values({ projectId: project.id, userId: user.id, repoUrl })
+    .returning({ id: projectSubmissions.id });
+
+  const submissionId = submission.id;
+  const repo = parseRepoUrl(repoUrl);
   if (!repo) {
     await fail(submissionId, "That is not a GitHub repository URL.");
     return NextResponse.json(

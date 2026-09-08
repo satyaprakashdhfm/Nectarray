@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Check, Loader2, X } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { useEscapeKey, useLockBodyScroll } from "@/hooks";
-import { createClient } from "@/lib/supabase/client";
 
 /**
  * Sign-in and registration, in the three states the flow actually has:
@@ -51,12 +50,15 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const supabase = createClient();
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { shouldCreateUser: true },
+      const response = await fetch("/api/auth/code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
       });
-      if (otpError) throw otpError;
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error ?? "Could not send the code.");
+      }
       setStage("code");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the code.");
@@ -71,18 +73,22 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const supabase = createClient();
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: code.trim(),
-        type: "email",
+      const response = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), code: code.trim() }),
       });
-      if (verifyError) throw verifyError;
+      const result = (await response.json()) as {
+        needsProfile?: boolean;
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(result.error ?? "That code was not accepted.");
+      }
 
       // A returning student already has a name on file — skip straight past
       // the profile step rather than asking again every sign-in.
-      const meta = data.user?.user_metadata ?? {};
-      if (meta.first_name) {
+      if (!result.needsProfile) {
         setStage("done");
         router.push("/dashboard");
         router.refresh();
@@ -105,15 +111,17 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const supabase = createClient();
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
+      const response = await fetch("/api/auth/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           phone: phone.trim(),
-        },
+        }),
       });
-      if (updateError) throw updateError;
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Could not save that.");
       setStage("done");
       router.push("/dashboard");
       router.refresh();
@@ -128,12 +136,8 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const supabase = createClient();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      });
-      if (oauthError) throw oauthError;
+      // A full navigation, not a fetch: Google has to see the browser.
+      window.location.href = "/api/auth/google/start";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
       setBusy(false);

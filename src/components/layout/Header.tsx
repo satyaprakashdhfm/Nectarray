@@ -48,7 +48,6 @@ export function Header() {
           <EnrolButton
             label="Log in"
             withArrow={false}
-            fallbackHref="/academy#enrol"
             className="hidden rounded-full px-4 py-2.5 text-[0.9375rem] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:inline-flex"
           />
 
@@ -105,7 +104,6 @@ export function Header() {
           <EnrolButton
             label="Log in"
             withArrow={false}
-            fallbackHref="/academy#enrol"
             className="border-night-line mt-3 inline-flex justify-center rounded-full border px-5 py-3.5 text-center text-base font-medium text-white/80"
           />
         </nav>

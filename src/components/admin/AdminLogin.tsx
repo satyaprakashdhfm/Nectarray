@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, LogOut, ShieldAlert } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 /**
  * The admin door. Google only, and deliberately not the student modal —
@@ -29,14 +28,8 @@ export function AdminLogin({
     setBusy(true);
     setError("");
     try {
-      const supabase = createClient();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/admin`,
-        },
-      });
-      if (oauthError) throw oauthError;
+      // A full navigation, not a fetch: Google has to see the browser.
+      window.location.href = "/api/auth/google/start";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed.");
       setBusy(false);
@@ -45,7 +38,7 @@ export function AdminLogin({
 
   async function signOut() {
     setBusy(true);
-    await createClient().auth.signOut();
+    await fetch("/api/auth/signout", { method: "POST" });
     router.refresh();
     setBusy(false);
   }
