@@ -104,325 +104,669 @@ export const agenticAiPage = {
   /* ---------------------------------------------------------------------
      What it looks like in an actual business
 
-     The two families above say what we build. These say what it does on a
-     Tuesday, which is the question a buyer is really asking — so each tab
-     is one real job of work, the systems it is plugged into, and the view
-     the person who owns that job would open afterwards.
+     One card per industry, and inside each one a tab per job of work. The
+     two families above say what we build; a buyer reading them is
+     translating into their own week, and this does that translation — the
+     instruction someone types, the systems it reaches, and the view whoever
+     owns that job opens afterwards.
 
-     The screens are illustrations of the shape of the output, not
-     screenshots of anyone's data.
+     The screens are illustrations of the shape of the output. They are not
+     screenshots, and they are not anybody's data.
   --------------------------------------------------------------------- */
   industries: [
     {
       id: "financial-services",
       label: "Financial services",
       icon: "chart",
-      title: "Close the books without the Tuesday scramble",
-      body: "The agent reads your ledger and your gateway settlements, reconciles one against the other, and tells you what your cash actually is today rather than what the balance says. The exceptions come to you already investigated.",
-      points: [
-        "Cleared cash separated from money still in transit",
-        "Overdue receivables ranked by what they would close",
-        "A reminder drafted per invoice, for you to send",
+      lede: "Finance teams lose their week to reconciling things that should reconcile themselves. These are the three that come up in every engagement.",
+      tabs: [
+        {
+          id: "cash-position",
+          label: "Cash position",
+          title: "Know what the cash actually is, not what the balance says",
+          body: "The agent reads your ledger and your gateway settlements, reconciles one against the other, and separates money you can spend today from money that has not landed yet. The exceptions arrive already investigated.",
+          points: [
+            "Cleared cash separated from money still in transit",
+            "Upcoming outflows netted against the reserve you hold",
+            "A written note on anything that looks tight",
+          ],
+          prompt:
+            "Pull our cash position from the books and reconcile it against gateway settlements. Show me what is genuinely available today against what is still in transit.",
+          connectors: ["Tally / Zoho Books", "Razorpay"],
+          screen: {
+            file: "Cash-position.xlsx",
+            columns: ["Account", "Balance", "As of", "Note"],
+            rows: [
+              {
+                cells: [
+                  "Operating current a/c",
+                  "₹62,34,018",
+                  "15 Oct",
+                  "Primary — HDFC",
+                ],
+              },
+              {
+                cells: [
+                  "Fixed deposit",
+                  "₹30,25,000",
+                  "15 Oct",
+                  "90-day reserve",
+                ],
+              },
+              {
+                cells: [
+                  "Gateway — settled",
+                  "₹4,12,044",
+                  "15 Oct",
+                  "Withdrawable now",
+                ],
+              },
+              {
+                cells: [
+                  "Gateway — in transit",
+                  "₹18,45,000",
+                  "15 Oct",
+                  "T+2 — see Settlements",
+                ],
+                tone: "muted",
+              },
+              {
+                cells: [
+                  "Cleared cash today",
+                  "₹96,71,062",
+                  "",
+                  "Excludes in transit",
+                ],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "Projected by 22 Oct",
+                  "₹1,15,16,062",
+                  "",
+                  "Includes in transit",
+                ],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "Vendor run due 18 Oct",
+                  "−₹84,50,000",
+                  "18 Oct",
+                  "Net of TDS",
+                ],
+                tone: "bad",
+              },
+              {
+                cells: [
+                  "Gap vs reserve target",
+                  "+₹66,062",
+                  "",
+                  "Tight — transit must clear",
+                ],
+                tone: "warn",
+              },
+            ],
+            sheets: ["Cash position", "Settlements", "Reserve policy"],
+          },
+        },
+        {
+          id: "collections",
+          label: "Collections",
+          title: "Chase the invoices that would actually close the gap",
+          body: "Every overdue invoice is not worth the same phone call. The agent ranks them by what they would recover and how likely they are to land, drafts a reminder in the tone that account is used to, and leaves the sending to you.",
+          points: [
+            "Ranked by amount, age and how the account has paid before",
+            "A reminder drafted per invoice, not one template sent to all",
+            "Promised-payment dates tracked and chased when they slip",
+          ],
+          prompt:
+            "Rank our overdue invoices by what they would recover, draft a reminder for each in the tone that account is used to, and queue them for me to review.",
+          connectors: ["Zoho Books", "Gmail"],
+          screen: {
+            file: "Overdue receivables",
+            columns: ["Customer", "Amount", "Overdue", "Drafted"],
+            rows: [
+              {
+                cells: [
+                  "Meridian Retail",
+                  "₹8,40,000",
+                  "34 days",
+                  "Ready to send",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Sunrise Traders",
+                  "₹6,12,500",
+                  "21 days",
+                  "Ready to send",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Kestrel Logistics",
+                  "₹4,88,000",
+                  "58 days",
+                  "Promised 20 Oct",
+                ],
+                tone: "warn",
+              },
+              {
+                cells: [
+                  "Anvil Foods",
+                  "₹2,10,400",
+                  "12 days",
+                  "Held — dispute open",
+                ],
+                tone: "muted",
+              },
+              {
+                cells: [
+                  "Top five would recover",
+                  "₹22,90,900",
+                  "",
+                  "Closes the reserve gap",
+                ],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "Needs your decision",
+                  "1 account",
+                  "",
+                  "Anvil — credit note?",
+                ],
+                tone: "total",
+              },
+            ],
+            sheets: ["Ranked", "Drafts", "Promises"],
+          },
+        },
+        {
+          id: "month-end",
+          label: "Month-end close",
+          title: "Match everything, and show only what refuses to match",
+          body: "Invoices to payments to purchase orders, across systems that were never designed to agree. The agent does the matching and puts the genuine exceptions in front of your accounts team with both sides of each one already pulled up.",
+          points: [
+            "Three-way matching across billing, banking and procurement",
+            "Duplicates and part-payments identified rather than flagged",
+            "Every exception with both records attached, ready to judge",
+          ],
+          prompt:
+            "Match October invoices to payments and purchase orders. Clear whatever matches cleanly and give me the exceptions with both records attached.",
+          connectors: ["Tally", "HDFC statements"],
+          screen: {
+            file: "October close",
+            columns: ["Batch", "Items", "Outcome", "Status"],
+            rows: [
+              {
+                cells: [
+                  "Vendor invoices",
+                  "1,284",
+                  "Matched to PO and payment",
+                  "Cleared",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Customer receipts",
+                  "2,013",
+                  "Matched to invoice",
+                  "Cleared",
+                ],
+                tone: "good",
+              },
+              {
+                cells: ["Part payments", "17", "Split and applied", "Cleared"],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Duplicate entries",
+                  "4",
+                  "Same invoice, two vendors",
+                  "For review",
+                ],
+                tone: "warn",
+              },
+              {
+                cells: ["Unmatched", "9", "No PO found", "For review"],
+                tone: "warn",
+              },
+              {
+                cells: [
+                  "Closed automatically",
+                  "3,314 of 3,327",
+                  "",
+                  "99.6% of the ledger",
+                ],
+                tone: "total",
+              },
+              {
+                cells: ["On your desk", "13", "", "Was around 400"],
+                tone: "total",
+              },
+            ],
+            sheets: ["Summary", "Exceptions", "Audit trail"],
+          },
+        },
       ],
-      prompt:
-        "Pull our cash position from the books and reconcile it against gateway settlements. Rank the overdue invoices that would close the gap, and draft a reminder for each.",
-      connectors: ["Tally / Zoho Books", "Razorpay"],
-      screen: {
-        file: "Cash-position.xlsx",
-        columns: ["Account", "Balance", "As of", "Note"],
-        rows: [
-          {
-            cells: [
-              "Operating current a/c",
-              "₹62,34,018",
-              "15 Oct",
-              "Primary — HDFC",
-            ],
-          },
-          {
-            cells: ["Fixed deposit", "₹30,25,000", "15 Oct", "90-day reserve"],
-          },
-          {
-            cells: [
-              "Gateway — settled",
-              "₹4,12,044",
-              "15 Oct",
-              "Withdrawable now",
-            ],
-          },
-          {
-            cells: [
-              "Gateway — in transit",
-              "₹18,45,000",
-              "15 Oct",
-              "T+2 — see Settlements",
-            ],
-            tone: "muted",
-          },
-          {
-            cells: [
-              "Cleared cash today",
-              "₹96,71,062",
-              "",
-              "Excludes in transit",
-            ],
-            tone: "total",
-          },
-          {
-            cells: [
-              "Projected by 22 Oct",
-              "₹1,15,16,062",
-              "",
-              "Includes in transit",
-            ],
-            tone: "total",
-          },
-          {
-            cells: [
-              "Vendor run due 18 Oct",
-              "−₹84,50,000",
-              "18 Oct",
-              "Net of TDS",
-            ],
-            tone: "bad",
-          },
-          {
-            cells: [
-              "Gap vs reserve target",
-              "+₹66,062",
-              "",
-              "Tight — transit must clear",
-            ],
-            tone: "warn",
-          },
-          {
-            cells: [
-              "Gap if transit excluded",
-              "−₹17,78,938",
-              "",
-              "Collect receivables as backstop",
-            ],
-            tone: "bad",
-          },
-        ],
-        sheets: ["Cash position", "Settlements", "Overdue A/R"],
-      },
     },
     {
       id: "small-business",
       label: "Small business",
       icon: "briefcase",
-      title: "Answer every enquiry, on the channel it arrived on",
-      body: "Most of what a small team answers all week is the same nine questions. The agent takes those on WhatsApp, chat and the phone, from your own catalogue and policies, books what needs booking, and sends you only the ones that want a decision.",
-      points: [
-        "Order, delivery and pricing questions answered from your data",
-        "Slots booked on the calendar your team already uses",
-        "Refunds and complaints handed to you with the full thread",
+      lede: "A small team answers the same nine questions all week and books everything by hand. Each tab is one of the jobs that keeps a founder off the work they meant to do.",
+      tabs: [
+        {
+          id: "enquiries",
+          label: "Enquiries",
+          title: "Answer every enquiry, on the channel it arrived on",
+          body: "One agent on WhatsApp, web chat and the phone, answering from your own catalogue, pricing and policies. It handles what it can end to end and sends you only what wants a decision, with the whole thread attached.",
+          points: [
+            "Order, delivery and pricing questions answered from your data",
+            "The same answer whichever channel it was asked on",
+            "Refunds and complaints passed to you, never guessed at",
+          ],
+          prompt:
+            "Answer order and delivery questions on WhatsApp and web chat from our catalogue, and send me anything about a refund or a complaint.",
+          connectors: ["WhatsApp Business", "Your catalogue"],
+          screen: {
+            file: "Enquiries — this week",
+            columns: ["Customer", "Channel", "Asked for", "Outcome"],
+            rows: [
+              {
+                cells: [
+                  "Kavya R.",
+                  "WhatsApp",
+                  "Delivery date, order #4821",
+                  "Answered",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Sunrise Traders",
+                  "Web chat",
+                  "Bulk pricing, 200 units",
+                  "Quote sent",
+                ],
+                tone: "good",
+              },
+              {
+                cells: ["Nithin P.", "Web chat", "GST invoice copy", "Sent"],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Deepa M.",
+                  "WhatsApp",
+                  "Refund, damaged item",
+                  "Passed to you",
+                ],
+                tone: "warn",
+              },
+              {
+                cells: ["Handled without you", "82 of 91", "", "Last 7 days"],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "Waiting on a person",
+                  "9",
+                  "",
+                  "Each with the thread attached",
+                ],
+                tone: "total",
+              },
+            ],
+            sheets: ["Enquiries", "Handovers", "Sources"],
+          },
+        },
+        {
+          id: "bookings",
+          label: "Bookings",
+          title: "Fill the diary without three messages each time",
+          body: "The agent offers real slots from the calendar your team already uses, holds one while the customer decides, confirms it, and sends the reminders. Reschedules and cancellations go through the same conversation.",
+          points: [
+            "Live availability, so nothing is double booked",
+            "Confirmations and reminders sent without anyone remembering to",
+            "Reschedules handled in the same thread as the booking",
+          ],
+          prompt:
+            "Offer installation slots from our calendar, confirm the booking, and send a reminder the day before. Let people reschedule in the same chat.",
+          connectors: ["Google Calendar", "WhatsApp Business"],
+          screen: {
+            file: "Bookings — next 7 days",
+            columns: ["When", "Customer", "Job", "State"],
+            rows: [
+              {
+                cells: ["Thu 11:00", "Imran S.", "Installation", "Confirmed"],
+                tone: "good",
+              },
+              {
+                cells: ["Thu 15:30", "Meera K.", "Site visit", "Confirmed"],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Fri 10:00",
+                  "R. Bhat",
+                  "Service call",
+                  "Rescheduled by customer",
+                ],
+                tone: "muted",
+              },
+              {
+                cells: [
+                  "Fri 16:00",
+                  "Open",
+                  "Cancellation",
+                  "Offered to waitlist",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Sat 11:00",
+                  "Anvil Foods",
+                  "Bulk delivery",
+                  "Needs your approval",
+                ],
+                tone: "warn",
+              },
+              {
+                cells: ["Booked this week", "34", "", "None double booked"],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "Reminders sent",
+                  "68",
+                  "",
+                  "24 hours and 2 hours before",
+                ],
+                tone: "total",
+              },
+            ],
+            sheets: ["Diary", "Waitlist", "Reminders"],
+          },
+        },
+        {
+          id: "quotes",
+          label: "Quotes & invoices",
+          title: "Quote the same day, and get paid without chasing",
+          body: "A quote request turns into a priced quote from your own rate card while the customer is still interested. Once accepted, the invoice is raised, sent, and followed up on the schedule you set.",
+          points: [
+            "Priced from your rate card, with your discount rules applied",
+            "Invoice raised the moment a quote is accepted",
+            "Polite follow-ups on a schedule, escalating to you if ignored",
+          ],
+          prompt:
+            "Price quote requests from our rate card, raise the invoice when one is accepted, and follow up on anything unpaid after seven days.",
+          connectors: ["Zoho Books", "WhatsApp Business"],
+          screen: {
+            file: "Quotes & invoices",
+            columns: ["Reference", "Customer", "Value", "State"],
+            rows: [
+              {
+                cells: [
+                  "Q-1182",
+                  "Sunrise Traders",
+                  "₹3,40,000",
+                  "Accepted — invoiced",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Q-1180",
+                  "Meridian Retail",
+                  "₹1,15,500",
+                  "Sent, awaiting reply",
+                ],
+                tone: "muted",
+              },
+              {
+                cells: ["INV-0921", "Kestrel Logistics", "₹88,000", "Paid"],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "INV-0918",
+                  "Anvil Foods",
+                  "₹42,300",
+                  "Follow-up sent, day 7",
+                ],
+                tone: "warn",
+              },
+              {
+                cells: [
+                  "Quoted this month",
+                  "₹14,80,200",
+                  "",
+                  "Average reply in 6 minutes",
+                ],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "Outstanding",
+                  "₹42,300",
+                  "",
+                  "One account, chased twice",
+                ],
+                tone: "total",
+              },
+            ],
+            sheets: ["Quotes", "Invoices", "Follow-ups"],
+          },
+        },
       ],
-      prompt:
-        "Answer order and delivery questions on WhatsApp from our catalogue, book installation slots on the real calendar, and send me anything about a refund.",
-      connectors: ["WhatsApp Business", "Google Calendar"],
-      screen: {
-        file: "Enquiries — this week",
-        columns: ["Customer", "Channel", "Asked for", "Outcome"],
-        rows: [
-          {
-            cells: [
-              "Kavya R.",
-              "WhatsApp",
-              "Delivery date, order #4821",
-              "Answered",
-            ],
-            tone: "good",
-          },
-          {
-            cells: [
-              "Sunrise Traders",
-              "Web chat",
-              "Bulk pricing, 200 units",
-              "Quote sent",
-            ],
-            tone: "good",
-          },
-          {
-            cells: [
-              "Imran S.",
-              "Phone",
-              "Reschedule installation",
-              "Booked — Thu 11:00",
-            ],
-            tone: "good",
-          },
-          {
-            cells: [
-              "Deepa M.",
-              "WhatsApp",
-              "Refund, damaged item",
-              "Passed to you",
-            ],
-            tone: "warn",
-          },
-          {
-            cells: ["Nithin P.", "Web chat", "GST invoice copy", "Sent"],
-            tone: "good",
-          },
-          {
-            cells: ["Handled without you", "82 of 91", "", "Last 7 days"],
-            tone: "total",
-          },
-          {
-            cells: [
-              "Waiting on a person",
-              "9",
-              "",
-              "Each with the thread attached",
-            ],
-            tone: "total",
-          },
-        ],
-        sheets: ["Enquiries", "Bookings", "Handovers"],
-      },
     },
     {
       id: "healthcare",
       label: "Healthcare",
       icon: "shield",
-      title: "Run the front desk, not the consultation",
-      body: "Scheduling, reminders, and the paperwork around a visit — deliberately nothing clinical. The agent confirms tomorrow's list, offers cancelled slots down the waitlist in order, and flags the patients whose insurance approval has not come back.",
-      points: [
-        "Confirmations and reminders before every appointment",
-        "Cancelled slots refilled from the waitlist automatically",
-        "Pre-authorisation chased and escalated when it stalls",
+      lede: "Everything here is the front desk and the paperwork around a visit — scheduling, reminders and insurance. Deliberately nothing clinical: the agent never advises a patient about their care.",
+      tabs: [
+        {
+          id: "front-desk",
+          label: "Front desk",
+          title: "Confirm tomorrow's list before tomorrow arrives",
+          body: "The agent confirms each appointment over WhatsApp, sends the reminders, answers where-and-when questions about the clinic, and passes anything a patient asks about their treatment straight to your staff.",
+          points: [
+            "Confirmations and reminders before every appointment",
+            "Directions, timings and documents to bring, answered instantly",
+            "Anything clinical routed to a person, always",
+          ],
+          prompt:
+            "Confirm tomorrow's appointments over WhatsApp, remind everyone what to bring, and route any question about treatment to the front desk.",
+          connectors: ["Practice management system", "WhatsApp Business"],
+          screen: {
+            file: "Front desk — Monday",
+            columns: ["Time", "Patient", "Reason", "Status"],
+            rows: [
+              {
+                cells: ["09:15", "A. Menon", "Follow-up", "Confirmed"],
+                tone: "good",
+              },
+              {
+                cells: ["09:45", "S. Iqbal", "New patient", "Confirmed"],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "10:30",
+                  "R. Pillai",
+                  "Report collection",
+                  "Reminded twice",
+                ],
+                tone: "muted",
+              },
+              {
+                cells: [
+                  "11:30",
+                  "T. Rao",
+                  "Asked about medication",
+                  "Passed to front desk",
+                ],
+                tone: "warn",
+              },
+              {
+                cells: [
+                  "Reminders sent",
+                  "48",
+                  "",
+                  "24 hours and 2 hours before",
+                ],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "No-shows this week",
+                  "3 of 96",
+                  "",
+                  "Was 11 the week before",
+                ],
+                tone: "total",
+              },
+            ],
+            sheets: ["Schedule", "Messages", "Handovers"],
+          },
+        },
+        {
+          id: "waitlist",
+          label: "Waitlist",
+          title: "Refill a cancelled slot before it goes cold",
+          body: "A cancellation at 10:00 is a lost hour by 10:20. The agent offers the slot down the waitlist in order, takes the first yes, and updates the schedule — usually before anyone at the desk has noticed.",
+          points: [
+            "Offered in waitlist order, with a short window to accept",
+            "The schedule updated the moment someone takes it",
+            "Nobody offered a slot they said they could not make",
+          ],
+          prompt:
+            "When an appointment is cancelled, offer the slot down the waitlist in order, and update the schedule as soon as someone accepts.",
+          connectors: ["Practice management system", "WhatsApp Business"],
+          screen: {
+            file: "Waitlist — this week",
+            columns: ["Slot freed", "Offered to", "Response", "Outcome"],
+            rows: [
+              {
+                cells: [
+                  "Mon 11:00",
+                  "3 patients, in order",
+                  "Second accepted",
+                  "Refilled",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Tue 15:30",
+                  "2 patients",
+                  "First accepted",
+                  "Refilled",
+                ],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Wed 09:00",
+                  "4 patients",
+                  "None available",
+                  "Left open",
+                ],
+                tone: "muted",
+              },
+              {
+                cells: [
+                  "Thu 16:15",
+                  "1 patient",
+                  "Asked to be removed",
+                  "Waitlist updated",
+                ],
+                tone: "warn",
+              },
+              { cells: ["Slots freed", "14", "", "This week"], tone: "total" },
+              {
+                cells: ["Refilled", "11", "", "Average 19 minutes"],
+                tone: "total",
+              },
+            ],
+            sheets: ["Waitlist", "Offers", "Schedule"],
+          },
+        },
+        {
+          id: "insurance",
+          label: "Insurance paperwork",
+          title: "Chase the pre-authorisation nobody has time to chase",
+          body: "The agent tracks every pre-authorisation from submission to decision, follows up on the ones that have gone quiet, and tells your desk which patients arriving this week still have nothing back.",
+          points: [
+            "Every request tracked from submission to a written decision",
+            "Follow-ups sent on the insurer's own timeline",
+            "A daily list of who is arriving without approval in hand",
+          ],
+          prompt:
+            "Track every pre-authorisation, follow up on anything with no reply after three days, and tell me each morning who is arriving this week without approval.",
+          connectors: ["Practice management system", "Insurer portals"],
+          screen: {
+            file: "Pre-authorisation",
+            columns: ["Patient", "Insurer", "Submitted", "State"],
+            rows: [
+              {
+                cells: [
+                  "T. Rao",
+                  "Star Health",
+                  "3 Oct",
+                  "No reply — chased twice",
+                ],
+                tone: "warn",
+              },
+              {
+                cells: ["A. Menon", "HDFC Ergo", "6 Oct", "Approved"],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "S. Iqbal",
+                  "Niva Bupa",
+                  "8 Oct",
+                  "Query raised — documents sent",
+                ],
+                tone: "muted",
+              },
+              {
+                cells: ["M. Fernandes", "Care Health", "9 Oct", "Approved"],
+                tone: "good",
+              },
+              {
+                cells: [
+                  "Approved this month",
+                  "38 of 44",
+                  "",
+                  "Average 4 days",
+                ],
+                tone: "total",
+              },
+              {
+                cells: [
+                  "Arriving without approval",
+                  "1",
+                  "",
+                  "Flagged to the desk",
+                ],
+                tone: "total",
+              },
+            ],
+            sheets: ["Tracker", "Chased", "Approved"],
+          },
+        },
       ],
-      prompt:
-        "Confirm tomorrow's appointments over WhatsApp, offer cancelled slots to the waitlist in order, and flag anyone whose insurance pre-authorisation is still pending.",
-      connectors: ["Practice management system", "WhatsApp Business"],
-      screen: {
-        file: "Front desk — Monday",
-        columns: ["Time", "Patient", "Reason", "Status"],
-        rows: [
-          {
-            cells: ["09:15", "A. Menon", "Follow-up, post-op", "Confirmed"],
-            tone: "good",
-          },
-          {
-            cells: ["09:45", "S. Iqbal", "New patient", "Confirmed"],
-            tone: "good",
-          },
-          {
-            cells: ["10:30", "R. Pillai", "Report review", "Reminded twice"],
-            tone: "muted",
-          },
-          {
-            cells: [
-              "11:00",
-              "Waitlist",
-              "Cancellation offered",
-              "Slot refilled",
-            ],
-            tone: "good",
-          },
-          {
-            cells: [
-              "11:30",
-              "T. Rao",
-              "Pre-auth outstanding",
-              "Passed to front desk",
-            ],
-            tone: "warn",
-          },
-          {
-            cells: ["Reminders sent", "48", "", "24 hours and 2 hours before"],
-            tone: "total",
-          },
-          {
-            cells: [
-              "No-shows this week",
-              "3 of 96",
-              "",
-              "Was 11 the week before",
-            ],
-            tone: "total",
-          },
-        ],
-        sheets: ["Schedule", "Waitlist", "Pre-auth"],
-      },
-    },
-    {
-      id: "retail",
-      label: "Retail & e-commerce",
-      icon: "cart",
-      title: "Keep the order questions off your inbox",
-      body: "Where is it, can I return it, why was I charged that. The agent answers all three from your store and your courier, books the pickup when a return is approved, and escalates the ones where a person has to make a call.",
-      points: [
-        "Order status and tracking answered from the store itself",
-        "Approved returns booked with the courier, end to end",
-        "Pricing and goodwill decisions escalated, never guessed",
-      ],
-      prompt:
-        "Answer order status and return questions from the store, book courier pickups for approved returns, and escalate anything about pricing to me.",
-      connectors: ["Shopify", "Shiprocket"],
-      screen: {
-        file: "Orders — last 30 days",
-        columns: ["Order", "Question", "What the agent did", "Result"],
-        rows: [
-          {
-            cells: [
-              "#4821",
-              "Where is my order",
-              "Gave live tracking and ETA",
-              "Closed",
-            ],
-            tone: "good",
-          },
-          {
-            cells: [
-              "#4790",
-              "Delivery running late",
-              "Told them, before they asked twice",
-              "No ticket",
-            ],
-            tone: "good",
-          },
-          {
-            cells: [
-              "#4744",
-              "Return, wrong size",
-              "Booked courier pickup",
-              "Closed",
-            ],
-            tone: "good",
-          },
-          {
-            cells: [
-              "#4712",
-              "Price differs from the ad",
-              "Escalated with screenshots",
-              "Passed to you",
-            ],
-            tone: "warn",
-          },
-          {
-            cells: [
-              "Tickets deflected",
-              "71%",
-              "",
-              "Of everything that came in",
-            ],
-            tone: "total",
-          },
-          {
-            cells: [
-              "First reply",
-              "9 seconds",
-              "",
-              "Was a little over 4 hours",
-            ],
-            tone: "total",
-          },
-        ],
-        sheets: ["Orders", "Returns", "Escalations"],
-      },
     },
   ],
 

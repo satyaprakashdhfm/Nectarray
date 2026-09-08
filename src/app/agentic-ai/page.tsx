@@ -3,13 +3,14 @@ import Image from "next/image";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { IndustryTabs } from "@/components/agentic/IndustryTabs";
+import { IndustryCard } from "@/components/agentic/IndustryCard";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { agenticAiPage, company } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const { hero, families, engineering, stack, cta, meta } = agenticAiPage;
+const { hero, families, industries, engineering, stack, cta, meta } =
+  agenticAiPage;
 
 /**
  * One accent: the mark's circuit blue. Weight comes from navy, not from a
@@ -352,17 +353,20 @@ export default function AgenticAiPage() {
 
             <Reveal delay={70}>
               <p className="lede mt-5 max-w-2xl">
-                The same two builds, in four businesses. Each tab is one real
-                job of work: what you ask for, what it is plugged into, and the
-                view whoever owns that job opens afterwards.
+                The same two builds, in three kinds of business. Each card is an
+                industry, and the tabs inside it are the jobs of work: what you
+                ask for, what it is plugged into, and the view whoever owns that
+                job opens afterwards.
               </p>
             </Reveal>
 
-            <Reveal delay={120}>
-              <div className="mt-10">
-                <IndustryTabs />
-              </div>
-            </Reveal>
+            <div className="mt-10 space-y-5">
+              {industries.map((industry, i) => (
+                <Reveal key={industry.id} delay={(i % 3) * 70}>
+                  <IndustryCard industry={industry} />
+                </Reveal>
+              ))}
+            </div>
           </div>
         </section>
 

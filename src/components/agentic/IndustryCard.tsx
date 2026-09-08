@@ -2,14 +2,11 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
-import { agenticAiPage } from "@/lib/content";
+import type { agenticAiPage } from "@/lib/content";
 
-const { industries } = agenticAiPage;
+type Industry = (typeof agenticAiPage)["industries"][number];
 
-/**
- * How a row in the mock reads. Every one of these is illustration — the
- * shape of the output, not anybody's real numbers.
- */
+/** How a verdict reads. Every one of these is illustration, not real data. */
 const TONE: Record<string, string> = {
   good: "text-leaf-deep",
   bad: "text-[#c0392b]",
@@ -19,68 +16,86 @@ const TONE: Record<string, string> = {
 };
 
 /**
- * What an agent does in one business, tab by tab.
+ * One industry, with a tab per job of work inside it.
  *
- * The families above this say what we build. A buyer reading them is
- * translating in their head into their own week, and this does that
- * translation for them: one real job of work per tab, the systems it plugs
- * into, and the view whoever owns that job would open afterwards.
+ * A single tab bar across all three industries made a visitor from a clinic
+ * click past a reconciliation to find out whether we had anything for them.
+ * Each industry is its own card now, and the tabs inside it are the jobs —
+ * so the card is scannable as a whole ("healthcare: front desk, waitlist,
+ * insurance") before anybody clicks anything.
  *
- * The screen on the right is drawn rather than photographed, because a
- * screenshot would either be a real client's data or a fake pretending to
- * be one. This is neither — it is a diagram of the output, and it says so.
+ * Each tab is one instruction someone types, the systems it reaches, and the
+ * view whoever owns that job opens afterwards. The screens are drawn rather
+ * than photographed, because a screenshot is either a client's real data or
+ * a fake dressed as one; each says as much underneath it.
  */
-export function IndustryTabs() {
+export function IndustryCard({ industry }: { industry: Industry }) {
   const [active, setActive] = useState(0);
-  const industry = industries[active];
+  const tab = industry.tabs[active];
 
   return (
-    <div>
-      {/* Tabs -------------------------------------------------------- */}
+    <article
+      id={industry.id}
+      className="card scroll-mt-24 overflow-hidden p-6 sm:p-8"
+    >
+      {/* Which industry, and why these three jobs ------------------- */}
+      <header className="flex items-start gap-4">
+        <span className="bg-brand-deep grid size-11 shrink-0 place-items-center rounded-xl text-white">
+          <Icon name={industry.icon} className="size-5" />
+        </span>
+        <div className="min-w-0">
+          <h3 className="display text-ink text-[1.5rem] sm:text-[1.75rem]">
+            {industry.label}
+          </h3>
+          <p className="text-ink-soft mt-2 max-w-2xl text-[0.9375rem] leading-relaxed">
+            {industry.lede}
+          </p>
+        </div>
+      </header>
+
+      {/* The jobs ---------------------------------------------------- */}
       <div
         role="tablist"
-        aria-label="Industries"
-        className="border-line bg-surface -mx-1 flex gap-1 overflow-x-auto rounded-full border p-1 lg:mx-0 lg:w-fit"
+        aria-label={`${industry.label} — what the agent does`}
+        className="border-line bg-mist mt-7 flex gap-1 overflow-x-auto rounded-full border p-1 lg:w-fit"
       >
-        {industries.map((entry, i) => (
+        {industry.tabs.map((entry, i) => (
           <button
             key={entry.id}
             type="button"
             role="tab"
-            id={`industry-tab-${entry.id}`}
+            id={`${industry.id}-tab-${entry.id}`}
             aria-selected={i === active}
-            aria-controls={`industry-panel-${entry.id}`}
+            aria-controls={`${industry.id}-panel-${entry.id}`}
             onClick={() => setActive(i)}
-            className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-[0.875rem] font-semibold whitespace-nowrap transition-colors ${
+            className={`shrink-0 rounded-full px-4 py-2 text-[0.875rem] font-semibold whitespace-nowrap transition-colors ${
               i === active
                 ? "bg-ink text-cta-fg"
-                : "text-ink-soft hover:bg-mist hover:text-ink"
+                : "text-ink-soft hover:bg-surface hover:text-ink"
             }`}
           >
-            <Icon name={entry.icon} className="size-4" />
             {entry.label}
           </button>
         ))}
       </div>
 
-      {/* Panel ------------------------------------------------------- */}
       <div
         role="tabpanel"
-        id={`industry-panel-${industry.id}`}
-        aria-labelledby={`industry-tab-${industry.id}`}
-        className="border-line from-brand-wash to-surface mt-6 grid gap-10 rounded-[1.5rem] border bg-gradient-to-br p-6 sm:p-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12 lg:p-10"
+        id={`${industry.id}-panel-${tab.id}`}
+        aria-labelledby={`${industry.id}-tab-${tab.id}`}
+        className="mt-6 grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-10"
       >
-        {/* Left — what it is */}
+        {/* Left — what this job is */}
         <div className="min-w-0">
-          <h3 className="display text-ink text-[1.5rem] leading-tight sm:text-[1.75rem]">
-            {industry.title}
-          </h3>
-          <p className="text-ink-soft mt-4 text-[0.9375rem] leading-relaxed">
-            {industry.body}
+          <h4 className="display text-ink text-[1.25rem] leading-tight sm:text-[1.375rem]">
+            {tab.title}
+          </h4>
+          <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
+            {tab.body}
           </p>
 
-          <ul className="mt-6 space-y-2.5">
-            {industry.points.map((point) => (
+          <ul className="mt-5 space-y-2.5">
+            {tab.points.map((point) => (
               <li
                 key={point}
                 className="text-ink-soft flex items-start gap-2.5 text-[0.875rem] leading-relaxed"
@@ -96,18 +111,18 @@ export function IndustryTabs() {
           </ul>
 
           {/* The instruction someone actually types, and what it reaches. */}
-          <div className="bg-night mt-7 rounded-2xl p-5 text-white/80">
+          <div className="bg-night mt-6 rounded-2xl p-5 text-white/80">
             <p className="text-[0.625rem] font-semibold tracking-[0.16em] text-white/40 uppercase">
               What you ask for
             </p>
             <p className="mt-2.5 text-[0.875rem] leading-relaxed">
-              {industry.prompt}
+              {tab.prompt}
             </p>
             <p className="mt-5 text-[0.625rem] font-semibold tracking-[0.16em] text-white/40 uppercase">
               Connected to
             </p>
             <div className="mt-2.5 flex flex-wrap gap-2">
-              {industry.connectors.map((connector) => (
+              {tab.connectors.map((connector) => (
                 <span
                   key={connector}
                   className="rounded-lg bg-white/10 px-2.5 py-1.5 text-[0.75rem] font-medium text-white/85"
@@ -120,7 +135,7 @@ export function IndustryTabs() {
         </div>
 
         {/* Right — the view it leaves behind */}
-        <figure className="border-line bg-surface min-w-0 overflow-hidden rounded-2xl border shadow-[0_24px_60px_-30px_rgba(14,27,38,0.35)]">
+        <figure className="border-line bg-surface min-w-0 self-start overflow-hidden rounded-2xl border shadow-[0_24px_60px_-30px_rgba(14,27,38,0.35)]">
           <div className="bg-night flex items-center gap-2.5 px-4 py-3">
             <span className="flex gap-1.5" aria-hidden>
               <span className="size-2.5 rounded-full bg-white/20" />
@@ -128,15 +143,15 @@ export function IndustryTabs() {
               <span className="size-2.5 rounded-full bg-white/20" />
             </span>
             <span className="truncate font-mono text-[0.75rem] text-white/70">
-              {industry.screen.file}
+              {tab.screen.file}
             </span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[34rem] text-left text-[0.8125rem]">
+            <table className="w-full min-w-[32rem] text-left text-[0.8125rem]">
               <thead className="bg-mist border-line-soft border-b">
                 <tr>
-                  {industry.screen.columns.map((column) => (
+                  {tab.screen.columns.map((column) => (
                     <th
                       key={column}
                       scope="col"
@@ -148,7 +163,7 @@ export function IndustryTabs() {
                 </tr>
               </thead>
               <tbody>
-                {industry.screen.rows.map((row) => (
+                {tab.screen.rows.map((row) => (
                   <tr
                     key={row.cells.join("|")}
                     className={`border-line-soft border-b last:border-0 ${
@@ -156,17 +171,17 @@ export function IndustryTabs() {
                     } ${row.tone === "warn" ? "bg-amber-wash/60" : ""}`}
                   >
                     {row.cells.map((cell, i) => {
-                      const last = i === row.cells.length - 1;
                       /*
                        * A verdict colours the cell that carries it, not the
                        * line it is on. Colouring the whole row turned a
                        * confirmed appointment into four green cells, which
                        * reads as decoration rather than as a status.
                        */
-                      const wholeRow =
+                      const last = i === row.cells.length - 1;
+                      const whole =
                         row.tone === "muted" || row.tone === "total";
                       const tone =
-                        wholeRow || last ? TONE[row.tone ?? ""] : undefined;
+                        whole || last ? TONE[row.tone ?? ""] : undefined;
                       return (
                         <td
                           key={i}
@@ -185,7 +200,7 @@ export function IndustryTabs() {
           </div>
 
           <div className="border-line-soft bg-mist/50 flex gap-1 overflow-x-auto border-t px-3 py-2">
-            {industry.screen.sheets.map((sheet, i) => (
+            {tab.screen.sheets.map((sheet, i) => (
               <span
                 key={sheet}
                 className={`rounded-md px-2.5 py-1 text-[0.75rem] whitespace-nowrap ${
@@ -204,6 +219,6 @@ export function IndustryTabs() {
           </figcaption>
         </figure>
       </div>
-    </div>
+    </article>
   );
 }
