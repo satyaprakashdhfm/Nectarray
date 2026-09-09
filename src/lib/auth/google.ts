@@ -31,6 +31,37 @@ export function googleConfigured(): boolean {
   );
 }
 
+/**
+ * The one origin this site answers to.
+ *
+ * Google matches the redirect_uri against the console entry character for
+ * character, so everything about how the origin is worked out matters. Two
+ * things make `new URL(request.url).origin` the wrong answer on Railway:
+ * the app is behind a proxy that terminates TLS and forwards plain HTTP, so
+ * the scheme can come back as `http:`, which Google will not accept for a
+ * public host at all; and both `nectarray.com` and `www.nectarray.com`
+ * resolve here, so which one the student happened to type decides which URI
+ * we send — and only one of them is in the console.
+ *
+ * SITE_URL settles it. Set it, and every sign-in uses the same redirect URI
+ * whatever the visitor typed. The forwarded headers are the fallback for a
+ * deployment that has not set it; the request URL is the fallback for local
+ * development, where it is right.
+ */
+export function siteOrigin(request: Request): string {
+  const configured = process.env.SITE_URL?.trim();
+  if (configured) return configured.replace(/\/+$/, "");
+
+  const headers = request.headers;
+  const host = headers.get("x-forwarded-host") ?? headers.get("host");
+  if (host) {
+    const proto = headers.get("x-forwarded-proto")?.split(",")[0].trim();
+    return `${proto ?? "https"}://${host}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 /** The redirect Google sends the browser back to. Must match the console. */
 export function redirectUri(origin: string): string {
   return `${origin}/api/auth/google/callback`;

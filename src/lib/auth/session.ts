@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 import { and, eq, gt, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sessions, users, type User } from "@/lib/db/schema";
@@ -43,11 +44,46 @@ export function sameSecret(a: string, b: string): boolean {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-/** Starts a session and sets the cookie. Returns nothing a caller can leak. */
+/**
+ * A cookie a route means to send, described rather than sent.
+ *
+ * Every sign-in here happens in a route handler that builds its own
+ * NextResponse — a redirect to Google, a redirect to the dashboard, a JSON
+ * body. Setting a cookie through the ambient `cookies()` jar and then
+ * returning a response you constructed yourself relies on Next merging the
+ * two, which is one more thing to be wrong about in a flow whose failure
+ * mode is a silent bounce back to the home page. So the session functions
+ * hand back what should be set and the route puts it on the response it is
+ * already returning, where it plainly belongs.
+ */
+export type CookieWrite = {
+  name: string;
+  value: string;
+  options: {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: "lax";
+    path: string;
+    expires: Date;
+  };
+};
+
+/** Puts a set of cookie writes onto a response that is about to be sent. */
+export function attachCookies<T extends NextResponse>(
+  response: T,
+  writes: CookieWrite[],
+): T {
+  for (const write of writes) {
+    response.cookies.set(write.name, write.value, write.options);
+  }
+  return response;
+}
+
+/** Starts a session. The caller is responsible for sending the cookies. */
 export async function startSession(
   userId: string,
   userAgent?: string | null,
-): Promise<void> {
+): Promise<CookieWrite[]> {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + LIFETIME_MS);
 
@@ -58,20 +94,21 @@ export async function startSession(
     userAgent: userAgent?.slice(0, 400) ?? null,
   });
 
-  await writeCookies(token, expiresAt);
+  return cookieWrites(token, expiresAt);
 }
 
 /** The pair: the session itself, and the hint the client scripts can read. */
-async function writeCookies(token: string, expiresAt: Date): Promise<void> {
-  const jar = await cookies();
+function cookieWrites(token: string, expiresAt: Date): CookieWrite[] {
   const shared = {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
     expires: expiresAt,
   };
-  jar.set(COOKIE, token, { ...shared, httpOnly: true });
-  jar.set(HINT, "1", { ...shared, httpOnly: false });
+  return [
+    { name: COOKIE, value: token, options: { ...shared, httpOnly: true } },
+    { name: HINT, value: "1", options: { ...shared, httpOnly: false } },
+  ];
 }
 
 /**
@@ -115,18 +152,37 @@ async function extend(token: string): Promise<void> {
     .update(sessions)
     .set({ expiresAt })
     .where(eq(sessions.tokenHash, hash(token)));
-  await writeCookies(token, expiresAt);
+
+  /*
+   * The row is the source of truth and it has been extended. Pushing the
+   * browser's copy out to match is a nicety, and it is only allowed from a
+   * route handler or a server action — currentUser() is mostly called while
+   * rendering a page, where setting a cookie throws. This used to be a bare
+   * call inside a floating promise, so the throw surfaced as an unhandled
+   * rejection on any visit past the halfway mark.
+   */
+  try {
+    const jar = await cookies();
+    for (const write of cookieWrites(token, expiresAt)) {
+      jar.set(write.name, write.value, write.options);
+    }
+  } catch {
+    // Rendering a page. The session lives on regardless.
+  }
 }
 
-/** Ends this session everywhere it counts: the row goes, then the cookie. */
-export async function endSession(): Promise<void> {
-  const jar = await cookies();
-  const token = jar.get(COOKIE)?.value;
+/**
+ * Ends this session everywhere it counts: the row goes, then the cookie.
+ *
+ * Returns the cookie writes that clear the browser's copy — an expiry in the
+ * past, which is a delete the response can actually carry.
+ */
+export async function endSession(): Promise<CookieWrite[]> {
+  const token = (await cookies()).get(COOKIE)?.value;
   if (token) {
     await db.delete(sessions).where(eq(sessions.tokenHash, hash(token)));
   }
-  jar.delete(COOKIE);
-  jar.delete(HINT);
+  return cookieWrites("", new Date(0));
 }
 
 /**

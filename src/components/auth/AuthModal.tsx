@@ -19,10 +19,17 @@ import { useEscapeKey, useLockBodyScroll } from "@/hooks";
  */
 type Stage = "email" | "code" | "profile" | "done";
 
-export function AuthModal({ onClose }: { onClose: () => void }) {
+export function AuthModal({
+  onClose,
+  initialError = "",
+}: {
+  onClose: () => void;
+  /** A message from a redirect — a Google sign-in that came back a failure. */
+  initialError?: string;
+}) {
   const [stage, setStage] = useState<Stage>("email");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");

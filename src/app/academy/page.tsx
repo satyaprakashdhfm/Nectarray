@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AboutCourse } from "@/components/academy/AboutCourse";
+import { AuthLauncher } from "@/components/auth/AuthLauncher";
 import { AcademyFaq } from "@/components/academy/AcademyFaq";
 import { AcademyNav } from "@/components/academy/AcademyNav";
 import { Curriculum } from "@/components/academy/Curriculum";
@@ -44,6 +46,13 @@ export default function AcademyPage() {
       </main>
       <Footer />
       <FloatingActions />
+      {/*
+       * Suspense because it reads the query string, and without a boundary
+       * one useSearchParams drags the whole page out of the static build.
+       */}
+      <Suspense fallback={null}>
+        <AuthLauncher />
+      </Suspense>
     </>
   );
 }

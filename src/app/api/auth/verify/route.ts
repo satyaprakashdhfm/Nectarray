@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { verifyCode } from "@/lib/auth/codes";
-import { startSession, sweepExpired } from "@/lib/auth/session";
+import { attachCookies, startSession, sweepExpired } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/auth/access";
 
 /**
@@ -50,12 +50,18 @@ export async function POST(request: Request) {
     await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
   }
 
-  await startSession(result.userId, request.headers.get("user-agent"));
+  const session = await startSession(
+    result.userId,
+    request.headers.get("user-agent"),
+  );
   void sweepExpired();
 
-  return NextResponse.json({
-    ok: true,
-    needsProfile: !user?.firstName,
-    isAdmin: isAdmin(user ?? null),
-  });
+  return attachCookies(
+    NextResponse.json({
+      ok: true,
+      needsProfile: !user?.firstName,
+      isAdmin: isAdmin(user ?? null),
+    }),
+    session,
+  );
 }
