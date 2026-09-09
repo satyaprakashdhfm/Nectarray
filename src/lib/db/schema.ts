@@ -199,6 +199,41 @@ export const lessons = pgTable(
   (table) => [index("lessons_module_idx").on(table.moduleId, table.position)],
 );
 
+/**
+ * Which lessons a batch has been let into.
+ *
+ * The row *is* the unlock: present means that batch may open that lesson,
+ * absent means locked. Storing the grant rather than a `locked` flag is what
+ * makes a new lesson safe — it arrives belonging to nobody, so a topic
+ * written weeks ahead of the class cannot be read early by forgetting to set
+ * something. Unlocking is the deliberate act; locking is the default.
+ *
+ * Keyed on the batch, not the student. A cohort moves through the course
+ * together, and per-student release would be a different feature with a
+ * different failure mode — one student quietly left behind.
+ *
+ * `lessons.is_published` is not this. That flag is about whether a lesson is
+ * finished being written; this is about who may read it, and the same lesson
+ * is released to one batch and not another.
+ */
+export const lessonReleases = pgTable(
+  "lesson_releases",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    cohortId: uuid("cohort_id")
+      .notNull()
+      .references(() => cohorts.id, { onDelete: "cascade" }),
+    lessonId: uuid("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    releasedAt: now(),
+  },
+  (table) => [
+    unique("lesson_releases_cohort_lesson").on(table.cohortId, table.lessonId),
+    index("lesson_releases_cohort_idx").on(table.cohortId),
+  ],
+);
+
 export const assignments = pgTable("assignments", {
   id: uuid().primaryKey().defaultRandom(),
   lessonId: uuid("lesson_id")

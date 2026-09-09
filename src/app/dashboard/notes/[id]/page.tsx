@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
 import { LessonToc } from "@/components/dashboard/lesson-toc";
 import { Markdown } from "@/components/dashboard/Markdown";
-import { getLesson, stripLeadingHeading } from "@/lib/lessons";
+import {
+  getLesson,
+  releasedLessonIds,
+  stripLeadingHeading,
+} from "@/lib/lessons";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons } from "@/lib/db/schema";
@@ -16,7 +20,7 @@ export default async function LessonPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { active, status } = await getAccess();
+  const { active, status, enrolment } = await getAccess();
   if (!active) return <EnrolmentPanel status={status} />;
 
   const { id } = await params;
@@ -27,12 +31,45 @@ export default async function LessonPage({
   // student has no business knowing the difference.
   if (!lesson || lesson.audience !== "student") notFound();
 
-  // Neighbours for the prev/next pager, within the same module.
-  const list = await db
-    .select({ id: lessons.id, title: lessons.title })
-    .from(lessons)
-    .where(eq(lessons.moduleId, lesson.moduleId))
-    .orderBy(asc(lessons.position));
+  /*
+   * The lock, enforced where the body would otherwise be read.
+   *
+   * The rail already declines to link a locked lesson, but the rail is a
+   * convenience and this is the gate: typing the id into the address bar has
+   * to hit the same answer. Told plainly rather than 404ed, because the title
+   * is listed either way and pretending it does not exist would only be
+   * confusing.
+   */
+  const released = await releasedLessonIds(enrolment?.cohortId);
+  if (!released.has(lesson.id)) {
+    return (
+      <article className="min-w-0 pb-16">
+        <div className="card mt-4 flex flex-col items-center p-10 text-center">
+          <span className="bg-mist text-ink-faint grid size-14 place-items-center rounded-full">
+            <Lock className="size-6" strokeWidth={2} aria-hidden />
+          </span>
+          <h1 className="display text-ink mt-5 text-[1.5rem]">
+            {lesson.title}
+          </h1>
+          <p className="text-ink-soft mt-3 max-w-prose text-[0.9375rem] leading-relaxed">
+            These notes open once this topic has been taught. Everything
+            covered so far is in the rail beside you.
+          </p>
+        </div>
+      </article>
+    );
+  }
+
+  // Neighbours for the prev/next pager, within the same module. Locked ones
+  // are dropped rather than shown: a pager is a door, and this one would
+  // offer to walk the student straight into a topic they cannot read.
+  const list = (
+    await db
+      .select({ id: lessons.id, title: lessons.title })
+      .from(lessons)
+      .where(eq(lessons.moduleId, lesson.moduleId))
+      .orderBy(asc(lessons.position))
+  ).filter((entry) => released.has(entry.id));
 
   const index = list.findIndex((entry) => entry.id === lesson.id);
   const prev = index > 0 ? list[index - 1] : null;

@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import { NotesRail, type RailModule } from "@/components/dashboard/NotesRail";
-import { and, asc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules as modulesTable } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
+import { releasedLessonIds } from "@/lib/lessons";
 
 /**
  * Short tab labels. The full module title is the heading above the lesson
@@ -34,13 +35,15 @@ export default async function NotesLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { active } = await getAccess();
+  const { active, enrolment } = await getAccess();
 
   // Not enrolled: the page itself renders the gate, and a rail listing
   // lessons they cannot open would only be a menu of locked doors.
   if (!active) {
     return <div className="shell py-8 lg:py-10">{children}</div>;
   }
+
+  const released = await releasedLessonIds(enrolment?.cohortId);
 
   /*
    * One query with the lessons nested, rather than a query per module. The
@@ -89,6 +92,7 @@ export default async function NotesLayout({
       id: row.lessonId,
       title: row.lessonTitle,
       position: row.lessonPosition,
+      locked: !released.has(row.lessonId),
     });
   }
 

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { cohorts, enrolments, lessons } from "@/lib/db/schema";
+import { cohorts, enrolments, lessonReleases, lessons } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/access";
 
 /**
@@ -93,6 +93,45 @@ export async function updateCohort(formData: FormData) {
 
   revalidatePath("/admin/cohort");
   revalidatePath("/dashboard");
+}
+
+/**
+ * Opens or closes one lesson for one batch.
+ *
+ * Writing the grant rather than a flag means unlocking is an insert and
+ * locking is a delete, and the absence of a row is what keeps a lesson shut.
+ * `onConflictDoNothing` makes a double-click harmless rather than an error.
+ *
+ * Locking again is deliberately allowed. A topic unlocked a day early should
+ * be retractable, and since the body is fetched per request the student loses
+ * it on their next navigation rather than keeping a copy open.
+ */
+export async function setLessonRelease(formData: FormData) {
+  const cohortId = String(formData.get("cohort_id") ?? "");
+  const lessonId = String(formData.get("lesson_id") ?? "");
+  const unlock = String(formData.get("unlock") ?? "") === "1";
+  if (!cohortId || !lessonId) throw new Error("Missing batch or lesson.");
+
+  await assertAdmin();
+
+  if (unlock) {
+    await db
+      .insert(lessonReleases)
+      .values({ cohortId, lessonId })
+      .onConflictDoNothing();
+  } else {
+    await db
+      .delete(lessonReleases)
+      .where(
+        and(
+          eq(lessonReleases.cohortId, cohortId),
+          eq(lessonReleases.lessonId, lessonId),
+        ),
+      );
+  }
+
+  revalidatePath("/admin/unlocking");
+  revalidatePath("/dashboard/notes", "layout");
 }
 
 /** Records what a student paid for their seat. */

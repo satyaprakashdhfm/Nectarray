@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Lock } from "lucide-react";
 import { useLessonToc } from "@/components/dashboard/lesson-toc";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +10,12 @@ export type RailLesson = {
   id: string;
   title: string;
   position: number;
+  /**
+   * Not yet unlocked for this student's batch: listed, so the course still
+   * reads as a whole, but not a link and not openable. The admin's teaching
+   * view leaves this unset — whoever is teaching sees all of it.
+   */
+  locked?: boolean;
 };
 export type RailModule = {
   id: string;
@@ -116,21 +123,36 @@ export function NotesRail({
               const current = lesson.id === lessonId;
               return (
                 <li key={lesson.id}>
-                  <Link
-                    href={`${basePath}/${lesson.id}`}
-                    // Fourteen lessons in view meant fourteen speculative
-                    // renders of a 40 KB page nobody asked for.
-                    prefetch={false}
-                    aria-current={current ? "page" : undefined}
-                    className={cn(
-                      "-ml-px block border-l-2 py-2 pl-4 text-[0.875rem] leading-snug transition-colors",
-                      current
-                        ? "border-brand text-ink bg-brand-wash/40 rounded-r-md font-semibold"
-                        : "text-ink-soft hover:border-line hover:text-ink border-transparent",
-                    )}
-                  >
-                    {lesson.title}
-                  </Link>
+                  {lesson.locked ? (
+                    <span
+                      aria-disabled="true"
+                      title="Opens when this topic is taught"
+                      className="text-ink-faint -ml-px flex items-center gap-2 border-l-2 border-transparent py-2 pl-4 text-[0.875rem] leading-snug"
+                    >
+                      <Lock className="size-3 shrink-0" aria-hidden />
+                      <span className="min-w-0">{lesson.title}</span>
+                      <span className="sr-only">
+                        {" "}
+                        — locked until this topic is taught
+                      </span>
+                    </span>
+                  ) : (
+                    <Link
+                      href={`${basePath}/${lesson.id}`}
+                      // Fourteen lessons in view meant fourteen speculative
+                      // renders of a 40 KB page nobody asked for.
+                      prefetch={false}
+                      aria-current={current ? "page" : undefined}
+                      className={cn(
+                        "-ml-px block border-l-2 py-2 pl-4 text-[0.875rem] leading-snug transition-colors",
+                        current
+                          ? "border-brand text-ink bg-brand-wash/40 rounded-r-md font-semibold"
+                          : "text-ink-soft hover:border-line hover:text-ink border-transparent",
+                      )}
+                    >
+                      {lesson.title}
+                    </Link>
+                  )}
 
                   {/* The open lesson's sections, one level in. */}
                   {current && toc.length > 1 && (

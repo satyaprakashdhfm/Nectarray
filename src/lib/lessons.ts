@@ -1,9 +1,34 @@
 import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { lessons, modules, type Lesson } from "@/lib/db/schema";
+import {
+  lessonReleases,
+  lessons,
+  modules,
+  type Lesson,
+} from "@/lib/db/schema";
 
 export type { Lesson };
+
+/**
+ * The lessons a batch has been let into, as a set to test membership against.
+ *
+ * Absence is the lock, so a student with no batch — which should not happen
+ * past the enrolment gate — gets an empty set rather than everything. The
+ * cache matters here for the same reason it does on getLesson: the rail in
+ * the layout and the page beside it both need this, and it cannot have
+ * changed between them.
+ */
+export const releasedLessonIds = cache(
+  async (cohortId: string | null | undefined): Promise<Set<string>> => {
+    if (!cohortId) return new Set();
+    const rows = await db
+      .select({ lessonId: lessonReleases.lessonId })
+      .from(lessonReleases)
+      .where(eq(lessonReleases.cohortId, cohortId));
+    return new Set(rows.map((row) => row.lessonId));
+  },
+);
 
 /** A lesson, plus who the module it belongs to is written for and that module's slug. */
 export type LessonWithAudience = Lesson & {
