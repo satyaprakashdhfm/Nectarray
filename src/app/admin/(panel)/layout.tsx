@@ -29,7 +29,6 @@ export const metadata: Metadata = {
 
 const TABS = [
   { href: "/admin", label: "Students" },
-  { href: "/admin/codes", label: "Codes" },
   { href: "/admin/cohort", label: "Class" },
   { href: "/admin/lessons", label: "Student Notes" },
   { href: "/admin/teaching", label: "Teacher Notes" },

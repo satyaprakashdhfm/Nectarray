@@ -2,10 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { randomInt } from "node:crypto";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { cohorts, enrolmentCodes, enrolments, lessons } from "@/lib/db/schema";
+import { cohorts, enrolments, lessons } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/access";
 
 /**
@@ -94,50 +93,6 @@ export async function updateCohort(formData: FormData) {
 
   revalidatePath("/admin/cohort");
   revalidatePath("/dashboard");
-}
-
-/**
- * The alphabet a code is drawn from.
- *
- * No I, O, 0 or 1: these are read off a screen and typed into a phone, and
- * the pair a student cannot tell apart is the pair that generates the support
- * message.
- */
-const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-/** Mints a code for a cohort. */
-export async function generateCode(formData: FormData) {
-  const cohortId = String(formData.get("cohort_id") ?? "");
-  const note = String(formData.get("note") ?? "").trim();
-  if (!cohortId) throw new Error("Pick a class.");
-
-  await assertAdmin();
-
-  /*
-   * randomInt rather than Math.random: this is a bearer token for a paid
-   * seat, and a predictable one is a free course. Retried on collision
-   * because the primary key is the code itself.
-   */
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    let code = "NECT-";
-    for (let i = 0; i < 8; i += 1) {
-      if (i === 4) code += "-";
-      code += ALPHABET[randomInt(0, ALPHABET.length)];
-    }
-
-    const written = await db
-      .insert(enrolmentCodes)
-      .values({ code, cohortId, note: note === "" ? null : note })
-      .onConflictDoNothing()
-      .returning({ code: enrolmentCodes.code });
-
-    if (written.length > 0) {
-      revalidatePath("/admin/codes");
-      return;
-    }
-  }
-
-  throw new Error("Could not mint a unique code. Try again.");
 }
 
 /** Records what a student paid for their seat. */
