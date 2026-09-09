@@ -1,6 +1,6 @@
 {
-  "id": "d6583561-c155-4aac-9dea-77314614db6c",
-  "prevId": "0dbb7bdf-f413-48b6-8b2f-a1e09ca648de",
+  "id": "85ae8752-b5a7-4cc2-bec5-80bdc27c9185",
+  "prevId": "01907a69-d732-40e9-b193-389bd2f26067",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -573,6 +573,12 @@
         },
         "body_md": {
           "name": "body_md",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_hash": {
+          "name": "source_hash",
           "type": "text",
           "primaryKey": false,
           "notNull": false

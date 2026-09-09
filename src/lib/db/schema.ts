@@ -202,6 +202,16 @@ export const lessons = pgTable(
     summary: text(),
     /** The lesson itself. Markdown, up to about 40 KB. */
     bodyMd: text("body_md"),
+    /**
+     * The sha-256 of the body as the last sync wrote it.
+     *
+     * Lesson text is authored in content/lessons/ and copied here by the
+     * pre-deploy migration, which needs to tell "nobody has touched this
+     * since I wrote it" from "somebody edited it in the admin panel". If the
+     * stored body still hashes to this, the sync may overwrite it; if it does
+     * not, the panel wins and the sync leaves it alone and says so.
+     */
+    sourceHash: text("source_hash"),
     position: integer().notNull(),
     isPublished: boolean("is_published").notNull().default(false),
     updatedAt: now(),

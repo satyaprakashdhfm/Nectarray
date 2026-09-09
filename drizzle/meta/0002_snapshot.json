@@ -1,5 +1,5 @@
 {
-  "id": "0dbb7bdf-f413-48b6-8b2f-a1e09ca648de",
+  "id": "01907a69-d732-40e9-b193-389bd2f26067",
   "prevId": "570146bf-eb51-49a7-a915-a6339ee2f66e",
   "version": "7",
   "dialect": "postgresql",
@@ -577,6 +577,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "source_hash": {
+          "name": "source_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "position": {
           "name": "position",
           "type": "integer",
@@ -676,13 +682,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "audience": {
-          "name": "audience",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'student'"
         }
       },
       "indexes": {},

@@ -1,1 +1,0 @@
-ALTER TABLE "modules" ADD COLUMN "audience" text DEFAULT 'student' NOT NULL;
