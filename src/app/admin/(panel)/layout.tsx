@@ -11,6 +11,18 @@ import {
 import { currentUser } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/auth/access";
 
+/*
+ * Rendered per request, never at build time.
+ *
+ * Without this Next tries each of these during "Generating static pages" to
+ * find out whether it can prerender them — which means running the query,
+ * against a database the build container cannot reach on the private
+ * network. It does not fail; it hangs for sixty seconds and then retries,
+ * and the build went from twenty seconds to nearly two minutes. Nothing here
+ * could ever be static: it is all somebody's admin panel.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin — NectArray Academy",
   robots: { index: false, follow: false, nocache: true },
