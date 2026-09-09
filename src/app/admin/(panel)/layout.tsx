@@ -31,7 +31,8 @@ const TABS = [
   { href: "/admin", label: "Students" },
   { href: "/admin/codes", label: "Codes" },
   { href: "/admin/cohort", label: "Class" },
-  { href: "/admin/lessons", label: "Lessons" },
+  { href: "/admin/lessons?audience=student", label: "Student Notes" },
+  { href: "/admin/lessons?audience=admin", label: "Teacher Notes" },
   { href: "/admin/enquiries", label: "Enquiries" },
 ];
 

@@ -29,7 +29,18 @@ type Lesson = {
   body_md: string | null;
 };
 
-export default async function AdminLessonsPage() {
+export default async function AdminLessonsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ audience?: string }>;
+}) {
+  const { audience: requested } = await searchParams;
+  // The same course is written twice — a short student version and a full
+  // teaching one — as separate modules. Defaulting to "student" when the
+  // param is missing or garbage keeps a bare /admin/lessons link showing
+  // what students see, not a page mixing both together.
+  const audience = requested === "admin" ? "admin" : "student";
+
   const [moduleRows, lessonRows] = await Promise.all([
     db
       .select({
@@ -55,11 +66,16 @@ export default async function AdminLessonsPage() {
   ]);
 
   // Hung together here rather than by a nested select, which was a second
-  // query per module.
-  const modules = moduleRows.map((module) => ({
-    ...module,
-    lessons: lessonRows.filter((lesson) => lesson.module_id === module.id),
-  }));
+  // query per module. Filtered to the tab the admin is actually on — a
+  // student note and its teaching counterpart are separate rows in separate
+  // modules, and mixing both lists together on one page was the thing that
+  // made "where is the teacher version" hard to answer.
+  const modules = moduleRows
+    .filter((module) => module.audience === audience)
+    .map((module) => ({
+      ...module,
+      lessons: lessonRows.filter((lesson) => lesson.module_id === module.id),
+    }));
 
   const field =
     "w-full rounded-xl border border-line bg-surface px-4 py-3 text-[0.9375rem] text-ink focus:border-brand focus:outline-none";
@@ -67,12 +83,12 @@ export default async function AdminLessonsPage() {
   return (
     <>
       <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
-        Lessons
+        {audience === "admin" ? "Teacher Notes" : "Student Notes"}
       </h1>
       <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem] leading-relaxed">
-        Notes are imported from the course repositories, and editable here
-        afterwards. Unpublished lessons are invisible to students, whatever
-        their enrolment status.
+        {audience === "admin"
+          ? "The full version of the course, for preparing to teach a class. Not shown to students at any enrolment status."
+          : "The short version enrolled students actually see. Unpublished lessons stay invisible to them, whatever their enrolment status."}
       </p>
 
       {/* New lesson ------------------------------------------------------ */}
@@ -89,7 +105,6 @@ export default async function AdminLessonsPage() {
               {(modules ?? []).map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.title}
-                  {m.audience !== "student" ? " (teaching notes)" : ""}
                 </option>
               ))}
             </select>
@@ -135,14 +150,7 @@ export default async function AdminLessonsPage() {
       <div className="mt-8 space-y-8">
         {(modules ?? []).map((module) => (
           <section key={module.id}>
-            <h2 className="eyebrow flex items-center gap-2">
-              {module.title}
-              {module.audience !== "student" && (
-                <span className="bg-brand-wash text-brand-deep rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold tracking-normal normal-case">
-                  teaching notes · not shown to students
-                </span>
-              )}
-            </h2>
+            <h2 className="eyebrow flex items-center gap-2">{module.title}</h2>
             <div className="card mt-4 overflow-hidden">
               {module.lessons.length === 0 ? (
                 <p className="text-ink-faint p-6 text-[0.9375rem]">
