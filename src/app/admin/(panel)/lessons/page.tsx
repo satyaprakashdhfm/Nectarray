@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { Pencil, Plus } from "lucide-react";
 import { createLesson } from "../actions";
-import { createClient } from "@/lib/supabase/server";
+import { asc } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  lessons as lessonsTable,
+  modules as modulesTable,
+} from "@/lib/db/schema";
 
 type Lesson = {
   id: string;
@@ -13,13 +18,35 @@ type Lesson = {
 };
 
 export default async function AdminLessonsPage() {
-  const supabase = await createClient();
-  const { data: modules } = await supabase
-    .from("modules")
-    .select(
-      "id, title, position, lessons(id, day_label, title, is_published, position, body_md)",
-    )
-    .order("position");
+  const [moduleRows, lessonRows] = await Promise.all([
+    db
+      .select({
+        id: modulesTable.id,
+        title: modulesTable.title,
+        position: modulesTable.position,
+      })
+      .from(modulesTable)
+      .orderBy(asc(modulesTable.position)),
+    db
+      .select({
+        id: lessonsTable.id,
+        module_id: lessonsTable.moduleId,
+        day_label: lessonsTable.dayLabel,
+        title: lessonsTable.title,
+        is_published: lessonsTable.isPublished,
+        position: lessonsTable.position,
+        body_md: lessonsTable.bodyMd,
+      })
+      .from(lessonsTable)
+      .orderBy(asc(lessonsTable.position)),
+  ]);
+
+  // Hung together here rather than by a nested select, which was a second
+  // query per module.
+  const modules = moduleRows.map((module) => ({
+    ...module,
+    lessons: lessonRows.filter((lesson) => lesson.module_id === module.id),
+  }));
 
   const field =
     "w-full rounded-xl border border-line bg-surface px-4 py-3 text-[0.9375rem] text-ink focus:border-brand focus:outline-none";

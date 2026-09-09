@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminLogin } from "@/components/admin/AdminLogin";
 import { Logo } from "@/components/layout/Logo";
-import { isAllowedAdminEmail } from "@/lib/admin";
-import { createClient } from "@/lib/supabase/server";
-import { authEnabled } from "@/lib/supabase/config";
+import { currentUser } from "@/lib/auth/session";
+import { isAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = {
   title: "Admin sign-in — NectArray",
@@ -21,18 +20,14 @@ export default async function AdminLoginPage() {
   let state: "out" | "wrong-account" = "out";
   let email: string | null = null;
 
-  if (authEnabled) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const { data: isAdmin } = await supabase.rpc("is_admin");
-      if (isAdmin && isAllowedAdminEmail(user.email)) redirect("/admin");
-      state = "wrong-account";
-      email = user.email ?? null;
-    }
+  const user = await currentUser();
+  if (user) {
+    if (isAdmin(user)) redirect("/admin");
+    // Signed in, but not as an admin. The usual cause is a browser still
+    // holding a student session, so they get a sign-out button rather than a
+    // door that silently refuses them.
+    state = "wrong-account";
+    email = user.email;
   }
 
   return (

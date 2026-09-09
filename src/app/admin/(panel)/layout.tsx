@@ -8,8 +8,8 @@ import {
   ThemeScript,
   ThemeToggle,
 } from "@/components/dashboard/Theme";
-import { isAllowedAdminEmail } from "@/lib/admin";
-import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth/session";
+import { isAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = {
   title: "Admin — NectArray Academy",
@@ -42,16 +42,8 @@ export default async function AdminPanelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/admin/login");
-  if (!isAllowedAdminEmail(user.email)) redirect("/admin/login");
-
-  const { data: isAdmin } = await supabase.rpc("is_admin");
-  if (!isAdmin) redirect("/admin/login");
+  const user = await currentUser();
+  if (!user || !isAdmin(user)) redirect("/admin/login");
 
   return (
     <div className="bg-mist min-h-screen">

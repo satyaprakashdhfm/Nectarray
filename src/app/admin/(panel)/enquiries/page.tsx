@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { desc } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { academyEnquiries } from "@/lib/db/schema";
 
 type Enquiry = {
   id: string;
@@ -48,16 +50,23 @@ const day = (value: string) =>
  * cover.
  */
 export default async function AdminEnquiriesPage() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("academy_enquiries")
-    .select(
-      "id, created_at, name, email, phone, background, experience, goal, timeline, fit, reply",
-    )
-    .order("created_at", { ascending: false })
-    .limit(200);
-
-  const rows = (data ?? []) as Enquiry[];
+  const rows = (await db
+    .select({
+      id: academyEnquiries.id,
+      created_at: academyEnquiries.createdAt,
+      name: academyEnquiries.name,
+      email: academyEnquiries.email,
+      phone: academyEnquiries.phone,
+      background: academyEnquiries.background,
+      experience: academyEnquiries.experience,
+      goal: academyEnquiries.goal,
+      timeline: academyEnquiries.timeline,
+      fit: academyEnquiries.fit,
+      reply: academyEnquiries.reply,
+    })
+    .from(academyEnquiries)
+    .orderBy(desc(academyEnquiries.createdAt))
+    .limit(200)) as unknown as Enquiry[];
 
   return (
     <>
@@ -69,26 +78,7 @@ export default async function AdminEnquiriesPage() {
         they said they were after, and the answer they were given.
       </p>
 
-      {/*
-       * The table is created by migration 0009. Until that has been run the
-       * query errors, and saying so plainly beats rendering an empty state
-       * that looks like nobody has enquired.
-       */}
-      {error ? (
-        <div className="border-amber/30 bg-amber-wash mt-8 rounded-2xl border p-6">
-          <p className="text-amber-deep text-[0.9375rem] font-semibold">
-            The enquiries table is not there yet.
-          </p>
-          <p className="text-ink-soft mt-2 text-[0.875rem] leading-relaxed">
-            Run{" "}
-            <code className="border-line bg-canvas text-ink rounded border px-1.5 py-0.5 font-mono text-[0.8125rem]">
-              supabase/migrations/0009_academy_enquiries.sql
-            </code>{" "}
-            in the Supabase SQL editor and reload. Nothing is lost meanwhile —
-            enquiries still arrive by email.
-          </p>
-        </div>
-      ) : rows.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="card mt-8 p-8 text-center">
           <p className="text-ink-soft text-[0.9375rem]">No enquiries yet.</p>
         </div>

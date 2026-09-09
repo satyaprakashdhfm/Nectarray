@@ -1,15 +1,24 @@
 import { generateCode } from "../actions";
-import { createClient } from "@/lib/supabase/server";
+import { asc, desc } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { cohorts as cohortsTable, enrolmentCodes } from "@/lib/db/schema";
 
 export default async function AdminCodesPage() {
-  const supabase = await createClient();
-
-  const [{ data: cohorts }, { data: codes }] = await Promise.all([
-    supabase.from("cohorts").select("id, name").order("created_at"),
-    supabase
-      .from("enrolment_codes")
-      .select("code, note, created_at, redeemed_at, redeemed_by")
-      .order("created_at", { ascending: false }),
+  const [cohorts, codes] = await Promise.all([
+    db
+      .select({ id: cohortsTable.id, name: cohortsTable.name })
+      .from(cohortsTable)
+      .orderBy(asc(cohortsTable.createdAt)),
+    db
+      .select({
+        code: enrolmentCodes.code,
+        note: enrolmentCodes.note,
+        created_at: enrolmentCodes.createdAt,
+        redeemed_at: enrolmentCodes.redeemedAt,
+        redeemed_by: enrolmentCodes.redeemedBy,
+      })
+      .from(enrolmentCodes)
+      .orderBy(desc(enrolmentCodes.createdAt)),
   ]);
 
   const field =

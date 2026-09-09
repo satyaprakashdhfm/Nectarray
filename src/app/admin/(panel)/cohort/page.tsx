@@ -1,14 +1,23 @@
 import { Video } from "lucide-react";
 import { updateCohort } from "../actions";
 import { cohortRoom } from "@/lib/meeting";
-import { createClient } from "@/lib/supabase/server";
+import { asc } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { cohorts as cohortsTable } from "@/lib/db/schema";
 
 export default async function AdminCohortPage() {
-  const supabase = await createClient();
-  const { data: cohorts } = await supabase
-    .from("cohorts")
-    .select("*")
-    .order("created_at");
+  const cohorts = (
+    await db.select().from(cohortsTable).orderBy(asc(cohortsTable.createdAt))
+  ).map((cohort) => ({
+    id: cohort.id,
+    name: cohort.name,
+    seats: cohort.seats,
+    is_active: cohort.isActive,
+    starts_on: cohort.startsOn,
+    ends_on: cohort.endsOn,
+    meet_url: cohort.meetUrl,
+    room_slug: cohort.roomSlug,
+  }));
 
   const field =
     "w-full rounded-xl border border-line bg-surface px-4 py-3 text-[0.9375rem] text-ink transition-colors focus:border-brand focus:outline-none";

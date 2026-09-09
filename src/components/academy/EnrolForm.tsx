@@ -47,7 +47,7 @@ const TIMELINES = [
  * /api/contact endpoint as everything else with interest "Academy
  * enrolment", so enquiries land in one inbox.
  *
- * TODO(auth): once Supabase auth lands, the hero's "Enrol now" opens the
+ * The hero's "Enrol now" opens the
  * login modal instead and this becomes the fallback for people who want to
  * ask a question before committing.
  */

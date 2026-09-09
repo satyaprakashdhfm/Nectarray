@@ -136,7 +136,13 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     try {
-      // A full navigation, not a fetch: Google has to see the browser.
+      /*
+       * A full navigation, not a router push. The route it lands on answers
+       * with a redirect to Google, and the client router cannot follow a
+       * cross-origin redirect out of a fetch — the browser has to make the
+       * request itself.
+       */
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = "/api/auth/google/start";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");

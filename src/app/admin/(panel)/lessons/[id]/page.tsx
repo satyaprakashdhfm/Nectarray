@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { updateLesson } from "../../actions";
-import { createClient } from "@/lib/supabase/server";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { lessons, modules } from "@/lib/db/schema";
 
 /**
  * The lesson editor.
@@ -17,21 +19,25 @@ export default async function AdminLessonEditor({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  // One join rather than a lookup and then a second lookup for its module.
+  const [row] = await db
+    .select({
+      id: lessons.id,
+      day_label: lessons.dayLabel,
+      title: lessons.title,
+      summary: lessons.summary,
+      body_md: lessons.bodyMd,
+      is_published: lessons.isPublished,
+      moduleTitle: modules.title,
+    })
+    .from(lessons)
+    .innerJoin(modules, eq(modules.id, lessons.moduleId))
+    .where(eq(lessons.id, id))
+    .limit(1);
 
-  const { data: lesson } = await supabase
-    .from("lessons")
-    .select("id, module_id, day_label, title, summary, body_md, is_published")
-    .eq("id", id)
-    .maybeSingle();
+  if (!row) notFound();
 
-  if (!lesson) notFound();
-
-  const { data: module } = await supabase
-    .from("modules")
-    .select("title")
-    .eq("id", lesson.module_id)
-    .maybeSingle();
+  const lesson = row;
 
   const field =
     "w-full rounded-xl border border-line bg-surface px-4 py-3 text-[0.9375rem] text-ink transition-colors focus:border-brand focus:outline-none";
@@ -49,7 +55,7 @@ export default async function AdminLessonEditor({
 
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">{module?.title ?? "Lesson"}</p>
+          <p className="eyebrow">{row.moduleTitle ?? "Lesson"}</p>
           <h1 className="display text-ink mt-1 text-[1.875rem]">
             {lesson.title}
           </h1>
@@ -127,7 +133,8 @@ export default async function AdminLessonEditor({
           />
           <p className="text-ink-faint mt-2 text-[0.8125rem]">
             The page prints the title above already, so a note does not need to
-            open with its own heading — a leading one is dropped when it renders.
+            open with its own heading — a leading one is dropped when it
+            renders.
           </p>
         </div>
 

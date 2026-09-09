@@ -2,22 +2,25 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { randomInt } from "node:crypto";
+import { and, desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { cohorts, enrolmentCodes, enrolments, lessons } from "@/lib/db/schema";
+import { requireAdmin } from "@/lib/auth/access";
 
 /**
  * Admin mutations.
  *
- * Deliberately written against the *user's own* session rather than the
- * service role: the admin-only RLS policies are then doing the enforcing on
- * every write, so a bug in this file cannot escalate past what the database
- * already allows. Nothing here needs to bypass RLS.
+ * Every one of these opens by throwing if the caller is not an admin. That
+ * used to be belt and braces — the admin-only RLS policies enforced it in the
+ * database whatever this file did — and it is now the only thing standing
+ * between a mislabelled form action and somebody else's payment record. A
+ * server action is a public HTTP endpoint with a generated name; it is not
+ * protected by being imported into an admin page.
  */
 
 async function assertAdmin() {
-  const supabase = await createClient();
-  const { data: isAdmin } = await supabase.rpc("is_admin");
-  if (!isAdmin) throw new Error("Not authorised.");
-  return supabase;
+  await requireAdmin();
 }
 
 const STATUSES = [
@@ -37,12 +40,8 @@ export async function setEnrolmentStatus(formData: FormData) {
     throw new Error(`Unknown status: ${status}`);
   }
 
-  const supabase = await assertAdmin();
-  const { error } = await supabase
-    .from("enrolments")
-    .update({ status })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  await assertAdmin();
+  await db.update(enrolments).set({ status }).where(eq(enrolments.id, id));
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
@@ -54,11 +53,11 @@ export async function createEnrolment(formData: FormData) {
   const cohortId = String(formData.get("cohort_id") ?? "");
   if (!userId || !cohortId) throw new Error("Missing student or class.");
 
-  const supabase = await assertAdmin();
-  const { error } = await supabase
-    .from("enrolments")
-    .insert({ user_id: userId, cohort_id: cohortId, status: "accepted" });
-  if (error) throw new Error(error.message);
+  await assertAdmin();
+  await db
+    .insert(enrolments)
+    .values({ userId, cohortId, status: "accepted" })
+    .onConflictDoNothing();
 
   revalidatePath("/admin");
 }
@@ -82,37 +81,63 @@ export async function updateCohort(formData: FormData) {
     throw new Error("The meeting link must be an https:// URL.");
   }
 
-  const supabase = await assertAdmin();
-  const { error } = await supabase
-    .from("cohorts")
-    .update({
-      meet_url: meetUrl === "" ? null : meetUrl,
-      seats: seatsRaw === "" ? undefined : seats,
-      starts_on: startsOn === "" ? null : startsOn,
-      ends_on: endsOn === "" ? null : endsOn,
+  await assertAdmin();
+  await db
+    .update(cohorts)
+    .set({
+      meetUrl: meetUrl === "" ? null : meetUrl,
+      ...(seatsRaw === "" ? {} : { seats }),
+      startsOn: startsOn === "" ? null : startsOn,
+      endsOn: endsOn === "" ? null : endsOn,
     })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+    .where(eq(cohorts.id, id));
 
   revalidatePath("/admin/cohort");
   revalidatePath("/dashboard");
 }
 
-/** Mints a code for a cohort. The database checks is_admin() again itself. */
+/**
+ * The alphabet a code is drawn from.
+ *
+ * No I, O, 0 or 1: these are read off a screen and typed into a phone, and
+ * the pair a student cannot tell apart is the pair that generates the support
+ * message.
+ */
+const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+/** Mints a code for a cohort. */
 export async function generateCode(formData: FormData) {
   const cohortId = String(formData.get("cohort_id") ?? "");
   const note = String(formData.get("note") ?? "").trim();
   if (!cohortId) throw new Error("Pick a class.");
 
-  const supabase = await assertAdmin();
-  const { error } = await supabase.rpc("generate_enrolment_code", {
-    p_cohort_id: cohortId,
-    p_note: note === "" ? null : note,
-    p_expires_at: null,
-  });
-  if (error) throw new Error(error.message);
+  await assertAdmin();
 
-  revalidatePath("/admin/codes");
+  /*
+   * randomInt rather than Math.random: this is a bearer token for a paid
+   * seat, and a predictable one is a free course. Retried on collision
+   * because the primary key is the code itself.
+   */
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    let code = "NECT-";
+    for (let i = 0; i < 8; i += 1) {
+      if (i === 4) code += "-";
+      code += ALPHABET[randomInt(0, ALPHABET.length)];
+    }
+
+    const written = await db
+      .insert(enrolmentCodes)
+      .values({ code, cohortId, note: note === "" ? null : note })
+      .onConflictDoNothing()
+      .returning({ code: enrolmentCodes.code });
+
+    if (written.length > 0) {
+      revalidatePath("/admin/codes");
+      return;
+    }
+  }
+
+  throw new Error("Could not mint a unique code. Try again.");
 }
 
 /** Records what a student paid for their seat. */
@@ -134,16 +159,15 @@ export async function updatePayment(formData: FormData) {
     }
   }
 
-  const supabase = await assertAdmin();
-  const { error } = await supabase
-    .from("enrolments")
-    .update({
-      amount_paid: amount,
-      paid_on: paidOn === "" ? null : paidOn,
-      payment_ref: ref === "" ? null : ref,
+  await assertAdmin();
+  await db
+    .update(enrolments)
+    .set({
+      amountPaid: amount === null ? null : String(amount),
+      paidOn: paidOn === "" ? null : paidOn,
+      paymentRef: ref === "" ? null : ref,
     })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+    .where(eq(enrolments.id, id));
 
   revalidatePath("/admin");
 }
@@ -161,19 +185,18 @@ export async function updateLesson(formData: FormData) {
 
   if (title === "") throw new Error("A lesson needs a title.");
 
-  const supabase = await assertAdmin();
-  const { error } = await supabase
-    .from("lessons")
-    .update({
-      day_label: dayLabel === "" ? "Day —" : dayLabel,
+  await assertAdmin();
+  await db
+    .update(lessons)
+    .set({
+      dayLabel: dayLabel === "" ? "Day —" : dayLabel,
       title,
       summary: summary === "" ? null : summary,
-      body_md: body === "" ? null : body,
-      is_published: published,
-      updated_at: new Date().toISOString(),
+      bodyMd: body === "" ? null : body,
+      isPublished: published,
+      updatedAt: new Date(),
     })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+    .where(eq(lessons.id, id));
 
   revalidatePath("/admin/lessons");
   revalidatePath(`/admin/lessons/${id}`);
@@ -189,29 +212,26 @@ export async function createLesson(formData: FormData) {
   if (!moduleId) throw new Error("Pick a module.");
   if (title === "") throw new Error("A lesson needs a title.");
 
-  const supabase = await assertAdmin();
+  await assertAdmin();
 
   // Append to the end of the module rather than fighting over a position.
-  const { data: last } = await supabase
-    .from("lessons")
-    .select("position")
-    .eq("module_id", moduleId)
-    .order("position", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [last] = await db
+    .select({ position: lessons.position })
+    .from(lessons)
+    .where(eq(lessons.moduleId, moduleId))
+    .orderBy(desc(lessons.position))
+    .limit(1);
 
-  const { data, error } = await supabase
-    .from("lessons")
-    .insert({
-      module_id: moduleId,
-      day_label: dayLabel === "" ? "Day —" : dayLabel,
+  const [data] = await db
+    .insert(lessons)
+    .values({
+      moduleId,
+      dayLabel: dayLabel === "" ? "Day —" : dayLabel,
       title,
       position: (last?.position ?? 0) + 1,
-      is_published: false,
+      isPublished: false,
     })
-    .select("id")
-    .single();
-  if (error) throw new Error(error.message);
+    .returning({ id: lessons.id });
 
   revalidatePath("/admin/lessons");
   redirect(`/admin/lessons/${data.id}`);

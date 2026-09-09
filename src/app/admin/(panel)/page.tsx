@@ -1,5 +1,15 @@
 import { createEnrolment, setEnrolmentStatus, updatePayment } from "./actions";
-import { createClient } from "@/lib/supabase/server";
+import { desc, eq, isNotNull } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  cohorts as cohortsTable,
+  enrolmentCodes,
+  enrolments,
+  practiceAttempts,
+  practiceProgress,
+  practiceQuestions,
+  users,
+} from "@/lib/db/schema";
 import { displayName } from "@/lib/utils";
 
 const STATUSES = [
@@ -22,8 +32,8 @@ type Enrolment = {
   id: string;
   status: string;
   cohort_id: string;
-  created_at: string;
-  amount_paid: number | null;
+  created_at: Date;
+  amount_paid: string | null;
   paid_on: string | null;
   payment_ref: string | null;
 };
@@ -35,7 +45,7 @@ type Row = {
   last_name: string | null;
   phone: string | null;
   role: string;
-  created_at: string;
+  created_at: Date;
   enrolments: Enrolment[];
 };
 
@@ -45,7 +55,7 @@ const rupees = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
-const day = (value: string | null | undefined) =>
+const day = (value: string | Date | null | undefined) =>
   value
     ? new Date(value).toLocaleDateString("en-IN", {
         day: "numeric",
@@ -63,48 +73,72 @@ const day = (value: string | null | undefined) =>
  * and they were spread across three pages and the database.
  */
 export default async function AdminStudentsPage() {
-  const supabase = await createClient();
+  const [people, enrolmentRows, cohorts, codes, questions, progress, attempts] =
+    await Promise.all([
+      db.select().from(users).orderBy(desc(users.createdAt)),
+      db.select().from(enrolments).orderBy(desc(enrolments.createdAt)),
+      db
+        .select({ id: cohortsTable.id, name: cohortsTable.name })
+        .from(cohortsTable)
+        .orderBy(cohortsTable.createdAt),
+      db
+        .select({
+          code: enrolmentCodes.code,
+          note: enrolmentCodes.note,
+          redeemed_by: enrolmentCodes.redeemedBy,
+          redeemed_at: enrolmentCodes.redeemedAt,
+        })
+        .from(enrolmentCodes)
+        .where(isNotNull(enrolmentCodes.redeemedBy)),
+      db
+        .select({ id: practiceQuestions.id, track: practiceQuestions.track })
+        .from(practiceQuestions)
+        .where(eq(practiceQuestions.isPublished, true)),
+      db
+        .select({
+          user_id: practiceProgress.userId,
+          question_id: practiceProgress.questionId,
+        })
+        .from(practiceProgress),
+      db
+        .select({ user_id: practiceAttempts.userId })
+        .from(practiceAttempts)
+        .where(eq(practiceAttempts.status, "pending")),
+    ]);
 
-  const [
-    { data: profiles },
-    { data: cohorts },
-    { data: codes },
-    { data: questions },
-    { data: progress },
-    { data: attempts },
-  ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select(
-        "*, enrolments(id, status, cohort_id, created_at, amount_paid, paid_on, payment_ref)",
-      )
-      .order("created_at", { ascending: false }),
-    supabase.from("cohorts").select("id, name").order("created_at"),
-    supabase
-      .from("enrolment_codes")
-      .select("code, note, redeemed_by, redeemed_at")
-      .not("redeemed_by", "is", null),
-    supabase
-      .from("practice_questions")
-      .select("id, track")
-      .eq("is_published", true),
-    supabase.from("practice_progress").select("user_id, question_id"),
-    supabase
-      .from("practice_attempts")
-      .select("user_id, status")
-      .eq("status", "pending"),
-  ]);
+  /*
+   * Everybody, with their enrolments hung off them. Two queries and a regroup
+   * rather than one per person: there is one row per student either way, and
+   * this way the number of round trips does not grow with the cohort.
+   */
+  const rows: Row[] = people.map((person) => ({
+    id: person.id,
+    email: person.email,
+    first_name: person.firstName,
+    last_name: person.lastName,
+    phone: person.phone,
+    role: person.role,
+    created_at: person.createdAt,
+    enrolments: enrolmentRows
+      .filter((entry) => entry.userId === person.id)
+      .map((entry) => ({
+        id: entry.id,
+        status: entry.status,
+        cohort_id: entry.cohortId,
+        created_at: entry.createdAt,
+        amount_paid: entry.amountPaid,
+        paid_on: entry.paidOn,
+        payment_ref: entry.paymentRef,
+      })),
+  }));
 
-  const rows = (profiles ?? []) as Row[];
-  const defaultCohort = cohorts?.[0];
+  const defaultCohort = cohorts[0];
 
   // Which code let each student in — the codes table is the record of that,
   // so there is nothing to keep in sync on the enrolment itself.
-  const codeFor = new Map(
-    (codes ?? []).map((c) => [c.redeemed_by as string, c]),
-  );
+  const codeFor = new Map(codes.map((c) => [c.redeemed_by as string, c]));
 
-  const trackOf = new Map((questions ?? []).map((q) => [q.id, q.track]));
+  const trackOf = new Map(questions.map((q) => [q.id, q.track]));
   const totals = { sql: 0, python: 0 };
   for (const track of trackOf.values()) {
     if (track === "sql") totals.sql += 1;
@@ -112,7 +146,7 @@ export default async function AdminStudentsPage() {
   }
 
   const solvedBy = new Map<string, { sql: number; python: number }>();
-  for (const row of progress ?? []) {
+  for (const row of progress) {
     const track = trackOf.get(row.question_id);
     if (!track) continue;
     const entry = solvedBy.get(row.user_id) ?? { sql: 0, python: 0 };
@@ -127,7 +161,9 @@ export default async function AdminStudentsPage() {
   }
 
   const enrolled = rows.filter((r) =>
-    r.enrolments?.some((e) => e.status === "enrolled" || e.status === "completed"),
+    r.enrolments?.some(
+      (e) => e.status === "enrolled" || e.status === "completed",
+    ),
   ).length;
   const collected = rows.reduce(
     (sum, r) => sum + Number(r.enrolments?.[0]?.amount_paid ?? 0),
@@ -243,11 +279,7 @@ export default async function AdminStudentsPage() {
                     </td>
 
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <Bar
-                        label="SQL"
-                        done={solved.sql}
-                        total={totals.sql}
-                      />
+                      <Bar label="SQL" done={solved.sql} total={totals.sql} />
                       <Bar
                         label="Py"
                         done={solved.python}
