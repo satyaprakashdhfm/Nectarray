@@ -194,6 +194,31 @@ def build_one(slug: str, seed: int) -> dict:
     }
 
 
+INDEX = ROOT / "content" / "python-testcase-index.json"
+
+
+def write_index() -> None:
+    """A few kilobytes of summary, so the dashboard need not open 10 MB.
+
+    Every problem page wants two things about every problem — how many cases
+    there are and what a couple of them look like. Reading all fifty-three
+    suites to answer that would pull the entire answer key into memory on a
+    page that is not even judging anything, so the public half is lifted out
+    here and the suites are opened only when a submission is actually run.
+    """
+    index = {}
+    for path in sorted(OUT.glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf8"))
+        index[data["slug"]] = {
+            "count": len(data["cases"]),
+            "samples": [{"args": c["args"], "expect": c["expect"]}
+                        for c in data["cases"] if c.get("public")],
+        }
+    INDEX.write_text(json.dumps(index, indent=1) + "\n", encoding="utf8", newline="")
+    print(f"\nindex: {len(index)} problems -> {INDEX.relative_to(ROOT)} "
+          f"({INDEX.stat().st_size / 1024:.1f} KB)")
+
+
 def main() -> int:
     wanted = sys.argv[1:] or sorted(SPECS)
     missing = [s for s in wanted if s not in SPECS]
@@ -222,6 +247,8 @@ def main() -> int:
         kb = path.stat().st_size / 1024
         print(f"  ok   {slug:52} {built['verified_against_oracle']:3}/100 verified"
               f"  {kb:7.1f} KB  {time.time() - t0:5.1f}s")
+
+    write_index()
 
     print(f"\n{len(wanted) - len(failures)}/{len(wanted)} problems, "
           f"{total_cases} cases, {total_verified} cross-checked, "

@@ -58,6 +58,12 @@ const STATEMENTS = path.join(
   "content",
   "python-statements.json",
 );
+const SUITES = path.join(process.cwd(), "testcases");
+const INDEX = path.join(
+  process.cwd(),
+  "content",
+  "python-testcase-index.json",
+);
 
 /** Read once per process; it is a static file and never changes at runtime. */
 let loaded: Promise<Map<string, JudgedProblem>> | null = null;
@@ -70,9 +76,63 @@ export function allProblems(): Promise<Map<string, JudgedProblem>> {
   return loaded;
 }
 
+/**
+ * The generated suite for one problem: a hundred cases, or nothing.
+ *
+ * Opened one problem at a time and never as a set. The suites come to about
+ * ten megabytes together, and a submission needs exactly one of them — the
+ * old shape, where every expectation for every problem lived in a single file
+ * that was parsed once and held forever, does not survive that change of
+ * scale. A missing or unreadable file is not an error: the small set that
+ * ships in python-tests.json is still a working judge, so a suite that has
+ * not been generated yet degrades to it rather than taking the problem down.
+ */
+const suiteCases = cache(
+  async (
+    slug: string,
+  ): Promise<{ args: unknown[]; expect: unknown }[] | null> => {
+    if (!/^[a-z0-9-]+$/.test(slug)) return null; // it reaches a path
+    try {
+      const raw = await readFile(path.join(SUITES, `${slug}.json`), "utf8");
+      const parsed = JSON.parse(raw) as {
+        cases?: { args: unknown[]; expect: unknown }[];
+      };
+      return parsed.cases?.length ? parsed.cases : null;
+    } catch {
+      return null;
+    }
+  },
+);
+
 export const getProblem = cache(async (slug: string) => {
-  return (await allProblems()).get(slug) ?? null;
+  const problem = (await allProblems()).get(slug) ?? null;
+  if (!problem) return null;
+
+  const generated = await suiteCases(slug);
+  if (!generated) return problem;
+
+  // Everything else — the starter, the reference, the comparison rule —
+  // still comes from the built file; only the cases are replaced.
+  return {
+    ...problem,
+    tests: { ...problem.tests, cases: generated },
+  } satisfies JudgedProblem;
 });
+
+type Summary = {
+  count: number;
+  samples: { args: unknown[]; expect: unknown }[];
+};
+
+let index: Promise<Record<string, Summary>> | null = null;
+
+/** The public half of the generated suites — a few kilobytes, not ten megabytes. */
+function testcaseIndex(): Promise<Record<string, Summary>> {
+  index ??= readFile(INDEX, "utf8")
+    .then((raw) => JSON.parse(raw) as Record<string, Summary>)
+    .catch(() => ({}));
+  return index;
+}
 
 let statements: Promise<Record<string, Statement>> | null = null;
 
@@ -91,19 +151,27 @@ function allStatements(): Promise<Record<string, Statement>> {
  * answer. The remaining expectations exist only on the server.
  */
 export async function briefs(): Promise<Record<string, ProblemBrief>> {
-  const [problems, written] = await Promise.all([
+  const [problems, written, index] = await Promise.all([
     allProblems(),
     allStatements(),
+    testcaseIndex(),
   ]);
   const out: Record<string, ProblemBrief> = {};
 
   for (const [slug, problem] of problems) {
+    /*
+     * The count and the worked examples come from the index when a generated
+     * suite exists. Only the cases marked public are offered — with a hundred
+     * per problem, "the first three" would now be an arbitrary three of the
+     * hidden ones, which is the answer key leaking a case at a time.
+     */
+    const summary = index[slug];
     out[slug] = {
       slug,
       starter_code: problem.starter_code,
       note: problem.note,
-      case_count: problem.tests.cases.length,
-      samples: problem.tests.cases.slice(0, 3),
+      case_count: summary?.count ?? problem.tests.cases.length,
+      samples: summary?.samples ?? problem.tests.cases.slice(0, 3),
       statement: written[slug]?.statement ?? "",
       constraints: written[slug]?.constraints ?? [],
     };

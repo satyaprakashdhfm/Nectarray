@@ -1,0 +1,1738 @@
+{
+ "3sum": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      -1,
+      0,
+      1,
+      2,
+      -1,
+      -4
+     ]
+    ],
+    "expect": [
+     [
+      -1,
+      -1,
+      2
+     ],
+     [
+      -1,
+      0,
+      1
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      0,
+      1,
+      1
+     ]
+    ],
+    "expect": []
+   }
+  ]
+ },
+ "4sum-ii": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2
+     ],
+     [
+      -2,
+      -1
+     ],
+     [
+      -1,
+      2
+     ],
+     [
+      0,
+      2
+     ]
+    ],
+    "expect": 2
+   },
+   {
+    "args": [
+     [
+      0
+     ],
+     [
+      0
+     ],
+     [
+      0
+     ],
+     [
+      0
+     ]
+    ],
+    "expect": 1
+   }
+  ]
+ },
+ "4sum": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      0,
+      -1,
+      0,
+      -2,
+      2
+     ],
+     0
+    ],
+    "expect": [
+     [
+      -2,
+      -1,
+      1,
+      2
+     ],
+     [
+      -2,
+      0,
+      0,
+      2
+     ],
+     [
+      -1,
+      0,
+      0,
+      1
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     8
+    ],
+    "expect": [
+     [
+      2,
+      2,
+      2,
+      2
+     ]
+    ]
+   }
+  ]
+ },
+ "best-time-to-buy-and-sell-stock": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      7,
+      1,
+      5,
+      3,
+      6,
+      4
+     ]
+    ],
+    "expect": 5
+   },
+   {
+    "args": [
+     [
+      7,
+      6,
+      4,
+      3,
+      1
+     ]
+    ],
+    "expect": 0
+   }
+  ]
+ },
+ "container-with-most-water": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      8,
+      6,
+      2,
+      5,
+      4,
+      8,
+      3,
+      7
+     ]
+    ],
+    "expect": 49
+   },
+   {
+    "args": [
+     [
+      1,
+      1
+     ]
+    ],
+    "expect": 1
+   }
+  ]
+ },
+ "contains-duplicate-ii": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      1
+     ],
+     3
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     [
+      1,
+      0,
+      1,
+      1
+     ],
+     1
+    ],
+    "expect": true
+   }
+  ]
+ },
+ "contains-duplicate": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      1
+     ]
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      4
+     ]
+    ],
+    "expect": false
+   }
+  ]
+ },
+ "count-inversions": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      2,
+      3,
+      7,
+      1,
+      3,
+      5
+     ]
+    ],
+    "expect": 5
+   },
+   {
+    "args": [
+     [
+      5,
+      4,
+      3,
+      2,
+      1
+     ]
+    ],
+    "expect": 10
+   }
+  ]
+ },
+ "count-subarrays-with-xor-k": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      4,
+      2,
+      2,
+      6,
+      4
+     ],
+     6
+    ],
+    "expect": 4
+   },
+   {
+    "args": [
+     [
+      5,
+      6,
+      7,
+      8,
+      9
+     ],
+     5
+    ],
+    "expect": 2
+   }
+  ]
+ },
+ "find-all-anagrams-in-a-string": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "cbaebabacd",
+     "abc"
+    ],
+    "expect": [
+     0,
+     6
+    ]
+   },
+   {
+    "args": [
+     "abab",
+     "ab"
+    ],
+    "expect": [
+     0,
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ "find-common-characters": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      "bella",
+      "label",
+      "roller"
+     ]
+    ],
+    "expect": [
+     "e",
+     "l",
+     "l"
+    ]
+   },
+   {
+    "args": [
+     [
+      "cool",
+      "lock",
+      "cook"
+     ]
+    ],
+    "expect": [
+     "c",
+     "o"
+    ]
+   }
+  ]
+ },
+ "find-the-duplicate-number": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      3,
+      4,
+      2,
+      2
+     ]
+    ],
+    "expect": 2
+   },
+   {
+    "args": [
+     [
+      3,
+      1,
+      3,
+      4,
+      2
+     ]
+    ],
+    "expect": 3
+   }
+  ]
+ },
+ "find-the-index-of-the-first-occurrence-in-a-string": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "sadbutsad",
+     "sad"
+    ],
+    "expect": 0
+   },
+   {
+    "args": [
+     "leetcode",
+     "leeto"
+    ],
+    "expect": -1
+   }
+  ]
+ },
+ "find-the-repeating-and-missing-number": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      3,
+      1,
+      2,
+      5,
+      3
+     ]
+    ],
+    "expect": [
+     3,
+     4
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      2,
+      4
+     ]
+    ],
+    "expect": [
+     2,
+     3
+    ]
+   }
+  ]
+ },
+ "first-missing-positive": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      0
+     ]
+    ],
+    "expect": 3
+   },
+   {
+    "args": [
+     [
+      3,
+      4,
+      -1,
+      1
+     ]
+    ],
+    "expect": 2
+   }
+  ]
+ },
+ "first-unique-character-in-a-string": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "leetcode"
+    ],
+    "expect": 0
+   },
+   {
+    "args": [
+     "loveleetcode"
+    ],
+    "expect": 2
+   }
+  ]
+ },
+ "group-anagrams": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      "eat",
+      "tea",
+      "tan",
+      "ate",
+      "nat",
+      "bat"
+     ]
+    ],
+    "expect": [
+     [
+      "eat",
+      "tea",
+      "ate"
+     ],
+     [
+      "tan",
+      "nat"
+     ],
+     [
+      "bat"
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      ""
+     ]
+    ],
+    "expect": [
+     [
+      ""
+     ]
+    ]
+   }
+  ]
+ },
+ "intersection-of-two-arrays-ii": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    "expect": [
+     2,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      4,
+      9,
+      5
+     ],
+     [
+      9,
+      4,
+      9,
+      8,
+      4
+     ]
+    ],
+    "expect": [
+     9,
+     4
+    ]
+   }
+  ]
+ },
+ "intersection-of-two-arrays": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    "expect": [
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      4,
+      9,
+      5
+     ],
+     [
+      9,
+      4,
+      9,
+      8,
+      4
+     ]
+    ],
+    "expect": [
+     9,
+     4
+    ]
+   }
+  ]
+ },
+ "isomorphic-strings": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "egg",
+     "add"
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     "foo",
+     "bar"
+    ],
+    "expect": false
+   }
+  ]
+ },
+ "longest-common-prefix": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      "flower",
+      "flow",
+      "flight"
+     ]
+    ],
+    "expect": "fl"
+   },
+   {
+    "args": [
+     [
+      "dog",
+      "racecar",
+      "car"
+     ]
+    ],
+    "expect": ""
+   }
+  ]
+ },
+ "longest-consecutive-sequence": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      100,
+      4,
+      200,
+      1,
+      3,
+      2
+     ]
+    ],
+    "expect": 4
+   },
+   {
+    "args": [
+     [
+      0,
+      3,
+      7,
+      2,
+      5,
+      8,
+      4,
+      6,
+      0,
+      1
+     ]
+    ],
+    "expect": 9
+   }
+  ]
+ },
+ "longest-palindromic-substring": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "cbbd"
+    ],
+    "expect": "bb"
+   },
+   {
+    "args": [
+     "racecar"
+    ],
+    "expect": "racecar"
+   }
+  ]
+ },
+ "longest-repeating-character-replacement": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "ABAB",
+     2
+    ],
+    "expect": 4
+   },
+   {
+    "args": [
+     "AABABBA",
+     1
+    ],
+    "expect": 4
+   }
+  ]
+ },
+ "longest-substring-without-repeating-characters": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "abcabcbb"
+    ],
+    "expect": 3
+   },
+   {
+    "args": [
+     "bbbbb"
+    ],
+    "expect": 1
+   }
+  ]
+ },
+ "majority-element": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      3,
+      2,
+      3
+     ]
+    ],
+    "expect": 3
+   },
+   {
+    "args": [
+     [
+      2,
+      2,
+      1,
+      1,
+      1,
+      2,
+      2
+     ]
+    ],
+    "expect": 2
+   }
+  ]
+ },
+ "maximum-subarray": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      -2,
+      1,
+      -3,
+      4,
+      -1,
+      2,
+      1,
+      -5,
+      4
+     ]
+    ],
+    "expect": 6
+   },
+   {
+    "args": [
+     [
+      5,
+      4,
+      -1,
+      7,
+      8
+     ]
+    ],
+    "expect": 23
+   }
+  ]
+ },
+ "median-of-two-sorted-arrays": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      3
+     ],
+     [
+      2
+     ]
+    ],
+    "expect": 2.0
+   },
+   {
+    "args": [
+     [
+      1,
+      2
+     ],
+     [
+      3,
+      4
+     ]
+    ],
+    "expect": 2.5
+   }
+  ]
+ },
+ "merge-intervals": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       8,
+       10
+      ],
+      [
+       15,
+       18
+      ]
+     ]
+    ],
+    "expect": [
+     [
+      1,
+      6
+     ],
+     [
+      8,
+      10
+     ],
+     [
+      15,
+      18
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       4
+      ],
+      [
+       4,
+       5
+      ]
+     ]
+    ],
+    "expect": [
+     [
+      1,
+      5
+     ]
+    ]
+   }
+  ]
+ },
+ "merge-sorted-array": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      0,
+      0,
+      0
+     ],
+     3,
+     [
+      2,
+      5,
+      6
+     ],
+     3
+    ],
+    "expect": [
+     1,
+     2,
+     2,
+     3,
+     5,
+     6
+    ]
+   },
+   {
+    "args": [
+     [
+      1
+     ],
+     1,
+     [],
+     0
+    ],
+    "expect": [
+     1
+    ]
+   }
+  ]
+ },
+ "minimum-window-substring": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "ADOBECODEBANC",
+     "ABC"
+    ],
+    "expect": "BANC"
+   },
+   {
+    "args": [
+     "a",
+     "a"
+    ],
+    "expect": "a"
+   }
+  ]
+ },
+ "missing-number": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      3,
+      0,
+      1
+     ]
+    ],
+    "expect": 2
+   },
+   {
+    "args": [
+     [
+      9,
+      6,
+      4,
+      2,
+      3,
+      5,
+      7,
+      0,
+      1
+     ]
+    ],
+    "expect": 8
+   }
+  ]
+ },
+ "move-zeroes": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      0,
+      1,
+      0,
+      3,
+      12
+     ]
+    ],
+    "expect": [
+     1,
+     3,
+     12,
+     0,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      0
+     ]
+    ],
+    "expect": [
+     0
+    ]
+   }
+  ]
+ },
+ "next-permutation": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expect": [
+     1,
+     3,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      3,
+      2,
+      1
+     ]
+    ],
+    "expect": [
+     1,
+     2,
+     3
+    ]
+   }
+  ]
+ },
+ "plus-one": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expect": [
+     1,
+     2,
+     4
+    ]
+   },
+   {
+    "args": [
+     [
+      9
+     ]
+    ],
+    "expect": [
+     1,
+     0
+    ]
+   }
+  ]
+ },
+ "product-of-array-except-self": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      4
+     ]
+    ],
+    "expect": [
+     24,
+     12,
+     8,
+     6
+    ]
+   },
+   {
+    "args": [
+     [
+      -1,
+      1,
+      0,
+      -3,
+      3
+     ]
+    ],
+    "expect": [
+     0,
+     0,
+     9,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "ransom-note": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "a",
+     "b"
+    ],
+    "expect": false
+   },
+   {
+    "args": [
+     "aa",
+     "aab"
+    ],
+    "expect": true
+   }
+  ]
+ },
+ "remove-duplicates-from-sorted-array": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      1,
+      2
+     ]
+    ],
+    "expect": {
+     "k": 2,
+     "prefix": [
+      1,
+      2
+     ]
+    }
+   },
+   {
+    "args": [
+     [
+      0,
+      0,
+      1,
+      1,
+      1,
+      2,
+      2,
+      3,
+      3,
+      4
+     ]
+    ],
+    "expect": {
+     "k": 5,
+     "prefix": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   }
+  ]
+ },
+ "reverse-string": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      "h",
+      "e",
+      "l",
+      "l",
+      "o"
+     ]
+    ],
+    "expect": [
+     "o",
+     "l",
+     "l",
+     "e",
+     "h"
+    ]
+   },
+   {
+    "args": [
+     [
+      "H",
+      "a",
+      "n",
+      "n",
+      "a",
+      "h"
+     ]
+    ],
+    "expect": [
+     "h",
+     "a",
+     "n",
+     "n",
+     "a",
+     "H"
+    ]
+   }
+  ]
+ },
+ "rotate-array": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+     ],
+     3
+    ],
+    "expect": [
+     5,
+     6,
+     7,
+     1,
+     2,
+     3,
+     4
+    ]
+   },
+   {
+    "args": [
+     [
+      -1,
+      -100,
+      3,
+      99
+     ],
+     2
+    ],
+    "expect": [
+     3,
+     99,
+     -1,
+     -100
+    ]
+   }
+  ]
+ },
+ "set-matrix-zeroes": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ]
+    ],
+    "expect": [
+     [
+      1,
+      0,
+      1
+     ],
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      1
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       0,
+       1,
+       2,
+       0
+      ],
+      [
+       3,
+       4,
+       5,
+       2
+      ],
+      [
+       1,
+       3,
+       1,
+       5
+      ]
+     ]
+    ],
+    "expect": [
+     [
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      4,
+      5,
+      0
+     ],
+     [
+      0,
+      3,
+      1,
+      0
+     ]
+    ]
+   }
+  ]
+ },
+ "sort-characters-by-frequency": {
+  "count": 100,
+  "samples": []
+ },
+ "sort-colors": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      2,
+      0,
+      2,
+      1,
+      1,
+      0
+     ]
+    ],
+    "expect": [
+     0,
+     0,
+     1,
+     1,
+     2,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      2,
+      0,
+      1
+     ]
+    ],
+    "expect": [
+     0,
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ "spiral-matrix": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       3
+      ],
+      [
+       4,
+       5,
+       6
+      ],
+      [
+       7,
+       8,
+       9
+      ]
+     ]
+    ],
+    "expect": [
+     1,
+     2,
+     3,
+     6,
+     9,
+     8,
+     7,
+     4,
+     5
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       3,
+       4
+      ],
+      [
+       5,
+       6,
+       7,
+       8
+      ],
+      [
+       9,
+       10,
+       11,
+       12
+      ]
+     ]
+    ],
+    "expect": [
+     1,
+     2,
+     3,
+     4,
+     8,
+     12,
+     11,
+     10,
+     9,
+     5,
+     6,
+     7
+    ]
+   }
+  ]
+ },
+ "squares-of-a-sorted-array": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      -4,
+      -1,
+      0,
+      3,
+      10
+     ]
+    ],
+    "expect": [
+     0,
+     1,
+     9,
+     16,
+     100
+    ]
+   },
+   {
+    "args": [
+     [
+      -7,
+      -3,
+      2,
+      3,
+      11
+     ]
+    ],
+    "expect": [
+     4,
+     9,
+     9,
+     49,
+     121
+    ]
+   }
+  ]
+ },
+ "string-to-integer-atoi": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "42"
+    ],
+    "expect": 42
+   },
+   {
+    "args": [
+     "   -42"
+    ],
+    "expect": -42
+   }
+  ]
+ },
+ "subarray-sum-equals-k": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      1,
+      1
+     ],
+     2
+    ],
+    "expect": 2
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ],
+     3
+    ],
+    "expect": 2
+   }
+  ]
+ },
+ "top-k-frequent-elements": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      1,
+      1,
+      2,
+      2,
+      3
+     ],
+     2
+    ],
+    "expect": [
+     1,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      1
+     ],
+     1
+    ],
+    "expect": [
+     1
+    ]
+   }
+  ]
+ },
+ "two-sum": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      2,
+      7,
+      11,
+      15
+     ],
+     9
+    ],
+    "expect": [
+     0,
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      3,
+      2,
+      4
+     ],
+     6
+    ],
+    "expect": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ "unique-number-of-occurrences": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      2,
+      1,
+      1,
+      3
+     ]
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     [
+      1,
+      2
+     ]
+    ],
+    "expect": false
+   }
+  ]
+ },
+ "valid-anagram": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "anagram",
+     "nagaram"
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     "rat",
+     "car"
+    ],
+    "expect": false
+   }
+  ]
+ },
+ "valid-palindrome": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "A man, a plan, a canal: Panama"
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     "race a car"
+    ],
+    "expect": false
+   }
+  ]
+ },
+ "word-pattern": {
+  "count": 100,
+  "samples": [
+   {
+    "args": [
+     "abba",
+     "dog cat cat dog"
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     "abba",
+     "dog cat cat fish"
+    ],
+    "expect": false
+   }
+  ]
+ }
+}

@@ -179,20 +179,44 @@ export async function POST(request: Request) {
   const accepted = passed === cases.length && cases.length > 0;
 
   /*
-   * On failure the student sees one case — the first that failed — with its
-   * input, the expected value and what they returned. That is how LeetCode
-   * does it and it is the right amount: enough to debug, not enough to read
-   * the whole answer key off a handful of wrong submissions.
+   * On failure the student sees one case, with its input, the expected value
+   * and what they returned. That is how LeetCode does it and it is the right
+   * amount: enough to debug, not enough to read the whole answer key off a
+   * handful of wrong submissions.
+   *
+   * The *smallest* failing case rather than the first. With a hundred cases
+   * per problem the first failure is often one of the large ones, and three
+   * thousand numbers is not a debugging aid — a solution that is wrong at
+   * scale is almost always wrong on something small too, and that is the
+   * case worth reading.
    */
-  const index = results.findIndex((r) => !r.ok);
+  const failures = results
+    .map((r, i) => (r.ok ? null : i))
+    .filter((i): i is number => i !== null);
+
+  const weigh = (i: number) => JSON.stringify(cases[i].args).length;
+  const index = failures.length
+    ? failures.reduce((best, i) => (weigh(i) < weigh(best) ? i : best))
+    : -1;
+
+  /*
+   * Even the smallest failure can be big — every case for a problem may be
+   * large. Past a couple of kilobytes the input is withheld rather than
+   * truncated, because half an array shown as if it were the whole one is
+   * worse than saying nothing.
+   */
+  const TOO_BIG = 2_000;
+  const oversized = index !== -1 && weigh(index) > TOO_BIG;
+
   const failing =
     index === -1
       ? null
       : {
           number: index + 1,
-          args: cases[index].args,
-          expect: cases[index].expect,
-          got: raw[index]?.got ?? null,
+          args: oversized ? null : cases[index].args,
+          expect: oversized ? null : cases[index].expect,
+          got: oversized ? null : (raw[index]?.got ?? null),
+          oversized,
           error: results[index].error ?? null,
         };
 

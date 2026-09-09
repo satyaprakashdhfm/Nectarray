@@ -71,9 +71,11 @@ const DIFF_LABEL: Record<string, string> = {
 
 type Failing = {
   number: number;
-  args: unknown[];
+  /** Null when the case was too large to send back — see `oversized`. */
+  args: unknown[] | null;
   expect: unknown;
   got: unknown;
+  oversized?: boolean;
   error: string | null;
 };
 
@@ -550,24 +552,42 @@ function Results({ run, solved }: { run: Run; solved: boolean }) {
           <p className="eyebrow border-line-soft border-b px-4 py-2">
             Failing test case {failing.number}
           </p>
-          <dl className="grid gap-3 p-4 text-[0.8125rem] sm:grid-cols-[6rem_1fr]">
-            <dt className="text-ink-faint font-semibold">Input</dt>
-            <dd className="text-ink-soft font-mono break-all">
-              {displayArgs(failing.args)}
-            </dd>
+          {failing.oversized ? (
+            /* Withheld rather than truncated: half an input shown as if it
+               were the whole one sends people debugging the wrong thing. */
+            <div className="p-4 text-[0.8125rem]">
+              <p className="text-ink-soft leading-relaxed">
+                This case is too large to print
+                {failing.error ? " — it also raised an error" : ""}. Every
+                smaller case passed, so the difference is likely to be how the
+                solution scales rather than what it computes.
+              </p>
+              {failing.error && (
+                <p className="text-amber-deep mt-2 font-mono break-all">
+                  {failing.error}
+                </p>
+              )}
+            </div>
+          ) : (
+            <dl className="grid gap-3 p-4 text-[0.8125rem] sm:grid-cols-[6rem_1fr]">
+              <dt className="text-ink-faint font-semibold">Input</dt>
+              <dd className="text-ink-soft font-mono break-all">
+                {displayArgs(failing.args ?? [])}
+              </dd>
 
-            <dt className="text-ink-faint font-semibold">Expected</dt>
-            <dd className="text-leaf-deep font-mono break-all">
-              {display(failing.expect)}
-            </dd>
+              <dt className="text-ink-faint font-semibold">Expected</dt>
+              <dd className="text-leaf-deep font-mono break-all">
+                {display(failing.expect)}
+              </dd>
 
-            <dt className="text-ink-faint font-semibold">
-              {failing.error ? "Error" : "You returned"}
-            </dt>
-            <dd className="text-amber-deep font-mono break-all">
-              {failing.error ?? display(failing.got)}
-            </dd>
-          </dl>
+              <dt className="text-ink-faint font-semibold">
+                {failing.error ? "Error" : "You returned"}
+              </dt>
+              <dd className="text-amber-deep font-mono break-all">
+                {failing.error ?? display(failing.got)}
+              </dd>
+            </dl>
+          )}
         </div>
       )}
 
