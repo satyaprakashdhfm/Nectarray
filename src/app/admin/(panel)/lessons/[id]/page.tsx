@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { updateLesson } from "../../actions";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
 
 /*
  * Rendered per request, never at build time.
@@ -40,7 +41,10 @@ export default async function AdminLessonEditor({
       summary: lessons.summary,
       body_md: lessons.bodyMd,
       is_published: lessons.isPublished,
+      position: lessons.position,
       moduleTitle: modules.title,
+      moduleSlug: modules.slug,
+      audience: modules.audience,
     })
     .from(lessons)
     .innerJoin(modules, eq(modules.id, lessons.moduleId))
@@ -50,6 +54,53 @@ export default async function AdminLessonEditor({
   if (!row) notFound();
 
   const lesson = row;
+
+  /*
+   * The same day's content lives twice — a short student lesson and a full
+   * teaching one — as two separate rows in two separate modules, paired only
+   * by sharing a position. "<slug>" and "<slug>-teaching" is the pairing
+   * convention those modules were created with; a module outside that
+   * convention (Agentic AI, Placement) simply has no counterpart, and the
+   * tabs below don't render.
+   */
+  const siblingSlug =
+    lesson.audience === "student"
+      ? `${lesson.moduleSlug}-teaching`
+      : lesson.moduleSlug.replace(/-teaching$/, "");
+
+  const [siblingModule] =
+    siblingSlug === lesson.moduleSlug
+      ? []
+      : await db
+          .select({ id: modules.id })
+          .from(modules)
+          .where(eq(modules.slug, siblingSlug))
+          .limit(1);
+
+  const [siblingLesson] = siblingModule
+    ? await db
+        .select({ id: lessons.id })
+        .from(lessons)
+        .where(
+          and(
+            eq(lessons.moduleId, siblingModule.id),
+            eq(lessons.position, lesson.position),
+          ),
+        )
+        .limit(1)
+    : [];
+
+  const tabs = siblingLesson
+    ? lesson.audience === "student"
+      ? [
+          { href: `/admin/lessons/${siblingLesson.id}`, label: "Teacher Notes", active: false },
+          { href: `/admin/lessons/${lesson.id}`, label: "Student Lesson", active: true },
+        ]
+      : [
+          { href: `/admin/lessons/${lesson.id}`, label: "Teacher Notes", active: true },
+          { href: `/admin/lessons/${siblingLesson.id}`, label: "Student Lesson", active: false },
+        ]
+    : null;
 
   const field =
     "w-full rounded-xl border border-line bg-surface px-4 py-3 text-[0.9375rem] text-ink transition-colors focus:border-brand focus:outline-none";
@@ -83,6 +134,36 @@ export default async function AdminLessonEditor({
           </Link>
         )}
       </div>
+
+      {tabs && (
+        <div className="mt-6">
+          <nav
+            aria-label="Notes version"
+            className="border-line bg-surface inline-flex gap-1 rounded-full border p-1"
+          >
+            {tabs.map((tab) => (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                aria-current={tab.active ? "page" : undefined}
+                className={cn(
+                  "inline-flex rounded-full px-4 py-1.5 text-[0.875rem] font-medium transition-colors",
+                  tab.active
+                    ? "bg-ink text-cta-fg"
+                    : "text-ink-soft hover:bg-mist hover:text-ink",
+                )}
+              >
+                {tab.label}
+              </Link>
+            ))}
+          </nav>
+          <p className="text-ink-faint mt-2 text-[0.8125rem]">
+            Teacher Notes is the full version, for preparing to teach the
+            class. Student Lesson is the short version enrolled students
+            actually see — they are two separate rows, each saved on its own.
+          </p>
+        </div>
+      )}
 
       <form action={updateLesson} className="card mt-6 p-6 sm:p-7">
         <input type="hidden" name="id" value={lesson.id} />

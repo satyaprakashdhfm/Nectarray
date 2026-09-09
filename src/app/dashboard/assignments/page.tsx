@@ -24,15 +24,16 @@ import { cn } from "@/lib/utils";
 /**
  * Everything a student is asked to build or solve, in one place.
  *
- * Four kinds of work, one shape of question ("here is a problem, here is
- * how it is checked") except Projects, which is marked by a person instead
- * of a judge — worth keeping alongside the other three anyway, because to a
- * student choosing what to do next it is exactly the same kind of decision.
+ * Python and SQL are judge-checked problem sets. Projects is the agentic-AI
+ * track — the five capstone builds (clean data, train a model, a RAG
+ * pipeline, an MCP agent, the full system) — marked by a person against a
+ * brief instead of a judge. There used to be a separate, empty "Agentic
+ * problems" tab reserved for judge-checked agentic questions that were never
+ * written; Projects already is that work, so one tab covers it.
  */
 const TRACKS = [
   { id: "python", label: "Python problems" },
   { id: "sql", label: "SQL questions" },
-  { id: "agentic", label: "Agentic problems" },
   { id: "projects", label: "Projects" },
 ] as const;
 
@@ -67,10 +68,8 @@ const BLURB: Record<Track, string> = {
   sql: "Written against the training database on the left. Run a query that matches the expected output and it ticks itself off.",
   python:
     "Read the problem, write the solution and run it against the test cases. Pass them all and it ticks itself off.",
-  agentic:
-    "Build against a real agent brief and run it against the test cases. Pass them all and it ticks itself off.",
   projects:
-    "Five builds, marked by a person against a brief rather than a judge.",
+    "Five agentic-AI builds, marked by a person against a brief rather than a judge.",
 };
 
 export default async function AssignmentsPage({

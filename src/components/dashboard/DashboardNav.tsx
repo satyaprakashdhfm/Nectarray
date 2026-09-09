@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 
 /*
  * Projects used to have its own tab here. It is a track inside Assignments
- * now — Python problems, SQL questions, Agentic problems and Projects are
- * one kind of thing, "work a student does and gets marked on", and having
- * two top-level entries for one kind of thing was the actual problem, not
- * how many builds happened to be in the fourth one.
+ * now — Python problems, SQL questions and Projects are one kind of thing,
+ * "work a student does and gets marked on", and having two top-level entries
+ * for one kind of thing was the actual problem, not how many builds happened
+ * to be in the third one.
  */
 const TABS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
