@@ -78,7 +78,7 @@ export default async function TeachingLayout({
         <NotesRail
           modules={modules}
           basePath="/admin/teaching"
-          stickyTop={88}
+          stickyTop="88px"
           progress={false}
         />
       </Suspense>

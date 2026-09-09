@@ -1,7 +1,7 @@
 /** The practice workspace's frame, while its questions load. */
 export default function AssignmentsLoading() {
   return (
-    <div className="flex h-[calc(100dvh-125px)] flex-col" aria-hidden>
+    <div className="flex h-[calc(100dvh-var(--app-chrome))] flex-col" aria-hidden>
       <div className="border-line bg-canvas flex shrink-0 items-center gap-4 border-b px-4 py-2.5">
         <div className="bg-mist h-9 w-72 animate-pulse rounded-full" />
       </div>

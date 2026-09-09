@@ -85,9 +85,20 @@ export const metadata: Metadata = {
     : undefined,
 };
 
+/*
+ * The app has a dark theme, so the document has to admit to supporting one.
+ * `colorScheme: "light"` told the browser this page was light-only, which
+ * left the native furniture — scrollbars, date pickers, form controls —
+ * rendered light against the dark dashboard. The theme colour follows the
+ * same split so the mobile browser's own chrome stops being a white band
+ * above a dark page.
+ */
 export const viewport: Viewport = {
-  themeColor: "#fbfcfc",
-  colorScheme: "light",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbfcfc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0c0e" },
+  ],
+  colorScheme: "light dark",
 };
 
 /**

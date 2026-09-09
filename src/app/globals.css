@@ -215,6 +215,28 @@ html {
   scroll-padding-top: 6rem;
 }
 
+/*
+ * The height of the app chrome, in one place.
+ *
+ * The dashboard header and the section tabs under it are both sticky, so
+ * every full-height pane below them is sized as the viewport minus the pair
+ * — and that sum used to be the literal 125px, written out at four call
+ * sites. Restyling the tabs as pills made the row taller and every one of
+ * those numbers silently wrong at once: the practice workspace was laid out
+ * fifteen pixels taller than the space it had, which is what put the problem
+ * list over the editor.
+ *
+ * The nav is given --app-nav as a fixed height rather than being left to its
+ * content, so the sum stays true whatever the tabs are restyled to next.
+ */
+:root {
+  --app-header: 72px;
+  --app-nav: 64px;
+  /* Plus the hairline under each of the two, which a pane sized against the
+     viewport has to give back or it ends up two pixels too tall. */
+  --app-chrome: calc(var(--app-header) + var(--app-nav) + 2px);
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);

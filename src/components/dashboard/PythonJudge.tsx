@@ -238,7 +238,10 @@ export function PythonJudge({
   );
 
   return (
-    <div className="flex h-full flex-col">
+    // overflow-hidden is load-bearing: every pane below is sized in pixels or
+    // viewport units, and without a clip a column that adds up to more than
+    // the box paints over its neighbours instead of being cut off.
+    <div className="flex h-full flex-col overflow-hidden">
       {/* Toolbar ------------------------------------------------------- */}
       <div className="border-line bg-surface flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b px-3 py-2">
         <button
@@ -359,9 +362,16 @@ export function PythonJudge({
         )}
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {/*
+            The dragged height is a desktop measurement: it comes from a
+            splitter that only exists beside a mouse. Applied unconditionally
+            it was 320 fixed pixels on a phone as well, which together with
+            the statement panel below added up to more column than the screen
+            had. Below lg the editor simply takes its share of what is left.
+          */}
           <div
-            style={{ height: editorHeight }}
-            className="bg-night flex shrink-0 flex-col"
+            style={{ "--editor-h": `${editorHeight}px` } as React.CSSProperties}
+            className="bg-night flex min-h-0 flex-1 flex-col lg:h-[var(--editor-h)] lg:flex-none"
           >
             {/*
               A bar over the editor, mostly for the copy button. Taking your
@@ -407,7 +417,13 @@ export function PythonJudge({
         )}
       </div>
 
-      <div className="border-line max-h-[55vh] shrink-0 overflow-y-auto border-t lg:hidden">
+      {/*
+        Half the remaining column rather than 55vh of a screen it does not
+        own. `shrink-0` at a viewport height meant this panel kept its full
+        size while the editor above kept its own, and the two together left
+        the box — this shares what there is and scrolls inside it.
+      */}
+      <div className="border-line min-h-0 flex-1 overflow-y-auto border-t lg:hidden">
         {statement}
         <ProblemList
           questions={questions}

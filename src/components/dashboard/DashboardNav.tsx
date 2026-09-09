@@ -32,9 +32,9 @@ export function DashboardNav() {
   return (
     <nav
       aria-label="Sections"
-      className="border-line bg-canvas sticky top-[72px] z-40 border-b"
+      className="border-line bg-canvas sticky top-[var(--app-header)] z-40 border-b"
     >
-      <div className="shell py-2.5">
+      <div className="shell flex h-[var(--app-nav)] items-center">
         <ul className="tab-bar">
           {TABS.map((tab) => {
             // Only the index tab needs an exact match; the rest own a subtree.

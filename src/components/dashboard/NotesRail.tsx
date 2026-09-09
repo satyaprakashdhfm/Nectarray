@@ -42,14 +42,14 @@ export type RailModule = {
 export function NotesRail({
   modules,
   basePath = "/dashboard/notes",
-  stickyTop = 125,
+  stickyTop = "var(--app-chrome)",
   progress = true,
 }: {
   modules: RailModule[];
   /** Where a lesson link points — the admin's read-only teaching view reuses this same rail. */
   basePath?: string;
-  /** Distance from the top of the viewport to stick under — the dashboard has a second nav row below its header, the admin panel doesn't. */
-  stickyTop?: number;
+  /** Distance from the top of the viewport to stick under, as a CSS length — the dashboard has a second nav row below its header, the admin panel doesn't. */
+  stickyTop?: string;
   /** Off for the teaching view, where every lesson is open and a full bar says nothing. */
   progress?: boolean;
 }) {
@@ -78,15 +78,12 @@ export function NotesRail({
 
   return (
     <div
-      className={cn(
-        "lg:border-line lg:sticky lg:overflow-y-auto lg:border-r lg:pr-5 lg:pb-16",
-        // Tailwind needs each arbitrary value written out in full somewhere
-        // in the source to generate it — a ternary between two literal
-        // strings still satisfies that; a template-interpolated one would not.
-        stickyTop === 88
-          ? "lg:top-[88px] lg:h-[calc(100vh-88px)]"
-          : "lg:top-[125px] lg:h-[calc(100vh-125px)]",
-      )}
+      // The offset travels as a custom property rather than as one of two
+      // hard-coded class pairs. Tailwind needs arbitrary values written out
+      // literally, which is why this used to be a ternary — and why the
+      // dashboard's half went stale the moment the tab row changed height.
+      style={{ "--rail-top": stickyTop } as React.CSSProperties}
+      className="lg:border-line lg:sticky lg:top-[var(--rail-top)] lg:h-[calc(100vh-var(--rail-top))] lg:overflow-y-auto lg:border-r lg:pr-5 lg:pb-16"
     >
       {/* Course switch */}
       {modules.length > 1 && (
