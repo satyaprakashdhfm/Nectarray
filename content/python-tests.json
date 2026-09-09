@@ -1397,74 +1397,6 @@
   }
  },
  {
-  "entry_point": "singleNumber",
-  "note": "",
-  "slug": "single-number",
-  "solution_py": "class Solution:\n    def singleNumber(self, nums: list[int]) -> int:\n        out = 0\n        for n in nums:\n            out ^= n\n        return out\n",
-  "starter_code": "class Solution:\n    def singleNumber(self, nums: list[int]) -> int:\n        ",
-  "tests": {
-   "cases": [
-    {
-     "args": [
-      [
-       2,
-       2,
-       1
-      ]
-     ],
-     "expect": 1
-    },
-    {
-     "args": [
-      [
-       4,
-       1,
-       2,
-       1,
-       2
-      ]
-     ],
-     "expect": 4
-    },
-    {
-     "args": [
-      [
-       1
-      ]
-     ],
-     "expect": 1
-    },
-    {
-     "args": [
-      [
-       -1,
-       -1,
-       -3
-      ]
-     ],
-     "expect": -3
-    },
-    {
-     "args": [
-      [
-       7,
-       3,
-       5,
-       3,
-       5,
-       7,
-       9
-      ]
-     ],
-     "expect": 9
-    }
-   ],
-   "compare": {
-    "kind": "exact"
-   }
-  }
- },
- {
   "entry_point": "plusOne",
   "note": "",
   "slug": "plus-one",
@@ -3022,78 +2954,6 @@
   }
  },
  {
-  "entry_point": "trap",
-  "note": "",
-  "slug": "trapping-rain-water",
-  "solution_py": "class Solution:\n    def trap(self, height: list[int]) -> int:\n        if not height:\n            return 0\n        lo, hi = 0, len(height) - 1\n        left, right, total = height[lo], height[hi], 0\n        while lo < hi:\n            if left <= right:\n                lo += 1\n                left = max(left, height[lo])\n                total += left - height[lo]\n            else:\n                hi -= 1\n                right = max(right, height[hi])\n                total += right - height[hi]\n        return total\n",
-  "starter_code": "class Solution:\n    def trap(self, height: list[int]) -> int:\n        ",
-  "tests": {
-   "cases": [
-    {
-     "args": [
-      [
-       0,
-       1,
-       0,
-       2,
-       1,
-       0,
-       1,
-       3,
-       2,
-       1,
-       2,
-       1
-      ]
-     ],
-     "expect": 6
-    },
-    {
-     "args": [
-      [
-       4,
-       2,
-       0,
-       3,
-       2,
-       5
-      ]
-     ],
-     "expect": 9
-    },
-    {
-     "args": [
-      []
-     ],
-     "expect": 0
-    },
-    {
-     "args": [
-      [
-       3
-      ]
-     ],
-     "expect": 0
-    },
-    {
-     "args": [
-      [
-       5,
-       4,
-       3,
-       2,
-       1
-      ]
-     ],
-     "expect": 0
-    }
-   ],
-   "compare": {
-    "kind": "exact"
-   }
-  }
- },
- {
   "entry_point": "firstMissingPositive",
   "note": "",
   "slug": "first-missing-positive",
@@ -3232,22 +3092,673 @@
   }
  },
  {
-  "entry_point": "largestRectangleArea",
+  "entry_point": "fourSum",
   "note": "",
-  "slug": "largest-rectangle-in-histogram",
-  "solution_py": "class Solution:\n    def largestRectangleArea(self, heights: list[int]) -> int:\n        stack, best = [], 0\n        for i, h in enumerate(heights + [0]):\n            start = i\n            while stack and stack[-1][1] > h:\n                index, height = stack.pop()\n                best = max(best, height * (i - index))\n                start = index\n            stack.append((start, h))\n        return best\n",
-  "starter_code": "class Solution:\n    def largestRectangleArea(self, heights: list[int]) -> int:\n        ",
+  "slug": "4sum",
+  "solution_py": "class Solution:\n    def fourSum(self, nums: list[int], target: int) -> list[list[int]]:\n        nums.sort()\n        n = len(nums)\n        out = []\n        for i in range(n - 3):\n            if i > 0 and nums[i] == nums[i - 1]:\n                continue\n            for j in range(i + 1, n - 2):\n                if j > i + 1 and nums[j] == nums[j - 1]:\n                    continue\n                lo, hi = j + 1, n - 1\n                while lo < hi:\n                    total = nums[i] + nums[j] + nums[lo] + nums[hi]\n                    if total < target:\n                        lo += 1\n                    elif total > target:\n                        hi -= 1\n                    else:\n                        out.append([nums[i], nums[j], nums[lo], nums[hi]])\n                        lo += 1\n                        hi -= 1\n                        while lo < hi and nums[lo] == nums[lo - 1]:\n                            lo += 1\n                        while lo < hi and nums[hi] == nums[hi + 1]:\n                            hi -= 1\n        return out\n",
+  "starter_code": "class Solution:\n    def fourSum(self, nums: list[int], target: int) -> list[list[int]]:\n        ",
+  "tests": {
+   "cases": [
+    {
+     "args": [
+      [
+       1,
+       0,
+       -1,
+       0,
+       -2,
+       2
+      ],
+      0
+     ],
+     "expect": [
+      [
+       -2,
+       -1,
+       1,
+       2
+      ],
+      [
+       -2,
+       0,
+       0,
+       2
+      ],
+      [
+       -1,
+       0,
+       0,
+       1
+      ]
+     ]
+    },
+    {
+     "args": [
+      [
+       2,
+       2,
+       2,
+       2,
+       2
+      ],
+      8
+     ],
+     "expect": [
+      [
+       2,
+       2,
+       2,
+       2
+      ]
+     ]
+    },
+    {
+     "args": [
+      [],
+      0
+     ],
+     "expect": []
+    },
+    {
+     "args": [
+      [
+       0,
+       0,
+       0,
+       0
+      ],
+      0
+     ],
+     "expect": [
+      [
+       0,
+       0,
+       0,
+       0
+      ]
+     ]
+    },
+    {
+     "args": [
+      [
+       -3,
+       -1,
+       0,
+       2,
+       4,
+       5
+      ],
+      2
+     ],
+     "expect": [
+      [
+       -3,
+       -1,
+       2,
+       4
+      ]
+     ]
+    },
+    {
+     "args": [
+      [
+       1000000000,
+       1000000000,
+       1000000000,
+       1000000000
+      ],
+      -294967296
+     ],
+     "expect": []
+    },
+    {
+     "args": [
+      [
+       -5,
+       -4,
+       -3,
+       -2,
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      0
+     ],
+     "expect": [
+      [
+       -5,
+       -4,
+       3,
+       6
+      ],
+      [
+       -5,
+       -4,
+       4,
+       5
+      ],
+      [
+       -5,
+       -3,
+       2,
+       6
+      ],
+      [
+       -5,
+       -3,
+       3,
+       5
+      ],
+      [
+       -5,
+       -2,
+       1,
+       6
+      ],
+      [
+       -5,
+       -2,
+       2,
+       5
+      ],
+      [
+       -5,
+       -2,
+       3,
+       4
+      ],
+      [
+       -4,
+       -3,
+       1,
+       6
+      ],
+      [
+       -4,
+       -3,
+       2,
+       5
+      ],
+      [
+       -4,
+       -3,
+       3,
+       4
+      ],
+      [
+       -4,
+       -2,
+       1,
+       5
+      ],
+      [
+       -4,
+       -2,
+       2,
+       4
+      ],
+      [
+       -3,
+       -2,
+       1,
+       4
+      ],
+      [
+       -3,
+       -2,
+       2,
+       3
+      ]
+     ]
+    }
+   ],
+   "compare": {
+    "kind": "unordered_nested"
+   }
+  }
+ },
+ {
+  "entry_point": "subarraysWithXorK",
+  "note": "",
+  "slug": "count-subarrays-with-xor-k",
+  "solution_py": "class Solution:\n    def subarraysWithXorK(self, nums: list[int], k: int) -> int:\n        seen = {0: 1}\n        run = 0\n        total = 0\n        for n in nums:\n            run ^= n\n            total += seen.get(run ^ k, 0)\n            seen[run] = seen.get(run, 0) + 1\n        return total\n",
+  "starter_code": "class Solution:\n    def subarraysWithXorK(self, nums: list[int], k: int) -> int:\n        ",
+  "tests": {
+   "cases": [
+    {
+     "args": [
+      [
+       4,
+       2,
+       2,
+       6,
+       4
+      ],
+      6
+     ],
+     "expect": 4
+    },
+    {
+     "args": [
+      [
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      5
+     ],
+     "expect": 2
+    },
+    {
+     "args": [
+      [
+       1,
+       1,
+       1,
+       1
+      ],
+      0
+     ],
+     "expect": 4
+    },
+    {
+     "args": [
+      [
+       0,
+       0,
+       0
+      ],
+      0
+     ],
+     "expect": 6
+    },
+    {
+     "args": [
+      [
+       3
+      ],
+      3
+     ],
+     "expect": 1
+    },
+    {
+     "args": [
+      [
+       3
+      ],
+      4
+     ],
+     "expect": 0
+    },
+    {
+     "args": [
+      [],
+      0
+     ],
+     "expect": 0
+    },
+    {
+     "args": [
+      [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      7
+     ],
+     "expect": 4
+    }
+   ],
+   "compare": {
+    "kind": "exact"
+   }
+  }
+ },
+ {
+  "entry_point": "findMissingRepeatingNumbers",
+  "note": "",
+  "slug": "find-the-repeating-and-missing-number",
+  "solution_py": "class Solution:\n    def findMissingRepeatingNumbers(self, nums: list[int]) -> list[int]:\n        n = len(nums)\n        xor = 0\n        for i, value in enumerate(nums, start=1):\n            xor ^= value ^ i\n\n        bit = xor & -xor\n        zeros = ones = 0\n        for i in range(1, n + 1):\n            if i & bit:\n                ones ^= i\n            else:\n                zeros ^= i\n        for value in nums:\n            if value & bit:\n                ones ^= value\n            else:\n                zeros ^= value\n\n        return [ones, zeros] if nums.count(ones) == 2 else [zeros, ones]\n",
+  "starter_code": "class Solution:\n    def findMissingRepeatingNumbers(self, nums: list[int]) -> list[int]:\n        ",
+  "tests": {
+   "cases": [
+    {
+     "args": [
+      [
+       3,
+       1,
+       2,
+       5,
+       3
+      ]
+     ],
+     "expect": [
+      3,
+      4
+     ]
+    },
+    {
+     "args": [
+      [
+       1,
+       2,
+       2,
+       4
+      ]
+     ],
+     "expect": [
+      2,
+      3
+     ]
+    },
+    {
+     "args": [
+      [
+       2,
+       2
+      ]
+     ],
+     "expect": [
+      2,
+      1
+     ]
+    },
+    {
+     "args": [
+      [
+       1,
+       1
+      ]
+     ],
+     "expect": [
+      1,
+      2
+     ]
+    },
+    {
+     "args": [
+      [
+       4,
+       3,
+       6,
+       2,
+       1,
+       1
+      ]
+     ],
+     "expect": [
+      1,
+      5
+     ]
+    },
+    {
+     "args": [
+      [
+       1,
+       3,
+       3
+      ]
+     ],
+     "expect": [
+      3,
+      2
+     ]
+    },
+    {
+     "args": [
+      [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35,
+       36,
+       37,
+       38,
+       39,
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       49,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       58,
+       59,
+       60,
+       61,
+       62,
+       63,
+       64,
+       65,
+       66,
+       67,
+       68,
+       69,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83,
+       84,
+       85,
+       86,
+       87,
+       88,
+       89,
+       90,
+       91,
+       92,
+       93,
+       94,
+       95,
+       96,
+       97,
+       98,
+       99,
+       100,
+       101,
+       102,
+       103,
+       104,
+       105,
+       106,
+       107,
+       108,
+       109,
+       110,
+       111,
+       112,
+       113,
+       114,
+       115,
+       116,
+       117,
+       118,
+       119,
+       120,
+       121,
+       122,
+       123,
+       124,
+       125,
+       126,
+       127,
+       128,
+       129,
+       130,
+       131,
+       132,
+       133,
+       134,
+       135,
+       136,
+       137,
+       138,
+       139,
+       140,
+       141,
+       142,
+       143,
+       144,
+       145,
+       146,
+       147,
+       148,
+       149,
+       150,
+       151,
+       152,
+       153,
+       154,
+       155,
+       156,
+       157,
+       158,
+       159,
+       160,
+       161,
+       162,
+       163,
+       164,
+       165,
+       166,
+       167,
+       168,
+       169,
+       170,
+       171,
+       172,
+       173,
+       174,
+       175,
+       176,
+       177,
+       178,
+       179,
+       180,
+       181,
+       182,
+       183,
+       184,
+       185,
+       186,
+       187,
+       188,
+       189,
+       190,
+       191,
+       192,
+       193,
+       194,
+       195,
+       196,
+       197,
+       198,
+       199,
+       199
+      ]
+     ],
+     "expect": [
+      199,
+      200
+     ]
+    }
+   ],
+   "compare": {
+    "kind": "exact"
+   }
+  }
+ },
+ {
+  "entry_point": "countInversions",
+  "note": "",
+  "slug": "count-inversions",
+  "solution_py": "class Solution:\n    def countInversions(self, nums: list[int]) -> int:\n        def sort(values: list[int]) -> tuple[list[int], int]:\n            if len(values) < 2:\n                return values, 0\n            mid = len(values) // 2\n            left, a = sort(values[:mid])\n            right, b = sort(values[mid:])\n\n            merged = []\n            count = a + b\n            i = j = 0\n            while i < len(left) and j < len(right):\n                if left[i] <= right[j]:\n                    merged.append(left[i])\n                    i += 1\n                else:\n                    merged.append(right[j])\n                    j += 1\n                    count += len(left) - i\n            merged.extend(left[i:])\n            merged.extend(right[j:])\n            return merged, count\n\n        return sort(nums)[1]\n",
+  "starter_code": "class Solution:\n    def countInversions(self, nums: list[int]) -> int:\n        ",
   "tests": {
    "cases": [
     {
      "args": [
       [
        2,
+       3,
+       7,
        1,
+       3,
+       5
+      ]
+     ],
+     "expect": 5
+    },
+    {
+     "args": [
+      [
        5,
-       6,
+       4,
+       3,
        2,
-       3
+       1
       ]
      ],
      "expect": 10
@@ -3255,11 +3766,20 @@
     {
      "args": [
       [
+       1,
        2,
-       4
+       3,
+       4,
+       5
       ]
      ],
-     "expect": 4
+     "expect": 0
+    },
+    {
+     "args": [
+      []
+     ],
+     "expect": 0
     },
     {
      "args": [
@@ -3267,22 +3787,149 @@
        1
       ]
      ],
-     "expect": 1
+     "expect": 0
     },
     {
      "args": [
       [
-       5,
-       5,
-       5,
-       5
+       2,
+       2,
+       2,
+       2
       ]
      ],
-     "expect": 20
+     "expect": 0
     },
     {
      "args": [
       [
+       -1,
+       -5,
+       3,
+       0,
+       3,
+       -2
+      ]
+     ],
+     "expect": 6
+    },
+    {
+     "args": [
+      [
+       120,
+       119,
+       118,
+       117,
+       116,
+       115,
+       114,
+       113,
+       112,
+       111,
+       110,
+       109,
+       108,
+       107,
+       106,
+       105,
+       104,
+       103,
+       102,
+       101,
+       100,
+       99,
+       98,
+       97,
+       96,
+       95,
+       94,
+       93,
+       92,
+       91,
+       90,
+       89,
+       88,
+       87,
+       86,
+       85,
+       84,
+       83,
+       82,
+       81,
+       80,
+       79,
+       78,
+       77,
+       76,
+       75,
+       74,
+       73,
+       72,
+       71,
+       70,
+       69,
+       68,
+       67,
+       66,
+       65,
+       64,
+       63,
+       62,
+       61,
+       60,
+       59,
+       58,
+       57,
+       56,
+       55,
+       54,
+       53,
+       52,
+       51,
+       50,
+       49,
+       48,
+       47,
+       46,
+       45,
+       44,
+       43,
+       42,
+       41,
+       40,
+       39,
+       38,
+       37,
+       36,
+       35,
+       34,
+       33,
+       32,
+       31,
+       30,
+       29,
+       28,
+       27,
+       26,
+       25,
+       24,
+       23,
+       22,
+       21,
+       20,
+       19,
+       18,
+       17,
+       16,
+       15,
+       14,
+       13,
+       12,
+       11,
+       10,
+       9,
+       8,
+       7,
        6,
        5,
        4,
@@ -3291,7 +3938,7 @@
        1
       ]
      ],
-     "expect": 12
+     "expect": 7140
     }
    ],
    "compare": {

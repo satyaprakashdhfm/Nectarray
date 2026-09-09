@@ -116,6 +116,63 @@ async function applySchema() {
     `UPDATE practice_questions
         SET slug = regexp_replace(leetcode_url, '.*/problems/([^/]+)/?.*', '\\1')
       WHERE slug IS NULL AND leetcode_url LIKE '%/problems/%'`,
+
+    /*
+     * Five problems retired from the Python sheet.
+     *
+     * Two stack problems, two design problems and one on bit tricks — each
+     * the only member of its topic, and each a technique the course does not
+     * teach. A sheet is a syllabus rather than a collection, and a problem
+     * whose method appears nowhere in the notes is one a student can only
+     * look up.
+     *
+     * Their judge definitions and statements are already gone from the
+     * content files; this removes the rows that pointed at them. Progress,
+     * opens and drafts reference the question with ON DELETE CASCADE, so a
+     * student's history for these goes with them, which is what we want —
+     * nothing should be left pointing at a problem that cannot be opened.
+     */
+    `DELETE FROM practice_questions
+      WHERE track = 'python'
+        AND slug IN (
+          'largest-rectangle-in-histogram',
+          'trapping-rain-water',
+          'insert-delete-getrandom-o1',
+          'lru-cache',
+          'single-number'
+        )`,
+
+    /*
+     * Four hard array problems, appended to the Python sheet.
+     *
+     * ON CONFLICT is not available here — slug carries no unique constraint —
+     * so the insert selects from a values list and excludes what is already
+     * there, which is what makes a re-run a no-op. Positions are taken from
+     * the current end of the track rather than hard-coded, so this does not
+     * collide with whatever the sheet has grown to.
+     *
+     * prompt_md is the fallback the workspace shows when a slug has no entry
+     * in python-statements.json; the JSON is the real source and wins.
+     */
+    `INSERT INTO practice_questions
+        (track, difficulty, topic, title, slug, has_judge, is_published, position, prompt_md)
+     SELECT 'python', 'hard', v.topic, v.title, v.slug, true, true,
+            (SELECT COALESCE(MAX(position), 0) FROM practice_questions WHERE track = 'python') + v.seq,
+            v.prompt
+       FROM (VALUES
+         (1, '4sum', '4 Sum Problem', 'Array',
+          'Return every unique quadruplet in nums that sums to target. Sort first, fix two with nested loops, then close the remaining two with a pair of pointers.'),
+         (2, 'count-subarrays-with-xor-k', 'Count Subarrays with Given XOR K', 'Array',
+          'Count the contiguous subarrays whose bitwise XOR equals k. A running prefix XOR plus a tally of the prefixes seen so far answers each position in constant time.'),
+         (3, 'find-the-repeating-and-missing-number', 'Find the Repeating and Missing Number', 'Array',
+          'One value in 1..n appears twice and one is missing. Return [repeating, missing]. XOR the list against the range, then split on any bit where the two differ.'),
+         (4, 'count-inversions', 'Count Inversions', 'Array',
+          'Count the pairs i < j where nums[i] > nums[j]. Count them during a merge sort: taking from the right half closes one inversion per element still unused on the left.')
+       ) AS v(seq, slug, title, topic, prompt)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM practice_questions q
+         WHERE q.track = 'python' AND q.slug = v.slug
+      )`,
   ];
 
   let applied = 0;

@@ -50,13 +50,6 @@
       "All values are distinct and in range `0..n`"
     ]
   },
-  "single-number": {
-    "statement": "Every value in `nums` appears twice except one, which appears once. Return that one.\n\nWorth doing in a single pass and constant extra space — there is a neat way.",
-    "constraints": [
-      "1 ≤ len(nums) ≤ 3 × 10⁴",
-      "Exactly one element appears once; every other appears twice"
-    ]
-  },
   "plus-one": {
     "statement": "`digits` is a non-negative integer, one decimal digit per element, most significant first. Add one to it and return the digits of the result.\n\nMind the carry: `[9, 9]` becomes `[1, 0, 0]`, which is longer than it started.",
     "constraints": [
@@ -181,13 +174,6 @@
       "Return nothing; the list is inspected afterwards"
     ]
   },
-  "trapping-rain-water": {
-    "statement": "`height` is an elevation map with bars one unit wide. Return how many units of water are trapped after rain.\n\nThe water above any bar is the smaller of the tallest bar to its left and the tallest to its right, minus the bar itself.",
-    "constraints": [
-      "1 ≤ len(height) ≤ 2 × 10⁴",
-      "0 ≤ height[i] ≤ 10⁵"
-    ]
-  },
   "first-missing-positive": {
     "statement": "Return the smallest positive integer that does not appear in `nums`.\n\nLinear time and constant extra space is the whole difficulty — which means using the list itself as the bookkeeping.",
     "constraints": [
@@ -201,13 +187,6 @@
       "Both lists are sorted ascending",
       "They are not both empty",
       "A whole-number median comes back as a float, e.g. `2.0`"
-    ]
-  },
-  "largest-rectangle-in-histogram": {
-    "statement": "`heights` is a histogram of bars one unit wide. Return the area of the largest rectangle that fits inside it.\n\nA rectangle can span several bars, and its height is then the shortest bar it spans. A stack of indices gets this to linear time.",
-    "constraints": [
-      "1 ≤ len(heights) ≤ 10⁵",
-      "0 ≤ heights[i] ≤ 10⁴"
     ]
   },
   "reverse-string": {
@@ -386,28 +365,48 @@
       "Quadruples are counted, not listed"
     ]
   },
-  "insert-delete-getrandom-o1": {
-    "statement": "Design `RandomizedSet`, supporting three operations in average O(1):\n\n- `insert(val)` — add `val`; return `True` if it was not already there\n- `remove(val)` — take `val` out; return `True` if it was there\n- `getRandom()` — return a random current element, every element equally likely\n\nA list gives O(1) random choice but O(n) removal; a dict gives O(1) removal but no random choice. Keeping both, and swapping the removed element with the last of the list, gets you all three.",
-    "constraints": [
-      "`getRandom` is only called when the set is non-empty",
-      "Up to 2 × 10⁵ calls in total",
-      "Average O(1) per operation"
-    ]
-  },
-  "lru-cache": {
-    "statement": "Design `LRUCache`, a fixed-capacity cache, with both operations in O(1):\n\n- `get(key)` — return the value, or `-1` if it is not present\n- `put(key, value)` — insert or overwrite; if that puts it over capacity, evict the least recently used key\n\nA `get` counts as a use, and so does overwriting an existing key. A dictionary plus a doubly linked list is the classic answer; Python's `OrderedDict` and its `move_to_end` are the same idea already built.",
-    "constraints": [
-      "1 ≤ capacity ≤ 3000",
-      "Up to 2 × 10⁵ calls in total",
-      "O(1) average for both operations"
-    ]
-  },
   "find-all-anagrams-in-a-string": {
     "statement": "Return the start index of every substring of `s` that is an anagram of `p`, in ascending order.\n\nThe windows are all the same length, so slide one of length `len(p)` and compare character counts as it moves.",
     "constraints": [
       "1 ≤ len(s), len(p) ≤ 3 × 10⁴",
       "Lowercase English letters",
       "Indices in ascending order"
+    ]
+  },
+  "4sum": {
+    "statement": "Given a list of integers `nums` and an integer `target`, return every **unique** quadruplet `[a, b, c, d]` from `nums` that adds up to `target`.\n\nThe four values must come from four *different* positions, but they may repeat in value. No quadruplet may appear twice in your answer, and both the quadruplets and the numbers inside them can come back in any order.\n\nSort the list first: with the outer two numbers fixed by a pair of loops, the remaining two are found by walking a pointer in from each end.",
+    "constraints": [
+      "0 ≤ len(nums) ≤ 200",
+      "−10⁹ ≤ nums[i] ≤ 10⁹",
+      "−10⁹ ≤ target ≤ 10⁹",
+      "The sum of four values can exceed 32 bits — Python integers do not overflow"
+    ]
+  },
+  "count-subarrays-with-xor-k": {
+    "statement": "Given a list of integers `nums` and an integer `k`, return how many **contiguous subarrays** have a bitwise XOR equal to `k`.\n\nCounting every subarray directly is quadratic. Let `run` be the XOR of everything up to the current index: a subarray ending here XORs to `k` exactly when some earlier prefix XORed to `run ^ k`, so keeping a tally of the prefixes seen so far answers each position in constant time.\n\nThe empty prefix counts — start the tally with `{0: 1}`, or you will miss every subarray that starts at index 0.",
+    "constraints": [
+      "0 ≤ len(nums) ≤ 10⁵",
+      "0 ≤ nums[i] ≤ 10⁹",
+      "0 ≤ k ≤ 10⁹",
+      "Subarrays are contiguous; the empty subarray does not count"
+    ]
+  },
+  "find-the-repeating-and-missing-number": {
+    "statement": "A list `nums` of length `n` should hold every integer from `1` to `n` exactly once. One value appears **twice** and one is **missing**.\n\nReturn `[repeating, missing]`.\n\nXOR everything in the list against every number from `1` to `n`: what survives is `repeating ^ missing`, since every other value cancels. Any set bit in that result is a bit on which the two numbers differ, so it splits both the list and the range into two groups — each containing exactly one of them.",
+    "constraints": [
+      "2 ≤ n ≤ 10⁵",
+      "Every value is between 1 and n",
+      "Exactly one value repeats and exactly one is missing",
+      "Solvable in O(n) time and O(1) extra space"
+    ]
+  },
+  "count-inversions": {
+    "statement": "An **inversion** is a pair of positions `i < j` where `nums[i] > nums[j]` — two elements that are in the wrong order relative to each other. Return how many inversions `nums` contains.\n\nThe count is a measure of how far the list is from sorted: already sorted gives 0, and fully reversed gives every pair.\n\nChecking all pairs is quadratic. Count them during a merge sort instead: when the merge takes a value from the right half while `i` elements remain unused in the left, that value is smaller than every one of them, so it closes `i` inversions at once.",
+    "constraints": [
+      "0 ≤ len(nums) ≤ 10⁵",
+      "−10⁹ ≤ nums[i] ≤ 10⁹",
+      "Equal values are not an inversion — the comparison is strict",
+      "The answer can exceed 32 bits"
     ]
   }
 }

@@ -147,25 +147,6 @@ PROBLEMS = [
         ],
     ),
     Problem(
-        slug="single-number",
-        entry="singleNumber",
-        starter="class Solution:\n    def singleNumber(self, nums: list[int]) -> int:\n        ",
-        solution="""class Solution:
-    def singleNumber(self, nums: list[int]) -> int:
-        out = 0
-        for n in nums:
-            out ^= n
-        return out
-""",
-        cases=[
-            [[2, 2, 1]],
-            [[4, 1, 2, 1, 2]],
-            [[1]],
-            [[-1, -1, -3]],
-            [[7, 3, 5, 3, 5, 7, 9]],
-        ],
-    ),
-    Problem(
         slug="plus-one",
         entry="plusOne",
         starter="class Solution:\n    def plusOne(self, digits: list[int]) -> list[int]:\n        ",
@@ -566,35 +547,6 @@ Problem(
         ],
     ),
     Problem(
-        slug="trapping-rain-water",
-        entry="trap",
-        starter="class Solution:\n    def trap(self, height: list[int]) -> int:\n        ",
-        solution="""class Solution:
-    def trap(self, height: list[int]) -> int:
-        if not height:
-            return 0
-        lo, hi = 0, len(height) - 1
-        left, right, total = height[lo], height[hi], 0
-        while lo < hi:
-            if left <= right:
-                lo += 1
-                left = max(left, height[lo])
-                total += left - height[lo]
-            else:
-                hi -= 1
-                right = max(right, height[hi])
-                total += right - height[hi]
-        return total
-""",
-        cases=[
-            [[0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]],
-            [[4, 2, 0, 3, 2, 5]],
-            [[]],
-            [[3]],
-            [[5, 4, 3, 2, 1]],
-        ],
-    ),
-    Problem(
         slug="first-missing-positive",
         entry="firstMissingPositive",
         starter="class Solution:\n    def firstMissingPositive(self, nums: list[int]) -> int:\n        ",
@@ -636,27 +588,149 @@ Problem(
         ],
     ),
     Problem(
-        slug="largest-rectangle-in-histogram",
-        entry="largestRectangleArea",
-        starter="class Solution:\n    def largestRectangleArea(self, heights: list[int]) -> int:\n        ",
+        slug="4sum",
+        entry="fourSum",
+        starter="class Solution:\n    def fourSum(self, nums: list[int], target: int) -> list[list[int]]:\n        ",
         solution="""class Solution:
-    def largestRectangleArea(self, heights: list[int]) -> int:
-        stack, best = [], 0
-        for i, h in enumerate(heights + [0]):
-            start = i
-            while stack and stack[-1][1] > h:
-                index, height = stack.pop()
-                best = max(best, height * (i - index))
-                start = index
-            stack.append((start, h))
-        return best
+    def fourSum(self, nums: list[int], target: int) -> list[list[int]]:
+        nums.sort()
+        n = len(nums)
+        out = []
+        for i in range(n - 3):
+            if i > 0 and nums[i] == nums[i - 1]:
+                continue
+            for j in range(i + 1, n - 2):
+                if j > i + 1 and nums[j] == nums[j - 1]:
+                    continue
+                lo, hi = j + 1, n - 1
+                while lo < hi:
+                    total = nums[i] + nums[j] + nums[lo] + nums[hi]
+                    if total < target:
+                        lo += 1
+                    elif total > target:
+                        hi -= 1
+                    else:
+                        out.append([nums[i], nums[j], nums[lo], nums[hi]])
+                        lo += 1
+                        hi -= 1
+                        while lo < hi and nums[lo] == nums[lo - 1]:
+                            lo += 1
+                        while lo < hi and nums[hi] == nums[hi + 1]:
+                            hi -= 1
+        return out
+""",
+        compare=UNORDERED_NESTED,  # the quadruplets are a set, in any order
+        cases=[
+            [[1, 0, -1, 0, -2, 2], 0],
+            [[2, 2, 2, 2, 2], 8],
+            [[], 0],
+            [[0, 0, 0, 0], 0],
+            [[-3, -1, 0, 2, 4, 5], 2],
+            [[1000000000, 1000000000, 1000000000, 1000000000], -294967296],
+            [[-5, -4, -3, -2, 1, 2, 3, 4, 5, 6], 0],
+        ],
+    ),
+    Problem(
+        slug="count-subarrays-with-xor-k",
+        entry="subarraysWithXorK",
+        starter="class Solution:\n    def subarraysWithXorK(self, nums: list[int], k: int) -> int:\n        ",
+        solution="""class Solution:
+    def subarraysWithXorK(self, nums: list[int], k: int) -> int:
+        seen = {0: 1}
+        run = 0
+        total = 0
+        for n in nums:
+            run ^= n
+            total += seen.get(run ^ k, 0)
+            seen[run] = seen.get(run, 0) + 1
+        return total
 """,
         cases=[
-            [[2, 1, 5, 6, 2, 3]],
-            [[2, 4]],
+            [[4, 2, 2, 6, 4], 6],
+            [[5, 6, 7, 8, 9], 5],
+            [[1, 1, 1, 1], 0],
+            [[0, 0, 0], 0],
+            [[3], 3],
+            [[3], 4],
+            [[], 0],
+            [[1, 2, 3, 4, 5, 6, 7, 8], 7],
+        ],
+    ),
+    Problem(
+        slug="find-the-repeating-and-missing-number",
+        entry="findMissingRepeatingNumbers",
+        starter="class Solution:\n    def findMissingRepeatingNumbers(self, nums: list[int]) -> list[int]:\n        ",
+        solution="""class Solution:
+    def findMissingRepeatingNumbers(self, nums: list[int]) -> list[int]:
+        n = len(nums)
+        xor = 0
+        for i, value in enumerate(nums, start=1):
+            xor ^= value ^ i
+
+        bit = xor & -xor
+        zeros = ones = 0
+        for i in range(1, n + 1):
+            if i & bit:
+                ones ^= i
+            else:
+                zeros ^= i
+        for value in nums:
+            if value & bit:
+                ones ^= value
+            else:
+                zeros ^= value
+
+        return [ones, zeros] if nums.count(ones) == 2 else [zeros, ones]
+""",
+        cases=[
+            [[3, 1, 2, 5, 3]],
+            [[1, 2, 2, 4]],
+            [[2, 2]],
+            [[1, 1]],
+            [[4, 3, 6, 2, 1, 1]],
+            [[1, 3, 3]],
+            [list(range(1, 200)) + [199]],
+        ],
+    ),
+    Problem(
+        slug="count-inversions",
+        entry="countInversions",
+        starter="class Solution:\n    def countInversions(self, nums: list[int]) -> int:\n        ",
+        solution="""class Solution:
+    def countInversions(self, nums: list[int]) -> int:
+        def sort(values: list[int]) -> tuple[list[int], int]:
+            if len(values) < 2:
+                return values, 0
+            mid = len(values) // 2
+            left, a = sort(values[:mid])
+            right, b = sort(values[mid:])
+
+            merged = []
+            count = a + b
+            i = j = 0
+            while i < len(left) and j < len(right):
+                if left[i] <= right[j]:
+                    merged.append(left[i])
+                    i += 1
+                else:
+                    merged.append(right[j])
+                    j += 1
+                    count += len(left) - i
+            merged.extend(left[i:])
+            merged.extend(right[j:])
+            return merged, count
+
+        return sort(nums)[1]
+""",
+        cases=[
+            [[2, 3, 7, 1, 3, 5]],
+            [[5, 4, 3, 2, 1]],
+            [[1, 2, 3, 4, 5]],
+            [[]],
             [[1]],
-            [[5, 5, 5, 5]],
-            [[6, 5, 4, 3, 2, 1]],
+            [[2, 2, 2, 2]],
+            [[-1, -5, 3, 0, 3, -2]],
+            [list(range(120, 0, -1))],
         ],
     ),
 ]

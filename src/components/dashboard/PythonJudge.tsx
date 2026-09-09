@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { useDraftSave } from "@/components/dashboard/use-draft";
 import {
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -59,6 +60,13 @@ const DIFF_TONE: Record<string, string> = {
   easy: "bg-leaf-wash text-leaf-deep",
   medium: "bg-amber-wash text-amber-deep",
   hard: "bg-brand-wash text-brand-deep",
+};
+
+const DIFF_ORDER = ["easy", "medium", "hard"] as const;
+const DIFF_LABEL: Record<string, string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
 };
 
 type Failing = {
@@ -605,50 +613,80 @@ function ProblemList({
   onPick: (next: number) => void;
 }) {
   return (
-    <ul className="py-2">
-      {questions.map((question, i) => (
-        <li key={question.id}>
-          <button
-            type="button"
-            onClick={() => onPick(i)}
-            aria-current={i === index ? "true" : undefined}
-            className={cn(
-              "flex w-full items-start gap-2.5 border-l-2 py-2 pr-3 pl-3 text-left text-[0.8125rem] leading-snug transition-colors",
-              i === index
-                ? "border-brand bg-surface text-ink font-medium"
-                : "text-ink-soft hover:bg-surface hover:text-ink border-transparent",
-            )}
-          >
-            <span
-              className={cn(
-                "mt-px grid size-[1.125rem] shrink-0 place-items-center rounded-full font-mono text-[0.625rem]",
-                solved.includes(question.id)
-                  ? "bg-leaf-deep text-cta-fg"
-                  : "text-ink-faint border-line border",
-              )}
-            >
-              {solved.includes(question.id) ? (
-                <Check className="size-2.5" strokeWidth={4} aria-hidden />
-              ) : (
-                i + 1
-              )}
-            </span>
-            <span className="min-w-0 flex-1">{question.title}</span>
-            <span
-              title={question.difficulty}
-              className={cn(
-                "mt-1.5 size-1.5 shrink-0 rounded-full",
-                question.difficulty === "easy"
-                  ? "bg-leaf-deep"
-                  : question.difficulty === "medium"
-                    ? "bg-amber-deep"
-                    : "bg-brand-deep",
-              )}
-            />
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div className="pb-2">
+      {DIFF_ORDER.map((level) => {
+        // Positions are kept, so the number beside a problem is its number in
+        // the whole set rather than its number within the group.
+        const group = questions
+          .map((entry, i) => ({ entry, i }))
+          .filter(({ entry }) => entry.difficulty === level);
+        if (group.length === 0) return null;
+
+        const done = group.filter(({ entry }) =>
+          solved.includes(entry.id),
+        ).length;
+        // Open on the group you are working in, and on easy as the default
+        // landing place. The rest stay shut so the whole set is one screen.
+        const open = group.some(({ i }) => i === index) || level === "easy";
+
+        return (
+          <details key={level} open={open} className="group/level">
+            <summary className="text-ink hover:bg-surface flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-[0.8125rem] font-semibold [&::-webkit-details-marker]:hidden">
+              <ChevronDown
+                className="size-3.5 shrink-0 -rotate-90 transition-transform group-open/level:rotate-0"
+                strokeWidth={2.5}
+                aria-hidden
+              />
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold",
+                  DIFF_TONE[level],
+                )}
+              >
+                {DIFF_LABEL[level]}
+              </span>
+              <span className="text-ink-faint ml-auto font-mono text-[0.75rem] tabular-nums">
+                {done}/{group.length}
+              </span>
+            </summary>
+
+            <ul className="pb-1">
+              {group.map(({ entry, i }) => (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(i)}
+                    aria-current={i === index ? "true" : undefined}
+                    className={cn(
+                      "flex w-full items-start gap-2.5 border-l-2 py-1.5 pr-3 pl-3 text-left text-[0.8125rem] leading-snug transition-colors",
+                      i === index
+                        ? "border-brand bg-surface text-ink font-medium"
+                        : "text-ink-soft hover:bg-surface hover:text-ink border-transparent",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "mt-px grid size-[1.125rem] shrink-0 place-items-center rounded-full font-mono text-[0.625rem]",
+                        solved.includes(entry.id)
+                          ? "bg-leaf-deep text-cta-fg"
+                          : "text-ink-faint border-line border",
+                      )}
+                    >
+                      {solved.includes(entry.id) ? (
+                        <Check className="size-2.5" strokeWidth={4} aria-hidden />
+                      ) : (
+                        i + 1
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">{entry.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        );
+      })}
+    </div>
   );
 }
 

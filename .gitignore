@@ -14,3 +14,7 @@ yarn-error.log*
 next-env.d.ts
 shots/
 tsconfig.tsbuildinfo
+
+# Python bytecode from scripts/python_judge
+__pycache__/
+*.pyc
