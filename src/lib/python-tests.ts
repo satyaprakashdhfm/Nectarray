@@ -36,9 +36,28 @@ export type ProblemBrief = {
   note: string;
   case_count: number;
   samples: { args: unknown[]; expect: unknown }[];
+  /** The problem itself, written out. See content/python-statements.json. */
+  statement: string;
+  constraints: string[];
 };
 
+/**
+ * What each problem actually asks.
+ *
+ * These used to be a line reading "Solve it on LeetCode, then mark it done
+ * here" over a link, which made the portal a table of contents for somebody
+ * else's site — a student had to leave to find out what the question was, and
+ * came back to a page that could not tell them whether they had answered it.
+ * The statements are ours now.
+ */
+type Statement = { statement: string; constraints: string[] };
+
 const FILE = path.join(process.cwd(), "content", "python-tests.json");
+const STATEMENTS = path.join(
+  process.cwd(),
+  "content",
+  "python-statements.json",
+);
 
 /** Read once per process; it is a static file and never changes at runtime. */
 let loaded: Promise<Map<string, JudgedProblem>> | null = null;
@@ -55,15 +74,27 @@ export const getProblem = cache(async (slug: string) => {
   return (await allProblems()).get(slug) ?? null;
 });
 
+let statements: Promise<Record<string, Statement>> | null = null;
+
+function allStatements(): Promise<Record<string, Statement>> {
+  statements ??= readFile(STATEMENTS, "utf8").then(
+    (raw) => JSON.parse(raw) as Record<string, Statement>,
+  );
+  return statements;
+}
+
 /**
  * The public half of every problem, keyed by slug.
  *
- * Three sample cases, matching what LeetCode itself shows — enough to
- * understand the shape of the answer, not enough to hard-code one. The
- * remaining cases exist only on the server.
+ * The statement, the starter code and three worked cases — enough to solve
+ * the problem without leaving the page, and not enough to hard-code an
+ * answer. The remaining expectations exist only on the server.
  */
 export async function briefs(): Promise<Record<string, ProblemBrief>> {
-  const problems = await allProblems();
+  const [problems, written] = await Promise.all([
+    allProblems(),
+    allStatements(),
+  ]);
   const out: Record<string, ProblemBrief> = {};
 
   for (const [slug, problem] of problems) {
@@ -73,6 +104,26 @@ export async function briefs(): Promise<Record<string, ProblemBrief>> {
       note: problem.note,
       case_count: problem.tests.cases.length,
       samples: problem.tests.cases.slice(0, 3),
+      statement: written[slug]?.statement ?? "",
+      constraints: written[slug]?.constraints ?? [],
+    };
+  }
+
+  /*
+   * The two design problems have a statement but no test file — they are a
+   * class with several operations rather than one function, so there is
+   * nothing for the judge to call. They still need a brief, or the panel has
+   * nothing to show but a title.
+   */
+  for (const [slug, entry] of Object.entries(written)) {
+    out[slug] ??= {
+      slug,
+      starter_code: "",
+      note: "",
+      case_count: 0,
+      samples: [],
+      statement: entry.statement,
+      constraints: entry.constraints,
     };
   }
 

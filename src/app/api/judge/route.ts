@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { practiceProgress } from "@/lib/db/schema";
+import { practiceProgress, practiceQuestions } from "@/lib/db/schema";
 import { currentUser } from "@/lib/auth/session";
 import { isCorrect } from "@/lib/judge";
 import { getProblem } from "@/lib/python-tests";
@@ -54,7 +55,7 @@ function rateLimited(userId: string): boolean {
   return recent.length > RATE_LIMIT;
 }
 
-type Body = { questionId?: unknown; slug?: unknown; source?: unknown };
+type Body = { questionId?: unknown; source?: unknown };
 
 export async function POST(request: Request) {
   const user = await currentUser();
@@ -86,19 +87,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
 
-  const { questionId, slug, source } = body;
-  if (
-    typeof questionId !== "string" ||
-    typeof slug !== "string" ||
-    typeof source !== "string"
-  ) {
+  const { questionId, source } = body;
+  if (typeof questionId !== "string" || typeof source !== "string") {
     return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
   if (source.length > 64_000) {
     return NextResponse.json({ error: "That is too long." }, { status: 413 });
   }
 
-  const problem = await getProblem(slug);
+  /*
+   * Which problem this is, decided here rather than taken from the request.
+   *
+   * The browser used to send the slug alongside the question id and nothing
+   * checked that the two agreed — so a student could have submitted Two Sum's
+   * four-line answer against the id of Trapping Rain Water and had the hard
+   * one tick itself off. The pairing lives in a column now, so the question
+   * id is the only thing worth believing and the slug is looked up from it.
+   */
+  const [row] = await db
+    .select({ slug: practiceQuestions.slug })
+    .from(practiceQuestions)
+    .where(eq(practiceQuestions.id, questionId))
+    .limit(1);
+
+  const problem = row?.slug ? await getProblem(row.slug) : null;
   if (!problem) {
     return NextResponse.json({ error: "Unknown problem." }, { status: 404 });
   }

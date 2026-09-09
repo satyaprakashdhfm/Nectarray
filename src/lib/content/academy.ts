@@ -116,10 +116,10 @@ export const academy: {
       {
         icon: "target",
         title: "Interview-focused Python practice",
-        body: "Arrays, strings and dictionaries, easy to hard, each linked to LeetCode and judged the way a screen judges: hidden tests, pass or fail. It is built around the patterns that actually come up, so every hour you put in is an hour that counts.",
+        body: "Arrays, strings and dictionaries, easy to hard. Every problem is written out in the portal and judged the way a screen judges: hidden tests, pass or fail. It is built around the patterns that actually come up, so every hour you put in is an hour that counts.",
         points: [
           "Arrays, strings, dictionaries — the interview core",
-          "Judged on hidden tests, LeetCode-style",
+          "Judged on hidden tests, pass or fail",
           "Built around the patterns screens actually ask for",
         ],
       },

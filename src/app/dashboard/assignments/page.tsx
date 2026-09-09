@@ -11,7 +11,11 @@ import {
 } from "@/components/dashboard/SqlPractice";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { practiceProgress, practiceQuestions } from "@/lib/db/schema";
+import {
+  practiceOpens,
+  practiceProgress,
+  practiceQuestions,
+} from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
 import { cn } from "@/lib/utils";
 
@@ -62,12 +66,16 @@ export default async function AssignmentsPage({
   const { track: requested } = await searchParams;
   const track = requested === "sql" ? "sql" : "python";
 
-  const [questions, progress] = await Promise.all([
+  const [questions, progress, opens] = await Promise.all([
     /*
-     * No expected_result here. The answers to the SQL questions come to
-     * 110 KB of JSON, and sending all of them so that one of them can be
-     * compared is most of the weight of this page. The workspace fetches the
-     * one it needs when the student presses Run.
+     * Neither the expected results nor the solutions.
+     *
+     * The answers to the SQL questions come to 110 KB of JSON, and sending
+     * all of them so that one can be compared was most of the weight of this
+     * page; the workspace fetches the one it needs when the student presses
+     * Run. `solution_sql` has gone the same way for a second reason — the
+     * solution is locked for fifteen minutes now, and a lock over an answer
+     * that is already in the markup is a picture of a lock.
      */
     db
       .select({
@@ -79,9 +87,7 @@ export default async function AssignmentsPage({
         title: practiceQuestions.title,
         prompt_md: practiceQuestions.promptMd,
         hint_md: practiceQuestions.hintMd,
-        solution_sql: practiceQuestions.solutionSql,
-        leetcode_url: practiceQuestions.leetcodeUrl,
-        mysql_note: practiceQuestions.mysqlNote,
+        slug: practiceQuestions.slug,
         has_judge: practiceQuestions.hasJudge,
       })
       .from(practiceQuestions)
@@ -100,7 +106,24 @@ export default async function AssignmentsPage({
           .from(practiceProgress)
           .where(eq(practiceProgress.userId, user.id))
       : Promise.resolve([]),
+    /*
+     * The clocks already running, so a student who opened a problem an hour
+     * ago sees an unlocked solution on arrival rather than a fresh countdown
+     * that only corrects itself once the browser has asked.
+     */
+    user
+      ? db
+          .select({
+            questionId: practiceOpens.questionId,
+            openedAt: practiceOpens.openedAt,
+          })
+          .from(practiceOpens)
+          .where(eq(practiceOpens.userId, user.id))
+      : Promise.resolve([]),
   ]);
+
+  const openedAt: Record<string, number> = {};
+  for (const row of opens) openedAt[row.questionId] = row.openedAt.getTime();
 
   // Starter code and a few sample cases per problem. The expectations behind
   // the rest of the cases stay on the server.
@@ -131,7 +154,7 @@ export default async function AssignmentsPage({
         <p className="text-ink-faint hidden text-[0.8125rem] xl:block">
           {track === "sql"
             ? "Written against the training database on the left. Run a query that matches the expected output and it ticks itself off."
-            : "Write the solution and run it against the test cases. It executes in your browser — pass them all and it ticks itself off."}
+            : "Read the problem, write the solution and run it against the test cases. Pass them all and it ticks itself off."}
         </p>
       </div>
       <div className="min-h-0 flex-1">
@@ -139,12 +162,14 @@ export default async function AssignmentsPage({
           <SqlPractice
             questions={questions as unknown as SqlQuestion[]}
             solved={solved}
+            openedAt={openedAt}
           />
         ) : (
           <PythonJudge
             questions={questions as unknown as PyQuestion[]}
             briefs={problemBriefs}
             solved={solved}
+            openedAt={openedAt}
           />
         )}
       </div>

@@ -5,8 +5,8 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   Eye,
+  Lock,
   Lightbulb,
   Loader2,
   PanelLeftClose,
@@ -17,7 +17,12 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
-import { ProofUpload } from "@/components/dashboard/ProofUpload";
+import { CopyButton } from "@/components/dashboard/CopyButton";
+import {
+  countdown,
+  useSolution,
+  type SolutionState,
+} from "@/components/dashboard/use-solution";
 import { display, displayArgs } from "@/lib/judge";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +36,9 @@ export type ProblemBrief = {
   note: string;
   case_count: number;
   samples: { args: unknown[]; expect: unknown }[];
+  /** The problem itself. See content/python-statements.json. */
+  statement: string;
+  constraints: string[];
 };
 
 export type PyQuestion = {
@@ -41,7 +49,7 @@ export type PyQuestion = {
   title: string;
   prompt_md: string | null;
   hint_md: string | null;
-  leetcode_url: string | null;
+  slug: string | null;
   has_judge: boolean;
 };
 
@@ -50,9 +58,6 @@ const DIFF_TONE: Record<string, string> = {
   medium: "bg-amber-wash text-amber-deep",
   hard: "bg-brand-wash text-brand-deep",
 };
-
-const slugOf = (url: string | null) =>
-  url ? (/\/problems\/([^/]+)/.exec(url)?.[1] ?? null) : null;
 
 type Failing = {
   number: number;
@@ -125,18 +130,18 @@ export function PythonJudge({
   questions,
   briefs,
   solved: initialSolved,
+  openedAt,
 }: {
   questions: PyQuestion[];
   briefs: Record<string, ProblemBrief>;
   solved: string[];
+  openedAt: Record<string, number>;
 }) {
   const [index, setIndex] = useState(0);
   const [edited, setEdited] = useState<string | null>(null);
   const [run, setRun] = useState<Run>({ at: "idle" });
   const [solved, setSolved] = useState<string[]>(initialSolved);
   const [showHint, setShowHint] = useState(false);
-  const [showSolution, setShowSolution] = useState(false);
-  const [solutionText, setSolutionText] = useState<string | null>(null);
 
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
@@ -145,8 +150,13 @@ export function PythonJudge({
   const [editorHeight, dragEditor] = useDragSize(320, 140, 700);
 
   const question = questions[index];
-  const slug = slugOf(question?.leetcode_url ?? null);
+  const slug = question?.slug ?? null;
   const brief = slug ? briefs[slug] : undefined;
+  const isSolved = question ? solved.includes(question.id) : false;
+
+  // The clock, the lock and the fetch. Nothing about the answer is in the
+  // page until it has been earned and asked for.
+  const solution = useSolution(question?.id ?? null, isSolved, openedAt);
 
   /*
    * The editor holds the student's edit, or null while they have not touched
@@ -158,8 +168,6 @@ export function PythonJudge({
     setIndex(next);
     setRun({ at: "idle" });
     setShowHint(false);
-    setShowSolution(false);
-    setSolutionText(null);
     setEdited(null);
   }
 
@@ -171,7 +179,7 @@ export function PythonJudge({
       const response = await fetch("/api/judge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId: question.id, slug, source: code }),
+        body: JSON.stringify({ questionId: question.id, source: code }),
       });
       const data = (await response.json()) as Verdict & { error?: string };
 
@@ -192,22 +200,6 @@ export function PythonJudge({
     }
   }
 
-  /** Fetched only when asked for, so it is not sitting in the page markup. */
-  async function revealSolution() {
-    if (showSolution) {
-      setShowSolution(false);
-      return;
-    }
-    setShowSolution(true);
-    if (solutionText === null && slug) {
-      const response = await fetch(
-        `/api/judge/solution?slug=${encodeURIComponent(slug)}`,
-      );
-      const data = (await response.json()) as { solution?: string };
-      setSolutionText(data.solution ?? "No reference solution recorded.");
-    }
-  }
-
   if (!question) {
     return (
       <div className="card m-6 p-8 text-center">
@@ -218,7 +210,6 @@ export function PythonJudge({
     );
   }
 
-  const isSolved = solved.includes(question.id);
   const done = questions.filter((q) => solved.includes(q.id)).length;
   const pct = questions.length ? (done / questions.length) * 100 : 0;
 
@@ -228,15 +219,8 @@ export function PythonJudge({
       brief={brief}
       solved={isSolved}
       showHint={showHint}
-      showSolution={showSolution}
-      solutionText={solutionText}
+      solution={solution}
       onHint={() => setShowHint((v) => !v)}
-      onSolution={revealSolution}
-      onSolved={() =>
-        setSolved((prev) =>
-          prev.includes(question.id) ? prev : [...prev, question.id],
-        )
-      }
     />
   );
 
@@ -369,6 +353,20 @@ export function PythonJudge({
             <label className="sr-only" htmlFor="py-editor">
               Your Python solution
             </label>
+            {/*
+              A bar over the editor, mostly for the copy button. Taking your
+              own answer out to paste somewhere is the thing students ask for
+              most; selecting it out of a textarea with a trackpad is not.
+            */}
+            <div className="border-night-line flex shrink-0 items-center justify-between border-b px-3 py-1.5">
+              <span className="text-[0.6875rem] font-semibold text-white/40">
+                Python
+              </span>
+              <CopyButton
+                text={code}
+                className="text-white/50 hover:bg-white/10 hover:text-white"
+              />
+            </div>
             <textarea
               id="py-editor"
               value={code}
@@ -644,26 +642,121 @@ function ProblemList({
   );
 }
 
+/**
+ * A run of text with `code spans` in it.
+ *
+ * The statements are ours and they are short, so a markdown parser in the
+ * browser would be several kilobytes to do one thing. Backticks are the one
+ * piece of markdown they use.
+ */
+function Prose({ text }: { text: string }) {
+  return (
+    <>
+      {text.split("\n\n").map((paragraph, p) => (
+        <p
+          key={p}
+          className="text-ink-soft mt-2 text-[0.875rem] leading-relaxed first:mt-0"
+        >
+          {paragraph.split(/`([^`]+)`/).map((part, i) =>
+            i % 2 === 1 ? (
+              <code
+                key={i}
+                className="bg-mist text-ink rounded px-1 py-0.5 font-mono text-[0.8125rem]"
+              >
+                {part}
+              </code>
+            ) : (
+              part
+            ),
+          )}
+        </p>
+      ))}
+    </>
+  );
+}
+
+/**
+ * The solution button.
+ *
+ * Shut for the first fifteen minutes a student has the problem open, and it
+ * says how much of that is left rather than simply refusing — a disabled
+ * control with no explanation reads as broken. Already solved skips the wait:
+ * the delay exists to buy the time spent stuck, and that has been paid.
+ */
+function SolutionButton({ solution }: { solution: SolutionState }) {
+  const locked = !solution.unlocked;
+
+  return (
+    <button
+      type="button"
+      onClick={solution.toggle}
+      disabled={locked}
+      title={
+        locked
+          ? "The worked solution opens after fifteen minutes with the problem."
+          : undefined
+      }
+      className="border-line bg-surface text-ink-soft hover:text-ink hover:border-brand disabled:hover:border-line disabled:hover:text-ink-soft inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[0.8125rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {locked ? (
+        <>
+          <Lock className="size-3.5" strokeWidth={2} aria-hidden />
+          {countdown(solution.remaining)}
+        </>
+      ) : (
+        <>
+          <Eye className="size-3.5" strokeWidth={2} aria-hidden />
+          {solution.showing ? "Hide" : "Solution"}
+        </>
+      )}
+    </button>
+  );
+}
+
+/** The revealed answer, with a copy button on it. */
+function SolutionBlock({
+  solution,
+  language,
+}: {
+  solution: SolutionState;
+  language: string;
+}) {
+  if (!solution.showing) return null;
+
+  return (
+    <div className="border-line bg-night mt-3 overflow-hidden rounded-lg border">
+      <div className="border-night-line flex items-center justify-between border-b px-3 py-1.5">
+        <span className="text-[0.6875rem] font-semibold text-white/40">
+          {language}
+        </span>
+        {solution.text && (
+          <CopyButton
+            text={solution.text}
+            className="text-white/50 hover:bg-white/10 hover:text-white"
+          />
+        )}
+      </div>
+      <pre className="overflow-x-auto p-3 font-mono text-[0.75rem] leading-[1.6] whitespace-pre-wrap text-white/90">
+        {solution.busy ? "Loading…" : (solution.text ?? "")}
+      </pre>
+    </div>
+  );
+}
+
 function Statement({
   question,
   brief,
   solved,
   showHint,
-  showSolution,
-  solutionText,
+  solution,
   onHint,
-  onSolution,
-  onSolved,
 }: {
   question: PyQuestion;
   brief: ProblemBrief | undefined;
   solved: boolean;
   showHint: boolean;
-  showSolution: boolean;
-  solutionText: string | null;
+  solution: SolutionState;
   onHint: () => void;
-  onSolution: () => void;
-  onSolved: () => void;
 }) {
   return (
     <div className="p-4">
@@ -680,37 +773,43 @@ function Statement({
       <h2 className="text-ink mt-2 text-[1rem] leading-snug font-semibold">
         {question.title}
       </h2>
-      {question.prompt_md && (
-        <p className="text-ink-soft mt-2 text-[0.875rem] leading-relaxed">
-          {question.prompt_md}
-        </p>
-      )}
 
-      {question.leetcode_url && (
-        <a
-          href={question.leetcode_url}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="text-brand-deep mt-3 inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold hover:underline"
-        >
-          Read the full statement on LeetCode
-          <ExternalLink className="size-3" strokeWidth={2} aria-hidden />
-        </a>
+      {/*
+        The problem itself. This used to be a one-line prompt over a link
+        reading "Read the full statement on LeetCode", which made the portal a
+        table of contents for somebody else's site: a student had to leave to
+        find out what the question was, and came back to a page that could not
+        tell them whether they had answered it. `prompt_md` is the fallback for
+        anything added through the admin panel that has no written statement.
+      */}
+      <div className="mt-2">
+        <Prose text={brief?.statement || question.prompt_md || ""} />
+      </div>
+
+      {brief && brief.constraints.length > 0 && (
+        <div className="border-line-soft mt-3 border-t pt-3">
+          <p className="eyebrow mb-1.5">Constraints</p>
+          <ul className="text-ink-faint space-y-1 text-[0.8125rem] leading-relaxed">
+            {brief.constraints.map((line, i) => (
+              <li key={i} className="flex gap-2">
+                <span aria-hidden>·</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {!question.has_judge && (
         <div className="border-amber/30 bg-amber-wash mt-4 rounded-lg border px-3 py-2.5">
           <p className="text-ink-soft text-[0.8125rem] leading-relaxed">
-            A design problem — a sequence of operations rather than one function
-            — so it is not run here. Solve it on LeetCode and upload the
-            accepted submission; it is read and checked before it counts.
+            A design problem — a class with several operations rather than one
+            function — so there is nothing here for the judge to call. Write it
+            in the editor, try it against the examples yourself, then tick it
+            off.
           </p>
           <div className="mt-2.5">
-            <ProofUpload
-              questionId={question.id}
-              solved={solved}
-              onSolved={onSolved}
-            />
+            <MarkDone questionId={question.id} solved={solved} />
           </div>
         </div>
       )}
@@ -731,31 +830,30 @@ function Statement({
           <Lightbulb className="size-3.5" strokeWidth={2} aria-hidden />
           {showHint ? "Hide hint" : "Get hint"}
         </button>
-        <button
-          type="button"
-          onClick={() => void onSolution()}
-          disabled={!brief}
-          className="border-line bg-surface text-ink-soft hover:text-ink hover:border-brand inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[0.8125rem] font-semibold transition-colors disabled:opacity-40"
-        >
-          <Eye className="size-3.5" strokeWidth={2} aria-hidden />
-          {showSolution ? "Hide" : "Solution"}
-        </button>
+        <SolutionButton solution={solution} />
       </div>
+
+      {!solution.unlocked && (
+        <p className="text-ink-faint mt-2 text-[0.75rem] leading-relaxed">
+          The worked solution opens fifteen minutes after you open a problem, or
+          as soon as you have solved it.
+        </p>
+      )}
+      {solution.error && (
+        <p className="text-amber-deep mt-2 text-[0.75rem]">{solution.error}</p>
+      )}
 
       {showHint && question.hint_md && (
         <p className="border-amber/30 bg-amber-wash text-ink-soft mt-3 rounded-lg border px-3 py-2.5 text-[0.8125rem] leading-relaxed">
           {question.hint_md}
         </p>
       )}
-      {showSolution && (
-        <pre className="border-line bg-night mt-3 overflow-x-auto rounded-lg border p-3 font-mono text-[0.75rem] leading-[1.6] whitespace-pre-wrap text-white/90">
-          {solutionText ?? "Loading…"}
-        </pre>
-      )}
 
-      {brief && (
+      <SolutionBlock solution={solution} language="Python" />
+
+      {brief && brief.samples.length > 0 && (
         <div className="mt-5">
-          <p className="eyebrow mb-2">Sample cases</p>
+          <p className="eyebrow mb-2">Examples</p>
           <ul className="space-y-2">
             {brief.samples.map((sample, i) => (
               <li
@@ -779,5 +877,60 @@ function Statement({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * The tick for the two problems the judge cannot run.
+ *
+ * It used to be an upload: a screenshot of an accepted submission somewhere
+ * else, read by a grader. With the problems stated here and solved here there
+ * is no elsewhere to screenshot, so it is a checkbox — and honest about being
+ * one. Two questions out of fifty-four are on the student's word.
+ */
+function MarkDone({
+  questionId,
+  solved,
+}: {
+  questionId: string;
+  solved: boolean;
+}) {
+  const [done, setDone] = useState(solved);
+  const [busy, setBusy] = useState(false);
+
+  if (done) {
+    return (
+      <p className="text-leaf-deep inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold">
+        <Check className="size-3.5" strokeWidth={3} aria-hidden />
+        Marked as done
+      </p>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={() => {
+        setBusy(true);
+        void fetch("/api/practice/solved", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ questionId }),
+        })
+          .then((response) => {
+            if (response.ok) setDone(true);
+          })
+          .finally(() => setBusy(false));
+      }}
+      className="border-line bg-canvas text-ink hover:border-brand inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors disabled:opacity-50"
+    >
+      {busy ? (
+        <Loader2 className="size-3.5 animate-spin" aria-hidden />
+      ) : (
+        <Check className="size-3.5" strokeWidth={2.5} aria-hidden />
+      )}
+      Mark as done
+    </button>
   );
 }

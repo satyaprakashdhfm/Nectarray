@@ -1,0 +1,413 @@
+{
+  "two-sum": {
+    "statement": "Given a list of integers `nums` and an integer `target`, return the indices of the two numbers that add up to `target`.\n\nExactly one pair works. You may not use the same element twice, and the two indices can come back in either order.",
+    "constraints": [
+      "2 ≤ len(nums) ≤ 10⁴",
+      "−10⁹ ≤ nums[i] ≤ 10⁹",
+      "Exactly one valid pair exists"
+    ]
+  },
+  "remove-duplicates-from-sorted-array": {
+    "statement": "`nums` is sorted ascending and may repeat. Move the distinct values to the front, in order, and return `k` — how many there are.\n\nThe first `k` positions of `nums` must hold those distinct values when you return. Whatever is left beyond `k` does not matter. Do it in place: no second list.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 3 × 10⁴",
+      "`nums` is sorted in non-decreasing order",
+      "The list is checked as well as the return value"
+    ]
+  },
+  "best-time-to-buy-and-sell-stock": {
+    "statement": "`prices[i]` is the price of one share on day `i`. Buy on one day and sell on a later one. Return the largest profit available; if no day pair turns a profit, return `0`.\n\nOne buy and one sell — you cannot sell before you buy.",
+    "constraints": [
+      "1 ≤ len(prices) ≤ 10⁵",
+      "0 ≤ prices[i] ≤ 10⁴"
+    ]
+  },
+  "majority-element": {
+    "statement": "Return the value that appears more than ⌊n/2⌋ times in `nums`.\n\nYou may assume such a value always exists, so there is no empty case to handle.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 5 × 10⁴",
+      "A majority element is guaranteed"
+    ]
+  },
+  "move-zeroes": {
+    "statement": "Shift every `0` in `nums` to the end while the non-zero values keep their relative order.\n\nIn place — the list itself is what gets checked, not a copy you return.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁴",
+      "Return nothing; the list is inspected afterwards"
+    ]
+  },
+  "contains-duplicate": {
+    "statement": "Return `True` if any value appears at least twice in `nums`, and `False` if every element is distinct.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁵"
+    ]
+  },
+  "missing-number": {
+    "statement": "`nums` holds `n` distinct numbers drawn from the range `0..n` — so exactly one of that range is absent. Return it.",
+    "constraints": [
+      "n == len(nums)",
+      "1 ≤ n ≤ 10⁴",
+      "All values are distinct and in range `0..n`"
+    ]
+  },
+  "single-number": {
+    "statement": "Every value in `nums` appears twice except one, which appears once. Return that one.\n\nWorth doing in a single pass and constant extra space — there is a neat way.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 3 × 10⁴",
+      "Exactly one element appears once; every other appears twice"
+    ]
+  },
+  "plus-one": {
+    "statement": "`digits` is a non-negative integer, one decimal digit per element, most significant first. Add one to it and return the digits of the result.\n\nMind the carry: `[9, 9]` becomes `[1, 0, 0]`, which is longer than it started.",
+    "constraints": [
+      "1 ≤ len(digits) ≤ 100",
+      "0 ≤ digits[i] ≤ 9",
+      "No leading zeros, except the number 0 itself"
+    ]
+  },
+  "merge-sorted-array": {
+    "statement": "`nums1` has length `m + n`: `m` sorted values followed by `n` zeros to be written over. `nums2` holds `n` sorted values. Merge them so `nums1` ends up sorted.\n\nIn place, into `nums1`. Filling from the back is easier than from the front.",
+    "constraints": [
+      "nums1.length == m + n",
+      "nums2.length == n",
+      "Both inputs are sorted ascending",
+      "Return nothing; `nums1` is inspected afterwards"
+    ]
+  },
+  "squares-of-a-sorted-array": {
+    "statement": "`nums` is sorted ascending and may contain negatives. Return the squares of its values, sorted ascending.\n\nSorting afterwards works. Doing it in one pass from both ends is the point of the exercise.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁴",
+      "−10⁴ ≤ nums[i] ≤ 10⁴",
+      "`nums` is already sorted"
+    ]
+  },
+  "intersection-of-two-arrays-ii": {
+    "statement": "Return the values that appear in both `nums1` and `nums2`, keeping duplicates: a value present twice in one and three times in the other appears twice in the answer.\n\nThe order of the result does not matter — it is compared as a multiset.",
+    "constraints": [
+      "1 ≤ len(nums1), len(nums2) ≤ 1000",
+      "Order of the result is not checked"
+    ]
+  },
+  "rotate-array": {
+    "statement": "Rotate `nums` to the right by `k` places, so the last `k` values wrap around to the front.\n\nIn place. `k` can be larger than the list.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁵",
+      "0 ≤ k ≤ 10⁵",
+      "Return nothing; the list is inspected afterwards"
+    ]
+  },
+  "product-of-array-except-self": {
+    "statement": "Return a list where each position holds the product of every value in `nums` except the one at that position.\n\nWithout division, and in linear time. Two passes — running products from the left, then from the right — get you there.",
+    "constraints": [
+      "2 ≤ len(nums) ≤ 10⁵",
+      "Every product fits in a 32-bit integer",
+      "Do not use division"
+    ]
+  },
+  "maximum-subarray": {
+    "statement": "Return the largest sum obtainable from a contiguous, non-empty run of `nums`.\n\nAll-negative input is allowed, in which case the answer is the least negative value.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁵",
+      "The subarray must be contiguous and non-empty"
+    ]
+  },
+  "sort-colors": {
+    "statement": "`nums` holds only `0`, `1` and `2`. Sort it in place so the zeros come first, then the ones, then the twos.\n\nOne pass, no counting sort, no library sort — that is the exercise.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 300",
+      "nums[i] is 0, 1 or 2",
+      "Return nothing; the list is inspected afterwards"
+    ]
+  },
+  "subarray-sum-equals-k": {
+    "statement": "Return how many contiguous subarrays of `nums` sum to `k`.\n\nNegatives are allowed, so a sliding window will not do it. Running sums and a count of the ones already seen will.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 2 × 10⁴",
+      "−1000 ≤ nums[i] ≤ 1000",
+      "Subarrays are counted, not listed"
+    ]
+  },
+  "find-the-duplicate-number": {
+    "statement": "`nums` has `n + 1` values, each in the range `1..n`. By the pigeonhole principle at least one value repeats — and exactly one does. Return it.\n\nSolvable without modifying the list and in constant extra space.",
+    "constraints": [
+      "len(nums) == n + 1",
+      "1 ≤ nums[i] ≤ n",
+      "Exactly one value is repeated, possibly many times"
+    ]
+  },
+  "3sum": {
+    "statement": "Return every distinct triple of values from `nums` that sums to zero.\n\nDistinct by value, not by index: `[-1, 0, 1]` belongs in the answer once, however many ways the list can produce it. Order does not matter, within a triple or between them — the judge compares them unordered.",
+    "constraints": [
+      "3 ≤ len(nums) ≤ 3000",
+      "No duplicate triples",
+      "Order is not checked, at either level"
+    ]
+  },
+  "container-with-most-water": {
+    "statement": "`height[i]` is the height of a vertical line at position `i`. Pick two lines so the container they form with the x-axis holds the most water, and return that area.\n\nArea is the shorter of the two lines times the distance between them.",
+    "constraints": [
+      "2 ≤ len(height) ≤ 10⁵",
+      "0 ≤ height[i] ≤ 10⁴",
+      "The container is not tilted"
+    ]
+  },
+  "merge-intervals": {
+    "statement": "`intervals` is a list of `[start, end]` pairs. Merge every pair that overlaps or touches, and return the result sorted by start.",
+    "constraints": [
+      "1 ≤ len(intervals) ≤ 10⁴",
+      "start ≤ end",
+      "The result is sorted by start"
+    ]
+  },
+  "set-matrix-zeroes": {
+    "statement": "If any cell of the matrix is `0`, set its whole row and its whole column to `0`.\n\nIn place. The trap is doing it as you go: a zero you write is indistinguishable from a zero that was there, so the effect spreads.",
+    "constraints": [
+      "1 ≤ rows, cols ≤ 200",
+      "Return nothing; the matrix is inspected afterwards"
+    ]
+  },
+  "spiral-matrix": {
+    "statement": "Return every value of the matrix in spiral order — along the top row, down the right side, back along the bottom, up the left, then inward.",
+    "constraints": [
+      "1 ≤ rows, cols ≤ 10",
+      "The matrix need not be square"
+    ]
+  },
+  "next-permutation": {
+    "statement": "Rearrange `nums` into the next permutation in lexicographic order. If it is already the largest, wrap around to the smallest — the sorted-ascending one.\n\nIn place, constant extra space.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 100",
+      "Return nothing; the list is inspected afterwards"
+    ]
+  },
+  "trapping-rain-water": {
+    "statement": "`height` is an elevation map with bars one unit wide. Return how many units of water are trapped after rain.\n\nThe water above any bar is the smaller of the tallest bar to its left and the tallest to its right, minus the bar itself.",
+    "constraints": [
+      "1 ≤ len(height) ≤ 2 × 10⁴",
+      "0 ≤ height[i] ≤ 10⁵"
+    ]
+  },
+  "first-missing-positive": {
+    "statement": "Return the smallest positive integer that does not appear in `nums`.\n\nLinear time and constant extra space is the whole difficulty — which means using the list itself as the bookkeeping.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁵",
+      "The answer is always in `1..len(nums) + 1`"
+    ]
+  },
+  "median-of-two-sorted-arrays": {
+    "statement": "Two sorted lists, `nums1` and `nums2`. Return the median of the two combined.\n\nMerging them is O(m + n) and will pass; the problem is really asking for the binary search on the shorter list.",
+    "constraints": [
+      "Both lists are sorted ascending",
+      "They are not both empty",
+      "A whole-number median comes back as a float, e.g. `2.0`"
+    ]
+  },
+  "largest-rectangle-in-histogram": {
+    "statement": "`heights` is a histogram of bars one unit wide. Return the area of the largest rectangle that fits inside it.\n\nA rectangle can span several bars, and its height is then the shortest bar it spans. A stack of indices gets this to linear time.",
+    "constraints": [
+      "1 ≤ len(heights) ≤ 10⁵",
+      "0 ≤ heights[i] ≤ 10⁴"
+    ]
+  },
+  "reverse-string": {
+    "statement": "Reverse the list of characters `s` in place.\n\nConstant extra space — two pointers walking towards each other, not a new list.",
+    "constraints": [
+      "1 ≤ len(s) ≤ 10⁵",
+      "`s` is a list of one-character strings",
+      "Return nothing; the list is inspected afterwards"
+    ]
+  },
+  "valid-palindrome": {
+    "statement": "Return `True` if `s` reads the same forwards and backwards once you ignore case and drop everything that is not a letter or a digit.\n\nAn empty string, after that filtering, counts as a palindrome.",
+    "constraints": [
+      "1 ≤ len(s) ≤ 2 × 10⁵",
+      "`s` may hold letters, digits, spaces and punctuation"
+    ]
+  },
+  "valid-anagram": {
+    "statement": "Return `True` if `t` is an anagram of `s` — the same characters, the same number of each, in some order.",
+    "constraints": [
+      "1 ≤ len(s), len(t) ≤ 5 × 10⁴",
+      "Lowercase English letters"
+    ]
+  },
+  "longest-common-prefix": {
+    "statement": "Return the longest string that every entry of `strs` starts with. If there is no common prefix, return `\"\"`.",
+    "constraints": [
+      "1 ≤ len(strs) ≤ 200",
+      "Entries may be empty",
+      "Lowercase English letters"
+    ]
+  },
+  "find-the-index-of-the-first-occurrence-in-a-string": {
+    "statement": "Return the index of the first occurrence of `needle` in `haystack`, or `-1` if it does not occur.\n\nAn empty needle occurs at index `0`.",
+    "constraints": [
+      "1 ≤ len(haystack), len(needle) ≤ 10⁴",
+      "Lowercase English letters"
+    ]
+  },
+  "first-unique-character-in-a-string": {
+    "statement": "Return the index of the first character in `s` that appears exactly once, or `-1` if every character repeats.",
+    "constraints": [
+      "1 ≤ len(s) ≤ 10⁵",
+      "Lowercase English letters"
+    ]
+  },
+  "isomorphic-strings": {
+    "statement": "Return `True` if `s` and `t` are isomorphic: the characters of `s` can be replaced to get `t`, with each character mapping to exactly one other and no two characters mapping to the same one.\n\nThe mapping has to work both ways — that second half is what most first attempts miss.",
+    "constraints": [
+      "1 ≤ len(s) ≤ 5 × 10⁴",
+      "len(s) == len(t)",
+      "A character may map to itself"
+    ]
+  },
+  "ransom-note": {
+    "statement": "Return `True` if `ransomNote` can be built from the letters in `magazine`, each letter of the magazine usable at most once.",
+    "constraints": [
+      "1 ≤ len(ransomNote), len(magazine) ≤ 10⁵",
+      "Lowercase English letters"
+    ]
+  },
+  "longest-substring-without-repeating-characters": {
+    "statement": "Return the length of the longest substring of `s` with no repeated character.\n\nSubstring, not subsequence — it has to be contiguous. A sliding window whose left edge jumps past the last sighting of the offending character does it in one pass.",
+    "constraints": [
+      "0 ≤ len(s) ≤ 5 × 10⁴",
+      "`s` may hold letters, digits, symbols and spaces"
+    ]
+  },
+  "longest-palindromic-substring": {
+    "statement": "Return the longest palindromic substring of `s`.\n\nWhere two answers tie in length either is accepted only if the tests say so — here the expected answer is the one that starts earliest, so expand around each centre from left to right and keep the first of an equal-length pair.",
+    "constraints": [
+      "1 ≤ len(s) ≤ 1000",
+      "On a tie, the earliest-starting substring is expected"
+    ]
+  },
+  "group-anagrams": {
+    "statement": "Group the entries of `strs` so that words which are anagrams of each other end up in the same list.\n\nOrder does not matter, within a group or between them — the judge compares them unordered.",
+    "constraints": [
+      "1 ≤ len(strs) ≤ 10⁴",
+      "Lowercase English letters",
+      "Order is not checked, at either level"
+    ]
+  },
+  "string-to-integer-atoi": {
+    "statement": "Implement `atoi`: read a leading integer out of `s` the way C's function does.\n\nSkip leading whitespace; take an optional `+` or `-`; read digits until a non-digit or the end; ignore everything after. No digits means `0`. Clamp the result to the 32-bit signed range, `−2³¹` to `2³¹ − 1`.",
+    "constraints": [
+      "0 ≤ len(s) ≤ 200",
+      "Clamp out-of-range results rather than wrapping them",
+      "Whitespace here means the space character"
+    ]
+  },
+  "longest-repeating-character-replacement": {
+    "statement": "You may change at most `k` characters of `s`, each to any uppercase letter. Return the length of the longest run of one repeated character you can produce.\n\nA window is valid while its length minus the count of its most common character is at most `k`.",
+    "constraints": [
+      "1 ≤ len(s) ≤ 10⁵",
+      "0 ≤ k ≤ len(s)",
+      "Uppercase English letters"
+    ]
+  },
+  "sort-characters-by-frequency": {
+    "statement": "Return `s` rearranged so that characters appear in descending order of how often they occur, with all copies of a character together.\n\nCharacters that occur equally often are ordered by first appearance in `s`, which is what a stable sort of a counter gives you.",
+    "constraints": [
+      "1 ≤ len(s) ≤ 5 × 10⁵",
+      "Letters and digits, upper and lower case",
+      "Ties broken by first appearance"
+    ]
+  },
+  "minimum-window-substring": {
+    "statement": "Return the shortest substring of `s` that contains every character of `t`, counting duplicates. If there is none, return `\"\"`.\n\nWhere two windows tie in length the earliest one is expected. Grow the window until it is valid, then shrink from the left while it stays valid.",
+    "constraints": [
+      "0 ≤ len(s) ≤ 10⁵, 1 ≤ len(t) ≤ 10⁵",
+      "`t` may repeat characters, and the counts must be met",
+      "Upper and lower case are different characters",
+      "On a tie, the earliest window is expected"
+    ]
+  },
+  "contains-duplicate-ii": {
+    "statement": "Return `True` if `nums` holds two equal values whose indices are at most `k` apart.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁵",
+      "0 ≤ k ≤ 10⁵"
+    ]
+  },
+  "word-pattern": {
+    "statement": "`pattern` is a string of letters and `s` is a sentence of space-separated words. Return `True` if the words follow the pattern: each letter maps to exactly one word and each word to exactly one letter.\n\nLike Isomorphic Strings, but over words — and the mapping has to hold both ways.",
+    "constraints": [
+      "1 ≤ len(pattern) ≤ 300",
+      "`s` has single spaces between words and none at either end",
+      "Lowercase English letters"
+    ]
+  },
+  "intersection-of-two-arrays": {
+    "statement": "Return the values present in both `nums1` and `nums2`, each appearing once.\n\nUnlike its sequel, duplicates are collapsed. The order of the result is not checked.",
+    "constraints": [
+      "1 ≤ len(nums1), len(nums2) ≤ 1000",
+      "Each value appears at most once in the result",
+      "Order of the result is not checked"
+    ]
+  },
+  "find-common-characters": {
+    "statement": "Return the characters that appear in every string of `words`, including duplicates: a character present twice in all of them appears twice in the answer.\n\nThe order of the result is not checked.",
+    "constraints": [
+      "1 ≤ len(words) ≤ 100",
+      "Lowercase English letters",
+      "Order of the result is not checked"
+    ]
+  },
+  "unique-number-of-occurrences": {
+    "statement": "Count how many times each value occurs in `arr`. Return `True` if no two values occur the same number of times.",
+    "constraints": [
+      "1 ≤ len(arr) ≤ 1000",
+      "−1000 ≤ arr[i] ≤ 1000"
+    ]
+  },
+  "top-k-frequent-elements": {
+    "statement": "Return the `k` values that occur most often in `nums`.\n\nThe order of the result is not checked. The answer is unique — no tie can straddle the cut-off.",
+    "constraints": [
+      "1 ≤ len(nums) ≤ 10⁵",
+      "1 ≤ k ≤ number of distinct values",
+      "Order of the result is not checked"
+    ]
+  },
+  "longest-consecutive-sequence": {
+    "statement": "Return the length of the longest run of consecutive integers that can be formed from the values in `nums`. They need not be adjacent in the list.\n\nLinear time is the point: put the values in a set and start counting only from a value whose predecessor is absent, so each run is walked once.",
+    "constraints": [
+      "0 ≤ len(nums) ≤ 10⁵",
+      "The values need not be sorted",
+      "Duplicates count once"
+    ]
+  },
+  "4sum-ii": {
+    "statement": "Four lists of the same length. Return how many index quadruples `(i, j, k, l)` satisfy `nums1[i] + nums2[j] + nums3[k] + nums4[l] == 0`.\n\nBy indices, not by value, so repeated values are counted separately. Sum the first two lists into a counter, then look up the negation of each sum of the last two.",
+    "constraints": [
+      "1 ≤ n ≤ 200",
+      "All four lists have length `n`",
+      "Quadruples are counted, not listed"
+    ]
+  },
+  "insert-delete-getrandom-o1": {
+    "statement": "Design `RandomizedSet`, supporting three operations in average O(1):\n\n- `insert(val)` — add `val`; return `True` if it was not already there\n- `remove(val)` — take `val` out; return `True` if it was there\n- `getRandom()` — return a random current element, every element equally likely\n\nA list gives O(1) random choice but O(n) removal; a dict gives O(1) removal but no random choice. Keeping both, and swapping the removed element with the last of the list, gets you all three.",
+    "constraints": [
+      "`getRandom` is only called when the set is non-empty",
+      "Up to 2 × 10⁵ calls in total",
+      "Average O(1) per operation"
+    ]
+  },
+  "lru-cache": {
+    "statement": "Design `LRUCache`, a fixed-capacity cache, with both operations in O(1):\n\n- `get(key)` — return the value, or `-1` if it is not present\n- `put(key, value)` — insert or overwrite; if that puts it over capacity, evict the least recently used key\n\nA `get` counts as a use, and so does overwriting an existing key. A dictionary plus a doubly linked list is the classic answer; Python's `OrderedDict` and its `move_to_end` are the same idea already built.",
+    "constraints": [
+      "1 ≤ capacity ≤ 3000",
+      "Up to 2 × 10⁵ calls in total",
+      "O(1) average for both operations"
+    ]
+  },
+  "find-all-anagrams-in-a-string": {
+    "statement": "Return the start index of every substring of `s` that is an anagram of `p`, in ascending order.\n\nThe windows are all the same length, so slide one of length `len(p)` and compare character counts as it moves.",
+    "constraints": [
+      "1 ≤ len(s), len(p) ≤ 3 × 10⁴",
+      "Lowercase English letters",
+      "Indices in ascending order"
+    ]
+  }
+}

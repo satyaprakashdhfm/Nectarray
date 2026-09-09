@@ -256,6 +256,15 @@ export const practiceQuestions = pgTable(
      * of that page.
      */
     expectedResult: jsonb("expected_result"),
+    /**
+     * The key into content/python-tests.json and content/python-statements.json.
+     *
+     * It used to be pulled back out of leetcode_url with a regular expression
+     * at render time, which meant the link had to stay in the page for the
+     * judge to know which problem it was looking at. The statements live here
+     * now and the link is gone, so the slug is a column.
+     */
+    slug: text(),
     leetcodeUrl: text("leetcode_url"),
     hasJudge: boolean("has_judge").notNull().default(false),
     isPublished: boolean("is_published").notNull().default(true),
@@ -263,6 +272,30 @@ export const practiceQuestions = pgTable(
   (table) => [
     index("practice_questions_track_idx").on(table.track, table.position),
   ],
+);
+
+/**
+ * When a student first opened a problem.
+ *
+ * The reference solution is not available for the first fifteen minutes, and
+ * this is the clock that says so. It is a row rather than something in the
+ * browser because a lock a student can lift by clearing local storage is not
+ * a lock, it is a suggestion — and the fifteen minutes are the point of the
+ * exercise. Written once, on first open, and never moved: reopening a problem
+ * tomorrow does not restart the wait.
+ */
+export const practiceOpens = pgTable(
+  "practice_opens",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    questionId: uuid("question_id")
+      .notNull()
+      .references(() => practiceQuestions.id, { onDelete: "cascade" }),
+    openedAt: now(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.questionId] })],
 );
 
 export const practiceProgress = pgTable(
@@ -280,8 +313,15 @@ export const practiceProgress = pgTable(
 );
 
 /**
- * A student's screenshot of an accepted LeetCode submission, and what the
+ * A student's screenshot of an accepted submission elsewhere, and what the
  * grader made of it.
+ *
+ * Nothing writes this any more. The two design problems were the only ones
+ * that used it, and they were only unjudgeable because the statement lived on
+ * somebody else's site — now that the problems are written out here there is
+ * no elsewhere to screenshot, and they are marked done by hand. The table is
+ * left in place rather than dropped: it costs nothing and it holds whatever
+ * was graded before.
  *
  * The screenshot itself is not kept. It used to go into a storage bucket and
  * be read back once, seconds later, by the grading call — so the bucket was a

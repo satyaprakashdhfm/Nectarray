@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AuthModal } from "@/components/auth/AuthModal";
 
@@ -32,23 +32,25 @@ export function AuthLauncher() {
   const asked = params.get("signin") === "1";
   const reason = params.get("error");
 
-  const [open, setOpen] = useState(asked);
-
-  useEffect(() => {
-    if (asked) setOpen(true);
-  }, [asked]);
+  /*
+   * Open is derived, not synchronised. The URL asking for the modal is the
+   * state; the only thing worth remembering separately is that this visitor
+   * has already dismissed it, which stops the box reappearing for the moment
+   * between the close and the router catching up with the new URL.
+   */
+  const [dismissed, setDismissed] = useState(false);
 
   const close = useCallback(() => {
-    setOpen(false);
+    setDismissed(true);
     /*
      * Take the parameters back out, so a refresh or a shared link does not
      * reopen a box the student has already dismissed. replace, not push —
      * this should not add a step to the back button.
      */
-    if (asked || reason) router.replace(pathname, { scroll: false });
-  }, [asked, reason, router, pathname]);
+    router.replace(pathname, { scroll: false });
+  }, [router, pathname]);
 
-  if (!open) return null;
+  if (!asked || dismissed) return null;
 
   return (
     <AuthModal

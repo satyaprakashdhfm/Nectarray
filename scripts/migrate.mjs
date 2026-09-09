@@ -54,26 +54,44 @@ async function applySchema() {
     console.error("[migrate] no drizzle/ directory in the container");
     return false;
   }
-  const file = fs
+  /*
+   * Every migration, oldest first — not just the newest one.
+   *
+   * This used to take `.at(-1)`, which was right while drizzle/ held exactly
+   * one file and quietly wrong the moment it held two: the second generated
+   * migration would have shipped alone, and a fresh database would have come
+   * up with only the tables that changed in it. They are all idempotent, so
+   * replaying the lot costs a handful of skipped NOTICEs.
+   */
+  const files = fs
     .readdirSync(dir)
     .filter((name) => name.endsWith(".sql"))
-    .sort()
-    .at(-1);
-  if (!file) {
+    .sort();
+  if (files.length === 0) {
     console.error("[migrate] no migration in drizzle/");
     return false;
   }
 
-  const statements = fs
-    .readFileSync(path.join(dir, file), "utf8")
-    .split("--> statement-breakpoint")
+  const statements = files
+    .flatMap((file) =>
+      fs
+        .readFileSync(path.join(dir, file), "utf8")
+        .split("--> statement-breakpoint"),
+    )
     .map((s) => s.trim())
     .filter(Boolean)
     .map((s) =>
       s
         .replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
         .replace("CREATE INDEX ", "CREATE INDEX IF NOT EXISTS ")
-        .replace("CREATE UNIQUE INDEX ", "CREATE UNIQUE INDEX IF NOT EXISTS "),
+        .replace("CREATE UNIQUE INDEX ", "CREATE UNIQUE INDEX IF NOT EXISTS ")
+        /*
+         * `ADD COLUMN` and `ADD CONSTRAINT` have no IF NOT EXISTS between
+         * them in Postgres — the column form does, the constraint form does
+         * not — so the column is made safe here and the constraint is left to
+         * fail into the "already exists" branch below.
+         */
+        .replace(/ ADD COLUMN (?!IF NOT EXISTS)/, " ADD COLUMN IF NOT EXISTS "),
     );
 
   /*
@@ -84,6 +102,19 @@ async function applySchema() {
     // The screenshot is handed straight to the grader now and never stored,
     // so the path to a file in a bucket that no longer exists went with it.
     "ALTER TABLE practice_attempts DROP COLUMN IF EXISTS image_path",
+
+    /*
+     * Backfill the slug from the link it used to be parsed out of.
+     *
+     * The Python workspace matched a question to its tests by pulling the
+     * slug out of leetcode_url with a regular expression at render time,
+     * which meant the link had to stay in the page for the judge to work.
+     * The statements are ours now and the link is gone, so this moves the
+     * slug into a column of its own, once.
+     */
+    `UPDATE practice_questions
+        SET slug = regexp_replace(leetcode_url, '.*/problems/([^/]+)/?.*', '\\1')
+      WHERE slug IS NULL AND leetcode_url LIKE '%/problems/%'`,
   ];
 
   let applied = 0;

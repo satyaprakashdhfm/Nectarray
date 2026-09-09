@@ -5,7 +5,6 @@ import {
   cohorts as cohortsTable,
   enrolmentCodes,
   enrolments,
-  practiceAttempts,
   practiceProgress,
   practiceQuestions,
   users,
@@ -85,7 +84,7 @@ const day = (value: string | Date | null | undefined) =>
  * and they were spread across three pages and the database.
  */
 export default async function AdminStudentsPage() {
-  const [people, enrolmentRows, cohorts, codes, questions, progress, attempts] =
+  const [people, enrolmentRows, cohorts, codes, questions, progress] =
     await Promise.all([
       db.select().from(users).orderBy(desc(users.createdAt)),
       db.select().from(enrolments).orderBy(desc(enrolments.createdAt)),
@@ -112,10 +111,6 @@ export default async function AdminStudentsPage() {
           question_id: practiceProgress.questionId,
         })
         .from(practiceProgress),
-      db
-        .select({ user_id: practiceAttempts.userId })
-        .from(practiceAttempts)
-        .where(eq(practiceAttempts.status, "pending")),
     ]);
 
   /*
@@ -165,11 +160,6 @@ export default async function AdminStudentsPage() {
     if (track === "sql") entry.sql += 1;
     else entry.python += 1;
     solvedBy.set(row.user_id, entry);
-  }
-
-  const pendingBy = new Map<string, number>();
-  for (const row of attempts ?? []) {
-    pendingBy.set(row.user_id, (pendingBy.get(row.user_id) ?? 0) + 1);
   }
 
   const enrolled = rows.filter((r) =>
@@ -243,7 +233,6 @@ export default async function AdminStudentsPage() {
                   ) || "—";
                 const code = codeFor.get(row.id);
                 const solved = solvedBy.get(row.id) ?? { sql: 0, python: 0 };
-                const pending = pendingBy.get(row.id) ?? 0;
 
                 return (
                   <tr
@@ -297,11 +286,6 @@ export default async function AdminStudentsPage() {
                         done={solved.python}
                         total={totals.python}
                       />
-                      {pending > 0 && (
-                        <span className="bg-amber-wash text-amber-deep mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold">
-                          {pending} awaiting check
-                        </span>
-                      )}
                     </td>
 
                     <td className="px-4 py-4">
