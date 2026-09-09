@@ -90,8 +90,18 @@ export default async function LessonPage({
     <article className="min-w-0 pb-16">
       <LessonToc entries={toc} />
 
-      <header className="border-line border-b pb-8">
-        <h1 className="display text-ink text-[2rem] sm:text-[2.5rem]">
+      {/*
+       * The tint lives here rather than behind the whole article. A wash
+       * under two thousand words of prose is a wash you stop seeing by the
+       * second paragraph, and it costs contrast the whole way down; on the
+       * title it does the one job colour is good for, which is telling you
+       * where the piece begins.
+       */}
+      <header className="border-brand/15 from-brand-wash/70 rounded-2xl border bg-gradient-to-br to-transparent p-7 sm:p-9">
+        <p className="text-brand-deep text-[0.75rem] font-semibold tracking-[0.14em] uppercase">
+          {lesson.dayLabel}
+        </p>
+        <h1 className="display text-ink mt-3 text-[2rem] sm:text-[2.5rem]">
           {lesson.title}
         </h1>
         {lesson.summary && <p className="lede mt-4">{lesson.summary}</p>}
@@ -123,7 +133,7 @@ export default async function LessonPage({
                 aria-hidden
               />
               <span className="min-w-0">
-                <span className="text-ink-faint block text-[0.75rem]">
+                <span className="text-brand-deep block text-[0.75rem] font-semibold">
                   Previous
                 </span>
                 <span className="text-ink block truncate text-[0.9375rem] font-semibold">
@@ -141,7 +151,7 @@ export default async function LessonPage({
               className="card card-hover group flex items-center gap-3 p-4 text-right sm:max-w-[48%]"
             >
               <span className="min-w-0 flex-1">
-                <span className="text-ink-faint block text-[0.75rem]">
+                <span className="text-brand-deep block text-[0.75rem] font-semibold">
                   Next
                 </span>
                 <span className="text-ink block truncate text-[0.9375rem] font-semibold">

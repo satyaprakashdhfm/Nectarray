@@ -617,11 +617,21 @@ label:has(input[type="checkbox"]) {
   scroll-margin-top: 140px;
 }
 
+/*
+ * Colour carries the top level of the hierarchy, and only the top level.
+ *
+ * Every heading was the same ink before, so which level you were at came
+ * down to a few points of size — and h3 at 1.375rem against h2 at 1.625rem
+ * is not a difference you notice while reading. The section heading is brand
+ * blue and everything under it stays ink, so one glance down the page shows
+ * where the sections begin without the notes turning into a colour chart.
+ */
 .notes h2 {
   margin-top: 3.5rem;
   padding-top: 2.5rem;
   border-top: 1px solid var(--color-line);
   font-size: 1.625rem;
+  color: var(--color-brand-deep);
 }
 
 @media (min-width: 640px) {
@@ -660,13 +670,21 @@ label:has(input[type="checkbox"]) {
   scroll-margin-top: 140px;
 }
 
+/*
+ * 17px, not 15px.
+ *
+ * These are read for an hour at a stretch, often on a laptop at arm's
+ * length, by somebody who is also running the code beside them. The old size
+ * was a documentation size — right for something you scan for one answer,
+ * tiring for something you work through end to end.
+ */
 .notes p,
 .notes ul,
 .notes ol {
-  margin-top: 1rem;
+  margin-top: 1.15rem;
   max-width: var(--measure);
-  font-size: 0.9375rem;
-  line-height: 1.8;
+  font-size: 1.0625rem;
+  line-height: 1.85;
   color: var(--color-ink-soft);
 }
 
@@ -741,6 +759,104 @@ label:has(input[type="checkbox"]) {
 .notes hr {
   margin-top: 3rem;
   border-color: var(--color-line);
+}
+
+/* --------------------------------------------------------------------------
+   Callouts
+
+   Written as GitHub-style alerts — `> [!TIP]` and friends — so a callout is
+   still a blockquote in the source and degrades to one anywhere else. The
+   colour says which kind at a glance and nothing else has to be read: green
+   is advice worth taking, blue is context, teal is a worked example, amber
+   is the thing that will bite.
+
+   Aimed at the same measure as prose. A callout that ran the full width of a
+   desktop would be a banner, and a banner is the one thing on a page nobody
+   reads.
+-------------------------------------------------------------------------- */
+
+.notes .callout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.25rem 0.875rem;
+  margin-top: 1.75rem;
+  max-width: var(--measure);
+  padding: 1.125rem 1.25rem;
+  border: 1px solid;
+  border-left-width: 3px;
+  border-radius: 0.75rem;
+}
+
+.notes .callout-icon {
+  grid-row: 1 / span 2;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.2rem;
+}
+
+.notes .callout-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The body inherits the callout's measure, so it does not cap itself again
+   inside a box that is already narrow. */
+.notes .callout > div > :where(p, ul, ol) {
+  margin-top: 0.4rem;
+  max-width: none;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--color-ink-soft);
+}
+
+.notes .callout > div > :first-child {
+  margin-top: 0.15rem;
+}
+
+.notes .callout-tip {
+  border-color: color-mix(in srgb, var(--color-leaf-deep) 35%, transparent);
+  background-color: color-mix(in srgb, var(--color-leaf-wash) 55%, transparent);
+}
+.notes .callout-tip .callout-icon,
+.notes .callout-tip .callout-label {
+  color: var(--color-leaf-deep);
+}
+
+.notes .callout-note {
+  border-color: color-mix(in srgb, var(--color-brand) 35%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-brand-wash) 55%,
+    transparent
+  );
+}
+.notes .callout-note .callout-icon,
+.notes .callout-note .callout-label {
+  color: var(--color-brand-deep);
+}
+
+.notes .callout-example {
+  border-color: color-mix(in srgb, var(--color-teal-deep) 35%, transparent);
+  background-color: color-mix(in srgb, var(--color-teal-wash) 55%, transparent);
+}
+.notes .callout-example .callout-icon,
+.notes .callout-example .callout-label {
+  color: var(--color-teal-deep);
+}
+
+.notes .callout-warning {
+  border-color: color-mix(in srgb, var(--color-amber-deep) 35%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-amber-wash) 55%,
+    transparent
+  );
+}
+.notes .callout-warning .callout-icon,
+.notes .callout-warning .callout-label {
+  color: var(--color-amber-deep);
 }
 
 /* Wide result tables scroll inside themselves, never pushing the page
@@ -906,23 +1022,42 @@ label:has(input[type="checkbox"]) {
   }
 }
 
+/*
+ * Bordered, because taking the block is the most common thing done with one.
+ *
+ * It was a low-contrast label with no edge, which on a dark bar reads as a
+ * caption rather than a control — the students who needed it most were
+ * selecting twenty lines by hand instead. The confirmation turns green: at
+ * this size a tick alone is easy to miss, and "did that copy?" is the only
+ * question the button has to answer.
+ */
 .code-copy {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
+  padding: 0.3rem 0.625rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.5rem;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.72);
   transition:
     color 0.15s ease,
+    border-color 0.15s ease,
     background-color 0.15s ease;
 }
 
 .code-copy:hover {
-  color: rgba(255, 255, 255, 0.92);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.32);
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.code-copy[data-done="true"],
+.code-copy[data-done="true"]:hover {
+  color: var(--color-leaf);
+  border-color: color-mix(in srgb, var(--color-leaf) 45%, transparent);
+  background-color: color-mix(in srgb, var(--color-leaf) 14%, transparent);
 }
 
 .code-copy svg {

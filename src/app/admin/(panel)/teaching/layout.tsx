@@ -75,7 +75,12 @@ export default async function TeachingLayout({
   return (
     <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
       <Suspense fallback={<div />}>
-        <NotesRail modules={modules} basePath="/admin/teaching" stickyTop={88} />
+        <NotesRail
+          modules={modules}
+          basePath="/admin/teaching"
+          stickyTop={88}
+          progress={false}
+        />
       </Suspense>
       <div className="min-w-0">{children}</div>
     </div>

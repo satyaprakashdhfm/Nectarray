@@ -73,7 +73,13 @@ function CopyButton({
   };
 
   return (
-    <button type="button" onClick={copy} className="code-copy">
+    <button
+      type="button"
+      onClick={copy}
+      data-done={done}
+      aria-label={done ? "Copied" : "Copy this block"}
+      className="code-copy"
+    >
       <svg viewBox="0 0 24 24" aria-hidden="true">
         {done ? (
           <path d="M20 6 9 17l-5-5" />

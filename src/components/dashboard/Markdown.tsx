@@ -1,9 +1,88 @@
-import type { ReactElement, ReactNode } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import {
+  BookOpen,
+  Info,
+  Lightbulb,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
 import { CodeBlock } from "@/components/dashboard/CodeBlock";
 import { remarkCodeTabs } from "@/lib/notes-code-tabs";
 import { idCounter } from "@/lib/toc";
+
+/**
+ * The callout kinds, written as GitHub-style alerts.
+ *
+ *     > [!TIP]
+ *     > Name the variable after what it holds, not what type it is.
+ *
+ * A callout is an ordinary blockquote in the source, so a lesson stays
+ * readable as plain markdown and anything that does not know this convention
+ * still renders the text.
+ */
+const CALLOUTS: Record<
+  string,
+  { label: string; variant: string; icon: LucideIcon }
+> = {
+  TIP: { label: "Tip", variant: "tip", icon: Lightbulb },
+  NOTE: { label: "Note", variant: "note", icon: Info },
+  IMPORTANT: { label: "Important", variant: "note", icon: Info },
+  EXAMPLE: { label: "Example", variant: "example", icon: BookOpen },
+  WARNING: { label: "Warning", variant: "warning", icon: TriangleAlert },
+  CAUTION: { label: "Caution", variant: "warning", icon: TriangleAlert },
+};
+
+const MARKER = /^\s*\[!(\w+)\]\s*\n?/;
+
+/**
+ * Removes the `[!TIP]` marker from the front of a callout's body.
+ *
+ * The marker is text like any other by the time react-markdown has parsed
+ * it, and it usually arrives as its own string followed by the line break
+ * that ended it — so both have to go, or the callout opens on a blank line.
+ */
+function stripMarker(node: ReactNode): ReactNode {
+  if (typeof node === "string") return node.replace(MARKER, "");
+
+  if (Array.isArray(node)) {
+    const out = [...node];
+    let done = false;
+    while (out.length > 0) {
+      const head = out[0];
+      if (!done && typeof head === "string") {
+        const rest = head.replace(MARKER, "");
+        done = true;
+        if (rest.trim() === "") {
+          out.shift();
+          continue;
+        }
+        out[0] = rest;
+        break;
+      }
+      // The soft break that ended the marker's own line.
+      if (done && isValidElement(head) && head.type === "br") {
+        out.shift();
+        continue;
+      }
+      break;
+    }
+    return out;
+  }
+
+  if (isValidElement(node)) {
+    const element = node as ReactElement<{ children?: ReactNode }>;
+    return cloneElement(element, {}, stripMarker(element.props.children));
+  }
+
+  return node;
+}
 
 /** Flattens children back to plain text, for slugs and for fenced code. */
 function toText(node: ReactNode): string {
@@ -69,6 +148,25 @@ export function Markdown({ children }: { children: string }) {
               <table>{children}</table>
             </div>
           ),
+
+          blockquote: ({ children }) => {
+            const marker = MARKER.exec(toText(children));
+            const kind = marker
+              ? CALLOUTS[marker[1].toUpperCase()]
+              : undefined;
+
+            // An ordinary quotation, which is still a blockquote.
+            if (!kind) return <blockquote>{children}</blockquote>;
+
+            const Icon = kind.icon;
+            return (
+              <div className={`callout callout-${kind.variant}`}>
+                <Icon className="callout-icon" aria-hidden />
+                <p className="callout-label">{kind.label}</p>
+                <div>{stripMarker(children)}</div>
+              </div>
+            );
+          },
 
           /*
            * The fence is taken apart here rather than in `code` because the

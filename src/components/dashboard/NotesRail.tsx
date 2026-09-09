@@ -43,12 +43,15 @@ export function NotesRail({
   modules,
   basePath = "/dashboard/notes",
   stickyTop = 125,
+  progress = true,
 }: {
   modules: RailModule[];
   /** Where a lesson link points — the admin's read-only teaching view reuses this same rail. */
   basePath?: string;
   /** Distance from the top of the viewport to stick under — the dashboard has a second nav row below its header, the admin panel doesn't. */
   stickyTop?: number;
+  /** Off for the teaching view, where every lesson is open and a full bar says nothing. */
+  progress?: boolean;
 }) {
   const pathname = usePathname();
   const params = useSearchParams();
@@ -68,6 +71,10 @@ export function NotesRail({
         )
       : modules.find((module) => module.slug === params.get("module"))) ??
     modules[0];
+
+  const openCount = active
+    ? active.lessons.filter((lesson) => !lesson.locked).length
+    : 0;
 
   return (
     <div
@@ -109,6 +116,35 @@ export function NotesRail({
       {active && (
         <>
           <p className="eyebrow mt-6 mb-3">{active.title}</p>
+
+          {/*
+           * How much of the course has opened, not how much has been read —
+           * nothing here tracks reading, and a bar that claimed to would be
+           * lying. It moves when the teacher unlocks the next topic, which
+           * is the thing a student is actually waiting on.
+           */}
+          {progress && (
+            <div className="mb-4">
+              <div
+                className="bg-mist h-1.5 overflow-hidden rounded-full"
+                role="progressbar"
+                aria-valuenow={openCount}
+                aria-valuemin={0}
+                aria-valuemax={active.lessons.length}
+                aria-label={`${openCount} of ${active.lessons.length} topics unlocked`}
+              >
+                <div
+                  className="bg-leaf-deep h-full rounded-full transition-[width] duration-500"
+                  style={{
+                    width: `${active.lessons.length === 0 ? 0 : (openCount / active.lessons.length) * 100}%`,
+                  }}
+                />
+              </div>
+              <p className="text-ink-faint mt-2 text-[0.75rem]">
+                {openCount} of {active.lessons.length} topics unlocked
+              </p>
+            </div>
+          )}
           <ul className="border-line-soft space-y-0.5 border-l">
             {active.lessons.map((lesson) => {
               const current = lesson.id === lessonId;
