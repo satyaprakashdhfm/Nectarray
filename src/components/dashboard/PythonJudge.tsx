@@ -18,6 +18,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
+import { CodeEditor } from "@/components/dashboard/CodeEditor";
 import { CopyButton } from "@/components/dashboard/CopyButton";
 import {
   countdown,
@@ -362,13 +363,10 @@ export function PythonJudge({
             style={{ height: editorHeight }}
             className="bg-night flex shrink-0 flex-col"
           >
-            <label className="sr-only" htmlFor="py-editor">
-              Your Python solution
-            </label>
             {/*
               A bar over the editor, mostly for the copy button. Taking your
               own answer out to paste somewhere is the thing students ask for
-              most; selecting it out of a textarea with a trackpad is not.
+              most; selecting it out of an editor with a trackpad is not.
             */}
             <div className="border-night-line flex shrink-0 items-center justify-between border-b px-3 py-1.5">
               <span className="text-[0.6875rem] font-semibold text-white/40">
@@ -379,28 +377,12 @@ export function PythonJudge({
                 className="text-white/50 hover:bg-white/10 hover:text-white"
               />
             </div>
-            <textarea
-              id="py-editor"
+            <CodeEditor
+              language="python"
               value={code}
-              onChange={(event) => setEdited(event.target.value)}
-              onKeyDown={(event) => {
-                if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-                  event.preventDefault();
-                  void judge();
-                }
-                // A code editor that moves focus on Tab is not a code editor.
-                if (event.key === "Tab") {
-                  event.preventDefault();
-                  const target = event.currentTarget;
-                  const { selectionStart: from, selectionEnd: to } = target;
-                  setEdited(`${code.slice(0, from)}    ${code.slice(to)}`);
-                  requestAnimationFrame(() => {
-                    target.selectionStart = target.selectionEnd = from + 4;
-                  });
-                }
-              }}
-              spellCheck={false}
-              className="h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-[0.875rem] leading-[1.7] text-white/90 focus:outline-none"
+              onChange={setEdited}
+              onRun={() => void judge()}
+              placeholder={"def solve(...):\n    ...\n\nCtrl/⌘ + Enter to run."}
             />
           </div>
 
@@ -625,7 +607,7 @@ function ProblemList({
               className={cn(
                 "mt-px grid size-[1.125rem] shrink-0 place-items-center rounded-full font-mono text-[0.625rem]",
                 solved.includes(question.id)
-                  ? "bg-leaf-deep text-white"
+                  ? "bg-leaf-deep text-cta-fg"
                   : "text-ink-faint border-line border",
               )}
             >

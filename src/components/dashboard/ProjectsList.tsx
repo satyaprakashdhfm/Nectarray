@@ -94,7 +94,7 @@ export async function ProjectsList({ userId }: { userId: string | null }) {
                   className={cn(
                     "grid size-10 shrink-0 place-items-center rounded-xl font-mono text-[0.875rem] font-semibold",
                     state?.status === "passed"
-                      ? "bg-leaf-deep text-white"
+                      ? "bg-leaf-deep text-cta-fg"
                       : "bg-brand-wash text-brand-deep",
                   )}
                 >

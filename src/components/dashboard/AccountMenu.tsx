@@ -102,7 +102,7 @@ export function AccountMenu({ profile }: { profile: Profile }) {
         aria-haspopup="dialog"
         className="border-night-line inline-flex items-center gap-2 rounded-full border py-1.5 pr-2.5 pl-1.5 text-[0.875rem] text-white/70 transition-colors hover:border-white/30 hover:text-white"
       >
-        <span className="bg-brand-deep grid size-6 place-items-center rounded-full text-white">
+        <span className="bg-brand-deep text-cta-fg grid size-6 place-items-center rounded-full">
           <UserRound className="size-3.5" strokeWidth={2.25} aria-hidden />
         </span>
         <span className="hidden max-w-[8rem] truncate sm:inline">{label}</span>
