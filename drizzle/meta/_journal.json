@@ -15,6 +15,13 @@
       "when": 1788925206111,
       "tag": "0001_brown_madame_web",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788928361480,
+      "tag": "0002_overrated_hiroim",
+      "breakpoints": true
     }
   ]
 }

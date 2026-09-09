@@ -17,6 +17,7 @@
  * it skips silently, and that is the signal the migration is finished.
  */
 
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
@@ -204,6 +205,110 @@ async function copyContent() {
   }
 }
 
+/**
+ * Copies the lesson text in content/lessons/ into the lessons table.
+ *
+ * The notes are written as markdown in the repository and this table is a
+ * copy of them — which is what the original seeding migration said it was
+ * doing, before the text drifted into being editable in two places at once.
+ *
+ * The admin panel can still edit a lesson, and that edit is not thrown away.
+ * Every sync records the hash of what it wrote; on the next deploy a body
+ * that still hashes to it has not been touched by anybody and may be
+ * replaced, and a body that does not is somebody's edit, so the file is
+ * skipped and the deploy log says which. The way to take a lesson back under
+ * the repository's control is to copy the panel's version into the file.
+ */
+async function syncLessons() {
+  const dir = path.join("content", "lessons");
+  const indexFile = path.join(dir, "index.json");
+  if (!fs.existsSync(indexFile)) {
+    console.log("[migrate] lessons: no content/lessons/index.json, skipping");
+    return;
+  }
+
+  const entries = JSON.parse(fs.readFileSync(indexFile, "utf8"));
+  let written = 0;
+  let kept = 0;
+  let missing = 0;
+
+  for (const entry of entries) {
+    const file = path.join(dir, entry.file);
+    if (!fs.existsSync(file)) {
+      console.error(`[migrate] lessons: ${entry.file} is listed but absent`);
+      missing += 1;
+      continue;
+    }
+
+    const body = fs.readFileSync(file, "utf8");
+    const hash = createHash("sha256").update(body).digest("hex");
+
+    /*
+     * Matched on module and position rather than on title, so that renaming a
+     * lesson in the index updates the row instead of silently writing
+     * nothing. The insert covers a lesson added to the repo that the database
+     * has never seen.
+     */
+    const [row] = await sql`
+      select id, body_md, source_hash
+        from lessons
+       where position = ${entry.position}
+         and module_id = (select id from modules where slug = ${entry.module})
+       limit 1
+    `;
+
+    if (!row) {
+      await sql`
+        insert into lessons
+          (module_id, day_label, title, summary, position, is_published,
+           body_md, source_hash)
+        select id, ${entry.day_label}, ${entry.title}, ${entry.summary},
+               ${entry.position}, ${entry.published}, ${body}, ${hash}
+          from modules where slug = ${entry.module}
+      `;
+      written += 1;
+      continue;
+    }
+
+    if (row.source_hash === hash) continue; // Already in step.
+
+    const stored = createHash("sha256")
+      .update(row.body_md ?? "")
+      .digest("hex");
+
+    /*
+     * A row that has never been synced has no hash to compare against. Its
+     * body came from the original seeding migration, which is the same text
+     * these files were extracted from — so adopting it is right, and the
+     * first sync is what puts every lesson under this scheme.
+     */
+    if (row.source_hash !== null && row.source_hash !== stored) {
+      console.log(
+        `[migrate] lessons: ${entry.file} skipped — edited in the panel`,
+      );
+      kept += 1;
+      continue;
+    }
+
+    await sql`
+      update lessons
+         set day_label = ${entry.day_label},
+             title = ${entry.title},
+             summary = ${entry.summary},
+             body_md = ${body},
+             source_hash = ${hash},
+             updated_at = now()
+       where id = ${row.id}
+    `;
+    written += 1;
+  }
+
+  console.log(
+    `[migrate] lessons: ${written} written, ${kept} left to the panel` +
+      (missing ? `, ${missing} missing` : ""),
+  );
+}
+
 async function report() {
   const [counts] = await sql`
     select (select count(*) from modules)            as modules,
@@ -229,6 +334,7 @@ async function report() {
 const ok = await applySchema();
 if (ok) {
   await copyContent();
+  await syncLessons();
   await report();
 }
 await sql.end({ timeout: 5 });
