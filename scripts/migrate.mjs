@@ -277,14 +277,30 @@ async function syncLessons() {
       .digest("hex");
 
     /*
-     * A row that has never been synced has no hash to compare against. Its
-     * body came from the original seeding migration, which is the same text
-     * these files were extracted from — so adopting it is right, and the
-     * first sync is what puts every lesson under this scheme.
+     * A row that has never been synced has no hash to compare against, and
+     * the safe reading of that is the pessimistic one.
+     *
+     * These files were extracted from the migration that seeded the table, so
+     * for a lesson nobody has touched the two are identical and adopting it
+     * changes nothing — the hash is recorded and it comes under this scheme
+     * from then on. But a lesson that was edited in the panel before any of
+     * this existed looks exactly the same from here: no hash, and a body that
+     * differs. Overwriting that on the strength of an assumption would be
+     * destroying somebody's work to tidy up bookkeeping.
+     *
+     * So an unsynced lesson is only adopted when it already matches, and
+     * `repo_owned` in the index is how a file says it is meant to differ —
+     * set it on a lesson you have deliberately rewritten here.
      */
-    if (row.source_hash !== null && row.source_hash !== stored) {
+    const first = row.source_hash === null;
+    const edited = first ? stored !== hash : row.source_hash !== stored;
+
+    if (edited && !entry.repo_owned) {
       console.log(
-        `[migrate] lessons: ${entry.file} skipped — edited in the panel`,
+        `[migrate] lessons: ${entry.file} skipped — ` +
+          (first
+            ? "differs from the seeded text; set repo_owned to publish it"
+            : "edited in the panel"),
       );
       kept += 1;
       continue;

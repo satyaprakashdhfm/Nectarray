@@ -4,3 +4,7 @@ out
 public
 shots
 package-lock.json
+
+# Course notes. These are prose and hand-aligned markdown tables, written to
+# be read in a diff by whoever teaches from them — Prettier reflows both.
+content

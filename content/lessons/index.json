@@ -6,7 +6,8 @@
     "title": "Programming Fundamentals",
     "summary": "Languages, compilation vs interpretation, Python architecture, installation and IDEs.",
     "published": true,
-    "file": "python/01-programming-fundamentals.md"
+    "file": "python/01-programming-fundamentals.md",
+    "repo_owned": true
   },
   {
     "module": "python",
