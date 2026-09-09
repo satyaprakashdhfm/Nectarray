@@ -111,17 +111,13 @@ export default async function AdminUnlockingPage({
 
       {batches.length > 1 && (
         <nav aria-label="Batches" className="mt-7">
-          <ul className="border-line bg-surface inline-flex gap-1 rounded-full border p-1">
+          <ul className="tab-bar">
             {batches.map((row) => (
               <li key={row.id}>
                 <Link
                   href={`/admin/unlocking?batch=${row.id}`}
                   aria-current={row.id === current.id ? "page" : undefined}
-                  className={
-                    row.id === current.id
-                      ? "bg-ink text-cta-fg inline-flex rounded-full px-4 py-2 text-[0.875rem] font-semibold"
-                      : "text-ink-soft hover:bg-mist hover:text-ink inline-flex rounded-full px-4 py-2 text-[0.875rem] font-medium transition-colors"
-                  }
+                  className="tab"
                 >
                   {row.name}
                 </Link>

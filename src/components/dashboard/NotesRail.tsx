@@ -83,11 +83,7 @@ export function NotesRail({
     >
       {/* Course switch */}
       {modules.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Courses"
-          className="border-line bg-mist flex gap-1 rounded-xl border p-1"
-        >
+        <div role="tablist" aria-label="Courses" className="tab-bar w-full">
           {modules.map((module) => {
             const current = module.slug === active?.slug;
             return (
@@ -97,16 +93,11 @@ export function NotesRail({
                 prefetch={false}
                 role="tab"
                 aria-selected={current}
-                className={cn(
-                  // The unselected tabs used to differ from the selected one
-                  // by a hairline shadow, which on a light panel is no
-                  // difference at all: you could not tell which course you
-                  // were in without reading the lesson list.
-                  "flex-1 rounded-lg px-2 py-2 text-center text-[0.8125rem] font-semibold transition-colors",
-                  current
-                    ? "bg-ink text-cta-fg shadow-sm"
-                    : "text-ink-faint hover:bg-surface hover:text-ink",
-                )}
+                // aria-current drives the selected styling, and role="tab"
+                // wants aria-selected for the screen reader — both, rather
+                // than one doing a job it was not meant for.
+                aria-current={current ? "page" : undefined}
+                className="tab flex-1 justify-center px-2 text-[0.8125rem]"
               >
                 {module.short}
               </Link>
@@ -144,10 +135,10 @@ export function NotesRail({
                       prefetch={false}
                       aria-current={current ? "page" : undefined}
                       className={cn(
-                        "-ml-px block border-l-2 py-2 pl-4 text-[0.875rem] leading-snug transition-colors",
+                        "-ml-px block rounded-r-md border-l-2 py-2 pl-4 text-[0.875rem] leading-snug transition-colors duration-200",
                         current
-                          ? "border-brand text-ink bg-brand-wash/40 rounded-r-md font-semibold"
-                          : "text-ink-soft hover:border-line hover:text-ink border-transparent",
+                          ? "border-brand text-ink bg-brand-wash/40 font-semibold"
+                          : "text-ink-soft hover:border-brand/40 hover:text-ink hover:bg-brand-wash/30 border-transparent",
                       )}
                     >
                       {lesson.title}

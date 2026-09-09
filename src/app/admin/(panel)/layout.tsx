@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/layout/Logo";
+import { AdminTabs } from "@/components/admin/AdminTabs";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
 import {
   ThemeCleanup,
@@ -26,15 +27,6 @@ export const metadata: Metadata = {
   title: "Admin — NectArray Academy",
   robots: { index: false, follow: false, nocache: true },
 };
-
-const TABS = [
-  { href: "/admin", label: "Students" },
-  { href: "/admin/cohort", label: "Class" },
-  { href: "/admin/lessons", label: "Student Notes" },
-  { href: "/admin/unlocking", label: "Unlocking" },
-  { href: "/admin/teaching", label: "Teacher Notes" },
-  { href: "/admin/enquiries", label: "Enquiries" },
-];
 
 /**
  * Two gates, and both must pass.
@@ -86,20 +78,7 @@ export default async function AdminPanelLayout({
       </header>
 
       <div className="shell py-8 lg:py-10">
-        <nav aria-label="Admin" className="mb-8">
-          <ul className="border-line bg-surface inline-flex gap-1 rounded-full border p-1">
-            {TABS.map((tab) => (
-              <li key={tab.href}>
-                <Link
-                  href={tab.href}
-                  className="text-ink-soft hover:bg-mist hover:text-ink inline-flex rounded-full px-4 py-2 text-[0.875rem] font-medium transition-colors"
-                >
-                  {tab.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <AdminTabs />
         <main id="main">{children}</main>
       </div>
     </div>

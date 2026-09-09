@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, LayoutDashboard, LifeBuoy, PenSquare } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 /*
  * Projects used to have its own tab here. It is a track inside Assignments
@@ -35,8 +34,8 @@ export function DashboardNav() {
       aria-label="Sections"
       className="border-line bg-canvas sticky top-[72px] z-40 border-b"
     >
-      <div className="shell">
-        <ul className="-mb-px flex gap-1 overflow-x-auto">
+      <div className="shell py-2.5">
+        <ul className="tab-bar">
           {TABS.map((tab) => {
             // Only the index tab needs an exact match; the rest own a subtree.
             // /dashboard/projects is folded into Assignments but still a
@@ -54,12 +53,7 @@ export function DashboardNav() {
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "inline-flex items-center gap-2.5 border-b-2 px-4 py-3.5 text-[0.9375rem] font-medium whitespace-nowrap transition-colors",
-                    active
-                      ? "border-brand text-ink"
-                      : "text-ink-soft hover:text-ink border-transparent",
-                  )}
+                  className="tab"
                 >
                   <tab.icon
                     className="size-[1.0625rem]"

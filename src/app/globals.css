@@ -66,6 +66,14 @@
   --color-brand: #1fa5de; /* the mark's circuit blue */
   --color-brand-deep: #147fae;
   --color-brand-wash: #e9f6fd;
+  /*
+   * The fill behind --color-cta-fg text, which is white here and near-black
+   * in dark mode. The brand blue itself carries white at only 2.8:1, so a
+   * solid brand pill with a label on it has to step down to this: 6.2:1
+   * here, 9.4:1 dark. It flips with the theme exactly as --color-ink does,
+   * which is what lets one rule serve both.
+   */
+  --color-brand-solid: #10688f;
 
   --color-leaf: #7ed957; /* the mark's green */
   --color-leaf-deep: #4c9c2e;
@@ -144,6 +152,8 @@
   /* The -deep tones were picked for contrast against white and go muddy on
      a dark ground; the display tones are the readable ones here. */
   --color-brand-deep: #4cc0f0;
+  /* Light fill, dark label — the mirror of the light-mode pairing. */
+  --color-brand-solid: #4cc0f0;
   --color-leaf-deep: #7ed957;
   --color-amber-deep: #f5a44a;
   --color-teal-deep: #35cfc7;
@@ -410,6 +420,79 @@ body {
     box-shadow:
       0 1px 2px rgba(14, 27, 38, 0.04),
       0 20px 44px -20px rgba(14, 27, 38, 0.22);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Tabs
+
+   One pill strip, used by every tab row in the app: the dashboard sections,
+   the admin panel, the course switch in the notes rail and the batch picker.
+   They were four different shapes before — an underline, an unlit pill row,
+   and two that painted the selected tab in ink — so "which tab am I on"
+   looked different on every screen, and on the admin panel it had no answer
+   at all.
+
+   Hover and selected are deliberately different *kinds* of change rather
+   than two strengths of one: hover is a wash the colour of the brand, and
+   selected is the brand itself carrying its label. Neither can be mistaken
+   for the other at a glance, which is what went wrong when both were greys.
+-------------------------------------------------------------------------- */
+
+@utility tab-bar {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-line);
+  border-radius: 9999px;
+  background-color: var(--color-surface);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--color-ink-soft);
+  transition:
+    background-color 0.2s var(--ease-out-quint),
+    color 0.2s var(--ease-out-quint),
+    box-shadow 0.2s var(--ease-out-quint);
+
+  &:hover {
+    background-color: var(--color-brand-wash);
+    color: var(--color-brand-deep);
+  }
+
+  /* Selected. Set after :hover so it wins on a pointer resting over it. */
+  &[aria-current="page"] {
+    background-color: var(--color-brand-solid);
+    color: var(--color-cta-fg);
+    font-weight: 600;
+    box-shadow: 0 6px 16px -10px color-mix(in srgb, var(--color-brand) 70%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+/* The pill's own motion is colour only; the label must not shift under the
+   pointer on a strip the reader is scanning. */
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition: none;
   }
 }
 
