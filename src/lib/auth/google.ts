@@ -25,10 +25,35 @@ export type GoogleIdentity = {
   lastName: string | null;
 };
 
+/**
+ * The credentials, as pasted.
+ *
+ * Whitespace and wrapping quotes get trimmed, because these are copied out of
+ * the Google console and pasted into a Railway variable field, and that path
+ * picks up a trailing newline or a pair of quotes often enough to be worth
+ * handling. Google does not forgive either: a client id with a stray space on
+ * the end is a client id it has never seen, and it answers `invalid_client` —
+ * "The OAuth client was not found" — which reads like the credential was
+ * deleted rather than mistyped.
+ */
+const clean = (value: string | undefined): string =>
+  (value ?? "").trim().replace(/^["']|["']$/g, "");
+
+export const clientId = () => clean(process.env.GOOGLE_CLIENT_ID);
+export const clientSecret = () => clean(process.env.GOOGLE_CLIENT_SECRET);
+
+/**
+ * Whether a Google sign-in has any chance of working.
+ *
+ * The shape check is not pedantry. Every web client id Google issues ends in
+ * `.apps.googleusercontent.com`; anything else in that variable — an API key,
+ * a project number, the client *secret* pasted into the wrong box — cannot
+ * work, and it is kinder to grey the button out than to send somebody to
+ * Google to be told the app does not exist.
+ */
 export function googleConfigured(): boolean {
-  return Boolean(
-    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-  );
+  const id = clientId();
+  return id.endsWith(".apps.googleusercontent.com") && clientSecret() !== "";
 }
 
 /**
@@ -83,7 +108,7 @@ export function authorizeUrl(options: {
   verifier: string;
 }): string {
   const url = new URL(AUTH_URL);
-  url.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID ?? "");
+  url.searchParams.set("client_id", clientId());
   url.searchParams.set("redirect_uri", redirectUri(options.origin));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
@@ -112,8 +137,8 @@ export async function exchange(options: {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID ?? "",
-      client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      client_id: clientId(),
+      client_secret: clientSecret(),
       code: options.code,
       code_verifier: options.verifier,
       grant_type: "authorization_code",
@@ -121,10 +146,28 @@ export async function exchange(options: {
     }),
   });
 
-  if (!response.ok) return null;
+  /*
+   * Say what went wrong, in the deploy log.
+   *
+   * This used to return null and the callback turned that into a one-word
+   * error in a query string, which left the actual cause — a mismatched
+   * redirect URI, a stale secret, a code already spent — only in a response
+   * body nobody kept. Google's error body names it. It carries no credential,
+   * so it is safe to write down.
+   */
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    console.error(
+      `[google] token exchange failed: ${response.status} ${detail.slice(0, 500)}`,
+    );
+    return null;
+  }
 
   const payload = (await response.json()) as { id_token?: string };
-  if (!payload.id_token) return null;
+  if (!payload.id_token) {
+    console.error("[google] token exchange returned no id_token");
+    return null;
+  }
 
   const claims = readIdToken(payload.id_token);
   if (!claims?.email) return null;
