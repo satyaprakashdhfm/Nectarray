@@ -212,7 +212,16 @@ async function report() {
            (select count(*) from practice_questions) as questions,
            (select count(*) from cohorts)            as cohorts,
            (select count(*) from enrolment_codes)    as codes,
-           (select count(*) from users)              as users
+           (select count(*) from users)              as users,
+           /*
+            * The Python workspace matches a question to its tests and its
+            * statement by this column. A null one is a problem the judge
+            * cannot find, so the backfill either worked or every Python
+            * question is broken — worth a number in the log rather than an
+            * assumption.
+            */
+           (select count(*) from practice_questions
+             where track = 'python' and slug is not null) as python_slugs
   `;
   console.log("[migrate] now holds:", JSON.stringify(counts));
 }
