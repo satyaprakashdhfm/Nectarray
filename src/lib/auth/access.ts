@@ -100,14 +100,33 @@ export async function requireEnrolled(): Promise<User> {
 }
 
 /**
+ * Whoever is signed into the admin realm — admin or not.
+ *
+ * A separate cookie from the student one, so the studio account and a
+ * student account can both be live in the same browser at once. It returns
+ * the user without judging them, because /admin/login needs to tell a
+ * stranger ("sign in") from the wrong Google account ("that one is not an
+ * admin"); requireAdmin does the judging.
+ */
+export const adminViewer = cache(async (): Promise<User | null> => {
+  return currentUser("admin");
+});
+
+/**
  * Admin, by the role column — with the environment as a bootstrap.
  *
  * `ADMIN_EMAILS` is how the first admin exists at all, since there is nobody
  * to promote them. It is checked against a verified address, so it grants
  * nothing to somebody who merely types an admin's email into the form.
+ *
+ * Note which session this reads. Being signed in as a student, even as a
+ * student whose address is on the allowlist, is not being signed into the
+ * panel: the admin cookie is set only by a sign-in that went through
+ * /admin/login, and that separation is the whole point of the two realms.
  */
 export async function requireAdmin(): Promise<User> {
-  const user = await requireUser();
+  const user = await adminViewer();
+  if (!user) throw new AccessError(401);
   if (isAdmin(user)) return user;
   throw new AccessError(403);
 }

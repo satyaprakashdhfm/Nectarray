@@ -4,17 +4,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
+/**
+ * Signs out of one realm.
+ *
+ * The panel and the dashboard hold separate sessions, so this has to say
+ * which — signing out of the panel should not also end the student session
+ * being used in the next tab to check what a student sees.
+ */
 export function SignOutButton({
   redirectTo = "/academy",
+  realm = "student",
 }: {
   redirectTo?: string;
+  realm?: "student" | "admin";
 } = {}) {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
   async function signOut() {
     setBusy(true);
-    await fetch("/api/auth/signout", { method: "POST" });
+    await fetch(`/api/auth/signout?realm=${realm}`, { method: "POST" });
     router.push(redirectTo);
     router.refresh();
   }

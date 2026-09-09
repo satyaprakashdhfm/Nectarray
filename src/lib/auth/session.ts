@@ -19,19 +19,39 @@ import { sessions, users, type User } from "@/lib/db/schema";
  * dashboard once a week never signs in twice.
  */
 
-const COOKIE = "na_session";
 /**
- * A second cookie, readable by scripts, holding nothing but the fact that
- * the first one exists.
+ * Two independent sign-ins, in one browser.
+ *
+ * The studio account and a student account are different people as far as
+ * this site is concerned, and whoever is running the course needs to be both
+ * at once — reading the panel in one tab and looking at what a student
+ * actually sees in the next. One cookie name cannot do that: signing into
+ * /admin overwrote the student session and signing in as a student threw you
+ * out of the panel, so the two took turns.
+ *
+ * They are separate cookies now. Nothing else about them differs — both are
+ * rows in the same table, and the admin one confers nothing on its own;
+ * isAdmin still decides. It is which cookie a page reads that keeps the two
+ * from treading on each other.
+ */
+export type Realm = "student" | "admin";
+
+/**
+ * Each realm's pair: the session cookie, and a script-readable hint holding
+ * nothing but the fact that it exists.
  *
  * The marketing pages are static and must stay that way — a server-side
  * session lookup there would turn a cached page into a function call per
  * visitor. The header and the enrol button only need to know which label to
- * show, so they read this. It carries no identity and grants nothing: forging
- * it changes a word on a button and gets no further, because everything that
- * matters is checked against the real cookie on the server.
+ * show, so they read the hint. It carries no identity and grants nothing:
+ * forging it changes a word on a button and gets no further, because
+ * everything that matters is checked against the real cookie on the server.
  */
-const HINT = "na_signed_in";
+const NAMES: Record<Realm, { session: string; hint: string }> = {
+  student: { session: "na_session", hint: "na_signed_in" },
+  admin: { session: "na_admin_session", hint: "na_admin_signed_in" },
+};
+
 const LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 
 const hash = (token: string) =>
@@ -83,6 +103,7 @@ export function attachCookies<T extends NextResponse>(
 export async function startSession(
   userId: string,
   userAgent?: string | null,
+  realm: Realm = "student",
 ): Promise<CookieWrite[]> {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + LIFETIME_MS);
@@ -94,20 +115,29 @@ export async function startSession(
     userAgent: userAgent?.slice(0, 400) ?? null,
   });
 
-  return cookieWrites(token, expiresAt);
+  return cookieWrites(token, expiresAt, realm);
 }
 
 /** The pair: the session itself, and the hint the client scripts can read. */
-function cookieWrites(token: string, expiresAt: Date): CookieWrite[] {
+function cookieWrites(
+  token: string,
+  expiresAt: Date,
+  realm: Realm,
+): CookieWrite[] {
   const shared = {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
     expires: expiresAt,
   };
+  const names = NAMES[realm];
   return [
-    { name: COOKIE, value: token, options: { ...shared, httpOnly: true } },
-    { name: HINT, value: "1", options: { ...shared, httpOnly: false } },
+    {
+      name: names.session,
+      value: token,
+      options: { ...shared, httpOnly: true },
+    },
+    { name: names.hint, value: "1", options: { ...shared, httpOnly: false } },
   ];
 }
 
@@ -117,8 +147,10 @@ function cookieWrites(token: string, expiresAt: Date): CookieWrite[] {
  * One query, joining the session to its owner, because every page needs both
  * and asking twice doubles the round trips on the slowest part of a render.
  */
-export async function currentUser(): Promise<User | null> {
-  const token = (await cookies()).get(COOKIE)?.value;
+export async function currentUser(
+  realm: Realm = "student",
+): Promise<User | null> {
+  const token = (await cookies()).get(NAMES[realm].session)?.value;
   if (!token) return null;
 
   const rows = await db
@@ -140,13 +172,13 @@ export async function currentUser(): Promise<User | null> {
   // to sign in twice, and rewriting on every request would be a write per
   // page view for no benefit.
   if (row.expiresAt.getTime() - Date.now() < LIFETIME_MS / 2) {
-    void extend(token);
+    void extend(token, realm);
   }
 
   return row.user;
 }
 
-async function extend(token: string): Promise<void> {
+async function extend(token: string, realm: Realm): Promise<void> {
   const expiresAt = new Date(Date.now() + LIFETIME_MS);
   await db
     .update(sessions)
@@ -163,7 +195,7 @@ async function extend(token: string): Promise<void> {
    */
   try {
     const jar = await cookies();
-    for (const write of cookieWrites(token, expiresAt)) {
+    for (const write of cookieWrites(token, expiresAt, realm)) {
       jar.set(write.name, write.value, write.options);
     }
   } catch {
@@ -177,12 +209,14 @@ async function extend(token: string): Promise<void> {
  * Returns the cookie writes that clear the browser's copy — an expiry in the
  * past, which is a delete the response can actually carry.
  */
-export async function endSession(): Promise<CookieWrite[]> {
-  const token = (await cookies()).get(COOKIE)?.value;
+export async function endSession(
+  realm: Realm = "student",
+): Promise<CookieWrite[]> {
+  const token = (await cookies()).get(NAMES[realm].session)?.value;
   if (token) {
     await db.delete(sessions).where(eq(sessions.tokenHash, hash(token)));
   }
-  return cookieWrites("", new Date(0));
+  return cookieWrites("", new Date(0), realm);
 }
 
 /**

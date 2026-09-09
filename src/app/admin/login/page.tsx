@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminLogin } from "@/components/admin/AdminLogin";
 import { Logo } from "@/components/layout/Logo";
-import { currentUser } from "@/lib/auth/session";
-import { isAdmin } from "@/lib/auth/access";
+import { adminViewer, isAdmin } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -28,16 +27,31 @@ export const metadata: Metadata = {
  * would otherwise make the sign-in page unreachable by the only people who
  * need it.
  */
-export default async function AdminLoginPage() {
+const REASONS: Record<string, string> = {
+  state: "That sign-in did not come back the way it left. Please try again.",
+  exchange: "Google would not finish the sign-in. Please try again.",
+  unverified: "Google has not verified that address.",
+  denied: "Sign-in with Google was cancelled.",
+};
+
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   let state: "out" | "wrong-account" = "out";
   let email: string | null = null;
 
-  const user = await currentUser();
+  const { error } = await searchParams;
+
+  const user = await adminViewer();
   if (user) {
     if (isAdmin(user)) redirect("/admin");
-    // Signed in, but not as an admin. The usual cause is a browser still
-    // holding a student session, so they get a sign-out button rather than a
-    // door that silently refuses them.
+    // Signed into the panel, but with an account that is not an admin.
+    // Since the admin cookie is separate from the student one, this can no
+    // longer be a browser that merely holds a student session — it is the
+    // wrong Google account, so the way out is to sign this one out and try
+    // the other.
     state = "wrong-account";
     email = user.email;
   }
@@ -49,7 +63,11 @@ export default async function AdminLoginPage() {
           <Logo markClassName="size-11" wordClassName="text-[1.5rem]" />
         </div>
         <div className="card p-8 text-center sm:p-10">
-          <AdminLogin state={state} email={email} />
+          <AdminLogin
+            state={state}
+            email={email}
+            initialError={error ? (REASONS[error] ?? REASONS.exchange) : ""}
+          />
         </div>
       </div>
     </div>

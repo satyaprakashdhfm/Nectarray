@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * Two jobs, in order: get everyone onto one hostname, then keep signed-out
- * visitors out of the two areas that have doors.
+ * visitors out of the two areas that have doors — each of which has its own
+ * session cookie, so being signed in to one says nothing about the other.
  *
  * ## One hostname
  *
@@ -46,13 +47,19 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const signedIn = Boolean(request.cookies.get("na_session")?.value);
-  if (signedIn) return NextResponse.next();
-
   const { pathname } = request.nextUrl;
 
-  // /admin/login is the admin door, so it has to stay reachable while out.
+  /*
+   * Each area checks its own cookie. Holding a student session is not being
+   * signed into the panel and vice versa — that is what lets both be true at
+   * the same time in one browser.
+   *
+   * /admin/login is the admin door, so it has to stay reachable while out.
+   */
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
+    if (request.cookies.get("na_admin_session")?.value) {
+      return NextResponse.next();
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     url.search = "";
@@ -60,6 +67,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/dashboard")) {
+    if (request.cookies.get("na_session")?.value) return NextResponse.next();
     const url = request.nextUrl.clone();
     url.pathname = "/academy";
     url.searchParams.set("signin", "1");

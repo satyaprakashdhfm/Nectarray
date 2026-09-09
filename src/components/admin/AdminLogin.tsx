@@ -6,22 +6,28 @@ import { Loader2, LogOut, ShieldAlert } from "lucide-react";
 
 /**
  * The admin door. Google only, and deliberately not the student modal —
- * the two areas do not share an entry point.
+ * the two areas do not share an entry point, and since the move to separate
+ * cookies they no longer share a session either. Signing in here does not
+ * disturb a student session in the next tab, which is the point: whoever
+ * runs the course needs to be both people at once.
  *
- * `state` is decided on the server: "out" means nobody is signed in,
- * "wrong-account" means someone is, but not an admin. The second case gets a
- * sign-out button rather than a silent failure, because the usual cause is
- * a browser still holding a student session.
+ * `state` is decided on the server: "out" means nobody is signed into the
+ * panel, "wrong-account" means somebody is but is not an admin — the wrong
+ * Google account — so they get a sign-out button rather than a door that
+ * silently refuses them.
  */
 export function AdminLogin({
   state,
   email,
+  initialError = "",
 }: {
   state: "out" | "wrong-account";
   email?: string | null;
+  /** A message from a redirect — a Google sign-in that came back a failure. */
+  initialError?: string;
 }) {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const router = useRouter();
 
   async function signIn() {
@@ -35,7 +41,7 @@ export function AdminLogin({
        * request itself.
        */
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = "/api/auth/google/start";
+      window.location.href = "/api/auth/google/start?realm=admin";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed.");
       setBusy(false);
@@ -44,7 +50,7 @@ export function AdminLogin({
 
   async function signOut() {
     setBusy(true);
-    await fetch("/api/auth/signout", { method: "POST" });
+    await fetch("/api/auth/signout?realm=admin", { method: "POST" });
     router.refresh();
     setBusy(false);
   }
@@ -59,9 +65,10 @@ export function AdminLogin({
           Not an admin account
         </h1>
         <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
-          You are signed in as{" "}
-          <span className="text-ink font-semibold">{email}</span>. Sign out and
-          use the admin account.
+          The panel is signed in as{" "}
+          <span className="text-ink font-semibold">{email}</span>. Sign out of
+          the panel and use the admin account — any student session in another
+          tab is left alone.
         </p>
         <button
           type="button"
@@ -80,7 +87,8 @@ export function AdminLogin({
     <>
       <h1 className="display text-ink text-[1.5rem]">Admin sign-in</h1>
       <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
-        Restricted to the studio account. Students sign in from the main site.
+        Restricted to the studio account. This is a separate sign-in from the
+        student one, so you can hold both at once.
       </p>
 
       <button

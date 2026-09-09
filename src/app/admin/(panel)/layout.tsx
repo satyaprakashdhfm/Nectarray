@@ -8,8 +8,7 @@ import {
   ThemeScript,
   ThemeToggle,
 } from "@/components/dashboard/Theme";
-import { currentUser } from "@/lib/auth/session";
-import { isAdmin } from "@/lib/auth/access";
+import { adminViewer, isAdmin } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -54,7 +53,7 @@ export default async function AdminPanelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await currentUser();
+  const user = await adminViewer();
   if (!user || !isAdmin(user)) redirect("/admin/login");
 
   return (
@@ -80,7 +79,7 @@ export default async function AdminPanelLayout({
               Main site
             </Link>
             <ThemeToggle />
-            <SignOutButton redirectTo="/admin/login" />
+            <SignOutButton realm="admin" redirectTo="/admin/login" />
           </div>
         </div>
       </header>

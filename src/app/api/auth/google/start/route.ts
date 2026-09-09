@@ -50,8 +50,21 @@ export async function GET(request: Request) {
     request.headers.get("host") ??
     new URL(request.url).host;
 
+  /*
+   * Which sign-in this is. The panel and the dashboard hold separate
+   * sessions, and a single round trip to Google cannot work out on the way
+   * back which one it was for — the callback is the same URL either way — so
+   * it travels in a cookie beside the state.
+   */
+  const realm =
+    new URL(request.url).searchParams.get("realm") === "admin"
+      ? "admin"
+      : "student";
+
   if (asked !== new URL(origin).host) {
-    return NextResponse.redirect(`${origin}/api/auth/google/start`);
+    return NextResponse.redirect(
+      `${origin}/api/auth/google/start?realm=${realm}`,
+    );
   }
 
   const state = randomBytes(16).toString("base64url");
@@ -70,6 +83,7 @@ export async function GET(request: Request) {
   };
   response.cookies.set("na_oauth_state", state, options);
   response.cookies.set("na_oauth_verifier", verifier, options);
+  response.cookies.set("na_oauth_realm", realm, options);
 
   return response;
 }
