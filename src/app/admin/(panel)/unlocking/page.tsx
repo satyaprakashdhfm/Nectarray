@@ -172,7 +172,7 @@ export default async function AdminUnlockingPage({
                       />
                       <button
                         type="submit"
-                        className="border-line bg-surface text-ink hover:border-brand inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[0.8125rem] font-semibold transition-colors"
+                        className="border-line bg-surface text-ink hover:bg-mist hover:border-brand active:bg-line inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[0.8125rem] font-semibold transition-colors duration-200"
                       >
                         {lesson.released ? (
                           <Lock className="size-3.5" aria-hidden />

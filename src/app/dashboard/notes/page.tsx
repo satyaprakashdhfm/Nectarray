@@ -26,10 +26,9 @@ export default async function NotesPage({
   const { module: wanted } = await searchParams;
 
   /*
-   * The first *unlocked* lesson of the chosen course, or of the first course
-   * that has one. Landing on a locked lesson would put every student on the
-   * locked notice the moment their batch is a day behind, so the ones their
-   * batch cannot open are dropped before the first is picked.
+   * The first *unlocked* lesson of the chosen course. Locked ones are dropped
+   * first, so a batch a day behind lands on material it can read rather than
+   * on the locked notice.
    */
   const released = await releasedLessonIds(enrolment?.cohortId);
 
@@ -42,15 +41,26 @@ export default async function NotesPage({
       .orderBy(asc(modules.position), asc(lessons.position))
   ).filter((row) => released.has(row.lessonId));
 
-  const first =
-    rows.find((row) => row.slug === wanted)?.lessonId ?? rows[0]?.lessonId;
+  /*
+   * A named course is answered with that course or with nothing — never with
+   * a different one. This used to fall back to the first unlocked lesson
+   * anywhere, which was invisible until releases existed and then became the
+   * whole behaviour: with only Python unlocked, clicking SQL or Agentic AI
+   * bounced the reader back to Python and left the Python tab lit, so the
+   * tabs looked broken rather than empty.
+   */
+  const inCourse = wanted ? rows.filter((row) => row.slug === wanted) : rows;
+  const first = inCourse[0]?.lessonId;
 
   if (first) redirect(`/dashboard/notes/${first}`);
 
   return (
     <div className="card p-8 text-center">
       <p className="text-ink-soft text-[0.9375rem]">
-        No notes have been unlocked yet. They open as each topic is taught.
+        {wanted
+          ? "Nothing in this course has been unlocked yet."
+          : "No notes have been unlocked yet."}{" "}
+        Topics open as each one is taught.
       </p>
     </div>
   );

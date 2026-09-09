@@ -231,6 +231,25 @@ body {
   color: #fff;
 }
 
+/*
+ * The hand back on anything clickable.
+ *
+ * Tailwind 4 dropped the pointer cursor from its reset — buttons get
+ * `cursor: default` now, the same arrow as dead text, so every button in the
+ * app read as unclickable until you tried it. Restored here rather than with
+ * a class on each button, because the ones most likely to be missed are the
+ * ones nobody remembered to annotate.
+ *
+ * Disabled is exempted: an arrow is the honest cursor for a control that
+ * will not respond.
+ */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+label:has(input[type="checkbox"]) {
+  cursor: pointer;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 3px;
