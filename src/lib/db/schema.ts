@@ -80,26 +80,6 @@ export const sessions = pgTable(
   (table) => [index("sessions_user_idx").on(table.userId)],
 );
 
-/**
- * A six-digit code, in flight.
- *
- * Hashed like a session token, for the same reason. `attempts` is what stops
- * a code being guessed: six digits is a million possibilities, which is a lot
- * for a person and nothing for a script, so the row dies after five tries.
- */
-export const authCodes = pgTable(
-  "auth_codes",
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    email: text().notNull(),
-    codeHash: text("code_hash").notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    attempts: integer().notNull().default(0),
-    createdAt: now(),
-  },
-  (table) => [index("auth_codes_email_idx").on(table.email)],
-);
-
 // ---------------------------------------------------------------------------
 //  The programme
 // ---------------------------------------------------------------------------

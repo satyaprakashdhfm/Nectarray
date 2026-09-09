@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { upsertUser } from "@/lib/auth/codes";
+import { upsertUser } from "@/lib/auth/users";
 import { exchange, siteOrigin } from "@/lib/auth/google";
 import { isAdmin } from "@/lib/auth/access";
 import {
