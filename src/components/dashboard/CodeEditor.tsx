@@ -2,10 +2,23 @@
 
 import { useCallback, useMemo, useState } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
-import { acceptCompletion, startCompletion } from "@codemirror/autocomplete";
+import {
+  acceptCompletion,
+  autocompletion,
+  startCompletion,
+  type Completion,
+  type CompletionContext,
+  type CompletionResult,
+} from "@codemirror/autocomplete";
 import { indentLess, indentMore } from "@codemirror/commands";
 import { python } from "@codemirror/lang-python";
-import { sql, SQLite, type SQLNamespace } from "@codemirror/lang-sql";
+import {
+  keywordCompletionSource,
+  schemaCompletionSource,
+  sql,
+  SQLite,
+  type SQLNamespace,
+} from "@codemirror/lang-sql";
 import {
   HighlightStyle,
   indentUnit,
@@ -157,16 +170,92 @@ const theme = EditorView.theme(
 );
 
 /**
- * The training schema, shaped the way `@codemirror/lang-sql`'s completion
- * source wants it — a table name mapped to its columns — so `SELECT p.` and
- * `FROM pat…` both suggest real things rather than nothing.
+ * The training schema, shaped the way `@codemirror/lang-sql` wants it.
+ *
+ * Every column carries its type and whether it is a key, because that is the
+ * question a student actually has mid-query — "is this a date or a string",
+ * "which one joins to admissions". The table itself gets a `self` completion
+ * so `FROM pat…` offers `patients` with its size rather than a bare word.
  */
 function sqlSchema(): SQLNamespace {
-  const schema: Record<string, string[]> = {};
+  const schema: Record<string, { self: Completion; children: Completion[] }> =
+    {};
   for (const table of PRACTICE_TABLES) {
-    schema[table.name] = table.columns.map((c) => c.name);
+    schema[table.name] = {
+      self: {
+        label: table.name,
+        type: "type",
+        detail: `table · ${table.columns.length} columns`,
+      },
+      children: table.columns.map((column) => columnCompletion(table.name, column)),
+    };
   }
   return schema;
+}
+
+/** One column, described the way the completion panel will show it. */
+function columnCompletion(
+  table: string,
+  column: (typeof PRACTICE_TABLES)[number]["columns"][number],
+): Completion {
+  const key = column.key === "pk" ? " · pk" : column.key === "fk" ? " · fk" : "";
+  return {
+    label: column.name,
+    type: column.key === "pk" ? "constant" : "property",
+    detail: `${column.type}${key}`,
+    info: `${table}.${column.name}`,
+  };
+}
+
+/**
+ * Everything in the training database, offered on a bare word.
+ *
+ * `schemaCompletionSource` only knows what to suggest once the query says
+ * which table it is about — after `FROM`, or behind a `patients.` prefix.
+ * Half of typing a query happens before that: `SELECT fi…` has no table in
+ * scope yet, and answering it with nothing is the difference between an
+ * editor that helps and one that waits. So every column is offered here too,
+ * each labelled with the table it came from, which doubles as a way to learn
+ * the schema without going back to the panel on the left.
+ */
+function practiceColumns(): Completion[] {
+  const out: Completion[] = [];
+  for (const table of PRACTICE_TABLES) {
+    for (const column of table.columns) {
+      const base = columnCompletion(table.name, column);
+      out.push({
+        ...base,
+        // The table belongs in the detail here: patients and doctors both
+        // carry a first_name, and which one you meant is the whole question.
+        detail: `${base.detail} · ${table.name}`,
+        boost: 1,
+      });
+    }
+  }
+  return out;
+}
+
+/** Where a table name belongs and a column does not. */
+const TABLE_POSITION = /\b(from|join|into|update|table)\s+[\w$]*$/i;
+
+/** A word being typed, completed against the columns we ship. */
+function schemaWordSource(context: CompletionContext): CompletionResult | null {
+  const word = context.matchBefore(/[\w$]+/);
+  if (!word || (word.from === word.to && !context.explicit)) return null;
+
+  // After a dot the SQL source knows which table is meant and answers
+  // precisely; every column of every table on top would bury that answer.
+  if (context.matchBefore(/\.[\w$]*/)) return null;
+
+  // Straight after FROM or JOIN the answer is a table, and the SQL source
+  // gives those. Offering columns as well would push the table being asked
+  // for below a list of things that cannot go there.
+  const line = context.state.doc.lineAt(context.pos);
+  if (TABLE_POSITION.test(line.text.slice(0, context.pos - line.from))) {
+    return null;
+  }
+
+  return { from: word.from, options: practiceColumns(), validFor: /^[\w$]*$/ };
 }
 
 export type EditorLanguage = "python" | "sql";
@@ -230,6 +319,21 @@ export function CodeEditor({
       language === "python"
         ? python()
         : sql({ dialect: SQLite, schema: sqlSchema(), upperCaseKeywords: true }),
+      /*
+       * Python keeps the language pack's own sources (builtins, and the
+       * names already in the file). SQL gets an explicit list instead, in
+       * priority order — what is in the database first, keywords after —
+       * because a student typing `fi` wants `first_name`, not `FILTER`.
+       */
+      language === "python"
+        ? autocompletion()
+        : autocompletion({
+            override: [
+              schemaCompletionSource({ dialect: SQLite, schema: sqlSchema() }),
+              schemaWordSource,
+              keywordCompletionSource(SQLite, true),
+            ],
+          }),
       // Four for Python because that is the language's own rule; two for SQL
       // because a query nests far deeper and four runs off the panel.
       indentUnit.of(language === "python" ? "    " : "  "),
@@ -271,7 +375,9 @@ export function CodeEditor({
             foldGutter: false,
             highlightActiveLine: true,
             highlightActiveLineGutter: true,
-            autocompletion: true,
+            // Configured above instead, so the SQL sources and their order
+            // are ours rather than the default set's.
+            autocompletion: false,
             bracketMatching: true,
             closeBrackets: true,
             indentOnInput: true,
