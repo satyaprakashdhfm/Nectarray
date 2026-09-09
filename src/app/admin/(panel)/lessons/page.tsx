@@ -29,18 +29,10 @@ type Lesson = {
   body_md: string | null;
 };
 
-export default async function AdminLessonsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ audience?: string }>;
-}) {
-  const { audience: requested } = await searchParams;
-  // The same course is written twice — a short student version and a full
-  // teaching one — as separate modules. Defaulting to "student" when the
-  // param is missing or garbage keeps a bare /admin/lessons link showing
-  // what students see, not a page mixing both together.
-  const audience = requested === "admin" ? "admin" : "student";
-
+export default async function AdminLessonsPage() {
+  // The teaching version of the same course lives at /admin/teaching, as a
+  // read-only view rather than a list of edit links — there is nothing to
+  // edit through this page but the short notes students actually see.
   const [moduleRows, lessonRows] = await Promise.all([
     db
       .select({
@@ -66,12 +58,9 @@ export default async function AdminLessonsPage({
   ]);
 
   // Hung together here rather than by a nested select, which was a second
-  // query per module. Filtered to the tab the admin is actually on — a
-  // student note and its teaching counterpart are separate rows in separate
-  // modules, and mixing both lists together on one page was the thing that
-  // made "where is the teacher version" hard to answer.
+  // query per module. Filtered to student modules only — see above.
   const modules = moduleRows
-    .filter((module) => module.audience === audience)
+    .filter((module) => module.audience === "student")
     .map((module) => ({
       ...module,
       lessons: lessonRows.filter((lesson) => lesson.module_id === module.id),
@@ -83,12 +72,12 @@ export default async function AdminLessonsPage({
   return (
     <>
       <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
-        {audience === "admin" ? "Teacher Notes" : "Student Notes"}
+        Student Notes
       </h1>
       <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem] leading-relaxed">
-        {audience === "admin"
-          ? "The full version of the course, for preparing to teach a class. Not shown to students at any enrolment status."
-          : "The short version enrolled students actually see. Unpublished lessons stay invisible to them, whatever their enrolment status."}
+        The short version enrolled students actually see, editable here.
+        Unpublished lessons stay invisible to them, whatever their enrolment
+        status.
       </p>
 
       {/* New lesson ------------------------------------------------------ */}

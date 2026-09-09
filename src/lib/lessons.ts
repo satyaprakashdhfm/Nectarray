@@ -5,8 +5,11 @@ import { lessons, modules, type Lesson } from "@/lib/db/schema";
 
 export type { Lesson };
 
-/** A lesson, plus who the module it belongs to is written for. */
-export type LessonWithAudience = Lesson & { audience: string };
+/** A lesson, plus who the module it belongs to is written for and that module's slug. */
+export type LessonWithAudience = Lesson & {
+  audience: string;
+  moduleSlug: string;
+};
 
 /**
  * One lesson, fetched at most once per request.
@@ -24,12 +27,18 @@ export const getLesson = cache(
      * notes were one guessed id away from any enrolled student.
      */
     const [row] = await db
-      .select({ lesson: lessons, audience: modules.audience })
+      .select({
+        lesson: lessons,
+        audience: modules.audience,
+        moduleSlug: modules.slug,
+      })
       .from(lessons)
       .innerJoin(modules, eq(modules.id, lessons.moduleId))
       .where(eq(lessons.id, id))
       .limit(1);
-    return row ? { ...row.lesson, audience: row.audience } : null;
+    return row
+      ? { ...row.lesson, audience: row.audience, moduleSlug: row.moduleSlug }
+      : null;
   },
 );
 

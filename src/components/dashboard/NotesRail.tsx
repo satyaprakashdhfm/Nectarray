@@ -32,7 +32,17 @@ export type RailModule = {
  * Which course is open follows the lesson you are reading, so arriving from
  * a link never leaves the rail pointing somewhere else.
  */
-export function NotesRail({ modules }: { modules: RailModule[] }) {
+export function NotesRail({
+  modules,
+  basePath = "/dashboard/notes",
+  stickyTop = 125,
+}: {
+  modules: RailModule[];
+  /** Where a lesson link points — the admin's read-only teaching view reuses this same rail. */
+  basePath?: string;
+  /** Distance from the top of the viewport to stick under — the dashboard has a second nav row below its header, the admin panel doesn't. */
+  stickyTop?: number;
+}) {
   const pathname = usePathname();
   const params = useSearchParams();
 
@@ -40,8 +50,8 @@ export function NotesRail({ modules }: { modules: RailModule[] }) {
   // re-render when you move between lessons. See lesson-toc.tsx.
   const toc = useLessonToc();
 
-  const lessonId = pathname.startsWith("/dashboard/notes/")
-    ? pathname.slice("/dashboard/notes/".length)
+  const lessonId = pathname.startsWith(`${basePath}/`)
+    ? pathname.slice(basePath.length + 1)
     : null;
 
   const active =
@@ -53,7 +63,17 @@ export function NotesRail({ modules }: { modules: RailModule[] }) {
     modules[0];
 
   return (
-    <div className="lg:border-line lg:sticky lg:top-[125px] lg:h-[calc(100vh-125px)] lg:overflow-y-auto lg:border-r lg:pr-5 lg:pb-16">
+    <div
+      className={cn(
+        "lg:border-line lg:sticky lg:overflow-y-auto lg:border-r lg:pr-5 lg:pb-16",
+        // Tailwind needs each arbitrary value written out in full somewhere
+        // in the source to generate it — a ternary between two literal
+        // strings still satisfies that; a template-interpolated one would not.
+        stickyTop === 88
+          ? "lg:top-[88px] lg:h-[calc(100vh-88px)]"
+          : "lg:top-[125px] lg:h-[calc(100vh-125px)]",
+      )}
+    >
       {/* Course switch */}
       {modules.length > 1 && (
         <div
@@ -66,7 +86,7 @@ export function NotesRail({ modules }: { modules: RailModule[] }) {
             return (
               <Link
                 key={module.slug}
-                href={`/dashboard/notes?module=${module.slug}`}
+                href={`${basePath}?module=${module.slug}`}
                 prefetch={false}
                 role="tab"
                 aria-selected={current}
@@ -97,7 +117,7 @@ export function NotesRail({ modules }: { modules: RailModule[] }) {
               return (
                 <li key={lesson.id}>
                   <Link
-                    href={`/dashboard/notes/${lesson.id}`}
+                    href={`${basePath}/${lesson.id}`}
                     // Fourteen lessons in view meant fourteen speculative
                     // renders of a 40 KB page nobody asked for.
                     prefetch={false}
