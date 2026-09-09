@@ -14,7 +14,9 @@
     "og": "node scripts/generate-og.cjs",
     "hero": "node scripts/crop-hero.cjs",
     "hero-art": "node scripts/prepare-hero-art.cjs",
-    "build:tests": "python3 scripts/build-python-tests.py"
+    "build:tests": "python3 scripts/build-python-tests.py",
+    "build:testcases": "python3 scripts/testcases/build.py",
+    "validate:testcases": "python3 scripts/validate-testcases.py"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.63",
