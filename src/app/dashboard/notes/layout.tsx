@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { NotesRail, type RailModule } from "@/components/dashboard/NotesRail";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules as modulesTable } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
@@ -59,6 +59,7 @@ export default async function NotesLayout({
     })
     .from(modulesTable)
     .innerJoin(lessons, eq(lessons.moduleId, modulesTable.id))
+    .where(eq(modulesTable.audience, "student"))
     .orderBy(asc(modulesTable.position), asc(lessons.position));
 
   /*
@@ -66,6 +67,9 @@ export default async function NotesLayout({
    * "Placement Readiness" had no lessons and no short label, so it fell
    * through to the tab bar's else-branch and rendered a *second* tab reading
    * "SQL" — three tabs, two of them claiming to be the same course.
+   *
+   * The where clause drops the teaching notes, which are the same course
+   * again at four times the length and are not addressed to the student.
    */
   const byModule = new Map<string, RailModule>();
   for (const row of rows) {

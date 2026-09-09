@@ -33,6 +33,7 @@ export default async function NotesPage({
     .select({ slug: modules.slug, lessonId: lessons.id })
     .from(modules)
     .innerJoin(lessons, eq(lessons.moduleId, modules.id))
+    .where(eq(modules.audience, "student"))
     .orderBy(asc(modules.position), asc(lessons.position));
 
   const first =

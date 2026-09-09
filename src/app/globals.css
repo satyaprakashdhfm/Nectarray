@@ -713,6 +713,97 @@ body {
   color: rgba(255, 255, 255, 0.45);
 }
 
+.code-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+/* The pair reads as one control, so the resting tab is quiet and the chosen
+   one is simply legible — no underline or pill, which at this size turns a
+   corner of the block into furniture. */
+.code-tab {
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.4);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.code-tab:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.code-tab.is-on {
+  color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------------------------------------------------------------------------
+   Code beside its output
+
+   Which arrangement is right depends on the room available, so it is decided
+   here rather than in the component. A container query rather than a media
+   query, because what matters is the width of the notes column — which loses
+   17rem to the contents rail on a desktop and none of it on a phone — not
+   the width of the window.
+
+   Wide: both panes, side by side, a bar each. The pair costs the height of
+   the taller one. Narrow: a tab each, because two columns of monospace in
+   half a phone is unreadable. The pair costs the height of one. It is never
+   the height of both.
+--------------------------------------------------------------------------- */
+
+.code-duo {
+  container-type: inline-size;
+}
+
+.code-duo-grid {
+  display: grid;
+}
+
+.code-pane {
+  min-width: 0;
+}
+
+/* Narrow: the tab bar rules, and only the chosen pane is in the flow. */
+.code-pane[data-shown="false"] {
+  display: none;
+}
+
+.code-bar-pane {
+  display: none;
+}
+
+@container (min-width: 46rem) {
+  .code-bar-tabs {
+    display: none;
+  }
+
+  .code-bar-pane {
+    display: flex;
+  }
+
+  /* Both panes, whichever tab was last pressed. */
+  .code-pane[data-shown="false"] {
+    display: block;
+  }
+
+  /* Code takes the wider half: it is the longer of the two far more often
+     than not, and it is the half being read against an editor. */
+  .code-duo-grid {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  }
+
+  .code-pane + .code-pane {
+    border-left: 1px solid var(--color-night-line);
+  }
+}
+
 .code-copy {
   display: inline-flex;
   align-items: center;

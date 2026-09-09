@@ -44,15 +44,21 @@ export default async function DashboardPage() {
         position: modulesTable.position,
       })
       .from(modulesTable)
+      .where(eq(modulesTable.audience, "student"))
       .orderBy(asc(modulesTable.position)),
     // Every published lesson, which is thirty-odd rows — cheaper to group in
     // memory than to ask Postgres for a count and a first id per module.
+    //
+    // Joined to modules rather than read alone, so the teaching notes are
+    // not counted into a student's progress or linked from their dashboard.
     db
       .select({
         id: lessons.id,
         moduleId: lessons.moduleId,
       })
       .from(lessons)
+      .innerJoin(modulesTable, eq(modulesTable.id, lessons.moduleId))
+      .where(eq(modulesTable.audience, "student"))
       .orderBy(asc(lessons.position)),
     db
       .select({ id: practiceQuestions.id, track: practiceQuestions.track })

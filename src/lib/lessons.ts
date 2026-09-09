@@ -1,9 +1,12 @@
 import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { lessons, type Lesson } from "@/lib/db/schema";
+import { lessons, modules, type Lesson } from "@/lib/db/schema";
 
 export type { Lesson };
+
+/** A lesson, plus who the module it belongs to is written for. */
+export type LessonWithAudience = Lesson & { audience: string };
 
 /**
  * One lesson, fetched at most once per request.
@@ -12,14 +15,23 @@ export type { Lesson };
  * shell to build the contents list in the rail, the page to render it. Left
  * alone that is the same 40 KB row pulled twice over the same request.
  */
-export const getLesson = cache(async (id: string): Promise<Lesson | null> => {
-  const [row] = await db
-    .select()
-    .from(lessons)
-    .where(eq(lessons.id, id))
-    .limit(1);
-  return row ?? null;
-});
+export const getLesson = cache(
+  async (id: string): Promise<LessonWithAudience | null> => {
+    /*
+     * The module's audience comes back with the lesson because the caller
+     * has to check it, and a lesson is addressed by its own id — nothing in
+     * the URL says which module it belongs to. Without this the teacher's
+     * notes were one guessed id away from any enrolled student.
+     */
+    const [row] = await db
+      .select({ lesson: lessons, audience: modules.audience })
+      .from(lessons)
+      .innerJoin(modules, eq(modules.id, lessons.moduleId))
+      .where(eq(lessons.id, id))
+      .limit(1);
+    return row ? { ...row.lesson, audience: row.audience } : null;
+  },
+);
 
 /**
  * Strips a lesson body's opening H1 when it is just the title again.

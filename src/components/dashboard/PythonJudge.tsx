@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useDraftSave } from "@/components/dashboard/use-draft";
 import {
   Check,
   ChevronLeft,
@@ -131,8 +132,11 @@ export function PythonJudge({
   briefs,
   solved: initialSolved,
   openedAt,
+  drafts,
 }: {
   questions: PyQuestion[];
+  /** What each question's editor held when it was last left. */
+  drafts: Record<string, string>;
   briefs: Record<string, ProblemBrief>;
   solved: string[];
   openedAt: Record<string, number>;
@@ -160,11 +164,19 @@ export function PythonJudge({
 
   /*
    * The editor holds the student's edit, or null while they have not touched
-   * it — the starter code is then derived from whichever problem is open.
+   * it this visit — falling back first to whatever was saved for this
+   * question and only then to the starter code, so returning to a problem
+   * picks up where it was left rather than resetting it.
    */
-  const code = edited ?? brief?.starter_code ?? "";
+  const code =
+    edited ?? drafts[question?.id ?? ""] ?? brief?.starter_code ?? "";
+
+  // Autosaves as the student types, and flushes immediately when `go` moves
+  // to another question rather than waiting out the debounce.
+  const flushDraft = useDraftSave(question?.id ?? null, code);
 
   function go(next: number) {
+    flushDraft();
     setIndex(next);
     setRun({ at: "idle" });
     setShowHint(false);

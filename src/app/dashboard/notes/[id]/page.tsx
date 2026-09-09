@@ -23,7 +23,9 @@ export default async function LessonPage({
 
   const lesson = await getLesson(id);
 
-  if (!lesson) notFound();
+  // A missing lesson and a teacher-only one are the same answer here: the
+  // student has no business knowing the difference.
+  if (!lesson || lesson.audience !== "student") notFound();
 
   // Neighbours for the prev/next pager, within the same module.
   const list = await db

@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BookOpen,
-  FolderGit2,
-  LayoutDashboard,
-  LifeBuoy,
-  PenSquare,
-} from "lucide-react";
+import { BookOpen, LayoutDashboard, LifeBuoy, PenSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/*
+ * Projects used to have its own tab here. It is a track inside Assignments
+ * now — Python problems, SQL questions, Agentic problems and Projects are
+ * one kind of thing, "work a student does and gets marked on", and having
+ * two top-level entries for one kind of thing was the actual problem, not
+ * how many builds happened to be in the fourth one.
+ */
 const TABS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/notes", label: "Notes", icon: BookOpen },
   { href: "/dashboard/assignments", label: "Assignments", icon: PenSquare },
-  { href: "/dashboard/projects", label: "Projects", icon: FolderGit2 },
   { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
 ];
 
@@ -39,10 +39,15 @@ export function DashboardNav() {
         <ul className="-mb-px flex gap-1 overflow-x-auto">
           {TABS.map((tab) => {
             // Only the index tab needs an exact match; the rest own a subtree.
+            // /dashboard/projects is folded into Assignments but still a
+            // real, bookmarkable route — the Assignments tab claims it too,
+            // rather than leaving a visitor on an old link with nothing lit.
             const active =
               tab.href === "/dashboard"
                 ? pathname === "/dashboard"
-                : pathname.startsWith(tab.href);
+                : pathname.startsWith(tab.href) ||
+                  (tab.href === "/dashboard/assignments" &&
+                    pathname.startsWith("/dashboard/projects"));
 
             return (
               <li key={tab.href}>

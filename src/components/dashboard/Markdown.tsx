@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/dashboard/CodeBlock";
+import { remarkCodeTabs } from "@/lib/notes-code-tabs";
 import { idCounter } from "@/lib/toc";
 
 /** Flattens children back to plain text, for slugs and for fenced code. */
@@ -48,7 +49,7 @@ export function Markdown({ children }: { children: string }) {
   return (
     <div className="notes">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkCodeTabs]}
         components={{
           // Shifted down one level: the lesson title is the page's h1, so a
           // section of the notes is an h2 however it was written.
@@ -75,14 +76,37 @@ export function Markdown({ children }: { children: string }) {
            * component — the copy button has to hand over exactly the
            * characters that were in the block, and by the time `code` runs
            * the <pre> wrapper has already been decided.
+           *
+           * A pair joined by remarkCodeTabs arrives here too. The rename it
+           * asks for lands on the inner <code> and leaves this wrapper in
+           * place, so the joined block is the child rather than a sibling —
+           * it carries both texts as props and no children of its own, and
+           * that is what tells the two cases apart.
            */
           pre: ({ children }) => {
             const child = (
               Array.isArray(children) ? children[0] : children
-            ) as ReactElement<{ className?: string; children?: ReactNode }>;
+            ) as ReactElement<{
+              className?: string;
+              children?: ReactNode;
+              code?: string;
+              language?: string;
+              output?: string;
+            }>;
             const props = child?.props ?? {};
             const language =
               /language-([\w+-]+)/.exec(props.className ?? "")?.[1] ?? "";
+
+            if (typeof props.code === "string") {
+              return (
+                <CodeBlock
+                  language={props.language || language}
+                  code={props.code}
+                  output={props.output ?? ""}
+                />
+              );
+            }
+
             return (
               <CodeBlock
                 language={language}

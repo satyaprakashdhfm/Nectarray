@@ -174,6 +174,20 @@ export const modules = pgTable("modules", {
   title: text().notNull(),
   summary: text(),
   position: integer().notNull(),
+  /**
+   * Who the module is written for: "student" or "admin".
+   *
+   * The same course is taught from two sets of notes. Students read a short,
+   * precise version; whoever is teaching reads the long one, with the
+   * background and the asides that would only slow a beginner down. Rather
+   * than a second body column on every lesson, the long set is its own
+   * module — so it carries its own lesson list, its own day labels and its
+   * own positions, and neither version constrains the shape of the other.
+   *
+   * Defaulting to "student" matters: every existing module is one, and a new
+   * module is far more likely to be. An admin module has to say so.
+   */
+  audience: text().notNull().default("student"),
 });
 
 export const lessons = pgTable(
@@ -308,6 +322,35 @@ export const practiceProgress = pgTable(
       .notNull()
       .references(() => practiceQuestions.id, { onDelete: "cascade" }),
     solvedAt: now(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.questionId] })],
+);
+
+/**
+ * A student's own in-progress work on one practice question — the SQL they
+ * were typing, or the Python they had not submitted yet.
+ *
+ * Switching to the next question, or just closing the tab, used to throw
+ * this away: the editor's only copy of it was a piece of React state with no
+ * question attached, so leaving a problem reset it to the starter code. One
+ * row per (user, question) instead, upserted on every autosave, is what
+ * makes "come back tomorrow and carry on" true rather than aspirational.
+ *
+ * Shared by both tracks rather than a column per track, because the shape is
+ * identical — one block of text a student is mid-way through — and a third
+ * track (agentic) reads and writes it the same way with nothing to add.
+ */
+export const practiceDrafts = pgTable(
+  "practice_drafts",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    questionId: uuid("question_id")
+      .notNull()
+      .references(() => practiceQuestions.id, { onDelete: "cascade" }),
+    code: text().notNull(),
+    updatedAt: now(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.questionId] })],
 );

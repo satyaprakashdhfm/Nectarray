@@ -15,6 +15,20 @@
       "when": 1788925206111,
       "tag": "0001_brown_madame_web",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788937523176,
+      "tag": "0002_clever_the_enforcers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788939333325,
+      "tag": "0003_lethal_wildside",
+      "breakpoints": true
     }
   ]
 }

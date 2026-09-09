@@ -36,6 +36,7 @@ export default async function AdminLessonsPage() {
         id: modulesTable.id,
         title: modulesTable.title,
         position: modulesTable.position,
+        audience: modulesTable.audience,
       })
       .from(modulesTable)
       .orderBy(asc(modulesTable.position)),
@@ -88,6 +89,7 @@ export default async function AdminLessonsPage() {
               {(modules ?? []).map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.title}
+                  {m.audience !== "student" ? " (teaching notes)" : ""}
                 </option>
               ))}
             </select>
@@ -133,7 +135,14 @@ export default async function AdminLessonsPage() {
       <div className="mt-8 space-y-8">
         {(modules ?? []).map((module) => (
           <section key={module.id}>
-            <h2 className="eyebrow">{module.title}</h2>
+            <h2 className="eyebrow flex items-center gap-2">
+              {module.title}
+              {module.audience !== "student" && (
+                <span className="bg-brand-wash text-brand-deep rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold tracking-normal normal-case">
+                  teaching notes · not shown to students
+                </span>
+              )}
+            </h2>
             <div className="card mt-4 overflow-hidden">
               {module.lessons.length === 0 ? (
                 <p className="text-ink-faint p-6 text-[0.9375rem]">
