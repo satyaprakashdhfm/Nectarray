@@ -1,4 +1,4 @@
-# Day 9 – Functions (Fundamentals)
+# Functions (Fundamentals)
 
 **Duration:** 50–60 Minutes
 
@@ -1275,7 +1275,7 @@ numbers list: [1, 2, 3]
 
 Below are small, self-contained functions — the kind you meet in placement rounds.
 Each has a docstring and a printed test. All are **iterative** (recursion is covered
-on Day 10).
+in Advanced Functions).
 
 ```python
 # 1) Factorial (iterative): n! = 1*2*...*n

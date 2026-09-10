@@ -177,7 +177,6 @@ export const lessons = pgTable(
     moduleId: uuid("module_id")
       .notNull()
       .references(() => modules.id, { onDelete: "cascade" }),
-    dayLabel: text("day_label").notNull(),
     title: text().notNull(),
     summary: text(),
     /** The lesson itself. Markdown, up to about 40 KB. */

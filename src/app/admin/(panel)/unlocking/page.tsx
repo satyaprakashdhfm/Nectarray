@@ -18,7 +18,6 @@ export const dynamic = "force-dynamic";
 
 type Row = {
   id: string;
-  dayLabel: string;
   title: string;
   released: boolean;
 };
@@ -59,7 +58,6 @@ export default async function AdminUnlockingPage({
       moduleTitle: modulesTable.title,
       modulePosition: modulesTable.position,
       lessonId: lessonsTable.id,
-      dayLabel: lessonsTable.dayLabel,
       title: lessonsTable.title,
       lessonPosition: lessonsTable.position,
     })
@@ -86,7 +84,6 @@ export default async function AdminUnlockingPage({
     }
     entry.lessons.push({
       id: row.lessonId,
-      dayLabel: row.dayLabel,
       title: row.title,
       released: released.has(row.lessonId),
     });
@@ -139,9 +136,6 @@ export default async function AdminUnlockingPage({
                   className="border-line flex items-center justify-between gap-4 border-b py-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-ink-faint text-[0.75rem]">
-                      {lesson.dayLabel}
-                    </p>
                     <p className="text-ink truncate text-[0.9375rem] font-medium">
                       {lesson.title}
                     </p>

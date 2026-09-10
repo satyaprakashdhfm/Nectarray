@@ -171,7 +171,6 @@ export async function updateLesson(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Missing lesson.");
 
-  const dayLabel = String(formData.get("day_label") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim();
   const body = String(formData.get("body_md") ?? "");
@@ -183,7 +182,6 @@ export async function updateLesson(formData: FormData) {
   await db
     .update(lessons)
     .set({
-      dayLabel: dayLabel === "" ? "Day —" : dayLabel,
       title,
       summary: summary === "" ? null : summary,
       bodyMd: body === "" ? null : body,
@@ -201,7 +199,6 @@ export async function updateLesson(formData: FormData) {
 /** Adds an empty lesson to a module, ready to be written into. */
 export async function createLesson(formData: FormData) {
   const moduleId = String(formData.get("module_id") ?? "");
-  const dayLabel = String(formData.get("day_label") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   if (!moduleId) throw new Error("Pick a module.");
   if (title === "") throw new Error("A lesson needs a title.");
@@ -220,7 +217,6 @@ export async function createLesson(formData: FormData) {
     .insert(lessons)
     .values({
       moduleId,
-      dayLabel: dayLabel === "" ? "Day —" : dayLabel,
       title,
       position: (last?.position ?? 0) + 1,
       isPublished: false,

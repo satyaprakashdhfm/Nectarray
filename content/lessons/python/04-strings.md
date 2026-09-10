@@ -1,4 +1,4 @@
-# Day 5 – Data Structures Introduction & Strings
+# Data Structures Introduction & Strings
 
 **Duration:** 55–60 Minutes
 

@@ -100,6 +100,17 @@ async function applySchema() {
    * generates ALTERs that assume they run exactly once; these do not.
    */
   const FIXUPS = [
+    /*
+     * The course does not number its lessons by day any more.
+     *
+     * A day label was a second ordering next to `position`, and the two fell
+     * out of step the moment a topic moved — object-oriented programming
+     * going before file handling left three lessons labelled with the day of
+     * the lesson that used to be there. Order is `position` alone now, and
+     * the notes name the lesson they cross-reference rather than its day.
+     */
+    "ALTER TABLE lessons DROP COLUMN IF EXISTS day_label",
+
     // The screenshot is handed straight to the grader now and never stored,
     // so the path to a file in a bucket that no longer exists went with it.
     "ALTER TABLE practice_attempts DROP COLUMN IF EXISTS image_path",
@@ -317,9 +328,9 @@ async function syncLessons() {
     if (!row) {
       await sql`
         insert into lessons
-          (module_id, day_label, title, summary, position, is_published,
+          (module_id, title, summary, position, is_published,
            body_md, source_hash)
-        select id, ${entry.day_label}, ${entry.title}, ${entry.summary},
+        select id, ${entry.title}, ${entry.summary},
                ${entry.position}, ${entry.published}, ${body}, ${hash}
           from modules where slug = ${entry.module}
       `;
@@ -365,8 +376,7 @@ async function syncLessons() {
 
     await sql`
       update lessons
-         set day_label = ${entry.day_label},
-             title = ${entry.title},
+         set title = ${entry.title},
              summary = ${entry.summary},
              body_md = ${body},
              source_hash = ${hash},

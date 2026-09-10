@@ -1,4 +1,4 @@
-# Day 7 – Tuples & Sets
+# Tuples & Sets
 
 **Duration:** 55–60 Minutes
 

@@ -2,7 +2,6 @@
   {
     "module": "python",
     "position": 1,
-    "day_label": "Day 1",
     "title": "Programming Fundamentals",
     "summary": "Languages, compilation vs interpretation, Python architecture, installation and IDEs.",
     "published": true,
@@ -13,7 +12,6 @@
   {
     "module": "python",
     "position": 2,
-    "day_label": "Day 2–3",
     "title": "Python Basics",
     "summary": "Variables, data types, operators, type conversion and input/output.",
     "published": true,
@@ -22,7 +20,6 @@
   {
     "module": "python",
     "position": 3,
-    "day_label": "Day 4",
     "title": "Conditions & Loops",
     "summary": "if/elif/else, match, for, while, break, continue, pass and loop patterns.",
     "published": true,
@@ -31,7 +28,6 @@
   {
     "module": "python",
     "position": 4,
-    "day_label": "Day 5",
     "title": "Strings",
     "summary": "Indexing, slicing, methods, formatting and why immutability matters.",
     "published": true,
@@ -40,7 +36,6 @@
   {
     "module": "python",
     "position": 5,
-    "day_label": "Day 6",
     "title": "Lists",
     "summary": "Mutability, methods, nesting and list comprehensions.",
     "published": true,
@@ -49,7 +44,6 @@
   {
     "module": "python",
     "position": 6,
-    "day_label": "Day 7",
     "title": "Tuples & Sets",
     "summary": "Immutable sequences, set algebra, and when each one is the right container.",
     "published": true,
@@ -58,7 +52,6 @@
   {
     "module": "python",
     "position": 7,
-    "day_label": "Day 8",
     "title": "Dictionaries",
     "summary": "Key-value storage, methods, nesting and dictionary comprehensions.",
     "published": true,
@@ -67,7 +60,6 @@
   {
     "module": "python",
     "position": 8,
-    "day_label": "Day 9",
     "title": "Functions",
     "summary": "Parameters, arguments, return values, scope and the call stack.",
     "published": true,
@@ -76,7 +68,6 @@
   {
     "module": "python",
     "position": 9,
-    "day_label": "Day 10",
     "title": "Advanced Functions",
     "summary": "Lambda, recursion, decorators, generators and the built-in higher-order functions.",
     "published": true,
@@ -85,7 +76,6 @@
   {
     "module": "python",
     "position": 13,
-    "day_label": "Day 14",
     "title": "File Handling",
     "summary": "Reading, writing, context managers and working with paths.",
     "published": true,
@@ -95,7 +85,6 @@
   {
     "module": "python",
     "position": 14,
-    "day_label": "Day 15",
     "title": "Exception Handling",
     "summary": "try/except/else/finally, raising, and writing custom exceptions.",
     "published": true,
@@ -105,7 +94,6 @@
   {
     "module": "sql",
     "position": 1,
-    "day_label": "Day 1",
     "title": "Database Fundamentals",
     "summary": "DBMS, RDBMS, SQL, database design and how a query actually executes.",
     "published": true,
@@ -114,7 +102,6 @@
   {
     "module": "sql",
     "position": 2,
-    "day_label": "Day 2–3",
     "title": "Database Objects",
     "summary": "CREATE, INSERT, ALTER, DELETE, TRUNCATE, DROP, constraints and data types.",
     "published": true,
@@ -123,7 +110,6 @@
   {
     "module": "sql",
     "position": 3,
-    "day_label": "Day 4–6",
     "title": "SELECT Queries",
     "summary": "SELECT, DISTINCT, WHERE, ORDER BY, LIMIT, OFFSET, aliases and NULL handling.",
     "published": true,
@@ -132,7 +118,6 @@
   {
     "module": "sql",
     "position": 4,
-    "day_label": "Day 7–8",
     "title": "Operators & Clauses",
     "summary": "IN, BETWEEN, LIKE, AND/OR/NOT, operator precedence and EXISTS.",
     "published": true,
@@ -141,7 +126,6 @@
   {
     "module": "sql",
     "position": 5,
-    "day_label": "Day 9–10",
     "title": "SQL Functions",
     "summary": "String, numeric, date, aggregate and conditional functions.",
     "published": true,
@@ -150,7 +134,6 @@
   {
     "module": "sql",
     "position": 6,
-    "day_label": "Day 11–12",
     "title": "Grouping",
     "summary": "GROUP BY, HAVING, execution order, duplicates and WITH ROLLUP.",
     "published": true,
@@ -159,7 +142,6 @@
   {
     "module": "sql",
     "position": 7,
-    "day_label": "Day 13–14",
     "title": "Joins & Set Operations",
     "summary": "INNER, LEFT, RIGHT, CROSS and SELF joins, plus UNION.",
     "published": true,
@@ -168,7 +150,6 @@
   {
     "module": "sql",
     "position": 8,
-    "day_label": "Day 15",
     "title": "Subqueries & Window Functions",
     "summary": "Subqueries, derived tables, ROW_NUMBER, RANK, DENSE_RANK and PARTITION BY.",
     "published": true,
@@ -177,7 +158,6 @@
   {
     "module": "sql",
     "position": 9,
-    "day_label": "Day 16",
     "title": "Views, Indexes & Transactions",
     "summary": "Views, indexes, EXPLAIN, transactions, SAVEPOINT and ACID.",
     "published": true,
@@ -186,7 +166,6 @@
   {
     "module": "sql",
     "position": 10,
-    "day_label": "Day 17",
     "title": "Stored Programs",
     "summary": "DELIMITER, procedures, functions, handlers, SIGNAL and triggers.",
     "published": true,
@@ -195,7 +174,6 @@
   {
     "module": "sql",
     "position": 11,
-    "day_label": "Day 18",
     "title": "Revision & Interview Prep",
     "summary": "Seven query patterns, twenty interview questions, silent failures and myths.",
     "published": true,
@@ -204,7 +182,6 @@
   {
     "module": "sql",
     "position": 12,
-    "day_label": "Reference",
     "title": "Dialect Differences",
     "summary": "Where MySQL, PostgreSQL, SQL Server and Oracle disagree — read before an interview.",
     "published": true,

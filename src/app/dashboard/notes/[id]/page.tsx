@@ -98,10 +98,7 @@ export default async function LessonPage({
        * where the piece begins.
        */}
       <header className="border-brand/15 from-brand-wash/70 rounded-2xl border bg-gradient-to-br to-transparent p-7 sm:p-9">
-        <p className="text-brand-deep text-[0.75rem] font-semibold tracking-[0.14em] uppercase">
-          {lesson.dayLabel}
-        </p>
-        <h1 className="display text-ink mt-3 text-[2rem] sm:text-[2.5rem]">
+        <h1 className="display text-ink text-[2rem] sm:text-[2.5rem]">
           {lesson.title}
         </h1>
         {lesson.summary && <p className="lede mt-4">{lesson.summary}</p>}

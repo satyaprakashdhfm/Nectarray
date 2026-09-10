@@ -290,7 +290,7 @@ Notice `c.course_id` inside the inner query — that comes from the **outer** qu
 The inner query runs five times, once for each course.
 
 > **Note:** The same answer can be produced by a `LEFT JOIN` with `GROUP BY`
-> (Day 7). The join is usually faster because it reads the table once. Know both.
+> (Joins & Set Operations). The join is usually faster because it reads the table once. Know both.
 
 ---
 

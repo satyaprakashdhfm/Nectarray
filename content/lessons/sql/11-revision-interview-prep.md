@@ -9,21 +9,21 @@ interview.
 # The Whole Course in One Picture
 
 ```text
-   DDL   CREATE / ALTER / DROP / TRUNCATE     build the structure      Day 2
-   DML   INSERT / UPDATE / DELETE             change the data          Day 2
-   DQL   SELECT                               read the data            Day 3
-   TCL   COMMIT / ROLLBACK / SAVEPOINT        confirm or undo          Day 9
+   DDL   CREATE / ALTER / DROP / TRUNCATE     build the structure
+   DML   INSERT / UPDATE / DELETE             change the data
+   DQL   SELECT                               read the data
+   TCL   COMMIT / ROLLBACK / SAVEPOINT        confirm or undo
    DCL   GRANT / REVOKE                       permissions
 ```
 
 ```text
-   SELECT      columns, aliases, expressions          Day 3     step 5
-   FROM        the table, plus JOINs                  Day 7     step 1
-   WHERE       filter ROWS      (no aggregates)       Day 3, 4  step 2
-   GROUP BY    make groups                            Day 6     step 3
-   HAVING      filter GROUPS    (aggregates allowed)  Day 6     step 4
-   ORDER BY    sort             (aliases allowed)     Day 3     step 6
-   LIMIT       cut                                    Day 3     step 7
+   SELECT      columns, aliases, expressions          step 5
+   FROM        the table, plus JOINs                  step 1
+   WHERE       filter ROWS      (no aggregates)       step 2
+   GROUP BY    make groups                            step 3
+   HAVING      filter GROUPS    (aggregates allowed)  step 4
+   ORDER BY    sort             (aliases allowed)     step 6
+   LIMIT       cut                                    step 7
 ```
 
 **The execution order answers half of all SQL questions.** Learn it first.

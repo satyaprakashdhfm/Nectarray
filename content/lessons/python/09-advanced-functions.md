@@ -1,4 +1,4 @@
-# Day 10 – Advanced Functions
+# Advanced Functions
 
 **Duration:** 50–60 Minutes
 
@@ -10,9 +10,9 @@
 - Understand **recursion** — base case, recursive case and the call stack.
 - Solve classic problems recursively and know recursion vs iteration trade-offs.
 
-## 1. Revision of Day 9
+## 1. Revision of Functions
 
-Before we go advanced, recall the fundamentals from Day 9.
+Before we go advanced, recall the fundamentals from Functions.
 
 | Concept | Meaning |
 |---|---|
@@ -30,7 +30,7 @@ Before we go advanced, recall the fundamentals from Day 9.
 - Today we build **on top of** these ideas — no need to repeat them.
 
 ```python
-# Quick warm-up recap from Day 9
+# Quick warm-up recap from Functions
 def add(a, b):        # a, b are parameters
     return a + b      # return sends the value back
 

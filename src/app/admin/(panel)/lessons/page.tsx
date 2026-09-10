@@ -22,7 +22,6 @@ export const dynamic = "force-dynamic";
 
 type Lesson = {
   id: string;
-  day_label: string;
   title: string;
   is_published: boolean;
   position: number;
@@ -47,7 +46,6 @@ export default async function AdminLessonsPage() {
       .select({
         id: lessonsTable.id,
         module_id: lessonsTable.moduleId,
-        day_label: lessonsTable.dayLabel,
         title: lessonsTable.title,
         is_published: lessonsTable.isPublished,
         position: lessonsTable.position,
@@ -82,7 +80,7 @@ export default async function AdminLessonsPage() {
 
       {/* New lesson ------------------------------------------------------ */}
       <form action={createLesson} className="card mt-8 p-6">
-        <div className="grid gap-4 sm:grid-cols-[1fr_auto_2fr_auto] sm:items-end">
+        <div className="grid gap-4 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
           <div>
             <label
               className="text-ink mb-2 block text-[0.8125rem] font-semibold"
@@ -97,20 +95,6 @@ export default async function AdminLessonsPage() {
                 </option>
               ))}
             </select>
-          </div>
-          <div>
-            <label
-              className="text-ink mb-2 block text-[0.8125rem] font-semibold"
-              htmlFor="new-day"
-            >
-              Day
-            </label>
-            <input
-              id="new-day"
-              name="day_label"
-              placeholder="Day 12"
-              className={`${field} sm:w-28`}
-            />
           </div>
           <div>
             <label
@@ -156,10 +140,7 @@ export default async function AdminLessonsPage() {
                           className="border-line-soft hover:bg-mist flex items-center justify-between gap-4 border-b p-5 transition-colors last:border-0"
                         >
                           <span className="min-w-0">
-                            <span className="text-ink-faint font-mono text-[0.8125rem]">
-                              {lesson.day_label}
-                            </span>
-                            <span className="text-ink ml-3 text-[0.9375rem] font-semibold">
+                            <span className="text-ink text-[0.9375rem] font-semibold">
                               {lesson.title}
                             </span>
                             <span className="text-ink-faint ml-3 text-[0.8125rem]">

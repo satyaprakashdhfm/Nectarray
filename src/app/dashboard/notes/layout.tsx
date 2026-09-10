@@ -27,8 +27,9 @@ const SHORT: Record<string, string> = {
  * The contents of the open lesson are deliberately *not* worked out here.
  * A layout is not re-rendered when you move between sibling routes, so
  * anything derived from the current path is frozen at whichever lesson you
- * opened first — which is exactly how the rail came to list Day 1's sections
- * underneath Day 7. The lesson page publishes them instead.
+ * opened first — which is exactly how the rail came to list the first
+ * lesson's sections underneath a later one. The lesson page publishes them
+ * instead.
  */
 export default async function NotesLayout({
   children,

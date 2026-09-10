@@ -19,77 +19,66 @@ const path = require("node:path");
 /**
  * File → where it sits in its module.
  *
- * Day labels come from the course plan, not from the filenames: the repo
- * numbers its SQL teaching notes 1..11 while that syllabus runs to day 18,
- * because several files cover more than one day.
+ * Titles come from the course plan, not from the filenames: the source repo
+ * numbers its files on a schedule this course does not follow, because
+ * several of its files cover more than one topic.
  *
- * Days with no file yet are simply absent — the importer skips them and says
+ * Lessons with no file yet are simply absent — the importer skips them and says
  * so, rather than seeding an empty lesson that looks published but is blank.
  */
 const SQL_LESSONS = [
   [
     "Day_01_Database_Fundamentals.md",
-    "Day 1",
     "Database Fundamentals",
     "DBMS, RDBMS, SQL, database design and how a query actually executes.",
   ],
   [
     "DAY2_CREATE_INSERT_ALTER_UPATE_DELETE.md",
-    "Day 2–3",
     "Database Objects",
     "CREATE, INSERT, ALTER, DELETE, TRUNCATE, DROP, constraints and data types.",
   ],
   [
     "DAY3_SELECT_RETRIEVING_DATA.md",
-    "Day 4–6",
     "SELECT Queries",
     "SELECT, DISTINCT, WHERE, ORDER BY, LIMIT, OFFSET, aliases and NULL handling.",
   ],
   [
     "DAY4_OPERATORS_AND_CLAUSES.md",
-    "Day 7–8",
     "Operators & Clauses",
     "IN, BETWEEN, LIKE, AND/OR/NOT, operator precedence and EXISTS.",
   ],
   [
     "DAY5_SQL_FUNCTIONS.md",
-    "Day 9–10",
     "SQL Functions",
     "String, numeric, date, aggregate and conditional functions.",
   ],
   [
     "DAY6_GROUP_BY_AND_HAVING.md",
-    "Day 11–12",
     "Grouping",
     "GROUP BY, HAVING, execution order, duplicates and WITH ROLLUP.",
   ],
   [
     "DAY7_JOINS_AND_UNION.md",
-    "Day 13–14",
     "Joins & Set Operations",
     "INNER, LEFT, RIGHT, CROSS and SELF joins, plus UNION.",
   ],
   [
     "DAY8_SUBQUERIES_AND_WINDOW_FUNCTIONS.md",
-    "Day 15",
     "Subqueries & Window Functions",
     "Subqueries, derived tables, ROW_NUMBER, RANK, DENSE_RANK and PARTITION BY.",
   ],
   [
     "DAY9_VIEWS_INDEXES_TRANSACTIONS.md",
-    "Day 16",
     "Views, Indexes & Transactions",
     "Views, indexes, EXPLAIN, transactions, SAVEPOINT and ACID.",
   ],
   [
     "DAY10_STORED_PROCEDURES_FUNCTIONS_TRIGGERS.md",
-    "Day 17",
     "Stored Programs",
     "DELIMITER, procedures, functions, handlers, SIGNAL and triggers.",
   ],
   [
     "DAY11_REVISION_AND_INTERVIEW_PREP.md",
-    "Day 18",
     "Revision & Interview Prep",
     "Seven query patterns, twenty interview questions, silent failures and myths.",
   ],
@@ -105,67 +94,56 @@ const SQL_LESSONS = [
 const PYTHON_LESSONS = [
   [
     "Day_1_Python_Fundamentals.md",
-    "Day 1",
     "Programming Fundamentals",
     "Languages, compilation vs interpretation, Python architecture, installation and IDEs.",
   ],
   [
     "Day_2_Python_Basics.md",
-    "Day 2–3",
     "Python Basics",
     "Variables, data types, operators, type conversion and input/output.",
   ],
   [
     "Day_4_Conditions_and_Loops.md",
-    "Day 4",
     "Conditions & Loops",
     "if/elif/else, match, for, while, break, continue, pass and loop patterns.",
   ],
   [
     "Day_5_Strings_Professional_Notes.md",
-    "Day 5",
     "Strings",
     "Indexing, slicing, methods, formatting and why immutability matters.",
   ],
   [
     "Day_6_Lists_Professional_Notes.md",
-    "Day 6",
     "Lists",
     "Mutability, methods, nesting and list comprehensions.",
   ],
   [
     "Day_7_Tuples_and_Sets_Professional_Notes.md",
-    "Day 7",
     "Tuples & Sets",
     "Immutable sequences, set algebra, and when each one is the right container.",
   ],
   [
     "Day_8_Dictionaries_Professional_Notes.md",
-    "Day 8",
     "Dictionaries",
     "Key-value storage, methods, nesting and dictionary comprehensions.",
   ],
   [
     "Day_9_Functions_Fundamentals.md",
-    "Day 9",
     "Functions",
     "Parameters, arguments, return values, scope and the call stack.",
   ],
   [
     "Day_10_Advanced_Functions.md",
-    "Day 10",
     "Advanced Functions",
     "Lambda, recursion, decorators, generators and the built-in higher-order functions.",
   ],
   [
     "Day_11_File_Handling.md",
-    "Day 11",
     "File Handling",
     "Reading, writing, context managers and working with paths.",
   ],
   [
     "Day_12_Exception_Handling.md",
-    "Day 12",
     "Exception Handling",
     "try/except/else/finally, raising, and writing custom exceptions.",
   ],
@@ -216,7 +194,7 @@ function main() {
     );
 
     let position = 0;
-    for (const [file, dayLabel, title, summary] of module.lessons) {
+    for (const [file, title, summary] of module.lessons) {
       const full = path.join(dir, file);
       if (!fs.existsSync(full)) {
         console.error(`  - not written yet, skipped: ${file}`);
@@ -233,15 +211,13 @@ function main() {
 
       out.push(
         "insert into public.lessons",
-        "  (module_id, day_label, title, summary, position, is_published, body_md)",
-        `select id, '${esc(dayLabel)}', '${esc(title)}', '${esc(summary)}', ${position}, true,`,
+        "  (module_id, title, summary, position, is_published, body_md)",
+        `select id, '${esc(title)}', '${esc(summary)}', ${position}, true,`,
         `  ${TAG}${body}${TAG}`,
         `from public.modules where slug = '${module.slug}';`,
         "",
       );
-      console.error(
-        `  ${String(position).padStart(2)}. ${dayLabel.padEnd(9)} ${title}`,
-      );
+      console.error(`  ${String(position).padStart(2)}. ${title}`);
     }
     totalLessons += position;
   }

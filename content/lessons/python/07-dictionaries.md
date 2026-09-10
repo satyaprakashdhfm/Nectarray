@@ -1,4 +1,4 @@
-# Day 8 – Dictionaries
+# Dictionaries
 
 **Duration:** 50–60 Minutes
 

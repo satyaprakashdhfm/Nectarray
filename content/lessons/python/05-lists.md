@@ -1,4 +1,4 @@
-# Day 6 – Lists
+# Lists
 
 **Duration:** 55–60 Minutes
 

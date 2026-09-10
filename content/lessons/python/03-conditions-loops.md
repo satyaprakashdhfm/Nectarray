@@ -1,4 +1,4 @@
-# Day 4 - Conditions & Loops
+# Conditions & Loops
 **Topics:** `if`, `if-else`, `if-elif-else`, `match`, `while`, `for`, `break`, `continue`, `pass`, Patterns
 
 ## 1. if Statement

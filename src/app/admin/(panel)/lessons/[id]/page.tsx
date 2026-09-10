@@ -35,7 +35,6 @@ export default async function AdminLessonEditor({
   const [row] = await db
     .select({
       id: lessons.id,
-      day_label: lessons.dayLabel,
       title: lessons.title,
       summary: lessons.summary,
       body_md: lessons.bodyMd,
@@ -134,30 +133,17 @@ export default async function AdminLessonEditor({
       <form action={updateLesson} className="card mt-6 p-6 sm:p-7">
         <input type="hidden" name="id" value={lesson.id} />
 
-        <div className="grid gap-5 sm:grid-cols-[8rem_1fr]">
-          <div>
-            <label className={label} htmlFor="day_label">
-              Day
-            </label>
-            <input
-              id="day_label"
-              name="day_label"
-              defaultValue={lesson.day_label}
-              className={field}
-            />
-          </div>
-          <div>
-            <label className={label} htmlFor="title">
-              Title
-            </label>
-            <input
-              id="title"
-              name="title"
-              defaultValue={lesson.title}
-              required
-              className={field}
-            />
-          </div>
+        <div>
+          <label className={label} htmlFor="title">
+            Title
+          </label>
+          <input
+            id="title"
+            name="title"
+            defaultValue={lesson.title}
+            required
+            className={field}
+          />
         </div>
 
         <div className="mt-5">

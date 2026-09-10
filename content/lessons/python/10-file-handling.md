@@ -1,4 +1,4 @@
-# Day 11 – File Handling
+# File Handling
 
 **Duration:** 50–60 Minutes
 
@@ -19,7 +19,7 @@ project. Run this cell once before the rest.
 ```python
 import os, tempfile
 
-WORKDIR = tempfile.mkdtemp(prefix="day11_files_")
+WORKDIR = tempfile.mkdtemp(prefix="files_demo_")
 os.chdir(WORKDIR)
 print("All files in this notebook are created inside:")
 print(WORKDIR)
@@ -28,7 +28,7 @@ print(WORKDIR)
 **Output:**
 ```text
 All files in this notebook are created inside:
-/tmp/day11_files_yuryou5x
+/tmp/files_demo_yuryou5x
 ```
 
 ## 1. What is File Handling?

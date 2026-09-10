@@ -683,7 +683,7 @@ ERROR 1644 (45000): Marks cannot exceed 100
 
 The row was never inserted.
 
-> **Note:** A `CHECK` constraint (Day 2) does this job better and more cheaply.
+> **Note:** A `CHECK` constraint (Database Objects) does this job better and more cheaply.
 > Use a trigger only when the rule needs **other tables**, or has to write an
 > audit row — things a constraint cannot do.
 

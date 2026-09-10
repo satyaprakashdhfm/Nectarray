@@ -1,4 +1,4 @@
-# Day 1 – Python Programming Fundamentals
+# Python Programming Fundamentals
 
 ## Agenda
 1. Subjects worth keeping in mind

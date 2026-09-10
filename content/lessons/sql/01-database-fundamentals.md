@@ -1,4 +1,4 @@
-# Day 1 · Database Fundamentals
+# Database Fundamentals
 
 **Duration:** 50–60 Minutes  ·  **Tool:** MySQL 8 + MySQL Workbench
 
@@ -182,7 +182,7 @@ This surprises everybody. You **write** a query in one order and the database
 | `LIMIT` | 7 |
 
 `FROM` runs **first** — the database must fetch the table before it can filter
-it. `SELECT` runs almost **last**. This explains a rule you will meet on Day 4:
+it. `SELECT` runs almost **last**. This explains a rule you will meet under Operators & Clauses:
 you cannot use a `SELECT` alias inside `WHERE`, because `WHERE` ran first.
 
 ---
@@ -291,7 +291,7 @@ To run SQL: type it, then press **Ctrl + Enter** (current statement) or
 **Key Notes:**
 - Unlike a file-based tool, **MySQL saves as you go** — there is no
   "write changes" button. An `INSERT` that succeeds is stored.
-- The one exception is when you open a **transaction** yourself — see Day 16.
+- The one exception is when you open a **transaction** yourself — see Views, Indexes & Transactions.
 - ⚠️ Workbench has a **safe update mode** on by default: it refuses `UPDATE` or
   `DELETE` without a `WHERE` on a key column. If you hit *"Error 1175"*, that is
   why. Turn it off with:

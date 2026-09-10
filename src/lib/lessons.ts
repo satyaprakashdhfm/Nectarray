@@ -71,9 +71,9 @@ export const getLesson = cache(
  * Strips a lesson body's opening H1 when it is just the title again.
  *
  * Every imported Python note opens with its own title, and the page renders
- * that title above the body already — so the reader met "Day 1 - Python
- * Programming Fundamentals" twice, once as the page heading and again as the
- * first line of the article, with a rule between them.
+ * that title above the body already — so the reader met "Programming
+ * Fundamentals" twice, once as the page heading and again as the first line
+ * of the article, with a rule between them.
  *
  * It has to be the title though, not merely the first heading. The SQL notes
  * open on a real section — "MySQL - Database and Table Basics" under a lesson

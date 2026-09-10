@@ -135,8 +135,8 @@ longer finds `students`.
 Coming from SQLite, these flip:
 
 1. **`FULL OUTER JOIN` works in SQLite but NOT in MySQL.** In MySQL you emulate
-   it with `LEFT JOIN` + `UNION` + `RIGHT JOIN` — see Day 13–14 §5.
-2. **Stored procedures do not exist in SQLite but do in MySQL.** Day 17 is a
+   it with `LEFT JOIN` + `UNION` + `RIGHT JOIN` — see Joins & Set Operations.
+2. **Stored procedures do not exist in SQLite but do in MySQL.** Stored Programs is a
    hands-on class here, not theory.
 
 ---

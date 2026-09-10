@@ -44,9 +44,8 @@ export type Fact = {
   value: string;
 };
 
-/** One dated row inside a curriculum module. */
+/** One row inside a curriculum module. */
 export type CurriculumTopic = {
-  days: string;
   title: string;
   body: string;
 };

@@ -1,4 +1,4 @@
-# Day 12 – Exception Handling
+# Exception Handling
 
 **Duration:** 50–60 Minutes
 

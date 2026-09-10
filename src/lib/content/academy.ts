@@ -164,52 +164,42 @@ export const academy: {
           "From what a program even is, through to threads, async and a capstone you can talk through in an interview.",
         topics: [
           {
-            days: "Day 1",
             title: "Programming Fundamentals",
             body: "Languages, compilation vs interpretation, Python architecture, installation, IDEs.",
           },
           {
-            days: "Day 2–3",
             title: "Python Basics",
             body: "Variables, data types, operators, type conversion, input/output.",
           },
           {
-            days: "Day 4",
             title: "Conditions & Loops",
             body: "if/elif/else, match, for, while, break, continue, pass, patterns.",
           },
           {
-            days: "Day 5–6",
             title: "Strings & Lists",
             body: "Indexing, slicing, methods, formatting, comprehensions.",
           },
           {
-            days: "Day 7–8",
             title: "Tuples, Sets & Dictionaries",
             body: "Methods, operations, nested collections.",
           },
           {
-            days: "Day 9–10",
             title: "Functions",
             body: "Parameters, arguments, scope, lambda, recursion, built-in functions.",
           },
           {
-            days: "Day 11–12",
             title: "File & Exception Handling",
             body: "Files, context managers, try/except, custom exceptions.",
           },
           {
-            days: "Day 13–16",
             title: "Object-Oriented Programming",
             body: "Classes, objects, inheritance, encapsulation, polymorphism, abstraction.",
           },
           {
-            days: "Day 17–20",
             title: "Advanced Python",
             body: "Modules, packages, virtual environments, memory management, threads, multiprocessing, async.",
           },
           {
-            days: "Day 21–22",
             title: "Revision, Practice & Capstone",
             body: "Real interview questions, problem-sheet practice and a mini project.",
           },
@@ -223,57 +213,46 @@ export const academy: {
           "Taught in MySQL 8. Every query in the notes was executed before it was written down, and the outputs are the real ones.",
         topics: [
           {
-            days: "Day 1",
             title: "Database Fundamentals",
             body: "DBMS, RDBMS, SQL, database design, SQL execution flow.",
           },
           {
-            days: "Day 2–3",
             title: "Database Objects",
             body: "CREATE, ALTER, DROP, TRUNCATE, constraints, data types.",
           },
           {
-            days: "Day 4–6",
             title: "SELECT Queries",
             body: "SELECT, WHERE, ORDER BY, DISTINCT, LIMIT, aliases, expressions.",
           },
           {
-            days: "Day 7–8",
             title: "Operators & Clauses",
             body: "Comparison, logical, IN, BETWEEN, LIKE, EXISTS, ANY, ALL.",
           },
           {
-            days: "Day 9–10",
             title: "SQL Functions",
             body: "String, numeric, date, aggregate and conditional functions.",
           },
           {
-            days: "Day 11–12",
             title: "Grouping",
             body: "GROUP BY, HAVING, aggregations and the real execution order.",
           },
           {
-            days: "Day 13–14",
             title: "Joins & Set Operations",
             body: "INNER, LEFT, RIGHT, FULL, SELF joins and UNION.",
           },
           {
-            days: "Day 15",
             title: "Subqueries & Window Functions",
             body: "Subqueries, ROW_NUMBER(), RANK(), DENSE_RANK().",
           },
           {
-            days: "Day 16",
             title: "Views, Indexes & Transactions",
             body: "Views, indexes, transactions — COMMIT, ROLLBACK, SAVEPOINT.",
           },
           {
-            days: "Day 17",
             title: "PL/SQL Fundamentals",
             body: "Blocks, variables, loops, procedures, functions, triggers.",
           },
           {
-            days: "Day 18",
             title: "Revision & Interview Prep",
             body: "Revision, real-world queries and complex interview questions.",
           },
@@ -287,57 +266,46 @@ export const academy: {
           "The half teams are hiring for: pandas and models first, then agents that retrieve, remember, call real tools and get judged against an evaluation set.",
         topics: [
           {
-            days: "Day 1",
             title: "NumPy and pandas",
             body: "Arrays, DataFrames, vectorised thinking, grouping and joining — the two libraries everything else sits on.",
           },
           {
-            days: "Day 2",
             title: "Cleaning real data",
             body: "Types that lie, dates that ambiguate, near-duplicate text, missing values, and the assertions that catch them.",
           },
           {
-            days: "Day 3",
             title: "Machine learning in one pass",
             body: "scikit-learn's four methods, honest splits, pipelines that prevent leakage, and choosing a metric you can defend.",
           },
           {
-            days: "Day 4",
             title: "Deep learning, NLP and embeddings",
             body: "Networks and transformers briefly; tokens and embeddings properly, because everything after this depends on them.",
           },
           {
-            days: "Day 5",
             title: "What an agent actually is",
             body: "The loop, tool definitions as prompts, and the five ways agents fail in production.",
           },
           {
-            days: "Day 6",
             title: "Retrieval-augmented generation",
             body: "Chunking, embeddings, pgvector, hybrid search, reranking, citations, and measuring recall rather than eyeballing it.",
           },
           {
-            days: "Day 7",
             title: "LangChain and LangGraph",
             body: "Chains where a line is enough; state, nodes, edges, checkpointers and human-in-the-loop where it is not.",
           },
           {
-            days: "Day 8",
             title: "Memory, sessions and users",
             body: "Working, session and long-term memory as three separate problems, with the context budget they have to fit.",
           },
           {
-            days: "Day 9",
             title: "MCP — the Model Context Protocol",
             body: "Tools, resources and prompts; stdio and Streamable HTTP; writing a server, and the security that goes with one.",
           },
           {
-            days: "Day 10",
             title: "The framework landscape",
             body: "LangGraph, OpenAI Agents SDK, Vercel AI SDK, AutoGen, Semantic Kernel, Azure AI Foundry — and when each earns its place.",
           },
           {
-            days: "Day 11",
             title: "Shipping an agent",
             body: "Evaluation sets, guardrails, retries, cost control, observability and streaming — the work that makes a demo a product.",
           },
@@ -351,27 +319,22 @@ export const academy: {
           "The part that turns all of it into an offer. Nobody teaches this and it is usually what is missing.",
         topics: [
           {
-            days: "Day 1",
             title: "Software Engineering & Systems",
             body: "SDLC, processes, job roles, team structure, system design basics.",
           },
           {
-            days: "Day 2",
             title: "Profile Building",
             body: "Résumé building, ATS optimisation and GitHub portfolio strategy.",
           },
           {
-            days: "Day 3",
             title: "Outreach & Strategy",
             body: "LinkedIn optimisation, job portals and strategic job-search workflows.",
           },
           {
-            days: "Day 4",
             title: "Behavioural Readiness",
             body: "Self introduction, professional communication and HR interview preparation.",
           },
           {
-            days: "Day 5",
             title: "Evaluation & Roadmap",
             body: "Technical mock interview, structured feedback and a personalised career roadmap.",
           },
