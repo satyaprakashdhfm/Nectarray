@@ -255,9 +255,21 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(60rem 42rem at 8% -8%, rgb(43 179 173 / 0.16), transparent 62%),
-    radial-gradient(52rem 40rem at 96% 18%, rgb(31 165 222 / 0.15), transparent 62%),
-    radial-gradient(64rem 46rem at 50% 112%, rgb(126 217 87 / 0.09), transparent 62%);
+    radial-gradient(
+      60rem 42rem at 8% -8%,
+      rgb(43 179 173 / 0.16),
+      transparent 62%
+    ),
+    radial-gradient(
+      52rem 40rem at 96% 18%,
+      rgb(31 165 222 / 0.15),
+      transparent 62%
+    ),
+    radial-gradient(
+      64rem 46rem at 50% 112%,
+      rgb(126 217 87 / 0.09),
+      transparent 62%
+    );
 }
 
 /* The water moves, slowly — a minute and a half for one drift — so the
@@ -660,7 +672,8 @@ label:has(input[type="checkbox"]) {
     background-color: var(--color-brand-solid);
     color: var(--color-cta-fg);
     font-weight: 600;
-    box-shadow: 0 6px 16px -10px color-mix(in srgb, var(--color-brand) 70%, transparent);
+    box-shadow: 0 6px 16px -10px
+      color-mix(in srgb, var(--color-brand) 70%, transparent);
   }
 
   &:focus-visible {
@@ -1299,7 +1312,10 @@ label:has(input[type="checkbox"]) {
   }
   /* Half the screen, less half the tile, a gap, and the edge margin. */
   .hero-copy {
-    max-width: min(50rem, calc(50vw - var(--hero-tile) / 2 - 3.5vw - var(--hero-pad)));
+    max-width: min(
+      50rem,
+      calc(50vw - var(--hero-tile) / 2 - 3.5vw - var(--hero-pad))
+    );
   }
   .hero-title {
     font-size: clamp(2.6rem, 3.2vw, 4.25rem);
@@ -1332,8 +1348,13 @@ label:has(input[type="checkbox"]) {
 /* A lit centre falling off to deep water at the edges — the logo's blue,
    with room for white type to read at the rim. */
 .hero-ground {
-  background:
-    radial-gradient(110% 85% at 50% 38%, #3fbde8 0%, #1d93c6 30%, #0f6690 62%, #0a3b57 100%);
+  background: radial-gradient(
+    110% 85% at 50% 38%,
+    #3fbde8 0%,
+    #1d93c6 30%,
+    #0f6690 62%,
+    #0a3b57 100%
+  );
 }
 
 .hero-blob {
@@ -1368,7 +1389,10 @@ label:has(input[type="checkbox"]) {
 
 /* A faint dot grid, strongest around the hub and gone at the edges. */
 .hero-dots {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1.3px);
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.22) 1px,
+    transparent 1.3px
+  );
   background-size: 26px 26px;
   mask-image: radial-gradient(60% 55% at 50% 40%, #000 0%, transparent 100%);
 }
@@ -1426,20 +1450,39 @@ label:has(input[type="checkbox"]) {
   position: absolute;
   inset: -45%;
   border-radius: 9999px;
-  background: radial-gradient(closest-side, rgba(126, 217, 87, 0.45), rgba(43, 179, 173, 0.18) 55%, transparent 75%);
+  background: radial-gradient(
+    closest-side,
+    rgba(126, 217, 87, 0.45),
+    rgba(43, 179, 173, 0.18) 55%,
+    transparent 75%
+  );
   filter: blur(8px);
 }
 
 /* The copy sits low-left, so that is where the scene is darkened. */
 .hero-shade-bottom {
-  background: linear-gradient(to top, rgba(4, 18, 28, 0.88) 0%, rgba(4, 18, 28, 0.55) 26%, transparent 58%);
+  background: linear-gradient(
+    to top,
+    rgba(4, 18, 28, 0.88) 0%,
+    rgba(4, 18, 28, 0.55) 26%,
+    transparent 58%
+  );
 }
 .hero-shade-left {
-  background: linear-gradient(to right, rgba(4, 18, 28, 0.55) 0%, transparent 46%);
+  background: linear-gradient(
+    to right,
+    rgba(4, 18, 28, 0.55) 0%,
+    transparent 46%
+  );
 }
 
 .hero-accent {
-  background-image: linear-gradient(100deg, #b6f09a 0%, #7ee0d6 50%, #9fdcf7 100%);
+  background-image: linear-gradient(
+    100deg,
+    #b6f09a 0%,
+    #7ee0d6 50%,
+    #9fdcf7 100%
+  );
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -1652,6 +1695,74 @@ label:has(input[type="checkbox"]) {
 .code-group-tab:focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: -2px;
+}
+
+/* Images on consecutive lines, one tab each (FigureGroup.tsx): the code
+   group's tabs over a dark frame, so a preview reads like a file viewer. */
+.figure-group {
+  margin-block: 1.5rem 1.75rem;
+}
+
+.figure-group-panel {
+  border: 1px solid var(--color-night-line);
+  border-radius: 0 0.875rem 0.875rem 0.875rem;
+  background-color: var(--color-night);
+  padding: 1rem;
+}
+
+.figure-group-panel > a {
+  display: block;
+}
+
+.figure-group-panel img {
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  max-height: min(70vh, 38rem);
+  width: auto;
+  height: auto;
+  border-radius: 0.45rem;
+}
+
+.figure-group-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.9rem;
+}
+
+.notes .figure-group-foot p {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.notes .figure-group-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.notes .figure-group-download:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.notes .figure-group-download:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }
 
 /* A screenshot in the notes, captioned by its markdown title. */

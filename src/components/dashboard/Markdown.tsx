@@ -15,8 +15,18 @@ import {
 } from "lucide-react";
 import { CodeBlock } from "@/components/dashboard/CodeBlock";
 import { CodeGroup } from "@/components/dashboard/CodeGroup";
+import { FigureGroup } from "@/components/dashboard/FigureGroup";
 import { remarkCodeTabs, type CodeTab } from "@/lib/notes-code-tabs";
+import { remarkFigureTabs, type FigureTab } from "@/lib/notes-figure-tabs";
 import { idCounter } from "@/lib/toc";
+
+/**
+ * A course file on this site — a dataset or a notebook a lesson hands out.
+ * Linked for download rather than opened in a new tab: a browser shows a PDF
+ * well enough, but a student following along needs it on disk, next to the
+ * code that reads it.
+ */
+const COURSE_FILE = /^\/[^?#]*\.(pdf|docx|xlsx|csv|zip|ipynb)$/i;
 
 /**
  * The callout kinds, written as GitHub-style alerts.
@@ -129,7 +139,7 @@ export function Markdown({ children }: { children: string }) {
   return (
     <div className="notes">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkCodeTabs]}
+        remarkPlugins={[remarkGfm, remarkCodeTabs, remarkFigureTabs]}
         components={{
           // Shifted down one level: the lesson title is the page's h1, so a
           // section of the notes is an h2 however it was written.
@@ -138,11 +148,27 @@ export function Markdown({ children }: { children: string }) {
           h3: heading("h4"),
           h4: heading("h5"),
 
-          a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noreferrer noopener">
-              {children}
-            </a>
-          ),
+          a: ({ href, children }) =>
+            href && COURSE_FILE.test(href) ? (
+              <a href={href} download>
+                {children}
+              </a>
+            ) : (
+              <a href={href} target="_blank" rel="noreferrer noopener">
+                {children}
+              </a>
+            ),
+
+          // Only remarkFigureTabs makes a div: raw HTML in a lesson is not
+          // rendered, so there is no other div to pass through.
+          div: (props) => {
+            const figures = (props as Record<string, unknown>)["data-figures"];
+            return typeof figures === "string" ? (
+              <FigureGroup figures={JSON.parse(figures) as FigureTab[]} />
+            ) : (
+              <div className={props.className}>{props.children}</div>
+            );
+          },
 
           table: ({ children }) => (
             <div className="table-scroll">
