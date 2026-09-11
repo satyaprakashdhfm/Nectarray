@@ -16,7 +16,7 @@ export function Pricing({ asPage = false }: { asPage?: boolean } = {}) {
       id="pricing"
       className={
         asPage
-          ? "border-line bg-mist relative overflow-hidden border-b pt-[10.5rem] pb-24 sm:pt-[11.5rem] sm:pb-28 lg:pt-[12.5rem] lg:pb-32"
+          ? "border-line bg-mist relative overflow-hidden border-b pt-[calc(6rem+var(--header-room))] pb-24 sm:pt-[calc(7rem+var(--header-room))] sm:pb-28 lg:pt-[calc(8rem+var(--header-room))] lg:pb-32"
           : "border-line bg-mist relative overflow-hidden border-y py-24 sm:py-28 lg:py-32"
       }
     >

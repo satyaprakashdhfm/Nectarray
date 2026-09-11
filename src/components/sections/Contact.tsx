@@ -81,7 +81,7 @@ export function Contact({ asPage = false }: { asPage?: boolean } = {}) {
       data-header-clear={asPage || undefined}
       className={
         asPage
-          ? "bg-night relative overflow-hidden pt-[10.5rem] pb-24 text-white sm:pt-[11.5rem] sm:pb-28 lg:pt-[12.5rem] lg:pb-32"
+          ? "bg-night relative overflow-hidden pt-[calc(6rem+var(--header-room))] pb-24 text-white sm:pt-[calc(7rem+var(--header-room))] sm:pb-28 lg:pt-[calc(8rem+var(--header-room))] lg:pb-32"
           : "bg-night relative overflow-hidden py-24 text-white sm:py-28 lg:py-32"
       }
     >

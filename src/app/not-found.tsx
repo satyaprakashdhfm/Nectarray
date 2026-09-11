@@ -11,7 +11,7 @@ export default function NotFound() {
       <Header />
       <main
         id="main"
-        className="grid min-h-[70vh] place-items-center pt-[72px]"
+        className="grid min-h-[70vh] place-items-center pt-[var(--header-room)]"
       >
         <div className="shell py-20 text-center">
           <p className="eyebrow mb-5">Error 404</p>

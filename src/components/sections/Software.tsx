@@ -31,7 +31,7 @@ export function Software({ asPage = false }: { asPage?: boolean } = {}) {
       id="software"
       className={
         asPage
-          ? "pt-32 pb-14 sm:pt-[8.5rem] sm:pb-16 lg:pt-[9.5rem] lg:pb-20"
+          ? "pt-[calc(3.5rem+var(--header-room))] pb-14 sm:pt-[calc(4rem+var(--header-room))] sm:pb-16 lg:pt-[calc(5rem+var(--header-room))] lg:pb-20"
           : sectionPad
       }
     >

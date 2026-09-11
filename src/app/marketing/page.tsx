@@ -192,7 +192,7 @@ export default function MarketingPage() {
          * strength and the page stays light throughout, so there is no
          * transition left to solve.
          */}
-        <section className="relative overflow-hidden pt-[4.5rem]">
+        <section className="relative overflow-hidden pt-[var(--header-room)]">
           <div
             className="pointer-events-none absolute inset-0 -z-10"
             aria-hidden

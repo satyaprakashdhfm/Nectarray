@@ -235,6 +235,23 @@ html {
   /* Plus the hairline under each of the two, which a pane sized against the
      viewport has to give back or it ends up two pixels too tall. */
   --app-chrome: calc(var(--app-header) + var(--app-nav) + 2px);
+
+  /*
+   * The public site's floating glass header, as one set of numbers that the
+   * bar and every page's opening section both read — so the room a page
+   * leaves at the top is always the room the bar actually takes.
+   *
+   * Fluid rather than stepped: identical to the fixed sizes up to a 1440
+   * laptop, then growing to roughly 1.3x on a 1920-2560 monitor, which is
+   * the proportion gokiwi.in steps to. A fixed 64px bar with 15px type is
+   * a strip of confetti across the top of a 27-inch screen.
+   */
+  --bar-top: clamp(0.75rem, 1.1vw, 2.125rem);
+  --bar-h: clamp(4rem, 1.3rem + 3vw, 5.25rem);
+  --bar-fs: clamp(0.9375rem, 0.25rem + 0.75vw, 1.125rem);
+  /* Where a page's content may start: under the bar, less the 8px of air
+     the old solid bar's 72px already assumed. */
+  --header-room: max(4.5rem, calc(var(--bar-top) + var(--bar-h) - 0.5rem));
 }
 
 body {
@@ -1138,6 +1155,57 @@ label:has(input[type="checkbox"]) {
    is ready; the glass, the shading and the tile are what stay once it is.
 -------------------------------------------------------------------------- */
 
+/*
+ * Hero geometry. From xl up the copy and the stats card are anchored to the
+ * edges of the screen, the way gokiwi.in's are, instead of sitting in the
+ * centred 92rem column the rest of the site uses: on a 2560 monitor that
+ * column starts 544px in and the hero reads as a small block adrift in the
+ * middle of a picture. The copy is also held clear of the tile by width,
+ * and everything scales with the viewport between a laptop and a monitor.
+ */
+.hero-ground {
+  --hero-tile: clamp(8.5rem, 13vw, 22rem);
+  --hero-pad: clamp(1.25rem, 6.5vw, 7.75rem);
+}
+
+@media (min-width: 80rem) {
+  .hero-frame {
+    max-width: none;
+    padding-inline: var(--hero-pad);
+    padding-bottom: clamp(7rem, 12vh, 13rem);
+  }
+  /* Half the screen, less half the tile, a gap, and the edge margin. */
+  .hero-copy {
+    max-width: min(50rem, calc(50vw - var(--hero-tile) / 2 - 3.5vw - var(--hero-pad)));
+  }
+  .hero-title {
+    font-size: clamp(2.6rem, 3.2vw, 4.25rem);
+  }
+  .hero-lede {
+    font-size: clamp(1.0625rem, 0.3rem + 0.9vw, 1.375rem);
+  }
+  .hero-action {
+    font-size: clamp(0.9375rem, 0.55rem + 0.5vw, 1.125rem);
+  }
+  .hero-note {
+    font-size: clamp(0.875rem, 0.45rem + 0.45vw, 1.0625rem);
+  }
+  .hero-stats {
+    width: clamp(26rem, 25vw, 38rem);
+    padding: clamp(1.5rem, 1.6vw, 2.25rem) clamp(1.75rem, 1.9vw, 2.75rem);
+  }
+  .hero-stat-value {
+    font-size: clamp(1.875rem, 2.1vw, 2.875rem);
+  }
+  .hero-stat-label {
+    font-size: clamp(0.75rem, 0.35rem + 0.45vw, 0.9375rem);
+  }
+  .hero-cue {
+    font-size: clamp(0.6875rem, 0.2rem + 0.55vw, 1rem);
+    bottom: clamp(1.5rem, 3vh, 3.5rem);
+  }
+}
+
 /* A lit centre falling off to deep water at the edges — the logo's blue,
    with room for white type to read at the rim. */
 .hero-ground {
@@ -1219,7 +1287,7 @@ label:has(input[type="checkbox"]) {
 /* The hub: a thick glossy tile, like a soft plastic key. */
 .hero-tile {
   position: relative;
-  width: clamp(8.5rem, 12.5vw, 12.5rem);
+  width: var(--hero-tile);
   aspect-ratio: 1;
   border-radius: 28%;
   background: linear-gradient(150deg, #ffffff 0%, #f1f9fd 55%, #ddf1fa 100%);

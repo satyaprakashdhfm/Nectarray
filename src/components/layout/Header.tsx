@@ -14,8 +14,6 @@ import { cn } from "@/lib/utils";
 const SHOW_AFTER_IDLE_MS = 1000;
 /** Within this far of the top the bar is simply there. */
 const SHOW_NEAR_TOP = 120;
-/** The bar's own bottom edge, give or take — where "behind the bar" ends. */
-const BAR_BOTTOM = 88;
 
 /**
  * The site header: a frosted glass pill floating over the page.
@@ -47,11 +45,16 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
     let idle: number | undefined;
 
     // Clear while the dark section is still behind the bar, frosted from the
-    // moment the page below it slides underneath.
+    // moment the page below it slides underneath. The bar's height is
+    // fluid, so "behind the bar" is measured rather than assumed.
     const overDark = () => {
       if (!clearAtTop) return false;
       const zone = document.querySelector("[data-header-clear]");
-      return zone ? zone.getBoundingClientRect().bottom > BAR_BOTTOM : false;
+      const bar = document.querySelector(".glass-bar");
+      if (!zone || !bar) return false;
+      return (
+        zone.getBoundingClientRect().bottom > bar.getBoundingClientRect().bottom
+      );
     };
 
     const onScroll = () => {
@@ -85,13 +88,17 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
   return (
     <header
       data-hidden={hidden && !open}
-      className="glass-header fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-5"
+      className="glass-header fixed inset-x-0 top-[var(--bar-top)] z-50 px-3 text-[length:var(--bar-fs)] sm:px-5"
     >
       <div
         data-solid={!clear || open}
-        className="glass-bar mx-auto flex h-16 max-w-[78rem] items-center justify-between gap-6 rounded-full pr-2.5 pl-5"
+        className="glass-bar mx-auto flex h-[var(--bar-h)] max-w-[78rem] items-center justify-between gap-6 rounded-full pr-[0.6em] pl-[1.3em] min-[1800px]:max-w-[84rem]"
       >
-        <Logo priority markClassName="size-9" />
+        <Logo
+          priority
+          markClassName="size-[2.4em]"
+          wordClassName="text-[1.4em]"
+        />
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
           {nav.map((item) => (
@@ -100,7 +107,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               href={item.href}
               aria-current={isCurrent(item.href) ? "page" : undefined}
               className={cn(
-                "rounded-full px-4 py-2 text-[0.9375rem] font-medium transition-colors duration-200",
+                "rounded-full px-[1.05em] py-[0.5em] font-medium transition-colors duration-200",
                 isCurrent(item.href)
                   ? "bg-white/14 text-white"
                   : "text-white/75 hover:bg-white/10 hover:text-white",
@@ -117,7 +124,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
           <EnrolButton
             label="Log in"
             withArrow={false}
-            className="hidden rounded-full px-4 py-2.5 text-[0.9375rem] font-medium text-white/75 transition-colors duration-200 hover:bg-white/10 hover:text-white sm:inline-flex"
+            className="hidden rounded-full px-[1.05em] py-[0.6em] font-medium text-white/75 transition-colors duration-200 hover:bg-white/10 hover:text-white sm:inline-flex"
           />
 
           {/* Straight to the enquiry form. The top of /contact opens on the
@@ -125,11 +132,15 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               a CTA landing above the form reads as having gone nowhere. */}
           <Link
             href="/contact#enquiry"
-            className="group text-night hidden items-center gap-2.5 rounded-full bg-white py-1.5 pr-1.5 pl-5 text-[0.9375rem] font-semibold transition-colors duration-200 hover:bg-white/90 sm:inline-flex"
+            className="group text-night hidden items-center gap-[0.65em] rounded-full bg-white py-[0.4em] pr-[0.4em] pl-[1.3em] font-semibold transition-colors duration-200 hover:bg-white/90 sm:inline-flex"
           >
             Book a call
-            <span className="bg-night grid size-8 place-items-center rounded-full text-white transition-transform duration-300 group-hover:rotate-45">
-              <ArrowUpRight className="size-4" strokeWidth={2.25} aria-hidden />
+            <span className="bg-night grid size-[2.15em] place-items-center rounded-full text-white transition-transform duration-300 group-hover:rotate-45">
+              <ArrowUpRight
+                className="size-[1.05em]"
+                strokeWidth={2.25}
+                aria-hidden
+              />
             </span>
           </Link>
 
