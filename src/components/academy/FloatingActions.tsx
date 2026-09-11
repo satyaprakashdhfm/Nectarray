@@ -43,7 +43,7 @@ export function FloatingActions() {
         type="button"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Back to top"
-        className={`bg-brand-deep fixed right-6 bottom-6 z-50 grid size-12 place-items-center rounded-xl text-white shadow-lg transition-all ${
+        className={`bg-brand-deep text-cta-fg fixed right-6 bottom-6 z-50 grid size-12 place-items-center rounded-xl shadow-lg transition-all ${
           up ? "opacity-100" : "pointer-events-none translate-y-3 opacity-0"
         }`}
       >

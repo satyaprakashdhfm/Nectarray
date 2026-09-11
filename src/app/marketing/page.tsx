@@ -141,7 +141,7 @@ function Tile({
         </span>
       ) : (
         <span
-          className={`grid size-9 place-items-center rounded-lg text-white ${accent.chip}`}
+          className={`text-cta-fg grid size-9 place-items-center rounded-lg ${accent.chip}`}
         >
           <Icon name={item.icon} className="size-[1.0625rem]" />
         </span>
@@ -523,7 +523,7 @@ export default function MarketingPage() {
               {process.steps.map((step, i) => (
                 <Reveal as="li" key={step.n} delay={i * 60}>
                   <div className="border-night-line bg-night-soft h-full rounded-2xl border p-5">
-                    <span className="bg-brand-deep grid size-8 place-items-center rounded-full font-mono text-[0.72rem] font-semibold text-white">
+                    <span className="bg-brand-deep text-cta-fg grid size-8 place-items-center rounded-full font-mono text-[0.72rem] font-semibold">
                       {step.n}
                     </span>
                     <h3 className="mt-4 text-[0.9375rem] font-semibold text-white">

@@ -248,7 +248,7 @@ export function EnrolForm() {
                       <span
                         className={`grid size-7 shrink-0 place-items-center rounded-full text-[0.8125rem] font-semibold transition-colors ${
                           i <= step
-                            ? "bg-brand-deep text-white"
+                            ? "bg-brand-deep text-cta-fg"
                             : "bg-mist text-ink-faint"
                         }`}
                       >
@@ -431,7 +431,7 @@ export function EnrolForm() {
                         type="button"
                         onClick={() => setStep((s) => s + 1)}
                         disabled={!stepValid}
-                        className="group bg-ink hover:bg-brand-deep disabled:hover:bg-ink inline-flex items-center gap-2 rounded-full px-6 py-3 text-[0.9375rem] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                        className="group bg-ink hover:bg-brand-deep disabled:hover:bg-ink text-cta-fg inline-flex items-center gap-2 rounded-full px-6 py-3 text-[0.9375rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Next
                         <ArrowRight
@@ -444,7 +444,7 @@ export function EnrolForm() {
                       <button
                         type="submit"
                         disabled={!stepValid || status === "sending"}
-                        className="bg-ink hover:bg-brand-deep disabled:hover:bg-ink inline-flex items-center gap-2 rounded-full px-6 py-3 text-[0.9375rem] font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                        className="bg-ink hover:bg-brand-deep disabled:hover:bg-ink text-cta-fg inline-flex items-center gap-2 rounded-full px-6 py-3 text-[0.9375rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {status === "sending" ? "Sending…" : "Send application"}
                       </button>

@@ -92,6 +92,10 @@
   --color-teal-deep: #17827e;
   --color-teal-wash: #e4f6f5;
 
+  /* Figures that are going the wrong way — an overdue amount, a failed
+     match. A red chosen for white; the dark grounds lift it. */
+  --color-danger: #c0392b;
+
   /*
    * Text on a solid --color-ink button. In light mode ink is near-black so
    * this is white; in dark mode ink is near-white, and white on white is
@@ -157,6 +161,7 @@
   --color-leaf-deep: #7ed957;
   --color-amber-deep: #f5a44a;
   --color-teal-deep: #35cfc7;
+  --color-danger: #ff8f80;
 }
 
 [data-ui-theme="dark"] .card {
@@ -185,6 +190,124 @@
       color-mix(in srgb, #ffffff 6%, transparent) 1px,
       transparent 1px
     );
+}
+
+/* --------------------------------------------------------------------------
+   Public site: dark ocean, glass
+
+   The marketing pages run dark, in the hero's own water — deep navy with a
+   trace of teal, never black — so the page does not flip from a lit scene to
+   white paper the moment the hero scrolls away. Keyed off the public header
+   (which carries data-site="public" on every public route and nowhere else),
+   so the dashboard's own light/dark switch is untouched and nothing has to
+   be set by script before first paint.
+
+   Like the dashboard's dark mode it redefines the same tokens rather than
+   adding class names, so every section that says bg-canvas / text-ink /
+   border-line turns with no change to its markup.
+-------------------------------------------------------------------------- */
+
+:root:has([data-site="public"]) {
+  --color-canvas: #061621;
+  --color-surface: #0c2231;
+  --color-mist: #081c29;
+  --color-line: #1c3747;
+  --color-line-soft: #14303f;
+
+  --color-ink: #eef5f9;
+  --color-ink-soft: #abbfcc;
+  --color-ink-faint: #7a93a3;
+
+  /* Text on a solid ink or brand fill: ink is the light one now. */
+  --color-cta-fg: #061621;
+
+  /* One step darker than the page, so a night section still reads as a
+     band rather than disappearing into the canvas. */
+  --color-night: #03101a;
+  --color-night-soft: #0a1e2b;
+  --color-night-line: #1a3444;
+
+  /* Washes are tints that let the ground through, which is what makes a
+     chip or a tinted card read as glass instead of a flat swatch. */
+  --color-brand-wash: rgb(31 165 222 / 0.13);
+  --color-leaf-wash: rgb(126 217 87 / 0.11);
+  --color-amber-wash: rgb(245 164 74 / 0.12);
+  --color-teal-wash: rgb(43 179 173 / 0.13);
+
+  /* The -deep tones were chosen for contrast on white; on this ground the
+     display tones are the readable ones. */
+  --color-brand-deep: #5ccaf3;
+  --color-brand-solid: #4cc0f0;
+  --color-leaf-deep: #8fe36b;
+  --color-amber-deep: #f7b467;
+  --color-teal-deep: #45d6cc;
+  --color-danger: #ff8f80;
+
+  color-scheme: dark;
+}
+
+/* The water the glass floats on: the hero's colours, far away and faint,
+   fixed behind everything so a card has something to blur. */
+:root:has([data-site="public"]) body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 42rem at 8% -8%, rgb(43 179 173 / 0.16), transparent 62%),
+    radial-gradient(52rem 40rem at 96% 18%, rgb(31 165 222 / 0.15), transparent 62%),
+    radial-gradient(64rem 46rem at 50% 112%, rgb(126 217 87 / 0.09), transparent 62%);
+}
+
+/* The water moves, slowly — a minute and a half for one drift — so the
+   frost on the cards shifts as the page is read rather than sitting as a
+   flat print. One fixed layer, transformed on the compositor: nothing is
+   repainted as it moves. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:has([data-site="public"]) body::before {
+    inset: -8%;
+    animation: water-drift 90s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes water-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-3%, 2%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(3%, -2%, 0) scale(1.03);
+  }
+}
+
+/* Glass cards: a pane of frosted light over the water, lit along the top
+   edge, rather than a white sheet with a shadow under it. */
+:root:has([data-site="public"]) .card {
+  background-color: rgb(255 255 255 / 0.045);
+  border-color: rgb(255 255 255 / 0.1);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 24px 50px -32px rgb(0 0 0 / 0.7);
+}
+
+:root:has([data-site="public"]) .card-hover:hover {
+  border-color: color-mix(in srgb, var(--color-brand) 45%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 0 0 1px color-mix(in srgb, var(--color-brand) 18%, transparent),
+    0 28px 60px -26px rgb(31 165 222 / 0.35);
+}
+
+/* Grid paper is drawn in ink, which is light now. */
+:root:has([data-site="public"]) .grid-paper {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
 }
 
 @theme {

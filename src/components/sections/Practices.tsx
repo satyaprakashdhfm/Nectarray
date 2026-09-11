@@ -83,7 +83,7 @@ export function Practices() {
 
                 <div className="flex items-start justify-between gap-4">
                   <span
-                    className={`grid size-12 place-items-center rounded-2xl text-white ${accents[i].chip}`}
+                    className={`text-cta-fg grid size-12 place-items-center rounded-2xl ${accents[i].chip}`}
                   >
                     <Icon name={pillar.icon} className="size-[1.375rem]" />
                   </span>

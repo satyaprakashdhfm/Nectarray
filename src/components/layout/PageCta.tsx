@@ -43,7 +43,7 @@ export function PageCta({
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link
               href="/contact#enquiry"
-              className="group bg-ink hover:bg-brand-deep inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[0.9375rem] font-semibold text-white transition-colors"
+              className="group bg-ink hover:bg-brand-deep text-cta-fg inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
             >
               Start a project
               <ArrowRight

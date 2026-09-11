@@ -9,7 +9,7 @@ type Industry = (typeof agenticAiPage)["industries"][number];
 /** How a verdict reads. Every one of these is illustration, not real data. */
 const TONE: Record<string, string> = {
   good: "text-leaf-deep",
-  bad: "text-[#c0392b]",
+  bad: "text-danger",
   warn: "text-amber-deep",
   muted: "text-ink-faint italic",
   total: "text-ink font-semibold",
@@ -40,7 +40,7 @@ export function IndustryCard({ industry }: { industry: Industry }) {
     >
       {/* Which industry, and why these three jobs ------------------- */}
       <header className="flex items-start gap-4">
-        <span className="bg-brand-deep grid size-11 shrink-0 place-items-center rounded-xl text-white">
+        <span className="bg-brand-deep text-cta-fg grid size-11 shrink-0 place-items-center rounded-xl">
           <Icon name={industry.icon} className="size-5" />
         </span>
         <div className="min-w-0">

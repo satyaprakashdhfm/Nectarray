@@ -95,7 +95,7 @@ export function AcademyHero() {
                 <EnrolButton
                   label={course.cta.label}
                   signedInLabel="Go to your dashboard"
-                  className="group bg-ink hover:bg-brand-deep inline-flex items-center gap-2 rounded-full px-8 py-4 text-[1rem] font-semibold text-white transition-colors"
+                  className="group bg-ink hover:bg-brand-deep text-cta-fg inline-flex items-center gap-2 rounded-full px-8 py-4 text-[1rem] font-semibold transition-colors"
                 />
                 <p className="text-ink-faint mt-4 text-[0.875rem]">
                   Sign in, and the dashboard opens with your notes, the practice

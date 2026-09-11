@@ -42,7 +42,7 @@ export function AcademyNav() {
           label={academy.course.cta.label}
           hideWhenSignedIn
           withArrow={false}
-          className="bg-ink hover:bg-brand-deep hidden shrink-0 rounded-full px-5 py-2 text-[0.875rem] font-semibold text-white transition-colors sm:inline-flex"
+          className="bg-ink hover:bg-brand-deep text-cta-fg hidden shrink-0 rounded-full px-5 py-2 text-[0.875rem] font-semibold transition-colors sm:inline-flex"
         />
       </div>
     </div>

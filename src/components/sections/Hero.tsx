@@ -105,7 +105,7 @@ export function Hero() {
                   className={`card card-hover group flex items-start gap-3.5 bg-gradient-to-br p-4 sm:gap-4 sm:p-5 ${accents[i].tint} to-surface ${tilts[i]} hover:rotate-0`}
                 >
                   <span
-                    className={`grid size-10 shrink-0 place-items-center rounded-xl text-white ${accents[i].chip}`}
+                    className={`text-cta-fg grid size-10 shrink-0 place-items-center rounded-xl ${accents[i].chip}`}
                   >
                     <Icon name={pillar.icon} className="size-[1.125rem]" />
                   </span>

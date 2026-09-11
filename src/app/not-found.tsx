@@ -39,7 +39,7 @@ export default function NotFound() {
           <div className="mt-10">
             <Link
               href="/"
-              className="bg-ink hover:bg-brand-deep inline-flex rounded-full px-6 py-3.5 text-[0.9375rem] font-semibold text-white transition-colors"
+              className="bg-ink hover:bg-brand-deep text-cta-fg inline-flex rounded-full px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors"
             >
               Back to the homepage
             </Link>

@@ -32,7 +32,7 @@ export function Process({ asPage = false }: { asPage?: boolean } = {}) {
           {process.steps.map((step, i) => (
             <Reveal as="li" key={step.n} delay={i * 90}>
               <div className="card card-hover relative h-full p-7">
-                <span className="bg-ink relative z-10 grid size-9 place-items-center rounded-full font-mono text-[0.75rem] font-semibold text-white">
+                <span className="bg-ink text-cta-fg relative z-10 grid size-9 place-items-center rounded-full font-mono text-[0.75rem] font-semibold">
                   {step.n}
                 </span>
                 <h3 className="text-ink mt-6 text-[1.125rem] font-semibold tracking-tight">

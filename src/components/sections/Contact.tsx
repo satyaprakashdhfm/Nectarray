@@ -253,7 +253,7 @@ export function Contact({ asPage = false }: { asPage?: boolean } = {}) {
             <button
               type="submit"
               disabled={status === "sending"}
-              className="text-ink hover:bg-leaf hover:text-night disabled:hover:text-ink mt-7 w-full rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
+              className="text-night hover:bg-leaf hover:text-night disabled:hover:text-night mt-7 w-full rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
             >
               {status === "sending" ? "Sending…" : "Send enquiry"}
             </button>

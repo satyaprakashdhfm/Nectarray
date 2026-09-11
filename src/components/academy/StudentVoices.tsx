@@ -77,7 +77,7 @@ export function StudentVoices() {
 
                   <figcaption className="relative flex items-start gap-4">
                     <span
-                      className="from-brand to-brand-deep grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-br text-[1.25rem] font-bold text-white"
+                      className="from-brand to-brand-deep text-cta-fg grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-br text-[1.25rem] font-bold"
                       aria-hidden
                     >
                       {entry.name.charAt(0)}
