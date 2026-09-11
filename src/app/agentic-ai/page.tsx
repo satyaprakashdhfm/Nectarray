@@ -125,7 +125,7 @@ export default function AgenticAiPage() {
       <StructuredData />
       <Header />
 
-      <main id="main" className="pt-[72px]">
+      <main id="main">
         {/* ── Hero ─────────────────────────────────────────────────── */}
         {/*
          * The artwork sits in a panel beside the copy, the way /academy's
@@ -140,7 +140,7 @@ export default function AgenticAiPage() {
          * strength and the page stays light throughout, so there is no
          * transition left to solve.
          */}
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden pt-[4.5rem]">
           <div
             className="pointer-events-none absolute inset-0 -z-10"
             aria-hidden

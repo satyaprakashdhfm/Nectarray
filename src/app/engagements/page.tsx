@@ -17,7 +17,7 @@ export default function EngagementsPage() {
   return (
     <>
       <Header />
-      <main id="main" className="pt-[72px]">
+      <main id="main">
         <Pricing asPage />
         <Process />
       </main>

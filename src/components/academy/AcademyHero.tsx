@@ -43,7 +43,7 @@ export function AcademyHero() {
   const { course } = academy;
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden pt-[4.5rem]">
       {/* Decoration ---------------------------------------------------- */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="from-brand-wash via-canvas to-leaf-wash absolute inset-0 bg-gradient-to-br" />

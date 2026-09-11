@@ -55,6 +55,7 @@ export function GlassHero() {
   return (
     <section
       id="top"
+      data-header-clear
       className="hero-ground relative isolate flex min-h-[max(100svh,40rem)] flex-col overflow-hidden text-white"
     >
       {/* Scene ------------------------------------------------------------ */}

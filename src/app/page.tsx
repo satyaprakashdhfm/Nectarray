@@ -21,7 +21,7 @@ export default function HomePage() {
         }}
       />
 
-      <Header variant="glass" />
+      <Header clearAtTop />
 
       <main id="main">
         <GlassHero />

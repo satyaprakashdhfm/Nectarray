@@ -14,7 +14,11 @@ export function Pricing({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section
       id="pricing"
-      className="border-line bg-mist relative overflow-hidden border-y py-24 sm:py-28 lg:py-32"
+      className={
+        asPage
+          ? "border-line bg-mist relative overflow-hidden border-b pt-[10.5rem] pb-24 sm:pt-[11.5rem] sm:pb-28 lg:pt-[12.5rem] lg:pb-32"
+          : "border-line bg-mist relative overflow-hidden border-y py-24 sm:py-28 lg:py-32"
+      }
     >
       <div
         className="grid-paper pointer-events-none absolute inset-0 -z-10 opacity-60"

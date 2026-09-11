@@ -78,7 +78,12 @@ export function Contact({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section
       id="contact"
-      className="bg-night relative overflow-hidden py-24 text-white sm:py-28 lg:py-32"
+      data-header-clear={asPage || undefined}
+      className={
+        asPage
+          ? "bg-night relative overflow-hidden pt-[10.5rem] pb-24 text-white sm:pt-[11.5rem] sm:pb-28 lg:pt-[12.5rem] lg:pb-32"
+          : "bg-night relative overflow-hidden py-24 text-white sm:py-28 lg:py-32"
+      }
     >
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [mask-image:radial-gradient(100%_70%_at_50%_0%,#000_30%,transparent_78%)] [background-size:46px_46px] opacity-50" />

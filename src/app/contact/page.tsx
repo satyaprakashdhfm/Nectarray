@@ -15,9 +15,9 @@ export const metadata: Metadata = pageMetadata({
 export default function ContactPage() {
   return (
     <>
-      <Header />
+      <Header clearAtTop />
       {/* No PageCta here — this page is the call to action */}
-      <main id="main" className="pt-[72px]">
+      <main id="main">
         <Contact asPage />
         <Faq />
       </main>

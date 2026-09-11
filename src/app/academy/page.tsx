@@ -32,7 +32,7 @@ export default function AcademyPage() {
   return (
     <>
       <Header />
-      <main id="main" className="pt-[72px]">
+      <main id="main">
         <AcademyHero />
         <AcademyNav />
         <TeachingScope />

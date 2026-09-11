@@ -27,7 +27,14 @@ import { software } from "@/lib/content";
  */
 export function Software({ asPage = false }: { asPage?: boolean } = {}) {
   return (
-    <section id="software" className={sectionPad}>
+    <section
+      id="software"
+      className={
+        asPage
+          ? "pt-32 pb-14 sm:pt-[8.5rem] sm:pb-16 lg:pt-[9.5rem] lg:pb-20"
+          : sectionPad
+      }
+    >
       <div className={wideShell}>
         <SectionHead
           as={asPage ? "h1" : "h2"}
