@@ -1,10 +1,15 @@
 import Link from "next/link";
+import { IntentLink } from "@/components/dashboard/IntentLink";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
 import { LessonToc } from "@/components/dashboard/lesson-toc";
 import { Markdown } from "@/components/dashboard/Markdown";
-import { getLesson, stripLeadingHeading } from "@/lib/lessons";
-import { and, asc, eq } from "drizzle-orm";
+import {
+  getLesson,
+  publishedSiblings,
+  stripLeadingHeading,
+} from "@/lib/lessons";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules } from "@/lib/db/schema";
 import { tocEntries } from "@/lib/toc";
@@ -26,19 +31,16 @@ export default async function TeachingLessonPage({
 }) {
   const { id } = await params;
 
-  const lesson = await getLesson(id);
+  // Side by side: the list is found through the lesson's id, so it does not
+  // have to wait for the lesson.
+  const [lesson, list] = await Promise.all([
+    getLesson(id),
+    publishedSiblings(id),
+  ]);
 
   // A missing lesson and a student one are the same answer here: this route
   // only ever shows teaching content.
   if (!lesson || lesson.audience !== "admin" || !lesson.isPublished) notFound();
-
-  const list = await db
-    .select({ id: lessons.id, title: lessons.title })
-    .from(lessons)
-    .where(
-      and(eq(lessons.moduleId, lesson.moduleId), eq(lessons.isPublished, true)),
-    )
-    .orderBy(asc(lessons.position));
 
   const index = list.findIndex((entry) => entry.id === lesson.id);
   const prev = index > 0 ? list[index - 1] : null;
@@ -53,23 +55,17 @@ export default async function TeachingLessonPage({
   // The student module this one mirrors, if any — same pairing convention
   // as the editor's tabs: "<slug>-teaching" reads back to "<slug>", and the
   // corresponding short lesson shares this one's position.
-  const [studentModule] = await db
-    .select({ id: modules.id })
-    .from(modules)
-    .where(eq(modules.slug, lesson.moduleSlug.replace(/-teaching$/, "")))
+  const [studentLesson] = await db
+    .select({ id: lessons.id })
+    .from(lessons)
+    .innerJoin(modules, eq(modules.id, lessons.moduleId))
+    .where(
+      and(
+        eq(modules.slug, lesson.moduleSlug.replace(/-teaching$/, "")),
+        eq(lessons.position, lesson.position),
+      ),
+    )
     .limit(1);
-  const [studentLesson] = studentModule
-    ? await db
-        .select({ id: lessons.id })
-        .from(lessons)
-        .where(
-          and(
-            eq(lessons.moduleId, studentModule.id),
-            eq(lessons.position, lesson.position),
-          ),
-        )
-        .limit(1)
-    : [];
 
   return (
     <article className="min-w-0 pb-16">
@@ -117,7 +113,7 @@ export default async function TeachingLessonPage({
           className="border-line mt-14 flex flex-col gap-3 border-t pt-8 sm:flex-row sm:justify-between"
         >
           {prev ? (
-            <Link
+            <IntentLink
               href={`/admin/teaching/${prev.id}`}
               className="card card-hover group flex items-center gap-3 p-4 sm:max-w-[48%]"
             >
@@ -134,13 +130,13 @@ export default async function TeachingLessonPage({
                   {prev.title}
                 </span>
               </span>
-            </Link>
+            </IntentLink>
           ) : (
             <span />
           )}
 
           {next && (
-            <Link
+            <IntentLink
               href={`/admin/teaching/${next.id}`}
               className="card card-hover group flex items-center gap-3 p-4 text-right sm:max-w-[48%]"
             >
@@ -157,7 +153,7 @@ export default async function TeachingLessonPage({
                 strokeWidth={2}
                 aria-hidden
               />
-            </Link>
+            </IntentLink>
           )}
         </nav>
       )}

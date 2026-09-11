@@ -24,6 +24,16 @@ export const GA_MEASUREMENT_ID = "G-E5N83KZDXQ";
 export const GTM_CONTAINER_ID = "GTM-P6CR6X3N";
 
 /**
+ * Whether to load the GTM container at all.
+ *
+ * Off while the container is empty: as published on 2026-09-12 it held no
+ * tags, so every visit downloaded and ran 115 KB of script that did
+ * nothing. Publishing a tag in the GTM console is not enough on its own —
+ * set this to true in the same breath, or the tag will never load.
+ */
+export const tagManagerEnabled = false;
+
+/**
  * Analytics only loads in production builds, so local development and
  * preview work never pollutes the property's data. To check the tag locally,
  * run `npm run build && npm start` and watch GA4 → Reports → Realtime.

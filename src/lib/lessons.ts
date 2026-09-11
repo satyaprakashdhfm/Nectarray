@@ -1,14 +1,13 @@
 import { cache } from "react";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db";
-import {
-  lessonReleases,
-  lessons,
-  modules,
-  type Lesson,
-} from "@/lib/db/schema";
+import { lessonReleases, lessons, modules, type Lesson } from "@/lib/db/schema";
 
 export type { Lesson };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (id: string) => UUID.test(id);
 
 /**
  * The lessons a batch has been let into, as a set to test membership against.
@@ -45,6 +44,10 @@ export type LessonWithAudience = Lesson & {
  */
 export const getLesson = cache(
   async (id: string): Promise<LessonWithAudience | null> => {
+    // Postgres rejects a malformed uuid with an error, which would make a
+    // mistyped address a server error instead of a missing lesson.
+    if (!isUuid(id)) return null;
+
     /*
      * The module's audience comes back with the lesson because the caller
      * has to check it, and a lesson is addressed by its own id — nothing in
@@ -64,6 +67,37 @@ export const getLesson = cache(
     return row
       ? { ...row.lesson, audience: row.audience, moduleSlug: row.moduleSlug }
       : null;
+  },
+);
+
+/**
+ * The published lessons of the module a lesson belongs to, in order — the
+ * prev/next pager's list.
+ *
+ * Found through the lesson's own id rather than its module id, so it does
+ * not have to wait for the lesson to arrive first: a lesson page fetches
+ * both at once. The caller filters out whatever the viewer may not open.
+ */
+export const publishedSiblings = cache(
+  async (lessonId: string): Promise<{ id: string; title: string }[]> => {
+    if (!isUuid(lessonId)) return [];
+    const current = alias(lessons, "current");
+    return db
+      .select({ id: lessons.id, title: lessons.title })
+      .from(lessons)
+      .where(
+        and(
+          eq(lessons.isPublished, true),
+          inArray(
+            lessons.moduleId,
+            db
+              .select({ moduleId: current.moduleId })
+              .from(current)
+              .where(eq(current.id, lessonId)),
+          ),
+        ),
+      )
+      .orderBy(asc(lessons.position));
   },
 );
 

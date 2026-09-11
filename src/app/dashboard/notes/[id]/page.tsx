@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { IntentLink } from "@/components/dashboard/IntentLink";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
@@ -6,12 +6,10 @@ import { LessonToc } from "@/components/dashboard/lesson-toc";
 import { Markdown } from "@/components/dashboard/Markdown";
 import {
   getLesson,
+  publishedSiblings,
   releasedLessonIds,
   stripLeadingHeading,
 } from "@/lib/lessons";
-import { and, asc, eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { lessons } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
 import { tocEntries } from "@/lib/toc";
 
@@ -20,12 +18,19 @@ export default async function LessonPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { active, status, enrolment } = await getAccess();
-  if (!active) return <EnrolmentPanel status={status} />;
-
   const { id } = await params;
 
-  const lesson = await getLesson(id);
+  /*
+   * The lesson and its neighbours do not depend on who is asking, so they
+   * are read while access is being checked rather than after it. Nothing
+   * from either reaches the page unless the checks below pass.
+   */
+  const [{ active, status, enrolment }, lesson, siblings] = await Promise.all([
+    getAccess(),
+    getLesson(id),
+    publishedSiblings(id),
+  ]);
+  if (!active) return <EnrolmentPanel status={status} />;
 
   // A missing lesson and a teacher-only one are the same answer here: the
   // student has no business knowing the difference.
@@ -65,18 +70,7 @@ export default async function LessonPage({
   // Neighbours for the prev/next pager, within the same module. Locked ones
   // are dropped rather than shown: a pager is a door, and this one would
   // offer to walk the student straight into a topic they cannot read.
-  const list = (
-    await db
-      .select({ id: lessons.id, title: lessons.title })
-      .from(lessons)
-      .where(
-        and(
-          eq(lessons.moduleId, lesson.moduleId),
-          eq(lessons.isPublished, true),
-        ),
-      )
-      .orderBy(asc(lessons.position))
-  ).filter((entry) => released.has(entry.id));
+  const list = siblings.filter((entry) => released.has(entry.id));
 
   const index = list.findIndex((entry) => entry.id === lesson.id);
   const prev = index > 0 ? list[index - 1] : null;
@@ -127,7 +121,7 @@ export default async function LessonPage({
           className="border-line mt-14 flex flex-col gap-3 border-t pt-8 sm:flex-row sm:justify-between"
         >
           {prev ? (
-            <Link
+            <IntentLink
               href={`/dashboard/notes/${prev.id}`}
               className="card card-hover group flex items-center gap-3 p-4 sm:max-w-[48%]"
             >
@@ -144,13 +138,13 @@ export default async function LessonPage({
                   {prev.title}
                 </span>
               </span>
-            </Link>
+            </IntentLink>
           ) : (
             <span />
           )}
 
           {next && (
-            <Link
+            <IntentLink
               href={`/dashboard/notes/${next.id}`}
               className="card card-hover group flex items-center gap-3 p-4 text-right sm:max-w-[48%]"
             >
@@ -167,7 +161,7 @@ export default async function LessonPage({
                 strokeWidth={2}
                 aria-hidden
               />
-            </Link>
+            </IntentLink>
           )}
         </nav>
       )}

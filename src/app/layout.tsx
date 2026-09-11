@@ -16,10 +16,18 @@ const fallbackSans = Schibsted_Grotesk({
   variable: "--font-fallback-sans",
 });
 
+/*
+ * Not preloaded, and upright only. The serif appears in two pull quotes
+ * well below the fold, and nowhere in italic, yet both faces were preloaded
+ * on every page — dashboard included — at a hundred kilobytes that competed
+ * with the page's own first paint. The browser now fetches it only where a
+ * quote actually uses it.
+ */
 const fallbackSerif = Source_Serif_4({
   subsets: ["latin"],
   display: "swap",
-  style: ["normal", "italic"],
+  style: ["normal"],
+  preload: false,
   variable: "--font-fallback-serif",
 });
 

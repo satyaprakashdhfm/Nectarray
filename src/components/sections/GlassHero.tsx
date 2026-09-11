@@ -121,6 +121,9 @@ export function GlassHero() {
                 width={329}
                 height={293}
                 priority
+                // 74% of the tile, which is clamp(8.5rem, 13vw, 22rem):
+                // about a tenth of the viewport, never under 6.3rem.
+                sizes="(max-width: 65rem) 6.5rem, 10vw"
                 className="w-[74%] object-contain"
               />
             </div>

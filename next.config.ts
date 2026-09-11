@@ -15,6 +15,27 @@ const nextConfig: NextConfig = {
      */
     staleTimes: { dynamic: 30, static: 180 },
   },
+
+  /*
+   * Lesson screenshots and the files the lessons hand out. Files in public/
+   * are served with `max-age=0`, so every lesson view asked the server again
+   * about every image on it, one round trip each. A day's freshness, then a
+   * week of serving the old copy while the new one is fetched: a replaced
+   * screenshot shows up by the next day, and nobody ever waits for one.
+   */
+  async headers() {
+    return [
+      {
+        source: "/notes/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

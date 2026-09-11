@@ -30,18 +30,18 @@ export default async function NotesPage({
    * first, so a batch a day behind lands on material it can read rather than
    * on the locked notice.
    */
-  const released = await releasedLessonIds(enrolment?.cohortId);
-
-  const rows = (
-    await db
+  const [released, all] = await Promise.all([
+    releasedLessonIds(enrolment?.cohortId),
+    db
       .select({ slug: modules.slug, lessonId: lessons.id })
       .from(modules)
       .innerJoin(lessons, eq(lessons.moduleId, modules.id))
       .where(
         and(eq(modules.audience, "student"), eq(lessons.isPublished, true)),
       )
-      .orderBy(asc(modules.position), asc(lessons.position))
-  ).filter((row) => released.has(row.lessonId));
+      .orderBy(asc(modules.position), asc(lessons.position)),
+  ]);
+  const rows = all.filter((row) => released.has(row.lessonId));
 
   /*
    * A named course is answered with that course or with nothing — never with

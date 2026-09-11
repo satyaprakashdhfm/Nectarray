@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Lock } from "lucide-react";
+import { IntentLink } from "@/components/dashboard/IntentLink";
 import { useLessonToc } from "@/components/dashboard/lesson-toc";
 import { cn } from "@/lib/utils";
 
@@ -91,10 +91,9 @@ export function NotesRail({
           {modules.map((module) => {
             const current = module.slug === active?.slug;
             return (
-              <Link
+              <IntentLink
                 key={module.slug}
                 href={`${basePath}?module=${module.slug}`}
-                prefetch={false}
                 role="tab"
                 aria-selected={current}
                 // aria-current drives the selected styling, and role="tab"
@@ -104,7 +103,7 @@ export function NotesRail({
                 className="tab flex-1 justify-center px-2 text-[0.8125rem]"
               >
                 {module.short}
-              </Link>
+              </IntentLink>
             );
           })}
         </div>
@@ -161,11 +160,8 @@ export function NotesRail({
                       </span>
                     </span>
                   ) : (
-                    <Link
+                    <IntentLink
                       href={`${basePath}/${lesson.id}`}
-                      // Fourteen lessons in view meant fourteen speculative
-                      // renders of a 40 KB page nobody asked for.
-                      prefetch={false}
                       aria-current={current ? "page" : undefined}
                       className={cn(
                         "-ml-px block rounded-r-md border-l-2 py-2 pl-4 text-[0.875rem] leading-snug transition-colors duration-200",
@@ -175,7 +171,7 @@ export function NotesRail({
                       )}
                     >
                       {lesson.title}
-                    </Link>
+                    </IntentLink>
                   )}
 
                   {/* The open lesson's sections, one level in. */}

@@ -44,29 +44,34 @@ export default async function NotesLayout({
     return <div className="shell py-8 lg:py-10">{children}</div>;
   }
 
-  const released = await releasedLessonIds(enrolment?.cohortId);
-
   /*
    * One query with the lessons nested, rather than a query per module. The
    * rail wants the whole tree and there are four modules, so a join and a
-   * regroup beats five round trips.
+   * regroup beats five round trips. It does not depend on the batch, so it
+   * runs alongside the release lookup rather than after it.
    */
-  const rows = await db
-    .select({
-      id: modulesTable.id,
-      slug: modulesTable.slug,
-      title: modulesTable.title,
-      position: modulesTable.position,
-      lessonId: lessons.id,
-      lessonTitle: lessons.title,
-      lessonPosition: lessons.position,
-    })
-    .from(modulesTable)
-    .innerJoin(lessons, eq(lessons.moduleId, modulesTable.id))
-    .where(
-      and(eq(modulesTable.audience, "student"), eq(lessons.isPublished, true)),
-    )
-    .orderBy(asc(modulesTable.position), asc(lessons.position));
+  const [released, rows] = await Promise.all([
+    releasedLessonIds(enrolment?.cohortId),
+    db
+      .select({
+        id: modulesTable.id,
+        slug: modulesTable.slug,
+        title: modulesTable.title,
+        position: modulesTable.position,
+        lessonId: lessons.id,
+        lessonTitle: lessons.title,
+        lessonPosition: lessons.position,
+      })
+      .from(modulesTable)
+      .innerJoin(lessons, eq(lessons.moduleId, modulesTable.id))
+      .where(
+        and(
+          eq(modulesTable.audience, "student"),
+          eq(lessons.isPublished, true),
+        ),
+      )
+      .orderBy(asc(modulesTable.position), asc(lessons.position)),
+  ]);
 
   /*
    * The join drops modules with nothing published, which is what we want.

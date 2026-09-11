@@ -11,12 +11,18 @@ import * as schema from "./schema";
  * eagerly meant the build itself failed anywhere DATABASE_URL was not set,
  * including a machine that only wanted to typecheck.
  *
- * One connection per instance, deliberately. Each concurrent request may be
- * its own process, so a pool of ten inside ten of them is a hundred
- * connections for ten students — which is how an app exhausts a database that
- * could have served it with a dozen. `idle_timeout` then closes what a
- * request has finished with, rather than leaving a backend process alive
- * waiting for a query that never comes.
+ * A small pool, kept warm. On Railway the app is one long-lived Node process
+ * serving every visitor, not a function per request, so this pool is the
+ * whole app's connection count. It used to be a single connection, on the
+ * serverless reasoning that each request might be its own process — here
+ * that queued every student's queries behind one socket, and a lesson page's
+ * layout and page, which render side by side, waited on each other too.
+ *
+ * `idle_timeout` is long for the same reason. At twenty seconds a quiet
+ * site closed its connection between almost every page view, and each visit
+ * paid for a fresh TCP, TLS and SCRAM handshake before its first query —
+ * half a dozen round trips, which while the database sat in another region
+ * was over a second on its own.
  */
 
 type Db = ReturnType<typeof make>;
@@ -36,8 +42,8 @@ function make() {
   }
 
   const client = postgres(url, {
-    max: 1,
-    idle_timeout: 20,
+    max: 10,
+    idle_timeout: 600,
     connect_timeout: 10,
     // Railway terminates TLS with its own certificate, which no public root
     // store vouches for; the connection never leaves their network.
