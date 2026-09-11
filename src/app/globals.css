@@ -1595,3 +1595,96 @@ label:has(input[type="checkbox"]) {
     transform: translateY(4px);
   }
 }
+
+/* --------------------------------------------------------------------------
+   Code groups and figures in the notes (Markdown.tsx, CodeGroup.tsx)
+-------------------------------------------------------------------------- */
+
+/* Tabs that sit on the block like an editor's file tabs: the chosen one is
+   the block's own colour and runs into it; the rest are a shade back. */
+.code-group {
+  margin-top: 1.25rem;
+}
+
+.code-group .code-block {
+  margin-top: 0;
+  border-top-left-radius: 0;
+}
+
+.code-group-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.code-group-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.code-group-tab {
+  flex-shrink: 0;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.95rem;
+  border: 1px solid var(--color-night-line);
+  border-bottom: none;
+  border-radius: 0.6rem 0.6rem 0 0;
+  background-color: var(--color-night-soft);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.5);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.code-group-tab:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.code-group-tab[aria-selected="true"] {
+  position: relative;
+  background-color: var(--color-night);
+  color: #fff;
+}
+
+.code-group-tab:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -2px;
+}
+
+/* A screenshot in the notes, captioned by its markdown title. */
+.notes-figure {
+  display: block;
+  margin: 1.75rem auto;
+  max-width: 54rem;
+}
+
+.notes-figure a {
+  display: block;
+  border-radius: 0.875rem;
+}
+
+.notes-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 0.875rem;
+  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.55);
+  transition: transform 0.25s ease;
+}
+
+.notes-figure a:hover img {
+  transform: translateY(-2px);
+}
+
+.notes-caption {
+  display: block;
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-ink-faint);
+}

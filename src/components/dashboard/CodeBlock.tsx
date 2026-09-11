@@ -30,6 +30,7 @@ const LABEL: Record<string, string> = {
   txt: "Output",
   output: "Output",
   csv: "CSV",
+  requirements: "Requirements",
   yaml: "YAML",
   yml: "YAML",
   html: "HTML",
@@ -121,10 +122,13 @@ export function CodeBlock({
   code,
   language,
   output,
+  title,
 }: {
   code: string;
   language: string;
   output?: string;
+  /** Shown in the corner instead of the language — usually a file name. */
+  title?: string;
 }) {
   const [copied, setCopied] = useState("");
   const [pane, setPane] = useState<"code" | "output">("code");
@@ -134,7 +138,8 @@ export function CodeBlock({
   // would claim a meaning the text does not have.
   const outTokens = useMemo(() => highlight(output ?? "", "text"), [output]);
 
-  const label = LABEL[language.toLowerCase()] ?? language.toUpperCase();
+  const label =
+    title ?? LABEL[language.toLowerCase()] ?? language.toUpperCase();
   const mark = (key: string) => () => {
     setCopied(key);
     window.setTimeout(() => setCopied(""), 1600);

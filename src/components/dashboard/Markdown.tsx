@@ -14,7 +14,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { CodeBlock } from "@/components/dashboard/CodeBlock";
-import { remarkCodeTabs } from "@/lib/notes-code-tabs";
+import { CodeGroup } from "@/components/dashboard/CodeGroup";
+import { remarkCodeTabs, type CodeTab } from "@/lib/notes-code-tabs";
 import { idCounter } from "@/lib/toc";
 
 /**
@@ -149,11 +150,34 @@ export function Markdown({ children }: { children: string }) {
             </div>
           ),
 
+          /*
+           * A screenshot, with its title as the caption:
+           *     ![Langfuse trace](/notes/agentic/trace.webp "One call, traced")
+           * Spans rather than <figure>, because markdown puts an image inside
+           * a paragraph and a <figure> in a <p> is invalid — the browser would
+           * close the paragraph early and the page would not hydrate. Linked
+           * to the full file, since a screenshot shrunk to the column is often
+           * too small to read.
+           */
+          img: ({ src, alt, title }) =>
+            typeof src === "string" ? (
+              <span className="notes-figure">
+                <a href={src} target="_blank" rel="noreferrer noopener">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- markdown images have no known size for next/image */}
+                  <img
+                    src={src}
+                    alt={alt ?? ""}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </a>
+                {title && <span className="notes-caption">{title}</span>}
+              </span>
+            ) : null,
+
           blockquote: ({ children }) => {
             const marker = MARKER.exec(toText(children));
-            const kind = marker
-              ? CALLOUTS[marker[1].toUpperCase()]
-              : undefined;
+            const kind = marker ? CALLOUTS[marker[1].toUpperCase()] : undefined;
 
             // An ordinary quotation, which is still a blockquote.
             if (!kind) return <blockquote>{children}</blockquote>;
@@ -190,17 +214,25 @@ export function Markdown({ children }: { children: string }) {
               code?: string;
               language?: string;
               output?: string;
+              title?: string;
+              tabs?: string;
             }>;
             const props = child?.props ?? {};
             const language =
               /language-([\w+-]+)/.exec(props.className ?? "")?.[1] ?? "";
+
+            // Several titled versions of one example, joined into tabs.
+            if (typeof props.tabs === "string") {
+              return <CodeGroup tabs={JSON.parse(props.tabs) as CodeTab[]} />;
+            }
 
             if (typeof props.code === "string") {
               return (
                 <CodeBlock
                   language={props.language || language}
                   code={props.code}
-                  output={props.output ?? ""}
+                  output={props.output}
+                  title={props.title}
                 />
               );
             }
