@@ -60,7 +60,7 @@ function Band({ compact }: { compact: boolean }) {
         <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row lg:flex-col xl:flex-row">
           <Link
             href={quote.cta.href}
-            className="text-night group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors hover:bg-white/90"
+            className="text-ink group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-[0.9375rem] font-semibold transition-colors hover:bg-white/90"
           >
             {quote.cta.label}
             <ArrowRight

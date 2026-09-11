@@ -297,7 +297,7 @@ export default function AgenticAiPage() {
                     <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
                       <header>
                         <span
-                          className={`text-cta-fg grid size-11 place-items-center rounded-xl ${BRAND.chip}`}
+                          className={`grid size-11 place-items-center rounded-xl text-white ${BRAND.chip}`}
                         >
                           <Icon name={family.icon} className="size-5" />
                         </span>
@@ -401,7 +401,7 @@ export default function AgenticAiPage() {
                       aria-hidden
                     />
                     <span
-                      className={`text-cta-fg grid size-10 place-items-center rounded-lg ${BRAND.chip}`}
+                      className={`grid size-10 place-items-center rounded-lg text-white ${BRAND.chip}`}
                     >
                       <Icon name={item.icon} className="size-[1.125rem]" />
                     </span>

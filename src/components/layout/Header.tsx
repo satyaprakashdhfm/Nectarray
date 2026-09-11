@@ -87,7 +87,6 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
 
   return (
     <header
-      data-site="public"
       data-hidden={hidden && !open}
       className="glass-header fixed inset-x-0 top-[var(--bar-top)] z-50 px-3 text-[length:var(--bar-fs)] sm:px-5"
     >
