@@ -18,10 +18,22 @@ import { nav } from "@/lib/content";
  * `glass` is for the home page only, where the hero is a full-bleed scene:
  * a frosted pill floating over it. It thickens once the scene has scrolled
  * away, because white type on light glass over a light page is grey on grey.
+ *
+ * Once the reader is past the top, the glass bar also gets out of the way:
+ * it slides off while they scroll and comes back only after they have held
+ * still for a second — someone who has stopped is reading or deciding, and
+ * that is when the navigation is worth its space. Near the top it always
+ * shows, and it never hides while its menu is open or focus is inside it.
  */
+/** How still the reader has to be, and for how long, before the bar returns. */
+const SHOW_AFTER_IDLE_MS = 1000;
+/** Within this far of the top the bar is simply there. */
+const SHOW_NEAR_TOP = 120;
+
 export function Header({ variant = "solid" }: { variant?: "solid" | "glass" }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   const close = useCallback(() => setOpen(false), []);
   useLockBodyScroll(open);
@@ -31,11 +43,34 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "glass" }) {
 
   useEffect(() => {
     if (!glass) return;
-    const onScroll = () =>
-      setScrolled(window.scrollY > window.innerHeight - 140);
-    onScroll();
+    let idle: number | undefined;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > window.innerHeight - 140);
+
+      // Every scroll event restarts the clock, so the bar only returns a
+      // full second after the last one — a pause, not a slow scroll.
+      window.clearTimeout(idle);
+      if (y < SHOW_NEAR_TOP) {
+        setHidden(false);
+        return;
+      }
+      setHidden(true);
+      idle = window.setTimeout(() => setHidden(false), SHOW_AFTER_IDLE_MS);
+    };
+
+    // A reload halfway down the page starts with the bar showing — only its
+    // thickness is caught up, a frame in, rather than hiding it on arrival.
+    const first = window.requestAnimationFrame(() =>
+      setScrolled(window.scrollY > window.innerHeight - 140),
+    );
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.cancelAnimationFrame(first);
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(idle);
+    };
   }, [glass]);
 
   const link = glass
@@ -44,9 +79,10 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "glass" }) {
 
   return (
     <header
+      data-hidden={glass ? hidden && !open : undefined}
       className={
         glass
-          ? "fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-5"
+          ? "glass-header fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-5"
           : "border-night-line bg-night fixed inset-x-0 top-0 z-50 border-b"
       }
     >

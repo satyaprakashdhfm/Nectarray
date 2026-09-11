@@ -1276,6 +1276,28 @@ label:has(input[type="checkbox"]) {
   transition: background-color 0.35s ease;
 }
 
+/* Slides off while the reader scrolls, back once they pause (Header.tsx).
+   Focus inside it overrides the hide, so tabbing into the navigation from
+   the keyboard always brings it back into view. */
+.glass-header {
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.35s ease;
+}
+.glass-header[data-hidden="true"]:not(:focus-within) {
+  transform: translateY(calc(-100% - 1.5rem));
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass-header {
+    transition: opacity 0.2s ease;
+  }
+  .glass-header[data-hidden="true"]:not(:focus-within) {
+    transform: none;
+  }
+}
+
 /* Past the hero the page is light, and white type on 40% glass over a
    light page is grey on grey — so the bar thickens once it has left the
    scene behind. */
