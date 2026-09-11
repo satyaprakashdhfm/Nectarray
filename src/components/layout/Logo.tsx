@@ -26,10 +26,12 @@ export function Logo({
         alt=""
         width={329}
         height={293}
-        // Drawn at 2.25–3rem everywhere it appears. Without this the
+        // Drawn at 2.25–2.75rem everywhere it appears. Without this the
         // browser assumed the full 329px and fetched a 384–750px copy — 44 KB
-        // for a mark the size of a thumbnail, preloaded on every page.
-        sizes="3.5rem"
+        // for a mark the size of a thumbnail, preloaded on every page. At
+        // 2.5rem a 3x phone takes the 128px copy (11 KB); a hint any larger
+        // tips it to the 256px one, which is three times the weight.
+        sizes="2.5rem"
         priority={priority}
         className={cn("object-contain", markClassName)}
       />
