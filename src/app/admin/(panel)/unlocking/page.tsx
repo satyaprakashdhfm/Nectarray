@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Lock, LockOpen } from "lucide-react";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   cohorts as cohortsTable,
@@ -63,7 +63,12 @@ export default async function AdminUnlockingPage({
     })
     .from(modulesTable)
     .innerJoin(lessonsTable, eq(lessonsTable.moduleId, modulesTable.id))
-    .where(eq(modulesTable.audience, "student"))
+    .where(
+      and(
+        eq(modulesTable.audience, "student"),
+        eq(lessonsTable.isPublished, true),
+      ),
+    )
     .orderBy(asc(modulesTable.position), asc(lessonsTable.position));
 
   const released = new Set(
@@ -97,9 +102,9 @@ export default async function AdminUnlockingPage({
         Unlocking
       </h1>
       <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem] leading-relaxed">
-        Notes stay shut until you open them. Unlock a topic once you have
-        taught it and it appears for everyone in that batch; until then they
-        see the title greyed out and cannot read it.{" "}
+        Notes stay shut until you open them. Unlock a topic once you have taught
+        it and it appears for everyone in that batch; until then they see the
+        title greyed out and cannot read it.{" "}
         <strong className="text-ink">
           {released.size} of {total}
         </strong>{" "}

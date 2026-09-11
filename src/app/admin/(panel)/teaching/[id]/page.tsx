@@ -30,12 +30,14 @@ export default async function TeachingLessonPage({
 
   // A missing lesson and a student one are the same answer here: this route
   // only ever shows teaching content.
-  if (!lesson || lesson.audience !== "admin") notFound();
+  if (!lesson || lesson.audience !== "admin" || !lesson.isPublished) notFound();
 
   const list = await db
     .select({ id: lessons.id, title: lessons.title })
     .from(lessons)
-    .where(eq(lessons.moduleId, lesson.moduleId))
+    .where(
+      and(eq(lessons.moduleId, lesson.moduleId), eq(lessons.isPublished, true)),
+    )
     .orderBy(asc(lessons.position));
 
   const index = list.findIndex((entry) => entry.id === lesson.id);
@@ -76,7 +78,7 @@ export default async function TeachingLessonPage({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <Link
           href="/admin/teaching"
-          className="text-ink-soft hover:text-ink lg:hidden inline-flex items-center gap-2 text-[0.875rem] font-medium transition-colors"
+          className="text-ink-soft hover:text-ink inline-flex items-center gap-2 text-[0.875rem] font-medium transition-colors lg:hidden"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden />
           All teaching notes

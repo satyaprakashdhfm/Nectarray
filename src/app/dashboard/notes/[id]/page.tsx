@@ -9,7 +9,7 @@ import {
   releasedLessonIds,
   stripLeadingHeading,
 } from "@/lib/lessons";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
@@ -29,7 +29,9 @@ export default async function LessonPage({
 
   // A missing lesson and a teacher-only one are the same answer here: the
   // student has no business knowing the difference.
-  if (!lesson || lesson.audience !== "student") notFound();
+  // Unpublished is the same answer again: a draft is not a lesson yet.
+  if (!lesson || lesson.audience !== "student" || !lesson.isPublished)
+    notFound();
 
   /*
    * The lock, enforced where the body would otherwise be read.
@@ -52,8 +54,8 @@ export default async function LessonPage({
             {lesson.title}
           </h1>
           <p className="text-ink-soft mt-3 max-w-prose text-[0.9375rem] leading-relaxed">
-            These notes open once this topic has been taught. Everything
-            covered so far is in the rail beside you.
+            These notes open once this topic has been taught. Everything covered
+            so far is in the rail beside you.
           </p>
         </div>
       </article>
@@ -67,7 +69,12 @@ export default async function LessonPage({
     await db
       .select({ id: lessons.id, title: lessons.title })
       .from(lessons)
-      .where(eq(lessons.moduleId, lesson.moduleId))
+      .where(
+        and(
+          eq(lessons.moduleId, lesson.moduleId),
+          eq(lessons.isPublished, true),
+        ),
+      )
       .orderBy(asc(lessons.position))
   ).filter((entry) => released.has(entry.id));
 

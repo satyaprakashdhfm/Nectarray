@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules } from "@/lib/db/schema";
 
@@ -21,7 +21,7 @@ export default async function TeachingIndexPage({
     .select({ slug: modules.slug, lessonId: lessons.id })
     .from(modules)
     .innerJoin(lessons, eq(lessons.moduleId, modules.id))
-    .where(eq(modules.audience, "admin"))
+    .where(and(eq(modules.audience, "admin"), eq(lessons.isPublished, true)))
     .orderBy(asc(modules.position), asc(lessons.position));
 
   const first =

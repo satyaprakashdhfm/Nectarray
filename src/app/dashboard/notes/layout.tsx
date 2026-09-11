@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { NotesRail, type RailModule } from "@/components/dashboard/NotesRail";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules as modulesTable } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
@@ -63,7 +63,9 @@ export default async function NotesLayout({
     })
     .from(modulesTable)
     .innerJoin(lessons, eq(lessons.moduleId, modulesTable.id))
-    .where(eq(modulesTable.audience, "student"))
+    .where(
+      and(eq(modulesTable.audience, "student"), eq(lessons.isPublished, true)),
+    )
     .orderBy(asc(modulesTable.position), asc(lessons.position));
 
   /*

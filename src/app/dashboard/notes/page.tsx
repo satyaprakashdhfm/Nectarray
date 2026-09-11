@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { EnrolmentPanel } from "@/components/dashboard/EnrolmentGate";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
@@ -37,7 +37,9 @@ export default async function NotesPage({
       .select({ slug: modules.slug, lessonId: lessons.id })
       .from(modules)
       .innerJoin(lessons, eq(lessons.moduleId, modules.id))
-      .where(eq(modules.audience, "student"))
+      .where(
+        and(eq(modules.audience, "student"), eq(lessons.isPublished, true)),
+      )
       .orderBy(asc(modules.position), asc(lessons.position))
   ).filter((row) => released.has(row.lessonId));
 
