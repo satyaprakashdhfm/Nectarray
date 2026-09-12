@@ -1407,15 +1407,16 @@ label:has(input[type="checkbox"]) {
   }
 }
 
-/* A lit centre falling off to deep water at the edges — the logo's blue,
-   with room for white type to read at the rim. */
+/* A lit centre falling off to black at the edges: the logo's blue where the
+   mark sits, the page's own ground by the time it reaches the rim, so the
+   hero meets the black section below it without a seam. */
 .hero-ground {
   background: radial-gradient(
-    110% 85% at 50% 38%,
-    #3fbde8 0%,
-    #1d93c6 30%,
-    #0f6690 62%,
-    #0a3b57 100%
+    118% 90% at 50% 36%,
+    #1a86b0 0%,
+    #0d5a7c 24%,
+    #06283a 55%,
+    #000000 100%
   );
 }
 
@@ -1431,7 +1432,7 @@ label:has(input[type="checkbox"]) {
   right: -10rem;
   bottom: -12rem;
   background: #7ed957;
-  opacity: 0.4;
+  opacity: 0.22;
 }
 .hero-blob-b {
   width: 32rem;
@@ -1439,6 +1440,7 @@ label:has(input[type="checkbox"]) {
   left: -10rem;
   top: 20%;
   background: #2bb3ad;
+  opacity: 0.3;
 }
 .hero-blob-c {
   width: 22rem;
@@ -1446,13 +1448,13 @@ label:has(input[type="checkbox"]) {
   left: 38%;
   top: -10rem;
   background: #f5a44a;
-  opacity: 0.28;
+  opacity: 0.16;
 }
 
 /* A faint dot grid, strongest around the hub and gone at the edges. */
 .hero-dots {
   background-image: radial-gradient(
-    rgba(255, 255, 255, 0.22) 1px,
+    rgba(255, 255, 255, 0.16) 1px,
     transparent 1.3px
   );
   background-size: 26px 26px;
@@ -1468,7 +1470,7 @@ label:has(input[type="checkbox"]) {
 }
 
 .hero-trace {
-  stroke: rgba(255, 255, 255, 0.2);
+  stroke: rgba(255, 255, 255, 0.16);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1488,8 +1490,8 @@ label:has(input[type="checkbox"]) {
 }
 
 .hero-node {
-  fill: #0f6690;
-  stroke: rgba(255, 255, 255, 0.55);
+  fill: #06283a;
+  stroke: rgba(255, 255, 255, 0.45);
   stroke-width: 2;
 }
 
@@ -1505,7 +1507,7 @@ label:has(input[type="checkbox"]) {
     inset 0 -10px 22px rgba(31, 165, 222, 0.16),
     0 0 0 1px rgba(255, 255, 255, 0.5),
     0 14px 0 -2px #bfe3f3,
-    0 36px 60px -18px rgba(3, 25, 40, 0.65);
+    0 36px 60px -18px rgba(0, 0, 0, 0.8);
 }
 
 .hero-tile-halo {
@@ -1525,15 +1527,15 @@ label:has(input[type="checkbox"]) {
 .hero-shade-bottom {
   background: linear-gradient(
     to top,
-    rgba(4, 18, 28, 0.88) 0%,
-    rgba(4, 18, 28, 0.55) 26%,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.6) 26%,
     transparent 58%
   );
 }
 .hero-shade-left {
   background: linear-gradient(
     to right,
-    rgba(4, 18, 28, 0.55) 0%,
+    rgba(0, 0, 0, 0.62) 0%,
     transparent 46%
   );
 }
