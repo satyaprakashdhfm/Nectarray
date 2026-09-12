@@ -1407,17 +1407,20 @@ label:has(input[type="checkbox"]) {
   }
 }
 
-/* A lit centre falling off to black at the edges: the logo's blue where the
-   mark sits, the page's own ground by the time it reaches the rim, so the
-   hero meets the black section below it without a seam. */
+/* Black, with the light coming off the mark rather than off the page. The
+   scene used to be a lit teal frame that darkened towards the rim, which
+   read as a bright picture stuck above a black page; now the room is dark
+   and the circuitry is the thing that glows in it. */
 .hero-ground {
-  background: radial-gradient(
-    118% 90% at 50% 36%,
-    #1a86b0 0%,
-    #0d5a7c 24%,
-    #06283a 55%,
-    #000000 100%
-  );
+  background:
+    radial-gradient(
+      62% 52% at 50% 36%,
+      rgba(45, 165, 210, 0.42) 0%,
+      rgba(20, 105, 145, 0.24) 34%,
+      rgba(8, 48, 70, 0.12) 62%,
+      transparent 100%
+    ),
+    radial-gradient(120% 90% at 50% 40%, #041520 0%, #01080e 58%, #000000 100%);
 }
 
 .hero-blob {
@@ -1432,7 +1435,7 @@ label:has(input[type="checkbox"]) {
   right: -10rem;
   bottom: -12rem;
   background: #7ed957;
-  opacity: 0.22;
+  opacity: 0.2;
 }
 .hero-blob-b {
   width: 32rem;
@@ -1440,7 +1443,7 @@ label:has(input[type="checkbox"]) {
   left: -10rem;
   top: 20%;
   background: #2bb3ad;
-  opacity: 0.3;
+  opacity: 0.26;
 }
 .hero-blob-c {
   width: 22rem;
@@ -1448,13 +1451,13 @@ label:has(input[type="checkbox"]) {
   left: 38%;
   top: -10rem;
   background: #f5a44a;
-  opacity: 0.16;
+  opacity: 0.14;
 }
 
 /* A faint dot grid, strongest around the hub and gone at the edges. */
 .hero-dots {
   background-image: radial-gradient(
-    rgba(255, 255, 255, 0.16) 1px,
+    rgba(255, 255, 255, 0.13) 1px,
     transparent 1.3px
   );
   background-size: 26px 26px;
@@ -1470,7 +1473,7 @@ label:has(input[type="checkbox"]) {
 }
 
 .hero-trace {
-  stroke: rgba(255, 255, 255, 0.16);
+  stroke: rgba(124, 205, 240, 0.26);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1490,8 +1493,8 @@ label:has(input[type="checkbox"]) {
 }
 
 .hero-node {
-  fill: #06283a;
-  stroke: rgba(255, 255, 255, 0.45);
+  fill: #04202f;
+  stroke: rgba(124, 205, 240, 0.55);
   stroke-width: 2;
 }
 
