@@ -1296,8 +1296,9 @@ label:has(input[type="checkbox"]) {
  * edges of the screen, the way gokiwi.in's are, instead of sitting in the
  * centred 92rem column the rest of the site uses: on a 2560 monitor that
  * column starts 544px in and the hero reads as a small block adrift in the
- * middle of a picture. The copy is also held clear of the tile by width,
- * and everything scales with the viewport between a laptop and a monitor.
+ * middle of a picture. The copy is also held clear of the mark in the film
+ * by width, and everything scales with the viewport between a laptop and a
+ * monitor.
  */
 .hero-ground {
   --hero-tile: clamp(8.5rem, 13vw, 22rem);
@@ -1310,7 +1311,7 @@ label:has(input[type="checkbox"]) {
     padding-inline: var(--hero-pad);
     padding-bottom: clamp(7rem, 12vh, 13rem);
   }
-  /* Half the screen, less half the tile, a gap, and the edge margin. */
+  /* Half the screen, less half the mark, a gap, and the edge margin. */
   .hero-copy {
     max-width: min(
       50rem,
@@ -1357,122 +1358,22 @@ label:has(input[type="checkbox"]) {
   );
 }
 
-.hero-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.55;
-}
-.hero-blob-a {
-  width: 38rem;
-  height: 38rem;
-  right: -10rem;
-  bottom: -12rem;
-  background: #7ed957;
-  opacity: 0.4;
-}
-.hero-blob-b {
-  width: 32rem;
-  height: 32rem;
-  left: -10rem;
-  top: 20%;
-  background: #2bb3ad;
-}
-.hero-blob-c {
-  width: 22rem;
-  height: 22rem;
-  left: 38%;
-  top: -10rem;
-  background: #f5a44a;
-  opacity: 0.28;
-}
-
-/* A faint dot grid, strongest around the hub and gone at the edges. */
-.hero-dots {
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.22) 1px,
-    transparent 1.3px
-  );
-  background-size: 26px 26px;
-  mask-image: radial-gradient(60% 55% at 50% 40%, #000 0%, transparent 100%);
-}
-
-/* From xl up the traces run under the copy, low and left; fading them out
-   there keeps lines from striking through the paragraph. */
-@media (min-width: 80rem) {
-  .hero-traces {
-    mask-image: linear-gradient(35deg, transparent 22%, #000 46%);
-  }
-}
-
-.hero-trace {
-  stroke: rgba(255, 255, 255, 0.2);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* A short bright dash that travels the length of a trace into the hub.
-   pathLength is 1000 on every trace, so one set of numbers fits all of
-   them: the dash starts just before the path and ends just past it. */
-.hero-pulse {
-  stroke: #e9fff2;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-dasharray: 60 1000;
-  stroke-dashoffset: 60;
-  filter: drop-shadow(0 0 6px rgba(126, 217, 87, 0.95));
-  opacity: 0;
-}
-
-.hero-node {
-  fill: #0f6690;
-  stroke: rgba(255, 255, 255, 0.55);
-  stroke-width: 2;
-}
-
-/* The hub: a thick glossy tile, like a soft plastic key. */
-.hero-tile {
-  position: relative;
-  width: var(--hero-tile);
-  aspect-ratio: 1;
-  border-radius: 28%;
-  background: linear-gradient(150deg, #ffffff 0%, #f1f9fd 55%, #ddf1fa 100%);
-  box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -10px 22px rgba(31, 165, 222, 0.16),
-    0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 14px 0 -2px #bfe3f3,
-    0 36px 60px -18px rgba(3, 25, 40, 0.65);
-}
-
-.hero-tile-halo {
-  position: absolute;
-  inset: -45%;
-  border-radius: 9999px;
-  background: radial-gradient(
-    closest-side,
-    rgba(126, 217, 87, 0.45),
-    rgba(43, 179, 173, 0.18) 55%,
-    transparent 75%
-  );
-  filter: blur(8px);
-}
-
 /* The copy sits low-left, so that is where the scene is darkened. */
 .hero-shade-bottom {
   background: linear-gradient(
     to top,
-    rgba(4, 18, 28, 0.88) 0%,
-    rgba(4, 18, 28, 0.55) 26%,
-    transparent 58%
+    rgba(4, 18, 28, 0.94) 0%,
+    rgba(4, 18, 28, 0.72) 30%,
+    rgba(4, 18, 28, 0.28) 55%,
+    transparent 78%
   );
 }
 .hero-shade-left {
   background: linear-gradient(
     to right,
-    rgba(4, 18, 28, 0.55) 0%,
-    transparent 46%
+    rgba(4, 18, 28, 0.75) 0%,
+    rgba(4, 18, 28, 0.42) 26%,
+    transparent 58%
   );
 }
 
@@ -1540,92 +1441,12 @@ label:has(input[type="checkbox"]) {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .hero-blob-a {
-    animation: blob-drift 18s ease-in-out infinite alternate;
-  }
-  .hero-blob-b {
-    animation: blob-drift 22s ease-in-out infinite alternate-reverse;
-  }
-  .hero-blob-c {
-    animation: blob-drift 16s ease-in-out infinite alternate;
-  }
-
-  .hero-pulse {
-    animation: trace-pulse 4s linear infinite;
-  }
-
-  .hero-tile {
-    animation: tile-float 6s ease-in-out infinite;
-  }
-  .hero-tile-halo {
-    animation: halo-breathe 4s ease-in-out infinite;
-  }
-
   .hero-rise {
     animation: hero-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
 
   .scroll-cue-arrow {
     animation: cue-bob 1.8s ease-in-out infinite;
-  }
-}
-
-@keyframes blob-drift {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(3rem, -2rem, 0) scale(1.12);
-  }
-}
-
-@keyframes trace-pulse {
-  0% {
-    stroke-dashoffset: 60;
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    stroke-dashoffset: -1000;
-    opacity: 0;
-  }
-}
-
-@keyframes tile-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes halo-breathe {
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: scale(0.96);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes hero-rise {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
