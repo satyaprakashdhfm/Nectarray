@@ -31,6 +31,8 @@ export type Practice = {
   summary: string;
   points: string[];
   href: string;
+  /** The card's cover image, in public/services. */
+  image: string;
 };
 
 export type Step = {

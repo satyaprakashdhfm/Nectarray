@@ -8,7 +8,7 @@ export function AcademyFaq() {
   return (
     <section
       id="faqs"
-      className="border-line bg-mist relative overflow-hidden border-y py-20 sm:py-24 lg:py-28"
+      className="border-line bg-mist relative overflow-hidden border-y py-16 sm:py-20"
     >
       <div
         className="grid-paper pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(95%_65%_at_50%_0%,#000_20%,transparent_78%)] opacity-50"

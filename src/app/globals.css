@@ -1500,13 +1500,13 @@ label:has(input[type="checkbox"]) {
 }
 
 .glass-bar {
-  background: rgba(7, 22, 32, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(18px) saturate(170%);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(14, 27, 38, 0.08);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 12px 40px -14px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 12px 40px -14px rgba(4, 16, 24, 0.45);
   transition: background-color 0.35s ease;
 }
 
@@ -1532,11 +1532,11 @@ label:has(input[type="checkbox"]) {
   }
 }
 
-/* Past the hero the page is light, and white type on 40% glass over a
-   light page is grey on grey — so the bar thickens once it has left the
-   scene behind. */
+/* Dense enough that whatever scrolls under it — a headline, a photograph,
+   a code block — never shows through far enough to compete with the
+   navigation sitting on top of it. */
 .glass-bar[data-solid="true"] {
-  background: rgba(7, 22, 32, 0.86);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 @media (prefers-reduced-motion: no-preference) {

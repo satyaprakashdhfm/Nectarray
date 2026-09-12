@@ -16,7 +16,7 @@ export function Offerings() {
   return (
     <section
       id="offerings"
-      className="border-line bg-mist relative border-y py-20 sm:py-24 lg:py-28"
+      className="border-line bg-mist relative border-y py-16 sm:py-20"
       aria-labelledby="offerings-title"
     >
       <div className="shell-wide">
@@ -32,8 +32,8 @@ export function Offerings() {
             Our <span className="ink-gradient">Offerings</span>
           </h2>
           <p className="lede mx-auto mt-5 max-w-2xl text-center">
-            Six things this programme does that a recorded course cannot, and
-            that a class of two hundred cannot either.
+            Six things a live class of five makes possible, every session, for
+            every person in the room.
           </p>
         </Reveal>
 

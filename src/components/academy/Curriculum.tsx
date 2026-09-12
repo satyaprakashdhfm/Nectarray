@@ -26,7 +26,7 @@ export function Curriculum() {
   const { curriculum } = academy.course;
 
   return (
-    <section id="curriculum" className="bg-surface py-20 sm:py-24 lg:py-28">
+    <section id="curriculum" className="bg-surface py-16 sm:py-20">
       <div className="shell-wide">
         <SectionHead
           eyebrow="Curriculum"

@@ -14,7 +14,7 @@ export function Marketing({ asPage = false }: { asPage?: boolean } = {}) {
   return (
     <section
       id="marketing"
-      className="border-line bg-mist relative overflow-hidden border-y py-24 sm:py-28 lg:py-32"
+      className="border-line bg-mist relative overflow-hidden border-y py-20 sm:py-24"
     >
       <div
         className="grid-paper pointer-events-none absolute inset-0 -z-10 opacity-60"

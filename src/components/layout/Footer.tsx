@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/Logo";
-import { company, footerNote, liveSocials, nav, pillars } from "@/lib/content";
+import { company, footerNote, liveSocials, pillars } from "@/lib/content";
 
 /**
  * One flat colour, on every route — the other half of the bookend the header
@@ -12,8 +12,8 @@ const link = "text-[0.9375rem] text-white/60 transition-colors hover:text-leaf";
 export function Footer() {
   return (
     <footer className="border-night-line bg-night border-t">
-      <div className="shell py-16 sm:py-20">
-        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-16">
+      <div className="shell py-14 sm:py-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr] lg:gap-14">
           <div>
             <Logo
               className="inline-flex"
@@ -54,13 +54,13 @@ export function Footer() {
             </ul>
           </nav>
 
-          <nav aria-label="Sections">
+          <nav aria-label="Company">
             <h2 className="eyebrow mb-5 text-white/40">Company</h2>
             <ul className="space-y-3">
               {[
-                ...nav,
-                { label: "Engagements", href: "/engagements" },
+                { label: "How we work", href: "/engagements" },
                 { label: "Contact", href: "/contact" },
+                { label: "Student login", href: "/dashboard" },
               ].map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className={link}>
@@ -72,7 +72,7 @@ export function Footer() {
           </nav>
         </div>
 
-        <div className="border-night-line mt-14 flex flex-col gap-3 border-t pt-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-night-line mt-12 flex flex-col gap-3 border-t pt-7 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[0.8125rem] text-white/40">
             © {new Date().getFullYear()} {company.name}. All rights reserved.
           </p>

@@ -45,10 +45,7 @@ export function StudentVoices() {
   if (studentQuotes.length === 0) return null;
 
   return (
-    <section
-      className="relative py-20 sm:py-24 lg:py-28"
-      aria-labelledby="voices-title"
-    >
+    <section className="relative py-16 sm:py-20" aria-labelledby="voices-title">
       <div className="shell-wide">
         <Reveal>
           <p className="text-brand-deep flex items-center justify-center gap-2 text-[1.25rem] font-semibold sm:text-[1.5rem]">

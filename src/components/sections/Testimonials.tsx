@@ -13,7 +13,7 @@ const tilts = ["lg:-rotate-1", "", "lg:rotate-1"];
 
 export function Testimonials() {
   return (
-    <section className="py-24 sm:py-28 lg:py-32">
+    <section className="py-20 sm:py-24">
       <div className="shell-wide">
         <SectionHead
           align="center"

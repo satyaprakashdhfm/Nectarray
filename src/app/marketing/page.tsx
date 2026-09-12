@@ -203,7 +203,7 @@ export default function MarketingPage() {
             <div className="bg-brand/14 absolute top-20 -right-28 size-[30rem] rounded-full blur-[140px]" />
           </div>
 
-          <div className="shell-wide relative pt-10 pb-20 sm:pt-14 sm:pb-24 lg:pt-16 lg:pb-28">
+          <div className="shell-wide relative pt-10 pb-16 sm:pt-14 sm:pb-20">
             <div className="grid gap-12 lg:grid-cols-[1fr_0.95fr] lg:items-center lg:gap-14">
               <div>
                 <Reveal>

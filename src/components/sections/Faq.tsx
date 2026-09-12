@@ -14,7 +14,7 @@ import { faqs } from "@/lib/content";
  */
 export function Faq({ asPage = false }: { asPage?: boolean } = {}) {
   return (
-    <section id="faq" className="py-24 sm:py-28 lg:py-32">
+    <section id="faq" className="py-20 sm:py-24">
       <div className="shell-wide grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
         <SectionHead
           as={asPage ? "h1" : "h2"}
@@ -24,7 +24,7 @@ export function Faq({ asPage = false }: { asPage?: boolean } = {}) {
               Before you <em>get in touch.</em>
             </>
           }
-          lede="If something here is not covered, ask us directly — we would rather answer than have you guess."
+          lede="If your question is not answered here, ask us directly. We would much rather answer it than leave you guessing."
           className="lg:sticky lg:top-28 lg:self-start"
         />
 

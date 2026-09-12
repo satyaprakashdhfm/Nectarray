@@ -48,13 +48,13 @@ export const academy: {
 } = {
   eyebrow: "NectArray Academy",
   title: "We teach the stack we ship with.",
-  lede: "Our flagship programme takes you from no code at all to reading, writing and defending real Python and SQL — taught live, in a small group, by engineers who do this work for clients every week.",
+  lede: "Our flagship programme takes you from your first line of code to reading, writing and defending real Python and SQL. It is taught live, in a small group, by engineers who do this work for clients every week.",
   course: {
     badge: "Flagship programme",
     tag: "Applications open",
     title: "Python, SQL & Data Science",
     summary:
-      "A placement programme for people moving into data science and AI. Python, then SQL, then the parts of getting hired that nobody teaches — built as practice you do, not lectures you sit through.",
+      "A placement programme for people moving into data science and AI. Python first, then SQL, then the interview and portfolio work that decides who gets the offer. You practise in every session instead of watching lectures.",
     breadcrumb: [
       { label: "Home", href: "/" },
       { label: "Academy", href: "/academy" },
@@ -70,9 +70,9 @@ export const academy: {
     about: {
       title: "About the programme",
       paragraphs: [
-        "Most courses hand you twenty hours of video and call it teaching. This is the other thing: you write code every session, you get it read by someone who has shipped code for a living, and you are told plainly what is wrong with it.",
+        "You write code in every session, someone who ships code for a living reads it, and you are told plainly what to fix. That loop is the whole programme.",
         "The order is deliberate. Python first, because everything downstream assumes it. SQL second, because the job is mostly asking data questions and the people who can do that cleanly are rarer than you would think. Then the part that actually converts skill into an offer — how the industry is structured, what a résumé is scanned for, and what happens in a technical round.",
-        "It is built for the two people who keep asking us for it: someone starting out who wants to enter data science or agentic AI and does not know where the floor is, and someone already working who wants to switch domains and needs to be interview-ready without quitting their job first.",
+        "It is built for the two people who keep asking us for it: someone starting out in data science or agentic AI who wants a solid floor to stand on, and someone already working who wants to switch fields and be interview-ready without quitting their job first.",
       ],
       highlights: [
         "Every submission read individually, with the lines that cost you marks named",
@@ -271,7 +271,7 @@ export const academy: {
           },
           {
             title: "Cleaning real data",
-            body: "Types that lie, dates that ambiguate, near-duplicate text, missing values, and the assertions that catch them.",
+            body: "Wrong types, ambiguous dates, near-duplicate text, missing values, and the checks that catch each of them.",
           },
           {
             title: "Machine learning in one pass",
@@ -316,7 +316,7 @@ export const academy: {
         title: "Placement Readiness & Career Strategy",
         days: "5 days",
         summary:
-          "The part that turns all of it into an offer. Nobody teaches this and it is usually what is missing.",
+          "The part that turns everything you have learned into an offer, and the part most people are missing when they start applying.",
         topics: [
           {
             title: "Software Engineering & Systems",

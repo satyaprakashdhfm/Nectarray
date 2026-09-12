@@ -74,13 +74,13 @@ export const marketingPage: {
   families: {
     eyebrow: "Channels",
     title: "Every channel that can send you a customer",
-    lede: "Most agencies sell you one channel and call it strategy. We map where your buyers actually are, run those channels properly, and kill the ones that do not pay for themselves.",
+    lede: "We start by finding where your buyers already spend their time, then run those channels properly and move the budget towards whatever is earning it.",
   },
 
   brand: {
     eyebrow: "Brand, content & creators",
     title: "The half that makes the ads work",
-    lede: "Performance marketing fails quietly when there is nothing behind it — no clear position, no content worth following, nobody credible saying your name. This is the work that makes a cold audience willing to click in the first place, and it compounds instead of stopping when you pause the spend. We create the content as well as plan it — scripted, shot and edited here.",
+    lede: "Ads go much further when there is something solid behind them: a clear position, content people want to follow, and other voices saying your name. This is the groundwork that makes a cold audience willing to click in the first place, and it compounds instead of stopping when you pause the spend. We create the content as well as plan it — scripted, shot and edited here.",
     items: [
       {
         icon: "target",
@@ -139,7 +139,7 @@ export const marketingPage: {
   aiSearch: {
     eyebrow: "AI search visibility",
     title: "When someone asks an assistant to recommend a business like yours",
-    lede: "A growing share of buying research now happens inside ChatGPT, Google's AI Overviews, Gemini and Perplexity, and it never reaches a blue link. These systems answer from what they can read about you and how well corroborated it is. That is the part we work on.",
+    lede: "More and more buying research now happens inside ChatGPT, Google's AI Overviews, Gemini and Perplexity, often without anyone opening a search result. These systems answer from what they can read about you and how well other sources back it up. That is the part we work on.",
     items: [
       {
         icon: "search",
@@ -193,14 +193,14 @@ export const marketingPage: {
     ],
     honesty: {
       title: "What this is, and what it is not",
-      body: "Nobody can guarantee you a mention in ChatGPT, Gemini or AI Overviews. There is no placement to buy, no submission form, and any agency promising you a spot is selling something it does not control — the model decides, and it changes. What this work does is remove the reasons you get overlooked or described wrongly: it makes your site readable to these systems, your identity unambiguous, your claims corroborated elsewhere, and your pages the clearest available answer to the questions your buyers actually ask. That improves your chances of being discovered, cited and recommended. Then we monitor what the assistants say about you, so you can see whether it is working rather than take our word for it.",
+      body: "There is no placement to buy inside ChatGPT, Gemini or AI Overviews, so nobody can promise you a spot in one. What we can do is give these systems every reason to find you and describe you correctly: a site they can read cleanly, an identity that is unambiguous, claims backed up by sources elsewhere, and pages that answer your buyers' real questions better than anything else out there. That is what improves your chances of being quoted and recommended. We then ask the assistants those same questions on a schedule, so you can watch what they say about you rather than take our word for it.",
     },
   },
 
   analytics: {
     eyebrow: "Measurement & data science",
     title: "Which activity actually moved revenue",
-    lede: "Most agencies report the numbers the ad platforms hand them, and every platform claims the same sale. We bring data science to the question instead: modelling the whole mix, testing it, and telling you where the next rupee should go.",
+    lede: "Every ad platform claims the same sale, so the totals never add up. We model the whole mix together, test it against what really happened, and tell you where the next rupee should go.",
     items: [
       {
         icon: "chart",
@@ -238,7 +238,7 @@ export const marketingPage: {
   platforms: {
     eyebrow: "Platforms",
     title: "The consoles we are actually in every week",
-    lede: "Not a logo wall for its own sake — this is where the work happens, and where you will be given access rather than a screenshot of it. Every account stays in your name.",
+    lede: "The platforms the work actually happens in. You get real access to each one, and every account stays in your name.",
     groups: [
       {
         label: "Paid & social",
@@ -324,7 +324,7 @@ export const marketingPage: {
   faqs: [
     {
       q: "Do you take a retainer before doing any work?",
-      a: "No. The audit and the written plan come first, so you can see what we think before committing to anything ongoing — including the case where our honest read is that you do not need us for it.",
+      a: "The audit and the written plan come first, so you can see how we think before committing to anything ongoing. If our honest read is that you can handle this in-house, we will tell you that too.",
     },
     {
       q: "What is the minimum ad spend you work with?",

@@ -4,6 +4,7 @@ import type { IconCard, Link, Practice, TagGroup } from "@/types";
 export const pillars: Practice[] = [
   {
     id: "marketing",
+    image: "/services/marketing.webp",
     index: "01",
     icon: "megaphone",
     title: "Growth & Marketing",
@@ -19,6 +20,7 @@ export const pillars: Practice[] = [
   },
   {
     id: "software",
+    image: "/services/software.webp",
     index: "02",
     icon: "code",
     title: "Software & Web",
@@ -34,6 +36,7 @@ export const pillars: Practice[] = [
   },
   {
     id: "ai",
+    image: "/services/agentic-ai.webp",
     index: "03",
     icon: "bot",
     title: "Agentic AI",
@@ -49,6 +52,7 @@ export const pillars: Practice[] = [
   },
   {
     id: "academy",
+    image: "/services/academy.webp",
     index: "04",
     icon: "graduation",
     title: "NectArray Academy",
@@ -78,7 +82,7 @@ export const marketing: {
 } = {
   eyebrow: "Growth & Marketing",
   title: "Every channel that can send you a customer, run by one team.",
-  lede: "Most agencies sell you one channel and call it strategy. We map where your buyers actually are, run those channels properly, and kill the ones that do not pay for themselves.",
+  lede: "We start by finding where your buyers already spend their time, then run those channels properly and move the budget towards whatever is earning it.",
   channels: [
     {
       icon: "target",

@@ -2,7 +2,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { PageCta } from "@/components/layout/PageCta";
 import { GlassHero } from "@/components/sections/GlassHero";
-import { Marquee } from "@/components/sections/Marquee";
 import { Practices } from "@/components/sections/Practices";
 import { buildStructuredData } from "@/lib/seo";
 
@@ -25,7 +24,6 @@ export default function HomePage() {
 
       <main id="main">
         <GlassHero />
-        <Marquee />
         <Practices />
       </main>
 

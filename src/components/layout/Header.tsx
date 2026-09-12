@@ -20,10 +20,9 @@ const SHOW_NEAR_TOP = 120;
  *
  * Two things change as the reader moves.
  *
- * How thick the glass is. Over a dark hero — a page that marks its opening
- * section `data-header-clear` and passes `clearAtTop` — the bar is barely
- * tinted and the scene shows through. Everywhere else it is a dense dark
- * frost, because white type on thin glass over a light page is grey on grey.
+ * How thick the glass is. Over the hero it is a light frost and the scene
+ * shows through. Everywhere else it is near-solid white, so a headline or
+ * a photograph scrolling under it never competes with the navigation.
  *
  * Whether it is there at all. Past the top it slides away while the reader
  * scrolls and returns once they have held still for a second: someone who
@@ -109,8 +108,8 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               className={cn(
                 "rounded-full px-[1.05em] py-[0.5em] font-medium transition-colors duration-200",
                 isCurrent(item.href)
-                  ? "bg-white/14 text-white"
-                  : "text-white/75 hover:bg-white/10 hover:text-white",
+                  ? "bg-night/8 text-night"
+                  : "text-night/65 hover:bg-night/6 hover:text-night",
               )}
             >
               {item.label}
@@ -124,7 +123,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
           <EnrolButton
             label="Log in"
             withArrow={false}
-            className="hidden rounded-full px-[1.05em] py-[0.6em] font-medium text-white/75 transition-colors duration-200 hover:bg-white/10 hover:text-white sm:inline-flex"
+            className="text-night/65 hover:bg-night/6 hover:text-night hidden rounded-full px-[1.05em] py-[0.6em] font-medium transition-colors duration-200 sm:inline-flex"
           />
 
           {/* Straight to the enquiry form. The top of /contact opens on the
@@ -132,10 +131,10 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               a CTA landing above the form reads as having gone nowhere. */}
           <Link
             href="/contact#enquiry"
-            className="group text-night hidden items-center gap-[0.65em] rounded-full bg-white py-[0.4em] pr-[0.4em] pl-[1.3em] font-semibold transition-colors duration-200 hover:bg-white/90 sm:inline-flex"
+            className="group bg-night hidden items-center gap-[0.65em] rounded-full py-[0.4em] pr-[0.4em] pl-[1.3em] font-semibold text-white transition-colors duration-200 hover:bg-[#16303f] sm:inline-flex"
           >
             Book a call
-            <span className="bg-night grid size-[2.15em] place-items-center rounded-full text-white transition-transform duration-300 group-hover:rotate-45">
+            <span className="text-night grid size-[2.15em] place-items-center rounded-full bg-white transition-transform duration-300 group-hover:rotate-45">
               <ArrowUpRight
                 className="size-[1.05em]"
                 strokeWidth={2.25}
@@ -150,7 +149,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="grid size-10 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition-colors duration-200 hover:bg-white/15 lg:hidden"
+            className="border-night/12 bg-night/5 text-night hover:bg-night/10 grid size-10 place-items-center rounded-full border transition-colors duration-200 lg:hidden"
           >
             {open ? (
               <X className="size-5" strokeWidth={2} aria-hidden />
@@ -175,8 +174,8 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               onClick={close}
               aria-current={isCurrent(item.href) ? "page" : undefined}
               className={cn(
-                "border-b border-white/10 py-3.5 text-lg font-medium",
-                isCurrent(item.href) ? "text-leaf" : "text-white",
+                "border-night/8 border-b py-3.5 text-lg font-medium",
+                isCurrent(item.href) ? "text-brand-solid" : "text-night",
               )}
             >
               {item.label}
@@ -185,14 +184,14 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
           <Link
             href="/contact#enquiry"
             onClick={close}
-            className="text-night mt-5 rounded-full bg-white px-5 py-3.5 text-center text-base font-semibold"
+            className="bg-night mt-5 rounded-full px-5 py-3.5 text-center text-base font-semibold text-white"
           >
             Book a call
           </Link>
           <EnrolButton
             label="Log in"
             withArrow={false}
-            className="mt-3 mb-2 inline-flex justify-center rounded-full border border-white/20 px-5 py-3.5 text-center text-base font-medium text-white/85"
+            className="border-night/12 text-night/80 mt-3 mb-2 inline-flex justify-center rounded-full border px-5 py-3.5 text-center text-base font-medium"
           />
         </nav>
       </div>

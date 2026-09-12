@@ -150,7 +150,7 @@ export function EnrolForm() {
   const label = "mb-2 block text-[0.8125rem] font-semibold text-ink";
 
   return (
-    <section id="enrol" className="bg-surface py-20 sm:py-24 lg:py-28">
+    <section id="enrol" className="bg-surface py-16 sm:py-20">
       <div className="shell-wide">
         <div className="border-line grid overflow-hidden rounded-[1.5rem] border lg:grid-cols-[0.85fr_1.15fr]">
           {/* Left panel --------------------------------------------------- */}
@@ -167,7 +167,7 @@ export function EnrolForm() {
                     Not sure if it is <em>for you?</em>
                   </>
                 }
-                lede="Answer three short questions and we will tell you honestly whether the programme fits — including if it does not."
+                lede="Answer three short questions and we will give you an honest read on whether this programme is right for you."
               />
 
               <ul className="mt-10 space-y-3">

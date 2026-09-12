@@ -15,13 +15,13 @@ import { company } from "@/lib/content";
  */
 export function PageCta({
   title = "Tell us what you are building.",
-  body = "A short note is enough to start. We reply to every enquiry within one business day — usually with questions, sometimes with a straight answer that you do not need us.",
+  body = "Send a short note about what you have in mind. You will hear back within one business day, usually with a few questions and a clear idea of how we can help.",
 }: {
   title?: string;
   body?: string;
 }) {
   return (
-    <section className="border-line bg-surface relative overflow-hidden border-t py-20 sm:py-24">
+    <section className="border-line bg-surface relative overflow-hidden border-t py-16 sm:py-20">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(100%_70%_at_50%_0%,#000_25%,transparent_78%)] opacity-50" />
         <div className="bg-brand/12 absolute -top-40 -left-24 size-[26rem] rounded-full blur-[120px]" />

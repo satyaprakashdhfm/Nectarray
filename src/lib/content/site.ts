@@ -49,48 +49,16 @@ export const nav: Link[] = [
 
 export const hero = {
   headline: ["We build the software,", "and the demand for it."],
-  lede: "NectArray is a four-in-one studio: we engineer web products, ship AI agents that actually do work, run the paid and organic marketing that fills them, and train the next set of engineers who build them.",
+  lede: "We build web products, ship AI agents that do real work, run the paid and organic marketing that brings people to them, and teach the engineers coming up behind us.",
   primaryCta: { label: "Start a project", href: "/contact#enquiry" },
   secondaryCta: { label: "See what we do", href: "#services" },
-  microNote: "No pitch deck. One call, and a straight answer on what you need.",
+  microNote: "One call is usually enough to know what your project needs and what it will take.",
   stats: [
     { value: "4", label: "Practices under one roof" },
     { value: "160+", label: "Integrations we work with" },
     { value: "25+", label: "Platforms and consoles" },
   ],
 };
-
-/** Pill chips that scroll under the hero. */
-export const trustChips = [
-  "Senior engineers only",
-  "Fixed scope, fixed price",
-  "You own the code",
-  "Weekly demos",
-  "Analytics that prove what worked",
-  "Marketing + build under one roof",
-  "No lock-in",
-  "Reply within 1 business day",
-];
-
-/** Tools we work with, scrolled as a second band under the chips. */
-export const marqueeItems = [
-  "Next.js",
-  "React",
-  "TypeScript",
-  "Vercel AI SDK",
-  "Claude",
-  "Python",
-  "PostgreSQL",
-  "Meta Ads",
-  "Google Ads",
-  "GA4",
-  "Shopify",
-  "WhatsApp API",
-  "n8n",
-  "Figma",
-  "Tailwind",
-  "LangGraph",
-];
 
 export const footerNote =
   "NectArray builds software, ships AI agents, runs growth marketing and teaches the whole stack.";

@@ -7,7 +7,7 @@ export function AboutCourse() {
   const { about, outcomes, forWho } = academy.course;
 
   return (
-    <section id="overview" className="bg-surface py-20 sm:py-24 lg:py-28">
+    <section id="overview" className="bg-surface py-16 sm:py-20">
       <div className="shell-wide">
         <div className="grid gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
           <div>

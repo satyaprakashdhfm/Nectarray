@@ -144,7 +144,7 @@ export const faqs: Faq[] = [
 export const contact = {
   eyebrow: "Get in touch",
   title: "Tell us what you are building.",
-  lede: "A short note is enough to start. We reply to every enquiry within one business day — usually with questions, sometimes with a straight answer that you do not need us.",
+  lede: "Send a short note about what you have in mind. You will hear back within one business day, usually with a few questions and a clear idea of how we can help.",
   interests: [
     "Marketing & growth",
     "Website or web app",
