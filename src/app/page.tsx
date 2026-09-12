@@ -22,7 +22,8 @@ export default function HomePage() {
 
       <Header clearAtTop />
 
-      <main id="main">
+      {/* data-page keys the pitch-black ground in globals.css. */}
+      <main id="main" data-page="home">
         <GlassHero />
         <Practices />
       </main>

@@ -193,6 +193,68 @@
 }
 
 /* --------------------------------------------------------------------------
+   The home page, on black
+
+   Keyed off data-page="home" on that page's <main>, so it is the home page
+   and nothing else. The tokens are redefined rather than the markup changed:
+   every section that says bg-mist / text-ink / border-line turns with it,
+   and the type flips to light in the same breath, which is what keeps the
+   page readable on a ground this dark.
+
+   --color-night is deliberately left alone. The practice cards and the
+   footer are painted with it, and against pure black a near-black panel is
+   what tells them apart from the page.
+-------------------------------------------------------------------------- */
+
+:root:has([data-page="home"]) {
+  --color-canvas: #000000;
+  --color-surface: #060606;
+  --color-mist: #000000;
+  --color-line: #21252a;
+  --color-line-soft: #16191c;
+
+  --color-ink: #f4f6f7;
+  --color-ink-soft: #a9b1b8;
+  --color-ink-faint: #79828a;
+
+  /* Text on a solid ink fill: ink is the light one now. */
+  --color-cta-fg: #000000;
+
+  /* Tints that let the black through, rather than pale swatches sitting
+     on top of it. */
+  --color-brand-wash: rgb(31 165 222 / 0.14);
+  --color-leaf-wash: rgb(126 217 87 / 0.12);
+  --color-amber-wash: rgb(245 164 74 / 0.12);
+  --color-teal-wash: rgb(43 179 173 / 0.13);
+
+  /* The -deep tones were chosen for contrast on white; on black the
+     display tones are the readable ones. */
+  --color-brand-deep: #5ccaf3;
+  --color-brand-solid: #4cc0f0;
+  --color-leaf-deep: #8fe36b;
+  --color-amber-deep: #f7b467;
+  --color-teal-deep: #45d6cc;
+  --color-danger: #ff8f80;
+
+  color-scheme: dark;
+}
+
+/* The grid paper is drawn in ink, which is now the light colour. */
+:root:has([data-page="home"]) .grid-paper {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, #ffffff 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, #ffffff 5%, transparent) 1px,
+      transparent 1px
+    );
+}
+
+/* --------------------------------------------------------------------------
    Public site: dark ocean, glass
 
    The marketing pages run dark, in the hero's own water — deep navy with a
