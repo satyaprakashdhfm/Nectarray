@@ -21,7 +21,7 @@ export function PageCta({
   body?: string;
 }) {
   return (
-    <section className="border-line from-brand-wash/70 via-canvas to-mist relative overflow-hidden border-t bg-gradient-to-b py-16 sm:py-20">
+    <section className="border-line bg-surface relative overflow-hidden border-t py-16 sm:py-20">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="grid-paper absolute inset-0 [mask-image:radial-gradient(100%_70%_at_50%_0%,#000_25%,transparent_78%)] opacity-50" />
         <div className="bg-brand/12 absolute -top-40 -left-24 size-[26rem] rounded-full blur-[120px]" />
