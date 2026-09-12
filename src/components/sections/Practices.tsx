@@ -49,7 +49,7 @@ export function Practices() {
                 href={pillar.href}
                 className="group border-night-line bg-night hover:border-brand/40 flex h-full flex-col overflow-hidden rounded-[1.75rem] border text-white shadow-[0_30px_70px_-30px_rgba(11,23,32,0.55)] transition-colors duration-300"
               >
-                <div className="relative aspect-[16/9] w-full overflow-hidden">
+                <div className="relative aspect-[16/7] w-full overflow-hidden">
                   <Image
                     src={pillar.image}
                     alt=""
@@ -69,28 +69,28 @@ export function Practices() {
                     {pillar.index}
                   </span>
 
-                  <h3 className="display absolute right-5 bottom-5 left-5 text-[1.5rem] leading-tight sm:text-[1.75rem]">
+                  <h3 className="display absolute right-5 bottom-4 left-5 text-[1.25rem] leading-tight sm:text-[1.5rem]">
                     {pillar.title}
                   </h3>
                 </div>
 
-                <div className="flex flex-1 flex-col p-6 sm:p-7">
-                  <p className="text-[0.9375rem] leading-relaxed text-white/65">
+                <div className="flex flex-1 flex-col p-5 sm:p-6">
+                  <p className="text-[0.875rem] leading-relaxed text-white/65">
                     {pillar.summary}
                   </p>
 
-                  <ul className="mt-5 flex flex-wrap gap-1.5">
+                  <ul className="mt-4 flex flex-wrap gap-1.5">
                     {pillar.points.map((point) => (
                       <li
                         key={point}
-                        className="border-night-line rounded-full border bg-white/[0.04] px-3 py-1.5 text-[0.8125rem] font-medium text-white/75"
+                        className="border-night-line rounded-full border bg-white/[0.04] px-2.5 py-1 text-[0.75rem] font-medium text-white/75"
                       >
                         {point}
                       </li>
                     ))}
                   </ul>
 
-                  <span className="group-hover:text-brand mt-auto inline-flex items-center gap-1.5 pt-6 text-[0.9375rem] font-semibold text-white transition-colors">
+                  <span className="group-hover:text-brand mt-auto inline-flex items-center gap-1.5 pt-5 text-[0.875rem] font-semibold text-white transition-colors">
                     Explore
                     <Icon
                       name="arrow"
