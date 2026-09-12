@@ -26,17 +26,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // The hero film and its poster: named files that only change when
-        // they are replaced, so a revalidation on every visit buys nothing.
-        source: "/hero/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=86400, stale-while-revalidate=604800",
-          },
-        ],
-      },
-      {
         source: "/notes/:path*",
         headers: [
           {
