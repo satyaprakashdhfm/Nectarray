@@ -1,7 +1,8 @@
 import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
+import { HomeHeader } from "@/components/layout/HomeHeader";
 import { PageCta } from "@/components/layout/PageCta";
-import { GlassHero } from "@/components/sections/GlassHero";
+import { Hero } from "@/components/sections/Hero";
+import { Marquee } from "@/components/sections/Marquee";
 import { Practices } from "@/components/sections/Practices";
 import { buildStructuredData } from "@/lib/seo";
 
@@ -20,11 +21,11 @@ export default function HomePage() {
         }}
       />
 
-      <Header clearAtTop dark />
+      <HomeHeader />
 
-      {/* data-page keys the pitch-black ground in globals.css. */}
-      <main id="main" data-page="home">
-        <GlassHero />
+      <main id="main">
+        <Hero />
+        <Marquee />
         <Practices />
       </main>
 
