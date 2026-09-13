@@ -30,7 +30,45 @@ const SHOW_NEAR_TOP = 120;
  * space. Near the top it always shows, it never hides with its menu open,
  * and focus inside it overrides the hide (see .glass-header in globals.css).
  */
-export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
+/**
+ * The two finishes of the bar. White glass on the light pages; dark glass on
+ * the home page, which runs on black and where a white pill was the brightest
+ * thing on the screen after the logo tile.
+ */
+const TONES = {
+  light: {
+    link: "text-black hover:bg-black/6",
+    linkCurrent: "bg-black/8 text-black",
+    login: "text-black hover:bg-black/6",
+    cta: "bg-night text-white hover:bg-[#16303f]",
+    ctaIcon: "text-night bg-white",
+    burger: "border-night/12 bg-night/5 text-night hover:bg-night/10",
+    mobileLink: "border-night/8 text-black",
+    mobileCta: "bg-night text-white",
+    mobileLogin: "border-night/12 text-black",
+  },
+  dark: {
+    link: "text-white hover:bg-white/10",
+    linkCurrent: "bg-white/14 text-white",
+    login: "text-white hover:bg-white/10",
+    cta: "bg-white text-black hover:bg-white/90",
+    ctaIcon: "bg-black text-white",
+    burger: "border-white/15 bg-white/8 text-white hover:bg-white/14",
+    mobileLink: "border-white/10 text-white",
+    mobileCta: "bg-white text-black",
+    mobileLogin: "border-white/20 text-white",
+  },
+};
+
+export function Header({
+  clearAtTop = false,
+  dark = false,
+}: {
+  clearAtTop?: boolean;
+  /** Dark glass, for a page that runs on a dark ground. */
+  dark?: boolean;
+}) {
+  const tone = TONES[dark ? "dark" : "light"];
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [clear, setClear] = useState(clearAtTop);
@@ -91,6 +129,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
     >
       <div
         data-solid={!clear || open}
+        data-tone={dark ? "dark" : undefined}
         className="glass-bar mx-auto flex h-[var(--bar-h)] max-w-[78rem] items-center justify-between gap-6 rounded-full pr-[0.6em] pl-[1.3em] min-[1800px]:max-w-[84rem]"
       >
         <Logo
@@ -107,9 +146,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               aria-current={isCurrent(item.href) ? "page" : undefined}
               className={cn(
                 "rounded-full px-[1.05em] py-[0.5em] font-medium transition-colors duration-200",
-                isCurrent(item.href)
-                  ? "bg-black/8 text-black"
-                  : "text-black hover:bg-black/6",
+                isCurrent(item.href) ? tone.linkCurrent : tone.link,
               )}
             >
               {item.label}
@@ -123,7 +160,10 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
           <EnrolButton
             label="Log in"
             withArrow={false}
-            className="hidden rounded-full px-[1.05em] py-[0.6em] font-medium text-black transition-colors duration-200 hover:bg-black/6 sm:inline-flex"
+            className={cn(
+              "hidden rounded-full px-[1.05em] py-[0.6em] font-medium transition-colors duration-200 sm:inline-flex",
+              tone.login,
+            )}
           />
 
           {/* Straight to the enquiry form. The top of /contact opens on the
@@ -131,10 +171,18 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               a CTA landing above the form reads as having gone nowhere. */}
           <Link
             href="/contact#enquiry"
-            className="group bg-night hidden items-center gap-[0.65em] rounded-full py-[0.4em] pr-[0.4em] pl-[1.3em] font-semibold text-white transition-colors duration-200 hover:bg-[#16303f] sm:inline-flex"
+            className={cn(
+              "group hidden items-center gap-[0.65em] rounded-full py-[0.4em] pr-[0.4em] pl-[1.3em] font-semibold transition-colors duration-200 sm:inline-flex",
+              tone.cta,
+            )}
           >
             Book a call
-            <span className="text-night grid size-[2.15em] place-items-center rounded-full bg-white transition-transform duration-300 group-hover:rotate-45">
+            <span
+              className={cn(
+                "grid size-[2.15em] place-items-center rounded-full transition-transform duration-300 group-hover:rotate-45",
+                tone.ctaIcon,
+              )}
+            >
               <ArrowUpRight
                 className="size-[1.05em]"
                 strokeWidth={2.25}
@@ -149,7 +197,10 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="border-night/12 bg-night/5 text-night hover:bg-night/10 grid size-10 place-items-center rounded-full border transition-colors duration-200 lg:hidden"
+            className={cn(
+              "grid size-10 place-items-center rounded-full border transition-colors duration-200 lg:hidden",
+              tone.burger,
+            )}
           >
             {open ? (
               <X className="size-5" strokeWidth={2} aria-hidden />
@@ -164,6 +215,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
         id="mobile-nav"
         hidden={!open}
         data-solid
+        data-tone={dark ? "dark" : undefined}
         className="glass-bar mx-auto mt-2 max-w-[78rem] rounded-3xl lg:hidden"
       >
         <nav className="flex flex-col px-5 py-3" aria-label="Mobile">
@@ -174,8 +226,9 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               onClick={close}
               aria-current={isCurrent(item.href) ? "page" : undefined}
               className={cn(
-                "border-night/8 border-b py-3.5 text-lg font-medium",
-                isCurrent(item.href) ? "text-brand-solid" : "text-black",
+                "border-b py-3.5 text-lg font-medium",
+                tone.mobileLink,
+                isCurrent(item.href) && "text-brand-solid",
               )}
             >
               {item.label}
@@ -184,14 +237,20 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
           <Link
             href="/contact#enquiry"
             onClick={close}
-            className="bg-night mt-5 rounded-full px-5 py-3.5 text-center text-base font-semibold text-white"
+            className={cn(
+              "mt-5 rounded-full px-5 py-3.5 text-center text-base font-semibold",
+              tone.mobileCta,
+            )}
           >
             Book a call
           </Link>
           <EnrolButton
             label="Log in"
             withArrow={false}
-            className="border-night/12 mt-3 mb-2 inline-flex justify-center rounded-full border px-5 py-3.5 text-center text-base font-medium text-black"
+            className={cn(
+              "mt-3 mb-2 inline-flex justify-center rounded-full border px-5 py-3.5 text-center text-base font-medium",
+              tone.mobileLogin,
+            )}
           />
         </nav>
       </div>

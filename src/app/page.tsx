@@ -20,7 +20,7 @@ export default function HomePage() {
         }}
       />
 
-      <Header clearAtTop />
+      <Header clearAtTop dark />
 
       {/* data-page keys the pitch-black ground in globals.css. */}
       <main id="main" data-page="home">
