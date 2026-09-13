@@ -1361,22 +1361,34 @@ label:has(input[type="checkbox"]) {
  * middle of a picture. The copy is also held clear of the tile by width,
  * and everything scales with the viewport between a laptop and a monitor.
  */
+:root {
+  --frame-pad: clamp(1.25rem, 6.5vw, 7.75rem);
+}
+
 .hero-ground {
   --hero-tile: clamp(8.5rem, 13vw, 22rem);
-  --hero-pad: clamp(1.25rem, 6.5vw, 7.75rem);
+  --hero-pad: var(--frame-pad);
 }
 
 @media (min-width: 80rem) {
+  .hero-frame,
+  .home-frame {
+    max-width: calc(92rem + 2 * var(--frame-pad));
+    padding-inline: var(--frame-pad);
+  }
   .hero-frame {
-    max-width: none;
-    padding-inline: var(--hero-pad);
     padding-bottom: clamp(7rem, 12vh, 13rem);
   }
-  /* Half the screen, less half the tile, a gap, and the edge margin. */
+  /* From the frame's left edge to just short of the tile. The frame is the
+     screen until it is capped, so this is half the screen until then and
+     half the frame after, less half the tile, a gap and the gutter. */
   .hero-copy {
     max-width: min(
       50rem,
-      calc(50vw - var(--hero-tile) / 2 - 3.5vw - var(--hero-pad))
+      calc(
+        min(50vw, 46rem + var(--frame-pad)) - var(--hero-tile) / 2 - 3.5vw -
+          var(--frame-pad)
+      )
     );
   }
   .hero-title {
@@ -1400,10 +1412,6 @@ label:has(input[type="checkbox"]) {
   }
   .hero-stat-label {
     font-size: clamp(0.75rem, 0.35rem + 0.45vw, 0.9375rem);
-  }
-  .hero-cue {
-    font-size: clamp(0.6875rem, 0.2rem + 0.55vw, 1rem);
-    bottom: clamp(1.5rem, 3vh, 3.5rem);
   }
 }
 
@@ -1631,10 +1639,6 @@ label:has(input[type="checkbox"]) {
   .hero-rise {
     animation: hero-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
-
-  .scroll-cue-arrow {
-    animation: cue-bob 1.8s ease-in-out infinite;
-  }
 }
 
 @keyframes blob-drift {
@@ -1693,16 +1697,6 @@ label:has(input[type="checkbox"]) {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes cue-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(4px);
   }
 }
 

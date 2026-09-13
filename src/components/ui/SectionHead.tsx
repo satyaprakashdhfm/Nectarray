@@ -15,6 +15,7 @@ export function SectionHead({
   lede,
   align = "left",
   onDark = false,
+  white = false,
   as: Heading = "h2",
   className = "",
 }: {
@@ -23,6 +24,8 @@ export function SectionHead({
   lede?: string;
   align?: "left" | "center";
   onDark?: boolean;
+  /** Eyebrow and headline in plain white, accent words included. */
+  white?: boolean;
   as?: "h1" | "h2";
   className?: string;
 }) {
@@ -36,11 +39,11 @@ export function SectionHead({
         <Reveal>
           <p
             className={`eyebrow mb-5 flex items-center gap-2.5 ${centered ? "justify-center" : ""} ${
-              onDark ? "text-leaf" : ""
+              white ? "text-white" : onDark ? "text-leaf" : ""
             }`}
           >
             <span
-              className={`h-px w-6 ${onDark ? "bg-leaf/50" : "bg-brand/50"}`}
+              className={`h-px w-6 ${white ? "bg-white/60" : onDark ? "bg-leaf/50" : "bg-brand/50"}`}
               aria-hidden
             />
             {eyebrow}
@@ -51,8 +54,8 @@ export function SectionHead({
       <Reveal delay={60}>
         <Heading
           className={`display text-[2.125rem] leading-[1.06] sm:text-[2.75rem] lg:text-[3.25rem] ${
-            onDark ? "text-white" : "text-ink"
-          } [&_em]:ink-gradient [&_em]:not-italic`}
+            white || onDark ? "text-white" : "text-ink"
+          } ${white ? "" : "[&_em]:ink-gradient"} [&_em]:not-italic`}
         >
           {title}
         </Heading>

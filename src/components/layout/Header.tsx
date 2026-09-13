@@ -108,8 +108,8 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               className={cn(
                 "rounded-full px-[1.05em] py-[0.5em] font-medium transition-colors duration-200",
                 isCurrent(item.href)
-                  ? "bg-night/8 text-night"
-                  : "text-night/65 hover:bg-night/6 hover:text-night",
+                  ? "bg-black/8 text-black"
+                  : "text-black hover:bg-black/6",
               )}
             >
               {item.label}
@@ -123,7 +123,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
           <EnrolButton
             label="Log in"
             withArrow={false}
-            className="text-night/65 hover:bg-night/6 hover:text-night hidden rounded-full px-[1.05em] py-[0.6em] font-medium transition-colors duration-200 sm:inline-flex"
+            className="hidden rounded-full px-[1.05em] py-[0.6em] font-medium text-black transition-colors duration-200 hover:bg-black/6 sm:inline-flex"
           />
 
           {/* Straight to the enquiry form. The top of /contact opens on the
@@ -175,7 +175,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
               aria-current={isCurrent(item.href) ? "page" : undefined}
               className={cn(
                 "border-night/8 border-b py-3.5 text-lg font-medium",
-                isCurrent(item.href) ? "text-brand-solid" : "text-night",
+                isCurrent(item.href) ? "text-brand-solid" : "text-black",
               )}
             >
               {item.label}
@@ -191,7 +191,7 @@ export function Header({ clearAtTop = false }: { clearAtTop?: boolean }) {
           <EnrolButton
             label="Log in"
             withArrow={false}
-            className="border-night/12 text-night/80 mt-3 mb-2 inline-flex justify-center rounded-full border px-5 py-3.5 text-center text-base font-medium"
+            className="border-night/12 mt-3 mb-2 inline-flex justify-center rounded-full border px-5 py-3.5 text-center text-base font-medium text-black"
           />
         </nav>
       </div>

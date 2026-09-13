@@ -31,8 +31,9 @@ export function Practices() {
         aria-hidden
       />
 
-      <div className="shell-wide">
+      <div className="shell-wide home-frame">
         <SectionHead
+          white
           eyebrow="What we do"
           title={
             <>

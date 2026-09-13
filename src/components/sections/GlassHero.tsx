@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { hero } from "@/lib/content";
 
 /**
@@ -214,18 +214,6 @@ export function GlassHero() {
           ))}
         </dl>
       </div>
-
-      <a
-        href={hero.secondaryCta.href}
-        className="scroll-cue hero-cue absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 text-[0.6875rem] font-semibold tracking-[0.18em] text-white/75 uppercase transition-colors hover:text-white"
-      >
-        Scroll to explore
-        <ArrowDown
-          className="scroll-cue-arrow size-[1.3em]"
-          strokeWidth={2.25}
-          aria-hidden
-        />
-      </a>
     </section>
   );
 }
