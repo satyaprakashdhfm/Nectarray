@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Plus, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Marketing } from "@/components/sections/Marketing";
@@ -10,17 +10,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { company, marketingPage } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const {
-  hero,
-  brand,
-  aiSearch,
-  analytics,
-  platforms,
-  process,
-  faqs,
-  cta,
-  meta,
-} = marketingPage;
+const { hero, brand, aiSearch, analytics, cta, meta } = marketingPage;
 
 /**
  * One accent: the mark's circuit blue. Weight comes from navy, not from a
@@ -92,14 +82,6 @@ function StructuredData() {
             },
           })),
         },
-      },
-      {
-        "@type": "FAQPage",
-        mainEntity: faqs.map((faq) => ({
-          "@type": "Question",
-          name: faq.q,
-          acceptedAnswer: { "@type": "Answer", text: faq.a },
-        })),
       },
     ],
   };
@@ -440,142 +422,6 @@ export default function MarketingPage() {
                   </Reveal>
                 ))}
               </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Platforms ────────────────────────────────────────────── */}
-        <section className="py-20 sm:py-24">
-          <div className="shell-wide">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-              <div className="lg:sticky lg:top-28 lg:self-start">
-                <Reveal>
-                  <Eyebrow>{platforms.eyebrow}</Eyebrow>
-                </Reveal>
-                <Reveal delay={70}>
-                  <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
-                    {platforms.title}
-                  </h2>
-                </Reveal>
-                <Reveal delay={130}>
-                  <p className="text-ink-soft mt-5 text-[0.9375rem] leading-relaxed">
-                    {platforms.lede}
-                  </p>
-                </Reveal>
-              </div>
-
-              {/* Real marks, the way the integrations grid on /software is
-                  drawn. A buyer recognises the Meta or Zomato logo faster
-                  than they read the words next to it. */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {platforms.groups.map((group, i) => (
-                  <Reveal key={group.label} delay={(i % 2) * 60}>
-                    <div className="card h-full p-5">
-                      <h3 className="text-ink text-[0.9375rem] font-semibold tracking-tight">
-                        {group.label}
-                      </h3>
-                      {group.note && (
-                        <p className="text-ink-soft mt-1.5 text-[0.8125rem] leading-[1.55]">
-                          {group.note}
-                        </p>
-                      )}
-                      <ul className="mt-4 flex flex-wrap gap-1.5">
-                        {group.brands.map((brand) => (
-                          <li
-                            key={brand.name}
-                            className="border-line bg-canvas flex items-center gap-1.5 rounded-md border px-2 py-1"
-                          >
-                            <BrandLogo
-                              name={brand.name}
-                              domain={brand.domain}
-                              className="size-3.5"
-                            />
-                            <span className="text-ink-soft text-[0.75rem] font-medium whitespace-nowrap">
-                              {brand.name}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </Reveal>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Process — the page's one full-colour band ────────────── */}
-        <section className="border-night-line bg-night border-y py-20 sm:py-24">
-          <div className="shell-wide">
-            <Reveal>
-              <p className="flex items-center gap-2.5 text-[0.75rem] font-semibold tracking-[0.16em] text-white/55 uppercase">
-                <span className="bg-brand h-px w-6" aria-hidden />
-                {process.eyebrow}
-              </p>
-            </Reveal>
-            <Reveal delay={70}>
-              <h2 className="display mt-5 text-[2rem] text-white sm:text-[2.5rem]">
-                {process.title}
-              </h2>
-            </Reveal>
-
-            <ol className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {process.steps.map((step, i) => (
-                <Reveal as="li" key={step.n} delay={i * 60}>
-                  <div className="border-night-line bg-night-soft h-full rounded-2xl border p-5">
-                    <span className="bg-brand-deep grid size-8 place-items-center rounded-full font-mono text-[0.72rem] font-semibold text-white">
-                      {step.n}
-                    </span>
-                    <h3 className="mt-4 text-[0.9375rem] font-semibold text-white">
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-[0.8125rem] leading-[1.55] text-white/70">
-                      {step.body}
-                    </p>
-                  </div>
-                </Reveal>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* ── FAQ ──────────────────────────────────────────────────── */}
-        <section className="border-line bg-mist border-y py-20 sm:py-24">
-          <div className="shell-wide grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-            <Reveal>
-              <h2 className="display text-ink text-[2rem] sm:text-[2.5rem] lg:sticky lg:top-28">
-                Questions we get
-                <br />
-                <span className="ink-gradient">before we start.</span>
-              </h2>
-            </Reveal>
-
-            {/* Two columns of accordions on a wide screen: six rows down one
-                side left most of the width empty. */}
-            <div className="grid gap-x-10 lg:grid-cols-2">
-              {faqs.map((faq, i) => (
-                <Reveal key={faq.q} delay={i * 50}>
-                  <details
-                    open={i === 0}
-                    className="group border-line border-b py-1 first:border-t lg:first:border-t-0"
-                  >
-                    <summary className="flex cursor-pointer list-none items-start justify-between gap-5 py-4 [&::-webkit-details-marker]:hidden">
-                      <h3 className="text-ink group-hover:text-brand-deep text-[0.9375rem] font-semibold tracking-tight transition-colors">
-                        {faq.q}
-                      </h3>
-                      <span
-                        className="border-line bg-surface text-ink-soft group-open:border-brand group-open:bg-brand mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border transition-all duration-300 group-open:rotate-45 group-open:text-white"
-                        aria-hidden
-                      >
-                        <Plus className="size-3.5" strokeWidth={2.25} />
-                      </span>
-                    </summary>
-                    <p className="text-ink-soft pr-10 pb-5 text-[0.875rem] leading-relaxed">
-                      {faq.a}
-                    </p>
-                  </details>
-                </Reveal>
-              ))}
             </div>
           </div>
         </section>

@@ -5,8 +5,7 @@
  * channel cards shared with the homepage and the Service list in the JSON-LD.
  * This is the long-form page built around them.
  */
-import type { Faq, IconCard, Link, Step } from "@/types";
-import type { BrandGroup } from "./practices";
+import type { IconCard, Link } from "@/types";
 
 /**
  * A service tile. `domain` only where the service is itself a product —
@@ -36,14 +35,6 @@ export const marketingPage: {
     honesty: { title: string; body: string };
   };
   analytics: { eyebrow: string; title: string; lede: string; items: Tile[] };
-  platforms: {
-    eyebrow: string;
-    title: string;
-    lede: string;
-    groups: BrandGroup[];
-  };
-  process: { eyebrow: string; title: string; steps: Step[] };
-  faqs: Faq[];
   cta: { title: string; body: string; primary: Link; secondary: Link };
 } = {
   meta: {
@@ -234,119 +225,6 @@ export const marketingPage: {
       },
     ],
   },
-
-  platforms: {
-    eyebrow: "Platforms",
-    title: "The consoles we are actually in every week",
-    lede: "The platforms the work actually happens in. You get real access to each one, and every account stays in your name.",
-    groups: [
-      {
-        label: "Paid & social",
-        brands: [
-          { name: "Meta Ads", domain: "meta.com" },
-          { name: "Instagram", domain: "instagram.com" },
-          { name: "Facebook", domain: "facebook.com" },
-          { name: "Google Ads", domain: "ads.google.com" },
-          { name: "YouTube", domain: "youtube.com" },
-          { name: "LinkedIn", domain: "linkedin.com" },
-          { name: "X", domain: "x.com" },
-        ],
-      },
-      {
-        label: "Measurement",
-        brands: [
-          { name: "Google Analytics", domain: "analytics.google.com" },
-          { name: "Tag Manager", domain: "tagmanager.google.com" },
-          { name: "Search Console", domain: "search.google.com" },
-          { name: "Meta Pixel", domain: "developers.facebook.com" },
-          { name: "Looker Studio", domain: "looker.com" },
-          { name: "Hotjar", domain: "hotjar.com" },
-        ],
-      },
-      {
-        label: "Commerce & listings",
-        brands: [
-          { name: "Shopify", domain: "shopify.com" },
-          { name: "Amazon Ads", domain: "advertising.amazon.in" },
-          { name: "Flipkart", domain: "flipkart.com" },
-          { name: "Business Profile", domain: "business.google.com" },
-          { name: "Zomato", domain: "zomato.com" },
-          { name: "Swiggy", domain: "swiggy.com" },
-        ],
-      },
-      {
-        label: "Lifecycle & AI search",
-        note: "Where the message goes out, and where the answers now come from.",
-        brands: [
-          { name: "WhatsApp Business", domain: "business.whatsapp.com" },
-          { name: "Mailchimp", domain: "mailchimp.com" },
-          { name: "ChatGPT", domain: "openai.com" },
-          { name: "Gemini", domain: "gemini.google.com" },
-          { name: "Perplexity", domain: "perplexity.ai" },
-          { name: "Claude", domain: "anthropic.com" },
-        ],
-      },
-    ],
-  },
-
-  process: {
-    eyebrow: "How we work",
-    title: "No retainer before there is a plan",
-    steps: [
-      {
-        n: "01",
-        title: "Audit",
-        body: "What is running, what it costs, what it returns, and which channels are being paid for out of habit.",
-      },
-      {
-        n: "02",
-        title: "Plan",
-        body: "A written plan naming the channels, the spend, the creative needed and what each is accountable for.",
-      },
-      {
-        n: "03",
-        title: "Instrument",
-        body: "Tracking before spending: GA4, conversions, server-side events. Numbers you can act on, not a dashboard.",
-      },
-      {
-        n: "04",
-        title: "Run",
-        body: "Campaigns live, creative in rotation, content shipping, and the AI-visibility groundwork underneath it.",
-      },
-      {
-        n: "05",
-        title: "Cut and double",
-        body: "Reviewed against the plan. What pays gets more; what does not gets stopped and said out loud.",
-      },
-    ],
-  },
-
-  faqs: [
-    {
-      q: "Do you take a retainer before doing any work?",
-      a: "The audit and the written plan come first, so you can see how we think before committing to anything ongoing. If our honest read is that you can handle this in-house, we will tell you that too.",
-    },
-    {
-      q: "What is the minimum ad spend you work with?",
-      a: "There is no fixed floor, but below roughly ₹50,000 a month across channels the learning is slow enough that content and organic usually return more per rupee. We will tell you that rather than take the account.",
-    },
-    {
-      q: "Can you guarantee we appear in ChatGPT or AI Overviews?",
-      a: "No, and neither can anyone else. There is no placement to buy and the model decides what to cite. What we can do is make your site and brand as findable, readable and corroborated as possible, which is what improves the odds — and then monitor what the assistants actually say about you so the effect is visible rather than claimed.",
-    },
-    {
-      q: "Is AI search visibility just SEO with a new name?",
-      a: "It overlaps heavily and the groundwork is shared — clean HTML, structured data, pages that answer a question properly. What differs is the target: a ranked list of links versus a single synthesised answer. That rewards being unambiguous and corroborated rather than just ranking well, and it is measured by asking the assistants, not by checking positions.",
-    },
-    {
-      q: "Do you make the creative, or do we?",
-      a: "We can do either. Most clients want the shooting and editing handled, some have an in-house team and want strategy, briefs and the media buying. Both work, as long as it is clear which it is before we start.",
-    },
-    {
-      q: "Do you also build the site the traffic lands on?",
-      a: "Yes, and it is the reason this works better than hiring the two separately. The people running the ads and the people building the landing page are the same team, so the page is built to convert and instrumented to prove it rather than reverse-engineered afterwards.",
-    },
-  ],
 
   cta: {
     title: "Tell us what you are selling.",
