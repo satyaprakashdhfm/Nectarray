@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Software } from "@/components/sections/Software";
+import { SoftwareHero } from "@/components/software/SoftwareHero";
 import { Integrations } from "@/components/software/Integrations";
 import { QuoteSection } from "@/components/software/QuoteCta";
 import { StackGrid } from "@/components/software/StackGrid";
@@ -19,6 +20,7 @@ export const metadata: Metadata = pageMetadata({
 /**
  * The practice page, read top to bottom as one argument:
  *
+ *   the offer          → what this is, in one screen
  *   what we build      → find your own trade in the list
  *   what it plugs into → the software you already run is on there
  *   what it is built on → and we know your platform down to the service
@@ -39,7 +41,8 @@ export default function SoftwarePage() {
     <>
       <Header />
       <main id="main">
-        <Software asPage />
+        <SoftwareHero />
+        <Software />
         <Integrations />
         <StackGrid />
         <WhyUs />

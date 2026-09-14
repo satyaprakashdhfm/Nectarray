@@ -118,12 +118,6 @@ export function AcademyHero() {
                     </span>
                   ))}
                 </div>
-                <p className="text-ink-soft text-[0.9375rem]">
-                  <span className="text-ink font-semibold">
-                    Every submission read
-                  </span>{" "}
-                  — individually, by the engineer who set it.
-                </p>
               </div>
             </Reveal>
           </div>

@@ -38,10 +38,10 @@ export const agenticAiPage = {
     {
       id: "customer-care",
       index: "01",
-      icon: "message",
-      title: "Customer care agents",
+      icon: "bot",
+      title: "Agents that do the work",
       summary:
-        "The agent your customers reach — on chat, on WhatsApp and on the phone. It answers from your own documentation, policies and catalogue, cites the page it took each answer from, opens and works tickets, and hands the conversation to a person the moment one is wanted. One agent, every channel, with the same knowledge behind all of them.",
+        "An agent given one job somebody currently does by hand, wired into the systems that job already touches. Customer conversations on every channel, yes  + EM +  but equally the reconciliation, the chasing, the triage and the weekly report. It answers from your own documentation and data, cites where each answer came from, and stops for a person the moment a person is wanted.",
       items: [
         {
           name: "Support agent on your site",
@@ -73,7 +73,7 @@ export const agenticAiPage = {
       id: "mcp",
       index: "02",
       icon: "plug",
-      title: "Custom MCP servers",
+      title: "Custom MCP servers, for any system",
       summary:
         "Model Context Protocol is the standard way an AI client gets safe, typed access to a system. We build the server that exposes yours, once, and from then on every AI tool you adopt can work with your data through it — with the permissions and the audit trail enforced on the server where they hold.",
       items: [
@@ -773,48 +773,186 @@ export const agenticAiPage = {
   /* ---------------------------------------------------------------------
      The unglamorous half — the reason a demo becomes a system
   --------------------------------------------------------------------- */
-  engineering: {
-    eyebrow: "The other half",
-    title: "The part that turns a demo into something you can run",
-    lede: "Anyone can get a convincing answer out of a model once. Everything below is what separates that from something you are willing to put in front of customers.",
+  /* ---------------------------------------------------------------------
+     Every kind of work an agent can take on, by the team that owns it.
+
+     `steps` is what the agent actually does, in order, and the panel plays
+     them as a task list working itself through. Placeholder for the films of
+     real runs that will replace it — the shape of the panel does not change
+     when they arrive, only what is inside it.
+  --------------------------------------------------------------------- */
+  domains: {
+    eyebrow: "Where an agent earns its place",
+    title: "An agent for the work each team is drowning in",
+    lede: "Not one assistant that does a bit of everything. A specific agent, given one job that somebody currently does by hand, wired into the systems that job already touches.",
     items: [
       {
-        icon: "check",
-        title: "Evaluation suites",
-        body: "A test set of real questions with known-good answers, run on every prompt or model change, so an improvement in one place cannot silently break three others.",
+        id: "finance",
+        prompt: "Pull our cash position from the books and reconcile it against gateway settlements. Show me what is genuinely available today.",
+        connectors: ["Tally / Zoho Books", "Razorpay", "Bank feeds"],
+        /** Reuses the worked example already written for this trade. */
+        industry: "financial-services",
+        label: "Finance & accounts",
+        icon: "chart",
+        body: "Reconciliation, chasing and the month-end scramble. The agent does the matching and brings you only what refuses to match.",
+        steps: [
+          "Pull the ledger and the settlement file",
+          "Match line by line, flag the gaps",
+          "Draft the chasers for what is overdue",
+          "Post the exceptions for a human to sign off",
+        ],
       },
       {
+        id: "sales",
+        prompt: "Read the enquiries that came in overnight, score them against what actually closes for us, and draft a reply to each.",
+        connectors: ["HubSpot / Zoho CRM", "Gmail", "Calendar"],
+        label: "Sales",
+        icon: "target",
+        body: "Research, follow-up and CRM hygiene — the work that gets skipped when the pipeline is busy, which is exactly when it costs you.",
+        steps: [
+          "Read the new enquiry and the company behind it",
+          "Score it against what actually closes for you",
+          "Draft the reply and the follow-up sequence",
+          "Log everything to the CRM, properly",
+        ],
+      },
+      {
+        id: "support",
+        prompt: "Answer the overnight messages from our own docs, do the small fixes yourself, and queue anything you are unsure of.",
+        connectors: ["WhatsApp Business", "Freshdesk", "Shopify"],
+        /** Reuses the worked example already written for this trade. */
+        industry: "small-business",
+        label: "Customer support",
+        icon: "message",
+        body: "Answering on the channel it arrived on, from your real documentation, and knowing when to stop and fetch a person.",
+        steps: [
+          "Read the message and find the order behind it",
+          "Answer from your docs, cite where it came from",
+          "Do the small thing — reschedule, refund, resend",
+          "Hand over the moment it is out of its depth",
+        ],
+      },
+      {
+        id: "marketing",
+        prompt: "Pull last week from the ad platforms and GA4, tell me what moved and what did not, and draft the next round of creative.",
+        connectors: ["Meta Ads", "Google Ads", "GA4"],
+        label: "Marketing",
+        icon: "megaphone",
+        body: "The repetitive half: briefs, variants, tagging and the weekly report nobody has time to assemble.",
+        steps: [
+          "Pull last week from the ad platforms and GA4",
+          "Write the read: what moved, what did not",
+          "Draft the next round of creative variants",
+          "Queue them for a human to approve",
+        ],
+      },
+      {
+        id: "operations",
+        prompt: "Watch today's orders, stock and courier feeds. Tell the right person the moment something is late, short or stuck.",
+        connectors: ["Unicommerce", "Shiprocket", "Slack"],
+        label: "Operations & logistics",
+        icon: "workflow",
+        body: "Chasing status across systems that do not talk to each other, and telling somebody before it becomes a problem.",
+        steps: [
+          "Watch orders, stock and courier feeds",
+          "Spot what is late, short or stuck",
+          "Notify the person who can act on it",
+          "Keep a running note of what was done",
+        ],
+      },
+      {
+        id: "people",
+        prompt: "Read this week's applications against the brief, summarise each with the evidence, and offer interview slots.",
+        connectors: ["Keka / Darwinbox", "Gmail", "Calendar"],
+        label: "People & hiring",
+        icon: "briefcase",
+        body: "Screening, scheduling and the onboarding checklist — the admin around hiring, not the judgement in it.",
+        steps: [
+          "Read the applications against the real brief",
+          "Summarise each one, evidence attached",
+          "Offer interview slots that suit both diaries",
+          "Open the onboarding tasks on day one",
+        ],
+      },
+      {
+        id: "clinics",
+        prompt: "Confirm tomorrow's list, refill anything that cancels from the waiting list, and chase the pre-authorisations.",
+        connectors: ["Practice management", "WhatsApp Business", "Insurer portal"],
+        /** Reuses the worked example already written for this trade. */
+        industry: "healthcare",
+        label: "Clinics & patient care",
         icon: "shield",
-        title: "Guardrails",
-        body: "Topic boundaries, refusal behaviour, PII redaction before anything leaves your infrastructure, and hard limits on what any tool is permitted to do.",
+        body: "Confirmations, cancellations and pre-authorisations. The desk work around care, never the care itself.",
+        steps: [
+          "Confirm tomorrow's list before tomorrow arrives",
+          "Refill a cancelled slot from the waiting list",
+          "Chase the pre-authorisation nobody has time to",
+          "Escalate anything clinical to a person",
+        ],
       },
       {
-        icon: "gauge",
-        title: "Cost and latency budgets",
-        body: "Per-conversation ceilings, smaller models for the easy steps, caching for the repeated ones. An agent that costs more than the work it saves is not automation.",
+        id: "legal",
+        prompt: "Read this contract against our playbook and mark every clause that departs from it, with the precedent for each.",
+        connectors: ["Google Drive", "DocuSign", "Clause library"],
+        label: "Legal & compliance",
+        icon: "notebook",
+        body: "Reading the long documents and telling you which three clauses are not standard. A first pass, not an opinion.",
+        steps: [
+          "Read the contract against your own playbook",
+          "Mark every clause that departs from it",
+          "Pull the precedent for each one",
+          "Send it to counsel with the work done",
+        ],
       },
       {
-        icon: "search",
-        title: "Observability",
-        body: "Full traces of every run — what the model saw, which tools it called, what came back. When someone asks why it did that, you can answer.",
+        id: "engineering",
+        prompt: "Read the alert and the logs around it, group it with what it resembles, and draft the first diagnosis.",
+        connectors: ["Sentry", "GitHub", "PagerDuty"],
+        label: "Engineering & IT",
+        icon: "code",
+        body: "Triage, on-call noise and the tickets that are the same five questions in different words.",
+        steps: [
+          "Read the alert and the logs around it",
+          "Group it with the incidents it resembles",
+          "Draft the first diagnosis and the runbook step",
+          "Page a human if it is genuinely new",
+        ],
       },
       {
+        id: "reporting",
+        prompt: "Answer the Monday question from the warehouse rather than last week's export, and check it reconciles before sending.",
+        connectors: ["PostgreSQL", "Looker Studio", "Slack"],
+        label: "Data & reporting",
         icon: "database",
-        title: "Retrieval that holds up",
-        body: "Chunking, embeddings and re-ranking tuned against your actual corpus, plus a re-index pipeline so the agent knows about the document you published this morning.",
+        body: "The recurring question somebody answers by hand every Monday, answered from the source instead of a stale export.",
+        steps: [
+          "Query the warehouse, not last week's export",
+          "Check the numbers reconcile before sending",
+          "Write the summary a human would have written",
+          "Deliver it where the team already looks",
+        ],
       },
-      {
-        icon: "arrow",
-        title: "Human handover",
-        body: "A defined confidence threshold, a clean escalation path, and full context handed to whoever picks it up. The failure mode is a person, not a wrong answer.",
-      },
-    ] satisfies IconCard[],
+    ],
+    cta: { label: "Ask about this one", href: "/contact#enquiry" },
   },
 
   stack: {
     title: "Built on harnesses, not from scratch",
-    body: "The frameworks below already solved streaming, tool calling, state, retries and tracing. We build on them and spend the time on the part that is specific to you.",
+    body: "Every model and framework we would reach for, named. The harnesses below already solved streaming, tool calling, state, retries and tracing, so we build on them and spend the time on the part that is specific to you. Which model runs the job is a decision we make per task and can change later  + EM +  nothing in the build is welded to one vendor.",
     groups: [
+      {
+        label: "Models",
+        brands: [
+          { name: "Claude", domain: "anthropic.com" },
+          { name: "GPT", domain: "openai.com" },
+          { name: "Gemini", domain: "gemini.google.com" },
+          { name: "Llama", domain: "llama.com" },
+          { name: "Mistral", domain: "mistral.ai" },
+          { name: "DeepSeek", domain: "deepseek.com" },
+          { name: "Qwen", domain: "qwen.ai" },
+          { name: "Ollama", domain: "ollama.com" },
+        ],
+      },
       {
         label: "Agent frameworks",
         brands: [

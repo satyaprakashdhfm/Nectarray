@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { AgentDomains } from "@/components/agentic/AgentDomains";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { IndustryCard } from "@/components/agentic/IndustryCard";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { agenticAiPage, company } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const { hero, families, industries, engineering, stack, cta, meta } =
-  agenticAiPage;
+const { hero, families, domains, stack, cta, meta } = agenticAiPage;
 
 /**
  * One accent: the mark's circuit blue. Weight comes from navy, not from a
@@ -334,9 +333,9 @@ export default function AgenticAiPage() {
           </div>
         </section>
 
-        {/* ── What it looks like in a business ─────────────────────── */}
+        {/* ── Agents by domain ────────────────────────── */}
         <section
-          id="industries"
+          id="domains"
           className="border-line bg-mist relative scroll-mt-24 overflow-hidden border-y py-20 sm:py-24"
         >
           <div
@@ -345,128 +344,81 @@ export default function AgenticAiPage() {
           />
 
           <div className="shell-wide">
-            <Reveal>
-              <h2 className="display text-ink max-w-3xl text-[2rem] sm:text-[2.6rem]">
-                What that looks like on a Tuesday
-              </h2>
-            </Reveal>
-
-            <Reveal delay={70}>
-              <p className="lede mt-5 max-w-2xl">
-                The same two builds, in three kinds of business. Each card is an
-                industry, and the tabs inside it are the jobs of work: what you
-                ask for, what it is plugged into, and the view whoever owns that
-                job opens afterwards.
-              </p>
-            </Reveal>
-
-            <div className="mt-10 space-y-5">
-              {industries.map((industry, i) => (
-                <Reveal key={industry.id} delay={(i % 3) * 70}>
-                  <IndustryCard industry={industry} />
-                </Reveal>
-              ))}
+            <div className="max-w-2xl">
+              <Reveal>
+                <Eyebrow>{domains.eyebrow}</Eyebrow>
+              </Reveal>
+              <Reveal delay={70}>
+                <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
+                  {domains.title}
+                </h2>
+              </Reveal>
+              <Reveal delay={130}>
+                <p className="text-ink-soft mt-5 text-[1.0625rem] leading-relaxed">
+                  {domains.lede}
+                </p>
+              </Reveal>
             </div>
+
+            <Reveal delay={180}>
+              <div className="mt-12">
+                <AgentDomains />
+              </div>
+            </Reveal>
           </div>
         </section>
 
-        {/* ── The engineering half ─────────────────────────────────── */}
-        <section className="border-line bg-mist relative overflow-hidden border-y py-20 sm:py-24">
-          <div
-            className="grid-paper pointer-events-none absolute inset-0 -z-10 opacity-60"
-            aria-hidden
-          />
-
-          <div className="shell-wide">
-            <Reveal>
-              <Eyebrow>{engineering.eyebrow}</Eyebrow>
-            </Reveal>
-            <Reveal delay={70}>
-              <h2 className="display text-ink mt-5 max-w-3xl text-[2rem] sm:text-[2.6rem]">
-                {engineering.title}
-              </h2>
-            </Reveal>
-            <Reveal delay={130}>
-              <p className="lede mt-5 max-w-2xl">{engineering.lede}</p>
-            </Reveal>
-
-            <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {engineering.items.map((item, i) => (
-                <Reveal as="li" key={item.title} delay={(i % 3) * 70}>
-                  <article
-                    className={`card card-hover to-surface relative h-full overflow-hidden bg-gradient-to-br p-6 pt-7 ${BRAND.tint}`}
-                  >
-                    <span
-                      className={`absolute inset-x-0 top-0 h-1 ${BRAND.rule}`}
-                      aria-hidden
-                    />
-                    <span
-                      className={`grid size-10 place-items-center rounded-lg text-white ${BRAND.chip}`}
-                    >
-                      <Icon name={item.icon} className="size-[1.125rem]" />
-                    </span>
-                    <h3 className="text-ink mt-5 text-[1rem] font-semibold">
-                      {item.title}
-                    </h3>
-                    <p className="text-ink-soft mt-2.5 text-[0.875rem] leading-relaxed">
-                      {item.body}
-                    </p>
-                  </article>
-                </Reveal>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* ── Stack — the frameworks, and the page's dark moment ──── */}
+        {/* ── Stack — every model and framework, named ────────── */}
         {/*
-         * Promoted, for two reasons. It is the section a technical buyer
-         * actually reads — "do you know my tooling" — and with the process
-         * band gone it is the only place left for the navy the rest of the
-         * page is punctuated with.
+         * On the page's own ground rather than the navy it used to sit in.
+         * A full-width dark band in the middle of a light page reads as a
+         * different site for as long as it lasts, and this is the section a
+         * technical buyer actually stops on — "do you know my tooling" —
+         * so it should look like part of the page it is answering for.
          *
-         * White chips on that navy rather than translucent ones: a favicon
-         * is drawn to sit on white, and several of these marks are black or
-         * near-black. On a dark chip Vercel and OpenAI simply disappear.
+         * The marks are larger here than anywhere else on the site on
+         * purpose: recognising a logo is the whole job of this section, and
+         * at 24px half of them were a smudge.
          */}
         <section
           id="stack"
-          className="border-night-line bg-night scroll-mt-24 border-y py-20 text-white sm:py-24"
+          className="border-line bg-canvas scroll-mt-24 border-y py-20 sm:py-24"
         >
           <div className="shell-wide">
             <div className="max-w-3xl">
               <Reveal>
-                <h2 className="display text-[2rem] text-white sm:text-[2.6rem]">
+                <h2 className="display text-ink text-[2rem] sm:text-[2.6rem]">
                   {stack.title}
                 </h2>
               </Reveal>
               <Reveal delay={80}>
-                <p className="mt-5 text-[1.0625rem] leading-relaxed text-white/70">
+                <p className="text-ink-soft mt-5 text-[1.0625rem] leading-relaxed">
                   {stack.body}
                 </p>
               </Reveal>
             </div>
 
-            <dl className="mt-12 grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+            <dl className="mt-12 grid gap-6 lg:grid-cols-2">
               {stack.groups.map((group, i) => (
-                <Reveal key={group.label} delay={(i % 4) * 70}>
-                  <div>
-                    <dt className="text-brand text-[0.75rem] font-semibold tracking-[0.16em] uppercase">
+                <Reveal key={group.label} delay={(i % 2) * 70}>
+                  <div className="card h-full p-6 sm:p-7">
+                    <dt className="text-brand-deep flex items-center gap-2.5 text-[0.8125rem] font-semibold tracking-[0.14em] uppercase">
+                      <span className="bg-brand h-px w-5" aria-hidden />
                       {group.label}
                     </dt>
-                    <dd className="mt-4">
-                      <ul className="flex flex-wrap gap-2">
+                    <dd className="mt-5">
+                      <ul className="flex flex-wrap gap-2.5">
                         {group.brands.map((brand) => (
                           <li
                             key={brand.name}
-                            className="bg-surface flex items-center gap-2.5 rounded-xl px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+                            className="border-line bg-surface hover:border-brand/40 flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors"
                           >
                             <BrandLogo
                               name={brand.name}
                               domain={brand.domain}
-                              className="size-6"
+                              className="size-8"
                             />
-                            <span className="text-ink text-[0.875rem] font-semibold whitespace-nowrap">
+                            <span className="text-ink text-[1rem] font-semibold whitespace-nowrap">
                               {brand.name}
                             </span>
                           </li>

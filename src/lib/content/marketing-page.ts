@@ -6,6 +6,7 @@
  * This is the long-form page built around them.
  */
 import type { IconCard, Link } from "@/types";
+import type { Brand } from "./practices";
 
 /**
  * A service tile. `domain` only where the service is itself a product —
@@ -13,6 +14,24 @@ import type { IconCard, Link } from "@/types";
  * the ones that are disciplines rather than brands keep the glyph.
  */
 type Tile = IconCard & { domain?: string };
+
+/**
+ * One move in the loop under the hero.
+ *
+ * `services` is the point of the thing: the eight channel cards used to sit
+ * in one flat grid, so Meta Ads and content management read as the same kind
+ * of work. Here each platform hangs off the stage it actually belongs to, and
+ * `anchor` points at the section further down that covers it properly.
+ */
+type LoopStage = {
+  n: string;
+  icon: string;
+  title: string;
+  short: string;
+  lede: string;
+  anchor: string;
+  services: { title: string; body: string; logos?: Brand[] }[];
+};
 
 export const marketingPage: {
   meta: { title: string; description: string };
@@ -25,6 +44,13 @@ export const marketingPage: {
     secondaryCta: Link;
     stats: { value: string; label: string }[];
   };
+  loop: {
+    eyebrow: string;
+    title: string;
+    lede: string;
+    caption: string;
+    stages: LoopStage[];
+  };
   families: { eyebrow: string; title: string; lede: string };
   brand: { eyebrow: string; title: string; lede: string; items: Tile[] };
   aiSearch: {
@@ -32,9 +58,9 @@ export const marketingPage: {
     title: string;
     lede: string;
     items: Tile[];
-    honesty: { title: string; body: string };
   };
   analytics: { eyebrow: string; title: string; lede: string; items: Tile[] };
+  read: { eyebrow: string; title: string; lede: string; items: Tile[] };
   cta: { title: string; body: string; primary: Link; secondary: Link };
 } = {
   meta: {
@@ -54,11 +80,196 @@ export const marketingPage: {
       lines: ["Every channel.", "Measured properly."] as [string, string],
     },
     primaryCta: { label: "Get a plan", href: "/contact#enquiry" },
-    secondaryCta: { label: "See the channels", href: "#channels" },
+    secondaryCta: { label: "See the channels", href: "#run" },
     stats: [
       { value: "8", label: "Channels run in-house" },
       { value: "25+", label: "Platforms and consoles" },
       { value: "4", label: "Practices under one roof" },
+    ],
+  },
+
+  loop: {
+    eyebrow: "How the work runs",
+    title: "It runs as a loop, not a launch",
+    lede: "Five moves, in this order, every month. The last one decides what the first one looks for next time, which is the only reason any of it improves.",
+    caption: "Then it starts again — this month's numbers set next month's plan.",
+    stages: [
+      {
+        n: "01",
+        icon: "search",
+        title: "See who is watching",
+        short: "Watch",
+        lede: "Before anything gets made or bought: who your buyers actually are, where their attention already goes, what your competitors are paying to reach them — and whether an assistant recommends you when someone asks.",
+        anchor: "#watch",
+        services: [
+          {
+            title: "Audience & competitor research",
+            body: "Who is in market, what they search for, and what everyone else in your category is already bidding on.",
+          },
+          {
+            title: "SEO & organic search",
+            body: "Technical audits, site architecture, local and Maps, and a real editorial calendar.",
+            logos: [
+              { name: "Google", domain: "google.com" },
+              { name: "Search Console", domain: "search.google.com" },
+            ],
+          },
+          {
+            title: "AI search visibility",
+            body: "What ChatGPT, Gemini and Perplexity say about you today, and the groundwork that changes it.",
+            logos: [
+              { name: "ChatGPT", domain: "openai.com" },
+              { name: "Gemini", domain: "gemini.google.com" },
+              { name: "Perplexity", domain: "perplexity.ai" },
+            ],
+          },
+          {
+            title: "Channel selection",
+            body: "Which channels are worth your money — and, more usefully, which ones to skip.",
+          },
+        ],
+      },
+      {
+        n: "02",
+        icon: "notebook",
+        title: "Make the content",
+        short: "Make",
+        lede: "The half that makes the ads work. Scripted, shot and edited here — short video, static, copy and the page it all points at, made to suit each place it runs rather than resized to fit.",
+        anchor: "#make",
+        services: [
+          {
+            title: "Brand strategy & positioning",
+            body: "Who you are for, what you are against, and the one sentence a customer repeats to someone else.",
+          },
+          {
+            title: "Social & content management",
+            body: "Calendar, shoots, reels, carousels, captions, scheduling and community replies — handled end to end.",
+            logos: [
+              { name: "Instagram", domain: "instagram.com" },
+              { name: "LinkedIn", domain: "linkedin.com" },
+              { name: "YouTube", domain: "youtube.com" },
+            ],
+          },
+          {
+            title: "Reels & short-form video",
+            body: "Vertical video built to be watched with the sound off and the thumb moving.",
+          },
+          {
+            title: "Creators & UGC",
+            body: "Creators chosen on audience overlap and comment quality, with usage rights negotiated up front.",
+          },
+        ],
+      },
+      {
+        n: "03",
+        icon: "megaphone",
+        title: "Put the ads out",
+        short: "Run",
+        lede: "Paid media across every console that can send you a customer — including chatbot ads, which open a conversation instead of dropping someone on a landing page and hoping.",
+        anchor: "#run",
+        services: [
+          {
+            title: "Meta Ads",
+            body: "Full-funnel structure, creative testing at volume, and Conversions API so iOS traffic stops disappearing.",
+            logos: [
+              { name: "Meta", domain: "meta.com" },
+              { name: "Instagram", domain: "instagram.com" },
+              { name: "Facebook", domain: "facebook.com" },
+            ],
+          },
+          {
+            title: "Google Ads",
+            body: "Search, Performance Max, Shopping, YouTube and Demand Gen, bid to margin rather than clicks.",
+            logos: [
+              { name: "Google Ads", domain: "ads.google.com" },
+              { name: "YouTube", domain: "youtube.com" },
+            ],
+          },
+          {
+            title: "Chatbot ads & conversational entry",
+            body: "Click-to-WhatsApp and click-to-Messenger campaigns landing in an agent that qualifies, answers and books — not a form.",
+            logos: [
+              { name: "WhatsApp Business", domain: "business.whatsapp.com" },
+              { name: "Meta", domain: "meta.com" },
+            ],
+          },
+          {
+            title: "LinkedIn & B2B",
+            body: "LinkedIn Ads, founder-led content and lead-gen that feeds a CRM instead of a spreadsheet.",
+            logos: [{ name: "LinkedIn", domain: "linkedin.com" }],
+          },
+          {
+            title: "Marketplace & commerce",
+            body: "Amazon and Flipkart ad management, listing and catalogue work, and feeds for Shopping.",
+            logos: [
+              { name: "Amazon", domain: "amazon.in" },
+              { name: "Flipkart", domain: "flipkart.com" },
+              { name: "Shopify", domain: "shopify.com" },
+            ],
+          },
+          {
+            title: "Lifecycle & retention",
+            body: "Email, SMS and WhatsApp flows: abandoned cart, onboarding, win-back — wired to your store or CRM.",
+            logos: [{ name: "Mailchimp", domain: "mailchimp.com" }],
+          },
+        ],
+      },
+      {
+        n: "04",
+        icon: "layers",
+        title: "Model the mix",
+        short: "Model",
+        lede: "Every platform claims the same sale, so the totals never add up. We model the channels together — including the offline and brand spend no pixel ever sees — and test what would have happened anyway.",
+        anchor: "#model",
+        services: [
+          {
+            title: "Marketing mix modelling",
+            body: "What each channel really contributed once they stop being measured one at a time.",
+          },
+          {
+            title: "Incrementality testing",
+            body: "Geo and holdout tests answering the only question that matters: would this sale have happened anyway?",
+          },
+          {
+            title: "Attribution you can defend",
+            body: "One model across channels, so Meta and Google stop both claiming the same conversion.",
+          },
+          {
+            title: "Budget allocation & forecasting",
+            body: "The model turned into a spend plan, with what a 30% increase is likely to return before you commit it.",
+          },
+        ],
+      },
+      {
+        n: "05",
+        icon: "chart",
+        title: "Read the numbers",
+        short: "Read",
+        lede: "Tracking that is right in the first place, dashboards someone actually opens, and a straight read on what to cut. This is the step that sets what stage 01 goes looking for next month.",
+        anchor: "#read",
+        services: [
+          {
+            title: "GA4 & Tag Manager",
+            body: "Set up correctly, with server-side tracking and offline conversion imports where they matter.",
+            logos: [
+              { name: "Google Analytics", domain: "analytics.google.com" },
+              { name: "Tag Manager", domain: "tagmanager.google.com" },
+            ],
+          },
+          {
+            title: "CRO & A/B testing",
+            body: "Tests on the pages that carry the revenue, not on button colours.",
+          },
+          {
+            title: "Cohorts, LTV & payback",
+            body: "What a customer is worth over time, so acquisition targets come from margin rather than a guess.",
+          },
+          {
+            title: "Reporting you will read",
+            body: "One view of spend, pipeline and revenue — and a call each month on what changes.",
+          },
+        ],
+      },
     ],
   },
 
@@ -182,10 +393,6 @@ export const marketingPage: {
         body: "We ask the assistants the questions your buyers ask, on a schedule, and track how they describe and recommend you over time.",
       },
     ],
-    honesty: {
-      title: "What this is, and what it is not",
-      body: "There is no placement to buy inside ChatGPT, Gemini or AI Overviews, so nobody can promise you a spot in one. What we can do is give these systems every reason to find you and describe you correctly: a site they can read cleanly, an identity that is unambiguous, claims backed up by sources elsewhere, and pages that answer your buyers' real questions better than anything else out there. That is what improves your chances of being quoted and recommended. We then ask the assistants those same questions on a schedule, so you can watch what they say about you rather than take our word for it.",
-    },
   },
 
   analytics: {
@@ -222,6 +429,45 @@ export const marketingPage: {
         icon: "database",
         title: "Cohorts, LTV & payback",
         body: "What a customer is worth over time and how long they take to pay back, so acquisition targets come from margin rather than a guess.",
+      },
+    ],
+  },
+
+  read: {
+    eyebrow: "Reporting & CRO",
+    title: "The read that decides next month",
+    lede: "Modelling is only worth having if the numbers underneath it are right and somebody actually looks at them. This is the tracking, the testing and the monthly call where the plan changes — the step that sends the loop back to the start.",
+    items: [
+      {
+        icon: "gauge",
+        title: "GA4 & Tag Manager",
+        domain: "analytics.google.com",
+        body: "Set up correctly the first time: clean events, consent handled, and no double counting between tags.",
+      },
+      {
+        icon: "plug",
+        title: "Server-side tracking",
+        body: "Conversions sent server to server, so ad blockers and iOS stop quietly deleting a third of your data.",
+      },
+      {
+        icon: "target",
+        title: "CRO & A/B testing",
+        body: "Tests on the pages that carry the revenue — checkout, pricing, the main landing page — not on button colours.",
+      },
+      {
+        icon: "database",
+        title: "Cohorts, LTV & payback",
+        body: "What a customer is worth over time and how long they take to pay back, so targets come from margin rather than a guess.",
+      },
+      {
+        icon: "chart",
+        title: "Dashboards you will read",
+        body: "One view of spend, pipeline and revenue. If nobody opens it, it is not reporting, it is decoration.",
+      },
+      {
+        icon: "notebook",
+        title: "The monthly call",
+        body: "What worked, what gets more, what stops — said plainly, and written down so the next month has a plan.",
       },
     ],
   },

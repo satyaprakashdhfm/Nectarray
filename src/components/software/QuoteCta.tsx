@@ -82,11 +82,6 @@ function Band({ compact }: { compact: boolean }) {
   );
 }
 
-/** The band on its own, for dropping inside a section that already exists. */
-export function QuoteBand({ compact = false }: { compact?: boolean }) {
-  return <Band compact={compact} />;
-}
-
 /**
  * The band as the page's closing section.
  *

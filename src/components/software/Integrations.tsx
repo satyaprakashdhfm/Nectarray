@@ -1,4 +1,3 @@
-import { Plug } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { headGap, sectionPad, wideShell } from "@/components/software/layout";
 import { Reveal } from "@/components/ui/Reveal";
@@ -69,25 +68,6 @@ export function Integrations() {
             </Reveal>
           ))}
         </div>
-
-        {/* The point of the section, said plainly ----------------------- */}
-        <Reveal delay={100}>
-          <div className="border-line bg-canvas mt-4 rounded-2xl border p-6 sm:p-8">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
-              <span className="bg-teal-wash text-teal-deep grid size-12 shrink-0 place-items-center rounded-xl">
-                <Plug className="size-5" strokeWidth={1.9} aria-hidden />
-              </span>
-              <div>
-                <h3 className="display text-ink text-[1.375rem] sm:text-[1.5rem]">
-                  {integrations.closer.title}
-                </h3>
-                <p className="text-ink-soft mt-3 max-w-3xl text-[0.9375rem] leading-relaxed">
-                  {integrations.closer.body}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Reveal>
       </div>
     </section>
   );

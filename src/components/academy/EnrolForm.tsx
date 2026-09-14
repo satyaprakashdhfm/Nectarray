@@ -161,13 +161,13 @@ export function EnrolForm() {
             />
             <div className="relative">
               <SectionHead
-                eyebrow="Still need help?"
+                eyebrow="Apply for a place"
                 title={
                   <>
-                    Not sure if it is <em>for you?</em>
+                    Tell us where you are <em>starting from.</em>
                   </>
                 }
-                lede="Answer three short questions and we will give you an honest read on whether this programme is right for you."
+                lede="Three short questions. You will get an honest read on whether this programme is right for you, including if the answer is no."
               />
 
               <ul className="mt-10 space-y-3">

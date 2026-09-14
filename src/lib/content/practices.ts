@@ -1,5 +1,5 @@
 /** The four practices, and the detail sections for the first three. */
-import type { IconCard, Link, Practice, TagGroup } from "@/types";
+import type { IconCard, Link, Practice } from "@/types";
 
 export const pillars: Practice[] = [
   {
@@ -209,20 +209,28 @@ export const software: {
   eyebrow: string;
   title: string;
   lede: string;
+  /** Mirrors the shape /marketing and /agentic-ai use for theirs. */
+  hero: {
+    eyebrow: string;
+    headline: [string, string];
+    lede: string;
+    panel: { badge: string; lines: [string, string] };
+    primaryCta: Link;
+    secondaryCta: Link;
+    stats: { value: string; label: string }[];
+  };
   services: SoftwareBuild[];
   integrations: {
     eyebrow: string;
     title: string;
     lede: string;
     groups: BrandGroup[];
-    closer: { title: string; body: string };
   };
   stack: {
     eyebrow: string;
     title: string;
     lede: string;
     groups: BrandGroup[];
-    clouds: { title: string; body: string; groups: TagGroup[] };
   };
   why: {
     eyebrow: string;
@@ -248,6 +256,23 @@ export const software: {
   eyebrow: "Software & Web",
   title: "Whatever the business is, there is a build here for it.",
   lede: "A single page or software your whole company runs on — we take it at any size. Find the kind of thing you need below, and the trade it gets built for. If your industry is not on a list, the list ran out of room, not us.",
+
+  hero: {
+    eyebrow: "Software & Web",
+    headline: ["A website, or the software", "your whole team works in."],
+    lede: "Sites, online stores, dashboards, internal tools and mobile apps — built by senior engineers and wired into the systems you already run. The code and the accounts are in your name from the first day, not ours.",
+    panel: {
+      badge: "What we build on",
+      lines: ["Every layer.", "Yours to keep."] as [string, string],
+    },
+    primaryCta: { label: "Get a quote", href: "/contact#enquiry" },
+    secondaryCta: { label: "See what we build", href: "#software" },
+    stats: [
+      { value: "6", label: "Kinds of build" },
+      { value: "100+", label: "Systems we plug into" },
+      { value: "100%", label: "Code and accounts in your name" },
+    ],
+  },
 
   services: [
     {
@@ -551,16 +576,12 @@ export const software: {
         ],
       },
     ],
-    closer: {
-      title: "Not on the list? Name it.",
-      body: "REST, GraphQL, SOAP, a webhook, an SFTP folder of CSVs, a vendor who will only email you a PDF, or a system whose documentation is one page long and wrong — we have integrated all of it. Tell us the software you already run and you will get a straight answer: whether it exposes an API, what it can and cannot do, and what it takes to connect. If there is genuinely no way in, we will say that too rather than bill you to find out.",
-    },
   },
 
   stack: {
     eyebrow: "Stack",
-    title: "We are not married to a stack. We are fluent across it.",
-    lede: "Unless a project argues otherwise we reach for the first few in each group — fast to build in, cheap to run, and easy for whoever picks it up next. When your team already runs something else, we work in that instead.",
+    title: "Built on tools you can hire for later.",
+    lede: "Unless a project argues otherwise we reach for the first few in each group: quick to build in, cheap to run, and common enough that the next developer you hire already knows them. If your team already runs something else, we work in that instead.",
     groups: [
       {
         label: "Frontend",
@@ -656,70 +677,6 @@ export const software: {
         ],
       },
     ],
-    clouds: {
-      title: "Down to the individual service",
-      body: "Cloud is not one decision, it is thirty. These are the services we provision, wire up and hand over inside your own account — billed to you, owned by you, with nothing running on ours.",
-      groups: [
-        {
-          label: "Amazon Web Services",
-          items: [
-            "EC2",
-            "S3",
-            "Lambda",
-            "RDS",
-            "Aurora",
-            "DynamoDB",
-            "CloudFront",
-            "Route 53",
-            "ECS & Fargate",
-            "EKS",
-            "SQS & SNS",
-            "SES",
-            "API Gateway",
-            "Cognito",
-            "Bedrock",
-            "Amplify",
-            "CloudWatch",
-            "IAM",
-          ],
-        },
-        {
-          label: "Microsoft Azure",
-          items: [
-            "App Service",
-            "Functions",
-            "AKS",
-            "Container Apps",
-            "Blob Storage",
-            "Azure SQL",
-            "Cosmos DB",
-            "Entra ID",
-            "Service Bus",
-            "Azure OpenAI",
-            "Front Door",
-            "Key Vault",
-            "Azure DevOps",
-            "Monitor",
-          ],
-        },
-        {
-          label: "Google Cloud",
-          items: [
-            "Cloud Run",
-            "GKE",
-            "Cloud Functions",
-            "Cloud SQL",
-            "Firestore",
-            "Cloud Storage",
-            "Pub/Sub",
-            "BigQuery",
-            "Vertex AI",
-            "Load Balancing",
-            "Secret Manager",
-          ],
-        },
-      ],
-    },
   },
 
   why: {

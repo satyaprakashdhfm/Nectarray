@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { academyEnquiries } from "@/lib/db/schema";
-import { academy, placements } from "@/lib/content";
+import { academy } from "@/lib/content";
 
 /**
  * Answers an academy enquiry, and keeps a record of both halves.
@@ -62,10 +62,7 @@ WHAT IT TEACHES, IN ORDER:
 ${modules}
 
 ALSO INCLUDED:
-${course.offerings.map((o) => `- ${o.title}: ${o.body}`).join("\n")}
-
-PLACEMENT SUPPORT:
-${placements.includes.map((i) => `- ${i.title}: ${i.body}`).join("\n")}`;
+${course.offerings.map((o) => `- ${o.title}: ${o.body}`).join("\n")}`;
 }
 
 const PROMPT = `You answer enquiries about a training programme, for the person who just filled in the form.

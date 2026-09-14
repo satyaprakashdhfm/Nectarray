@@ -1,37 +1,18 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { ShieldCheck } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { Marketing } from "@/components/sections/Marketing";
+import { GrowthLoop } from "@/components/marketing/GrowthLoop";
+import { StageSection } from "@/components/marketing/StageSection";
+import type { ShowcaseItem } from "@/components/marketing/StageShowcase";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
-import { company, marketingPage } from "@/lib/content";
+import { company, marketing, marketingPage } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const { hero, brand, aiSearch, analytics, cta, meta } = marketingPage;
-
-/**
- * One accent: the mark's circuit blue. Weight comes from navy, not from a
- * second hue.
- *
- * Rotating four accents through these grids was tried and it looked cheap —
- * amber and green tiles next to each other read as a template, not as this
- * studio. /academy and /software get their colour a different way: mostly
- * blue, with a panel or a band in the dark navy the header and footer are
- * already drawn in. That is what is copied here.
- *
- * Card treatment is still the one from sections/Practices.tsx — a `-wash`
- * tint graded into the card, an accent rule along the top, and the chip
- * solid in the deep tone with a white glyph. `-deep` on anything carrying a
- * glyph, never the display tone: those sit near 2.5:1 on white.
- */
-const BRAND = {
-  tint: "from-brand-wash",
-  rule: "bg-brand",
-  chip: "bg-brand-deep",
-};
+const { hero, loop, brand, aiSearch, analytics, read, cta, meta } =
+  marketingPage;
 
 /**
  * Eyebrow with the accent rule the SectionHead component draws.
@@ -56,7 +37,49 @@ function Eyebrow({
   );
 }
 
-/** Service + FAQ schema scoped to this page. */
+/**
+ * A service as the showcase panel wants it: one shape, whether the copy came
+ * from a `domain` on a tile or a `logos` list on a channel.
+ */
+const toItem = (t: {
+  icon: string;
+  title: string;
+  body: string;
+  domain?: string;
+}): ShowcaseItem => ({
+  icon: t.icon,
+  title: t.title,
+  body: t.body,
+  logos: t.domain ? [{ name: t.title, domain: t.domain }] : undefined,
+});
+
+/** Which content object each stage draws its heading from. */
+const STAGE_COPY: Record<string, { title: string; lede: string }> = {
+  "01": { title: aiSearch.title, lede: aiSearch.lede },
+  "02": { title: brand.title, lede: brand.lede },
+  "03": {
+    title: "Every console that can send you a customer",
+    lede: marketing.lede,
+  },
+  "04": { title: analytics.title, lede: analytics.lede },
+  "05": { title: read.title, lede: read.lede },
+};
+
+/** And the services it shows. */
+const STAGE_ITEMS: Record<string, ShowcaseItem[]> = {
+  "01": aiSearch.items.map(toItem),
+  "02": brand.items.map(toItem),
+  "03": marketing.channels.map((c) => ({
+    icon: c.icon,
+    title: c.title,
+    body: c.body,
+    logos: c.logos,
+  })),
+  "04": analytics.items.map(toItem),
+  "05": read.items.map(toItem),
+};
+
+/** Service schema scoped to this page. */
 function StructuredData() {
   const graph = {
     "@context": "https://schema.org",
@@ -91,50 +114,6 @@ function StructuredData() {
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
     />
-  );
-}
-
-/** A compact service tile. Enough to recognise the work, not to explain it. */
-function Tile({
-  item,
-  accent,
-}: {
-  item: { icon: string; title: string; body: string; domain?: string };
-  accent: typeof BRAND;
-}) {
-  return (
-    <article
-      className={`card card-hover to-surface relative h-full overflow-hidden bg-gradient-to-br p-5 pt-6 ${accent.tint}`}
-    >
-      <span
-        className={`absolute inset-x-0 top-0 h-1 ${accent.rule}`}
-        aria-hidden
-      />
-      {/* A real mark where the service is a product — ChatGPT, Gemini,
-          Perplexity, YouTube — and the accent chip where it is a discipline
-          with no logo to show for it. */}
-      {item.domain ? (
-        <span className="border-line bg-canvas grid size-9 place-items-center rounded-lg border">
-          <BrandLogo
-            name={item.title}
-            domain={item.domain}
-            className="size-[1.125rem]"
-          />
-        </span>
-      ) : (
-        <span
-          className={`grid size-9 place-items-center rounded-lg text-white ${accent.chip}`}
-        >
-          <Icon name={item.icon} className="size-[1.0625rem]" />
-        </span>
-      )}
-      <h3 className="text-ink mt-4 text-[0.9375rem] font-semibold tracking-tight">
-        {item.title}
-      </h3>
-      <p className="text-ink-soft mt-1.5 text-[0.8125rem] leading-[1.55]">
-        {item.body}
-      </p>
-    </article>
   );
 }
 
@@ -291,140 +270,54 @@ export default function MarketingPage() {
           </div>
         </section>
 
-        {/* ── Channels — the shared eight, also in the homepage JSON-LD ── */}
-        <div id="channels" className="scroll-mt-24">
-          <Marketing />
-        </div>
-
-        {/* ── Brand, content & creators ────────────────────────────── */}
-        <section className="py-20 sm:py-24">
-          <div className="shell-wide">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-              <div className="lg:sticky lg:top-28 lg:self-start">
-                <Reveal>
-                  <Eyebrow>{brand.eyebrow}</Eyebrow>
-                </Reveal>
-                <Reveal delay={70}>
-                  <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
-                    {brand.title}
-                  </h2>
-                </Reveal>
-                <Reveal delay={130}>
-                  <p className="text-ink-soft mt-5 text-[0.9375rem] leading-relaxed">
-                    {brand.lede}
-                  </p>
-                </Reveal>
-              </div>
-
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {brand.items.map((item, i) => (
-                  <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
-                    <Tile item={item} accent={BRAND} />
-                  </Reveal>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* ── AI search visibility ─────────────────────────────────── */}
+        {/* ── The loop ───────────────────────────────────────── */}
         <section
-          id="ai-search"
-          className="border-line bg-mist relative scroll-mt-24 overflow-hidden border-y py-20 sm:py-24"
+          id="loop"
+          className="border-line bg-mist-deep scroll-mt-24 border-b py-20 sm:py-24"
         >
-          <div
-            className="grid-paper pointer-events-none absolute inset-0 -z-10 opacity-60"
-            aria-hidden
+          <div className="shell-wide">
+            <GrowthLoop>
+              <Reveal>
+                <Eyebrow>{loop.eyebrow}</Eyebrow>
+              </Reveal>
+              <Reveal delay={70}>
+                <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
+                  {loop.title}
+                </h2>
+              </Reveal>
+              <Reveal delay={130}>
+                <p className="text-ink-soft mt-5 text-[0.9375rem] leading-relaxed">
+                  {loop.lede}
+                </p>
+              </Reveal>
+            </GrowthLoop>
+
+            <p className="text-ink-faint mt-10 text-center text-[0.8125rem]">
+              {loop.caption}
+            </p>
+          </div>
+        </section>
+
+        {/* ── The five stages ────────────────────────────── */}
+        {/*
+         * Driven off the same list the wheel is drawn from, so a stage cannot
+         * exist in one and not the other. `items` is the only per-stage part
+         * left in this file, because the copy lives in four different content
+         * objects that predate the loop.
+         */}
+        {loop.stages.map((stage, i) => (
+          <StageSection
+            key={stage.n}
+            id={stage.anchor.slice(1)}
+            n={stage.n}
+            name={stage.title}
+            title={STAGE_COPY[stage.n].title}
+            lede={STAGE_COPY[stage.n].lede}
+            items={STAGE_ITEMS[stage.n]}
+            ground={i % 2 === 0 ? "bg-canvas" : "bg-mist-deep"}
+            texture={i % 2 === 0}
           />
-
-          <div className="shell-wide">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-              <div className="lg:sticky lg:top-28 lg:self-start">
-                <Reveal>
-                  <Eyebrow>{aiSearch.eyebrow}</Eyebrow>
-                </Reveal>
-                <Reveal delay={70}>
-                  <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
-                    {aiSearch.title}
-                  </h2>
-                </Reveal>
-                <Reveal delay={130}>
-                  <p className="text-ink-soft mt-5 text-[0.9375rem] leading-relaxed">
-                    {aiSearch.lede}
-                  </p>
-                </Reveal>
-              </div>
-
-              <div>
-                <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {aiSearch.items.map((item, i) => (
-                    <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
-                      <Tile item={item} accent={BRAND} />
-                    </Reveal>
-                  ))}
-                </ul>
-
-                {/*
-                 * Said plainly and given its own panel, not buried in a
-                 * footnote. A promise nobody can keep is the thing every
-                 * other agency in this category is selling.
-                 */}
-                <Reveal delay={140}>
-                  <div className="border-night-line bg-night mt-4 rounded-2xl border p-6 text-white sm:p-7">
-                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
-                      <span className="bg-brand/15 text-brand grid size-11 shrink-0 place-items-center rounded-xl">
-                        <ShieldCheck
-                          className="size-5"
-                          strokeWidth={1.9}
-                          aria-hidden
-                        />
-                      </span>
-                      <div>
-                        <h3 className="text-[1.0625rem] font-semibold tracking-tight text-white">
-                          {aiSearch.honesty.title}
-                        </h3>
-                        <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-white/70">
-                          {aiSearch.honesty.body}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Reveal>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Measurement & data science ───────────────────────────── */}
-        <section id="analytics" className="scroll-mt-24 py-20 sm:py-24">
-          <div className="shell-wide">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-              <div className="lg:sticky lg:top-28 lg:self-start">
-                <Reveal>
-                  <Eyebrow>{analytics.eyebrow}</Eyebrow>
-                </Reveal>
-                <Reveal delay={70}>
-                  <h2 className="display text-ink mt-5 text-[2rem] sm:text-[2.5rem]">
-                    {analytics.title}
-                  </h2>
-                </Reveal>
-                <Reveal delay={130}>
-                  <p className="text-ink-soft mt-5 text-[0.9375rem] leading-relaxed">
-                    {analytics.lede}
-                  </p>
-                </Reveal>
-              </div>
-
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {analytics.items.map((item, i) => (
-                  <Reveal as="li" key={item.title} delay={(i % 3) * 60}>
-                    <Tile item={item} accent={BRAND} />
-                  </Reveal>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
+        ))}
 
         {/* ── CTA ──────────────────────────────────────────────────── */}
         <section className="border-line bg-surface relative overflow-hidden border-t py-20 sm:py-24">

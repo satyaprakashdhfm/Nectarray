@@ -56,6 +56,10 @@
   --color-canvas: #fbfcfc; /* page ground, under the grid */
   --color-surface: #ffffff; /* cards */
   --color-mist: #f2f6f8; /* recessed panels */
+  /* A second recessed tone, one step down from --color-mist. The stage
+     sections on /marketing alternate between the two: on plain mist the
+     neighbours read as one flat plane with a hairline drawn across it. */
+  --color-mist-deep: #e7eef3;
   --color-line: #e4eaee; /* hairlines */
   --color-line-soft: #eef2f5;
 
@@ -132,6 +136,7 @@
   --color-canvas: #0b0c0e;
   --color-surface: #16181d;
   --color-mist: #101216;
+  --color-mist-deep: #0b0d10;
   --color-line: #2b2e35;
   --color-line-soft: #212429;
 
@@ -211,6 +216,7 @@
   --color-canvas: #061621;
   --color-surface: #0c2231;
   --color-mist: #081c29;
+  --color-mist-deep: #05141e;
   --color-line: #1c3747;
   --color-line-soft: #14303f;
 
@@ -716,6 +722,17 @@ label:has(input[type="checkbox"]) {
 
 [data-reveal="on"] .reveal[data-shown="true"] {
   animation: rise 0.7s var(--ease-out-quint) forwards;
+}
+
+/* The dwell on a StageShowcase slide, drawn as a line under its title bar
+   so the panel moving on by itself is announced rather than sudden. */
+@keyframes showcase-run {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 @keyframes marquee-track {

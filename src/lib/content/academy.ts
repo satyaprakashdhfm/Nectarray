@@ -374,8 +374,16 @@ export const academy: {
         a: "You submit your solution and get it back scored out of ten — on whether it is correct, whether it is readable, and whether it would survive a review. You see which lines cost you marks, not just a number.",
       },
       {
-        q: "What happens when the programme ends?",
-        a: "You keep the notes and the practice environment. It ends with a technical mock interview and a written roadmap specific to where you are and what you are targeting.",
+        q: "What are the notes, exactly?",
+        a: "A written reference for every topic we cover, kept in your dashboard rather than handed out as slides. Each one has the explanation, a worked example with its output beside it, and practice questions at the end. They are edited as the course runs  + EM +  if a session throws up a better way to explain something, the note is updated that week and you see the new one.",
+      },
+      {
+        q: "What is the practice environment?",
+        a: "A SQL playground and a Python judge that run in the browser, with no setup on your machine. You write a query or a function, run it against real tables or hidden test cases, and get told what failed and why. Your solved questions are tracked, so you can see what you have actually covered rather than what you have read.",
+      },
+      {
+        q: "Do I keep any of it afterwards?",
+        a: "Yes. Your login stays, so the notes and the practice environment stay with you  + EM +  including the updates made after your cohort finishes. The programme ends with a technical mock interview and a written roadmap specific to where you are and what you are targeting.",
       },
     ],
 
@@ -385,42 +393,3 @@ export const academy: {
     "Web development and applied AI engineering are in the works — ask to be told first.",
 };
 
-/** The in-page anchors the academy sub-nav scrolls between. */
-/**
- * Placement and career support.
- *
- * Its own block rather than a bullet inside the offerings, because for a
- * career-change buyer it is the reason they are reading the page at all.
- */
-export const placements: {
-  eyebrow: string;
-  title: string;
-  lede: string;
-  includes: { title: string; body: string }[];
-} = {
-  eyebrow: "Placements & career assistance",
-  title: "The part that turns the course into an offer",
-  lede: "Our placement cell is dedicated to helping you secure the job the programme was taken for, and we work with hiring partners to get your profile in front of them.",
-  includes: [
-    {
-      title: "Resume building & LinkedIn optimisation",
-      body: "Your CV rewritten for the roles you are actually applying to, and a profile that recruiters searching those roles will find.",
-    },
-    {
-      title: "Mock interviews with industry professionals",
-      body: "Technical and HR rounds run by engineers who sit on the other side of real interviews, with the feedback said plainly.",
-    },
-    {
-      title: "Job alerts & referrals",
-      body: "Openings that match your profile as they come up, and a referral into them wherever we have the relationship to make one.",
-    },
-  ],
-};
-
-export const academyNav: Link[] = [
-  { label: "Overview", href: "#overview" },
-  { label: "Offerings", href: "#offerings" },
-  { label: "Curriculum", href: "#curriculum" },
-  { label: "Placements", href: "#placements" },
-  { label: "FAQs", href: "#faqs" },
-];
