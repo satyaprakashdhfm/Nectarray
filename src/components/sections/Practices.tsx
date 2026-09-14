@@ -5,44 +5,12 @@ import { SectionHead } from "@/components/ui/SectionHead";
 import { pillars } from "@/lib/content";
 
 /**
- * One accent per practice, in wordmark order: amber, blue, green, teal.
- *
- * The card is a picture under a dark wash now, so the pieces that carry
- * text are white on that wash and only the bar, the icon chip and the tint
- * are coloured. `link` uses the display tone rather than the deep one: the
- * deep tones were picked for contrast against white and go muddy here.
+ * The four practices, on the pattern the panel on /agentic-ai uses: the
+ * picture under a dark wash, one blue accent, and a ringed badge in the top
+ * corner. Each card used to carry its own colour — amber, blue, green, teal
+ * — across a bar, a chip and its tags, which put four palettes in one grid
+ * before a reader had read a word. The pictures tell them apart now.
  */
-const accents = [
-  {
-    bar: "bg-amber",
-    chip: "bg-amber-deep",
-    tint: "from-amber-deep/40",
-    pill: "border border-white/15 bg-white/10 text-white/85",
-    link: "group-hover:text-amber",
-  },
-  {
-    bar: "bg-brand",
-    chip: "bg-brand-deep",
-    tint: "from-brand-deep/40",
-    pill: "border border-white/15 bg-white/10 text-white/85",
-    link: "group-hover:text-brand",
-  },
-  {
-    bar: "bg-leaf",
-    chip: "bg-leaf-deep",
-    tint: "from-leaf-deep/40",
-    pill: "border border-white/15 bg-white/10 text-white/85",
-    link: "group-hover:text-leaf",
-  },
-  {
-    bar: "bg-teal",
-    chip: "bg-teal-deep",
-    tint: "from-teal-deep/40",
-    pill: "border border-white/15 bg-white/10 text-white/85",
-    link: "group-hover:text-teal",
-  },
-];
-
 export function Practices() {
   return (
     <section
@@ -90,28 +58,14 @@ export function Practices() {
                   aria-hidden
                 />
                 <span
-                  className={`absolute inset-0 -z-10 bg-gradient-to-br to-transparent ${accents[i].tint}`}
+                  className="from-brand-deep/40 absolute inset-0 -z-10 bg-gradient-to-br to-transparent"
                   aria-hidden
                 />
 
-                {/* Accent rule — always on, so the card is identifiable at
-                    rest rather than only under a cursor that never lands on
-                    a phone. */}
-                <span
-                  className={`absolute inset-x-0 top-0 h-1.5 ${accents[i].bar}`}
-                  aria-hidden
-                />
-
-                <div className="flex items-start justify-between gap-4">
-                  <span
-                    className={`grid size-12 place-items-center rounded-2xl text-white ${accents[i].chip}`}
-                  >
-                    <Icon name={pillar.icon} className="size-[1.375rem]" />
-                  </span>
-                  <span className="font-mono text-xs text-white/45">
-                    {pillar.index}
-                  </span>
-                </div>
+                <span className="bg-night/70 text-brand ring-brand/30 inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase ring-1 backdrop-blur">
+                  <Icon name={pillar.icon} className="size-3.5" />
+                  {pillar.index}
+                </span>
 
                 <h3 className="display mt-6 text-[1.5rem] text-white sm:text-[1.625rem]">
                   {pillar.title}
@@ -124,16 +78,14 @@ export function Practices() {
                   {pillar.points.map((point) => (
                     <li
                       key={point}
-                      className={`rounded-full px-3 py-1.5 text-[0.8125rem] font-medium ${accents[i].pill}`}
+                      className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[0.8125rem] font-medium text-white/85"
                     >
                       {point}
                     </li>
                   ))}
                 </ul>
 
-                <span
-                  className={`mt-7 inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-white transition-colors ${accents[i].link}`}
-                >
+                <span className="group-hover:text-brand mt-7 inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-white transition-colors">
                   Explore
                   <Icon
                     name="arrow"
