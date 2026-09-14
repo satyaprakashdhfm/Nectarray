@@ -7,39 +7,39 @@ import { pillars } from "@/lib/content";
 /**
  * One accent per practice, in wordmark order: amber, blue, green, teal.
  *
- * `chip` and `pill` use the deep tones because they carry text or a glyph;
- * `bar` and `tint` use the display tones, which only ever sit behind
- * nothing. The fourth practice used to fall back to grey, which read as a
- * disabled card rather than a fourth equal.
+ * The card is a picture under a dark wash now, so the pieces that carry
+ * text are white on that wash and only the bar, the icon chip and the tint
+ * are coloured. `link` uses the display tone rather than the deep one: the
+ * deep tones were picked for contrast against white and go muddy here.
  */
 const accents = [
   {
     bar: "bg-amber",
     chip: "bg-amber-deep",
-    tint: "from-amber-wash/85",
-    pill: "bg-amber-wash text-amber-deep",
-    link: "group-hover:text-amber-deep",
+    tint: "from-amber-deep/40",
+    pill: "border border-white/15 bg-white/10 text-white/85",
+    link: "group-hover:text-amber",
   },
   {
     bar: "bg-brand",
     chip: "bg-brand-deep",
-    tint: "from-brand-wash/85",
-    pill: "bg-brand-wash text-brand-deep",
-    link: "group-hover:text-brand-deep",
+    tint: "from-brand-deep/40",
+    pill: "border border-white/15 bg-white/10 text-white/85",
+    link: "group-hover:text-brand",
   },
   {
     bar: "bg-leaf",
     chip: "bg-leaf-deep",
-    tint: "from-leaf-wash/85",
-    pill: "bg-leaf-wash text-leaf-deep",
-    link: "group-hover:text-leaf-deep",
+    tint: "from-leaf-deep/40",
+    pill: "border border-white/15 bg-white/10 text-white/85",
+    link: "group-hover:text-leaf",
   },
   {
     bar: "bg-teal",
     chip: "bg-teal-deep",
-    tint: "from-teal-wash/85",
-    pill: "bg-teal-wash text-teal-deep",
-    link: "group-hover:text-teal-deep",
+    tint: "from-teal-deep/40",
+    pill: "border border-white/15 bg-white/10 text-white/85",
+    link: "group-hover:text-teal",
   },
 ];
 
@@ -86,7 +86,11 @@ export function Practices() {
                   className="-z-20 object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 />
                 <span
-                  className={`via-surface/85 to-surface/78 absolute inset-0 -z-10 bg-gradient-to-br ${accents[i].tint}`}
+                  className="from-night/70 via-night/87 to-night/94 absolute inset-0 -z-10 bg-gradient-to-b"
+                  aria-hidden
+                />
+                <span
+                  className={`absolute inset-0 -z-10 bg-gradient-to-br to-transparent ${accents[i].tint}`}
                   aria-hidden
                 />
 
@@ -104,15 +108,15 @@ export function Practices() {
                   >
                     <Icon name={pillar.icon} className="size-[1.375rem]" />
                   </span>
-                  <span className="text-ink-faint font-mono text-xs">
+                  <span className="font-mono text-xs text-white/45">
                     {pillar.index}
                   </span>
                 </div>
 
-                <h3 className="display mt-6 text-[1.5rem] sm:text-[1.625rem]">
+                <h3 className="display mt-6 text-[1.5rem] text-white sm:text-[1.625rem]">
                   {pillar.title}
                 </h3>
-                <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
+                <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/75">
                   {pillar.summary}
                 </p>
 
@@ -128,7 +132,7 @@ export function Practices() {
                 </ul>
 
                 <span
-                  className={`text-ink mt-7 inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors ${accents[i].link}`}
+                  className={`mt-7 inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-white transition-colors ${accents[i].link}`}
                 >
                   Explore
                   <Icon
