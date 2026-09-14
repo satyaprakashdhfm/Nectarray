@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
@@ -15,28 +16,28 @@ const accents = [
   {
     bar: "bg-amber",
     chip: "bg-amber-deep",
-    tint: "from-amber-wash",
+    tint: "from-amber-wash/85",
     pill: "bg-amber-wash text-amber-deep",
     link: "group-hover:text-amber-deep",
   },
   {
     bar: "bg-brand",
     chip: "bg-brand-deep",
-    tint: "from-brand-wash",
+    tint: "from-brand-wash/85",
     pill: "bg-brand-wash text-brand-deep",
     link: "group-hover:text-brand-deep",
   },
   {
     bar: "bg-leaf",
     chip: "bg-leaf-deep",
-    tint: "from-leaf-wash",
+    tint: "from-leaf-wash/85",
     pill: "bg-leaf-wash text-leaf-deep",
     link: "group-hover:text-leaf-deep",
   },
   {
     bar: "bg-teal",
     chip: "bg-teal-deep",
-    tint: "from-teal-wash",
+    tint: "from-teal-wash/85",
     pill: "bg-teal-wash text-teal-deep",
     link: "group-hover:text-teal-deep",
   },
@@ -71,8 +72,24 @@ export function Practices() {
             <Reveal as="li" key={pillar.id} delay={i * 80}>
               <a
                 href={pillar.href}
-                className={`card card-hover group relative flex h-full flex-col overflow-hidden bg-gradient-to-br p-7 sm:p-8 ${accents[i].tint} to-surface`}
+                className="card card-hover group relative isolate flex h-full flex-col overflow-hidden p-7 sm:p-8"
               >
+                {/* The practice's picture across the whole card, under a wash
+                    of the card's own colour: enough of the artwork to see what
+                    the practice is, not so much that it competes with the
+                    words on top of it. */}
+                <Image
+                  src={pillar.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 40rem, (min-width: 640px) 48vw, 94vw"
+                  className="-z-20 object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                />
+                <span
+                  className={`via-surface/85 to-surface/78 absolute inset-0 -z-10 bg-gradient-to-br ${accents[i].tint}`}
+                  aria-hidden
+                />
+
                 {/* Accent rule — always on, so the card is identifiable at
                     rest rather than only under a cursor that never lands on
                     a phone. */}

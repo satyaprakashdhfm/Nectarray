@@ -1,8 +1,7 @@
 import { Footer } from "@/components/layout/Footer";
-import { HomeHeader } from "@/components/layout/HomeHeader";
+import { Header } from "@/components/layout/Header";
 import { PageCta } from "@/components/layout/PageCta";
 import { Hero } from "@/components/sections/Hero";
-import { Marquee } from "@/components/sections/Marquee";
 import { Practices } from "@/components/sections/Practices";
 import { buildStructuredData } from "@/lib/seo";
 
@@ -21,11 +20,10 @@ export default function HomePage() {
         }}
       />
 
-      <HomeHeader />
+      <Header />
 
       <main id="main">
         <Hero />
-        <Marquee />
         <Practices />
       </main>
 

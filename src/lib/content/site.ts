@@ -60,37 +60,5 @@ export const hero = {
   ],
 };
 
-/** Pill chips that scroll under the hero. */
-export const trustChips = [
-  "Senior engineers only",
-  "Fixed scope, fixed price",
-  "You own the code",
-  "Weekly demos",
-  "Analytics that prove what worked",
-  "Marketing + build under one roof",
-  "No lock-in",
-  "Reply within 1 business day",
-];
-
-/** Tools we work with, scrolled as a second band under the chips. */
-export const marqueeItems = [
-  "Next.js",
-  "React",
-  "TypeScript",
-  "Vercel AI SDK",
-  "Claude",
-  "Python",
-  "PostgreSQL",
-  "Meta Ads",
-  "Google Ads",
-  "GA4",
-  "Shopify",
-  "WhatsApp API",
-  "n8n",
-  "Figma",
-  "Tailwind",
-  "LangGraph",
-];
-
 export const footerNote =
   "NectArray builds software, ships AI agents, runs growth marketing and teaches the whole stack.";

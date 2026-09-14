@@ -1286,8 +1286,7 @@ label:has(input[type="checkbox"]) {
 /* --------------------------------------------------------------------------
    Glass header (components/layout/Header.tsx)
 
-   The floating frosted bar every page but the home page uses. The home page
-   keeps its solid night bar (HomeHeader.tsx).
+   The floating frosted bar every public page uses.
 -------------------------------------------------------------------------- */
 
 .glass-bar {

@@ -32,7 +32,10 @@ const accents = [
 
 export function Hero() {
   return (
-    <section id="top" className="relative overflow-hidden pt-[72px]">
+    <section
+      id="top"
+      className="relative overflow-hidden pt-[var(--header-room)]"
+    >
       {/* Ground: a tinted wash, graph paper, and four brand glows ---------- */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <div className="from-brand-wash via-canvas to-leaf-wash absolute inset-0 bg-gradient-to-br" />
