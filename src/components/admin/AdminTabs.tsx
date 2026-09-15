@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
+  Briefcase,
   CalendarDays,
   Inbox,
   LockOpen,
@@ -17,6 +18,7 @@ const TABS = [
   { href: "/admin/lessons", label: "Student Notes", icon: NotebookPen },
   { href: "/admin/unlocking", label: "Unlocking", icon: LockOpen },
   { href: "/admin/teaching", label: "Teacher Notes", icon: BookOpen },
+  { href: "/admin/placement", label: "Placement", icon: Briefcase },
   { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
 ];
 

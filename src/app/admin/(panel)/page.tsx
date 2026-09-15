@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createEnrolment, setEnrolmentStatus, updatePayment } from "./actions";
 import { desc, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -240,9 +241,12 @@ export default async function AdminStudentsPage() {
                     className="border-line-soft border-b align-top last:border-0"
                   >
                     <td className="px-4 py-4">
-                      <span className="text-ink block text-[0.9375rem] font-semibold">
+                      <Link
+                        href={`/admin/placement/${row.id}`}
+                        className="text-ink hover:text-brand-deep block text-[0.9375rem] font-semibold transition-colors"
+                      >
                         {name}
-                      </span>
+                      </Link>
                       <span className="text-ink-soft block text-[0.8125rem]">
                         {row.email ?? "—"}
                       </span>
