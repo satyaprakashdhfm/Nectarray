@@ -1,55 +1,23 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   BRAND FONTS
+   FONTS
    ---------------------------------------------------------------------------
-   The site is set in "Anthropic Sans" / "Anthropic Serif". Those are licensed
-   fonts and are NOT bundled here. Until the real files are dropped in, the
-   stack falls through to close open-source stand-ins loaded in app/layout.tsx
-   (Schibsted Grotesk for the sans, Source Serif 4 for the serif).
-
-   To switch to the real thing: put the woff2 files in /public/fonts and
-   uncomment the @font-face blocks below. Nothing else needs to change --
-   "Anthropic Sans"/"Anthropic Serif" already sit first in every stack.
-   See public/fonts/README.md.
+   Schibsted Grotesk (sans) and Source Serif 4 (serif), loaded via
+   next/font/google in app/layout.tsx. Next self-hosts the files and exposes
+   each as its own CSS variable (--font-schibsted / --font-source-serif),
+   which the --font-sans / --font-serif theme tokens below then wrap with
+   generic fallbacks. Every component reads the theme tokens, never the
+   next/font variables directly, so swapping the face is a one-file change.
 --------------------------------------------------------------------------- */
-
-/*
-@font-face {
-  font-family: "Anthropic Sans";
-  src: url("/fonts/AnthropicSans-Regular.woff2") format("woff2");
-  font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Anthropic Sans";
-  src: url("/fonts/AnthropicSans-Medium.woff2") format("woff2");
-  font-weight: 500; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Anthropic Sans";
-  src: url("/fonts/AnthropicSans-Bold.woff2") format("woff2");
-  font-weight: 700; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Anthropic Serif";
-  src: url("/fonts/AnthropicSerif-Regular.woff2") format("woff2");
-  font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Anthropic Serif";
-  src: url("/fonts/AnthropicSerif-Italic.woff2") format("woff2");
-  font-weight: 400; font-style: italic; font-display: swap;
-}
-*/
 
 @theme {
   /* Type ------------------------------------------------------------------ */
   --font-sans:
-    "Anthropic Sans", var(--font-fallback-sans), ui-sans-serif, system-ui,
-    -apple-system, "Segoe UI", sans-serif;
+    var(--font-schibsted), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
   --font-serif:
-    "Anthropic Serif", var(--font-fallback-serif), ui-serif, Georgia,
-    "Times New Roman", serif;
+    var(--font-source-serif), ui-serif, Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
 
   /* Palette — sampled from the NectArray mark ----------------------------- */

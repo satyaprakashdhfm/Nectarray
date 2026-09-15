@@ -5,15 +5,11 @@ import { company } from "@/lib/content";
 import { siteDescription, siteUrl } from "@/lib/seo";
 import "./globals.css";
 
-/**
- * Stand-ins for the licensed brand faces. The CSS stacks in globals.css put
- * "Anthropic Sans" / "Anthropic Serif" ahead of these, so dropping the real
- * woff2 files into /public/fonts is the only step needed to switch over.
- */
-const fallbackSans = Schibsted_Grotesk({
+/** The site's sans face, loaded from Google Fonts and self-hosted by Next. */
+const sans = Schibsted_Grotesk({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-fallback-sans",
+  variable: "--font-schibsted",
 });
 
 /*
@@ -23,12 +19,12 @@ const fallbackSans = Schibsted_Grotesk({
  * with the page's own first paint. The browser now fetches it only where a
  * quote actually uses it.
  */
-const fallbackSerif = Source_Serif_4({
+const serif = Source_Serif_4({
   subsets: ["latin"],
   display: "swap",
   style: ["normal"],
   preload: false,
-  variable: "--font-fallback-serif",
+  variable: "--font-source-serif",
 });
 
 const title = `${company.name} — ${company.tagline}`;
@@ -122,7 +118,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fallbackSans.variable} ${fallbackSerif.variable}`}
+      className={`${sans.variable} ${serif.variable}`}
       /*
        * globals.css sets `scroll-behavior: smooth` so that in-page anchors
        * glide rather than jump. Without this attribute that setting also
