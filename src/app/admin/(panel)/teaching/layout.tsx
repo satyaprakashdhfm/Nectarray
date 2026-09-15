@@ -13,6 +13,7 @@ const SHORT: Record<string, string> = {
   "python-teaching": "Python",
   "sql-teaching": "SQL",
   "agentic-ai-teaching": "Agentic AI",
+  "placement-teaching": "Placement",
 };
 
 /**
