@@ -12,13 +12,19 @@ export type CompileResult =
       unavailable?: boolean;
     };
 
-/** Whether services/latex is configured on this deployment. */
+/** Whether the LaTeX endpoint on services/judge is configured here. */
 export function compilerConfigured(): boolean {
   return Boolean(process.env.LATEX_URL && process.env.LATEX_TOKEN);
 }
 
 /**
- * Sends a resume to services/latex and returns the PDF, or why it failed.
+ * Sends a resume to the backend's /compile endpoint and returns the PDF, or
+ * why it failed.
+ *
+ * The same service and URL as JUDGE_URL — the LaTeX compiler is mounted on
+ * services/judge rather than run as its own deployment, see that service's
+ * README — but its own token, LATEX_TOKEN, so the two capabilities stay
+ * independently revocable.
  *
  * Shared by the student compile route and the admin placement page — both
  * want exactly this call, and the admin page makes it directly rather than

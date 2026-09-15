@@ -1,14 +1,11 @@
-"""The resume compiler.
+"""Compiles a resume's LaTeX source to PDF.
 
-One job: take a small LaTeX project and turn it into a PDF, or say why it
-could not. It does not know who is asking or whose resume this is — the web
-app owns the student, the saved files and the template.
-
-It lives apart from the web app for the same reason the judge does. LaTeX is
-a programming language with file access: a document can \\input any file the
-process can read, loop forever, or write output until the disk fills. So it
-runs in a container holding nothing but TeX and this service, with shell
-escape off, reads confined to the job's own folder, and a clock on every run.
+Folded into this same backend rather than run as a second service: a LaTeX
+document can read files on disk and loop forever, which is exactly the kind
+of untrusted work this container already exists to isolate for the Python
+judge above it. The two jobs share the process's resource limits and
+sandboxing posture; they do not share a token, so a leaked judge token
+cannot compile a document and a leaked LaTeX token cannot run code.
 """
 
 import asyncio
@@ -16,22 +13,14 @@ import os
 import pathlib
 import re
 import resource
-import secrets
 import signal
 import tempfile
-
-from fastapi import FastAPI, Header, HTTPException
-from fastapi.responses import JSONResponse, Response
-from pydantic import BaseModel
-
-# The one credential, shared with the web app. Without it every request is
-# refused rather than compiling documents for strangers.
-TOKEN = os.environ.get("LATEX_TOKEN", "")
 
 TIMEOUT_SECONDS = float(os.environ.get("LATEX_TIMEOUT_SECONDS", "20"))
 
 # pdflatex is single-threaded and a resume takes about a second. A small cap
-# keeps a burst of recompiles from starving the container.
+# keeps a burst of recompiles from starving the container the judge also runs
+# in.
 SLOTS = asyncio.Semaphore(int(os.environ.get("LATEX_CONCURRENCY", "2")))
 
 MAX_FILES = 8
@@ -43,17 +32,14 @@ NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}\.(tex|cls|sty|bib)$")
 # With -file-line-error, a real error reads "./template.tex:42: message".
 LOCATED = re.compile(r"^(?:\./)?([A-Za-z0-9_-]+\.(?:tex|cls|sty)):(\d+): (.+)$")
 
-app = FastAPI(title="NectArray LaTeX", docs_url=None, redoc_url=None)
 
+class LatexError(Exception):
+    """Carries exactly what the HTTP layer should send back."""
 
-class CompileRequest(BaseModel):
-    main: str
-    files: dict[str, str]
-
-
-@app.get("/health")
-async def health() -> dict:
-    return {"ok": True}
+    def __init__(self, status: int, detail: dict):
+        super().__init__(detail.get("error", ""))
+        self.status = status
+        self.detail = detail
 
 
 def _limits() -> None:
@@ -97,30 +83,24 @@ def _explain(log: str) -> dict:
     return {"error": "LaTeX stopped without producing a PDF."}
 
 
-@app.post("/compile")
-async def compile_document(
-    request: CompileRequest, x_latex_token: str = Header(default="")
-) -> Response:
-    if not TOKEN:
-        raise HTTPException(503, "LATEX_TOKEN is not set on this service.")
-    # Constant-time, so the token cannot be recovered a byte at a time.
-    if not secrets.compare_digest(x_latex_token, TOKEN):
-        raise HTTPException(401, "Bad token.")
-
-    if len(request.files) > MAX_FILES:
-        raise HTTPException(413, "Too many files.")
-    for name, body in request.files.items():
+async def compile_document(main: str, files: dict[str, str]) -> bytes:
+    """Returns the compiled PDF, or raises LatexError with what went wrong."""
+    if len(files) > MAX_FILES:
+        raise LatexError(413, {"error": "Too many files."})
+    for name, body in files.items():
         if not NAME.match(name):
-            raise HTTPException(400, f"Not an allowed file name: {name}")
+            raise LatexError(400, {"error": f"Not an allowed file name: {name}"})
         if len(body.encode()) > MAX_FILE_BYTES:
-            raise HTTPException(413, f"{name} is too large.")
-    if not request.main.endswith(".tex") or request.main not in request.files:
-        raise HTTPException(400, "The main file must be one of the .tex files sent.")
+            raise LatexError(413, {"error": f"{name} is too large."})
+    if not main.endswith(".tex") or main not in files:
+        raise LatexError(
+            400, {"error": "The main file must be one of the .tex files sent."}
+        )
 
     async with SLOTS:
-        with tempfile.TemporaryDirectory(prefix="job-") as workdir:
+        with tempfile.TemporaryDirectory(prefix="latex-") as workdir:
             root = pathlib.Path(workdir)
-            for name, body in request.files.items():
+            for name, body in files.items():
                 (root / name).write_text(body, encoding="utf-8")
 
             process = await asyncio.create_subprocess_exec(
@@ -129,7 +109,7 @@ async def compile_document(
                 "-interaction=nonstopmode",
                 "-halt-on-error",
                 "-file-line-error",
-                request.main,
+                main,
                 cwd=workdir,
                 env=_environment(workdir),
                 stdout=asyncio.subprocess.PIPE,
@@ -145,15 +125,15 @@ async def compile_document(
                 # The whole group, so nothing pdflatex started outlives it.
                 os.killpg(process.pid, signal.SIGKILL)
                 await process.wait()
-                return JSONResponse(
+                raise LatexError(
+                    422,
                     {
                         "error": "Compiling took too long and was stopped. "
                         "Look for a command that repeats itself."
                     },
-                    status_code=422,
                 )
 
-            stem = request.main[: -len(".tex")]
+            stem = main[: -len(".tex")]
             pdf = root / f"{stem}.pdf"
             log_file = root / f"{stem}.log"
             log = (
@@ -163,12 +143,6 @@ async def compile_document(
             )
 
             if process.returncode == 0 and pdf.exists():
-                return Response(
-                    content=pdf.read_bytes(),
-                    media_type="application/pdf",
-                    headers={"Cache-Control": "no-store"},
-                )
+                return pdf.read_bytes()
 
-            return JSONResponse(
-                {**_explain(log), "log": log[-6000:]}, status_code=422
-            )
+            raise LatexError(422, {**_explain(log), "log": log[-6000:]})

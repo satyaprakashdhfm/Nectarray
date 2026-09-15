@@ -12,7 +12,7 @@ const body = z.object({ files: resumeFilesSchema });
  * Compiles the editor's current resume source to a PDF.
  *
  * What is in the editor, not what is saved — a student presses Recompile to
- * see the line they just typed. The LaTeX itself runs in services/latex,
+ * see the line they just typed. The LaTeX itself runs on services/judge,
  * never here: a document can read files, and this process can read the
  * database credentials.
  */

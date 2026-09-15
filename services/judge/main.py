@@ -1,14 +1,18 @@
-"""The code runner.
+"""The backend: the code runner, and the LaTeX compiler alongside it.
 
-One job: take a Python submission and a set of inputs, run them, and say what
-came back. It does not know who the student is, which problem this is, or
-whether the answer is right — the web app owns all of that, and keeps the
-expected outputs to itself.
+The code runner's job: take a Python submission and a set of inputs, run
+them, and say what came back. It does not know who the student is, which
+problem this is, or whether the answer is right — the web app owns all of
+that, and keeps the expected outputs to itself.
 
 Kept deliberately small and replaceable. Judge0 fills exactly this slot in
 most people's architecture; it cannot be self-hosted on a platform that
 withholds privileged containers, which is why this exists, and swapping to it
 later means changing the one function that shells out.
+
+The LaTeX compiler lives in latex.py and is mounted here rather than as its
+own service — see that module's docstring for why one container can hold
+both kinds of untrusted work.
 """
 
 import asyncio
@@ -20,13 +24,20 @@ import sys
 import time
 
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
+
+import latex
 
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
-# The one credential. Set it on both this service and the web app; without it
-# the service refuses every request rather than running code for strangers.
+# The one credential per capability. Set on both this service and the web
+# app; without it the matching endpoint refuses every request rather than
+# running code, or compiling a document, for strangers. Deliberately two
+# tokens rather than one shared: a leaked judge token cannot compile a
+# document, and a leaked LaTeX token cannot run code.
 TOKEN = os.environ.get("JUDGE_TOKEN", "")
+LATEX_TOKEN = os.environ.get("LATEX_TOKEN", "")
 
 # Wall clock, over the top of the child's own CPU limit. A process asleep or
 # blocked on a syscall burns no CPU and would otherwise never be stopped.
@@ -35,7 +46,33 @@ WALL_TIMEOUT_SECONDS = float(os.environ.get("JUDGE_TIMEOUT_SECONDS", "12"))
 MAX_SOURCE_BYTES = 64 * 1024
 MAX_CASES = 200
 
-app = FastAPI(title="NectArray judge", docs_url=None, redoc_url=None)
+app = FastAPI(title="NectArray backend", docs_url=None, redoc_url=None)
+
+
+class CompileRequest(BaseModel):
+    main: str
+    files: dict[str, str]
+
+
+@app.post("/compile")
+async def compile_resume(
+    request: CompileRequest, x_latex_token: str = Header(default="")
+) -> Response:
+    if not LATEX_TOKEN:
+        raise HTTPException(503, "LATEX_TOKEN is not set on this service.")
+    if not secrets.compare_digest(x_latex_token, LATEX_TOKEN):
+        raise HTTPException(401, "Bad token.")
+
+    try:
+        pdf = await latex.compile_document(request.main, request.files)
+    except latex.LatexError as error:
+        return JSONResponse(error.detail, status_code=error.status)
+
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 class Compare(BaseModel):
@@ -56,7 +93,12 @@ class RunRequest(BaseModel):
 
 @app.get("/health")
 async def health() -> dict:
-    return {"ok": True, "python": sys.version.split()[0]}
+    return {
+        "ok": True,
+        "python": sys.version.split()[0],
+        "judge": bool(TOKEN),
+        "latex": bool(LATEX_TOKEN),
+    }
 
 
 @app.post("/run")
