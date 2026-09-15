@@ -71,6 +71,37 @@ export async function defaultResumeFiles(user: User): Promise<ResumeFiles> {
   return { "template.tex": filled, "resume.cls": cls };
 }
 
+/**
+ * The self-introduction template, with the student's name already in it.
+ *
+ * Never saved on its own — the placement page falls back to this at read
+ * time when a student's `intro` is null, the same way it falls back to
+ * `defaultResumeFiles` for the resume. Editing it is what actually creates
+ * the saved row; opening the tab and doing nothing leaves the account with
+ * no intro at all, which is the right default rather than a database full
+ * of copies of this same paragraph.
+ *
+ * `user` is optional so the admin panel can render the bare template — the
+ * one every student who hasn't written their own sees — without a person to
+ * attach it to.
+ */
+export function defaultIntro(
+  user?: Pick<User, "firstName" | "lastName"> | null,
+): string {
+  const name = [user?.firstName, user?.lastName]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(" ");
+
+  return `I am ${name || "[Your Name]"}, currently pursuing my Bachelor's degree in Computer Science Engineering at [Your College Name]. I have built a strong foundation in [Your Specialisation — e.g. AI/ML, Web Development] through both college subjects and hands-on projects.
+
+Throughout my academic journey, I have studied core computer science subjects and gained practical skills in [Your Key Skills]. These have helped me understand both the fundamentals and the real-world applications of the technologies I work with.
+
+As part of my time at NectArray, I worked on projects involving [Your Tools and Technologies], and gained hands-on experience with [Something Specific You Built or Learned]. This helped me understand how to bring together [X] and [Y] to build something people can actually use.
+
+I am excited about this opportunity, and if given a chance, I will contribute meaningfully to the team and the organisation.`;
+}
+
 /** "Kurmarao_Marada_Resume.pdf" — safe as a download name on every OS. */
 export function resumePdfName(user: User): string {
   const parts = [user.firstName, user.lastName]

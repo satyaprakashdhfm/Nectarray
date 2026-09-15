@@ -5,7 +5,12 @@ import { PlacementTools } from "@/components/dashboard/PlacementTools";
 import { db } from "@/lib/db";
 import { placementProfiles } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
-import { asResumeFiles, defaultResumeFiles, resumePdfName } from "@/lib/resume";
+import {
+  asResumeFiles,
+  defaultIntro,
+  defaultResumeFiles,
+  resumePdfName,
+} from "@/lib/resume";
 
 export const metadata: Metadata = {
   title: "Placement — NectArray Academy",
@@ -51,7 +56,7 @@ export default async function PlacementPage({
     <PlacementTools
       userId={user.id}
       initialTool={tool === "resume" ? "resume" : "intro"}
-      intro={profile?.intro ?? ""}
+      intro={profile?.intro ?? defaultIntro(user)}
       files={files}
       pdfName={resumePdfName(user)}
       compilerReady={Boolean(process.env.LATEX_URL && process.env.LATEX_TOKEN)}
