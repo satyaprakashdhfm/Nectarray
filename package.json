@@ -14,6 +14,7 @@
     "og": "node scripts/generate-og.cjs",
     "hero": "node scripts/crop-hero.cjs",
     "hero-art": "node scripts/prepare-hero-art.cjs",
+    "latex:dev": "docker build -t nectarray-latex services/latex && docker run --rm -p 8081:8080 -e LATEX_TOKEN=dev nectarray-latex",
     "build:tests": "python3 scripts/build-python-tests.py",
     "build:testcases": "python3 scripts/testcases/build.py",
     "validate:testcases": "python3 scripts/validate-testcases.py"
@@ -25,6 +26,7 @@
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/language": "^6.12.4",
+    "@codemirror/legacy-modes": "^6.5.4",
     "@codemirror/state": "^6.7.4",
     "@codemirror/view": "^6.43.11",
     "@uiw/react-codemirror": "^4.25.11",

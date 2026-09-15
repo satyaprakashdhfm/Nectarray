@@ -22,8 +22,10 @@ import {
 import {
   HighlightStyle,
   indentUnit,
+  StreamLanguage,
   syntaxHighlighting,
 } from "@codemirror/language";
+import { stex } from "@codemirror/legacy-modes/mode/stex";
 import { keymap, type KeyBinding } from "@codemirror/view";
 import { tags as t } from "@lezer/highlight";
 import { PRACTICE_TABLES } from "@/lib/practice-db";
@@ -58,6 +60,8 @@ const highlight = HighlightStyle.define([
   { tag: [t.function(t.propertyName), t.macroName], color: "#f5d67b" },
 
   { tag: [t.className, t.typeName, t.namespace], color: "#5fd3bc" },
+  // LaTeX commands — \section, \textbf — which the stex mode reports as tags.
+  { tag: t.tagName, color: "#7cc4f8" },
   { tag: [t.propertyName, t.attributeName], color: "#9fd4f5" },
   { tag: t.variableName, color: "rgba(236,240,244,0.88)" },
 
@@ -258,10 +262,12 @@ function schemaWordSource(context: CompletionContext): CompletionResult | null {
   return { from: word.from, options: practiceColumns(), validFor: /^[\w$]*$/ };
 }
 
-export type EditorLanguage = "python" | "sql";
+export type EditorLanguage = "python" | "sql" | "latex";
+
+const latex = StreamLanguage.define(stex);
 
 /**
- * The editor both practice workspaces write in.
+ * The editor the practice workspaces and the resume editor write in.
  *
  * One component rather than one per language, because everything a student
  * would notice — the colours, the completion panel, what Tab does, what
@@ -272,13 +278,19 @@ export function CodeEditor({
   value,
   onChange,
   onRun,
+  onSave,
+  onView,
   language,
   placeholder,
 }: {
   value: string;
   onChange: (value: string) => void;
-  /** Ctrl/⌘ + Enter, the shortcut both workspaces advertise. */
+  /** Ctrl/⌘ + Enter: run the query, the tests, or the compile. */
   onRun: () => void;
+  /** Ctrl/⌘ + S, where there is something to save. */
+  onSave?: () => void;
+  /** The live view, for a caller that needs to move the cursor itself. */
+  onView?: (view: EditorView) => void;
   language: EditorLanguage;
   placeholder?: string;
 }) {
@@ -310,30 +322,35 @@ export function CodeEditor({
       { key: "Tab", run: indentMore, shift: indentLess },
       { key: "Ctrl-Space", run: startCompletion },
       { key: "Mod-Enter", run: () => (onRun(), true), preventDefault: true },
+      ...(onSave
+        ? [{ key: "Mod-s", run: () => (onSave(), true), preventDefault: true }]
+        : []),
     ],
-    [onRun],
+    [onRun, onSave],
   );
 
   const extensions = useMemo(
     () => [
       language === "python"
         ? python()
-        : sql({ dialect: SQLite, schema: sqlSchema(), upperCaseKeywords: true }),
+        : language === "latex"
+          ? latex
+          : sql({ dialect: SQLite, schema: sqlSchema(), upperCaseKeywords: true }),
       /*
-       * Python keeps the language pack's own sources (builtins, and the
-       * names already in the file). SQL gets an explicit list instead, in
+       * Python and LaTeX keep the default sources (for LaTeX, the words
+       * already in the file). SQL gets an explicit list instead, in
        * priority order — what is in the database first, keywords after —
        * because a student typing `fi` wants `first_name`, not `FILTER`.
        */
-      language === "python"
-        ? autocompletion()
-        : autocompletion({
+      language === "sql"
+        ? autocompletion({
             override: [
               schemaCompletionSource({ dialect: SQLite, schema: sqlSchema() }),
               schemaWordSource,
               keywordCompletionSource(SQLite, true),
             ],
-          }),
+          })
+        : autocompletion(),
       // Four for Python because that is the language's own rule; two for SQL
       // because a query nests far deeper and four runs off the panel.
       indentUnit.of(language === "python" ? "    " : "  "),
@@ -357,6 +374,7 @@ export function CodeEditor({
         <CodeMirror
           value={value}
           onChange={handleChange}
+          onCreateEditor={onView}
           extensions={extensions}
           /*
            * Not "light", which is what this component defaults to — and

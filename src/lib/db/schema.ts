@@ -456,6 +456,29 @@ export const projectSubmissions = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+//  Placement
+// ---------------------------------------------------------------------------
+
+/**
+ * A student's self-introduction and resume, one row each.
+ *
+ * The resume is stored as its LaTeX source files rather than as a PDF. The
+ * PDF is whatever the source compiles to today, so keeping it would be a
+ * second copy that goes stale the moment the student changes a line — and
+ * the editor recompiles it on open anyway. A null `resume_files` means the
+ * student has never saved one, and the template is offered instead.
+ */
+export const placementProfiles = pgTable("placement_profiles", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  intro: text(),
+  /** File name to LaTeX source, e.g. { "template.tex": "…", "resume.cls": "…" }. */
+  resumeFiles: jsonb("resume_files").$type<Record<string, string>>(),
+  updatedAt: now(),
+});
+
+// ---------------------------------------------------------------------------
 //  Enquiries
 // ---------------------------------------------------------------------------
 
