@@ -16,6 +16,7 @@ import {
 import { CodeBlock } from "@/components/dashboard/CodeBlock";
 import { CodeGroup } from "@/components/dashboard/CodeGroup";
 import { FigureGroup } from "@/components/dashboard/FigureGroup";
+import { TechIcon } from "@/components/dashboard/TechIcon";
 import { remarkCodeTabs, type CodeTab } from "@/lib/notes-code-tabs";
 import { remarkFigureTabs, type FigureTab } from "@/lib/notes-figure-tabs";
 import { idCounter } from "@/lib/toc";
@@ -184,9 +185,17 @@ export function Markdown({ children }: { children: string }) {
            * close the paragraph early and the page would not hydrate. Linked
            * to the full file, since a screenshot shrunk to the column is often
            * too small to read.
+           *
+           * `![](tech:redis) Redis` in a tools table is a different thing
+           * entirely — a brand mark sitting inline with the name it labels,
+           * not a screenshot — so it skips the figure/link treatment above
+           * and renders through TechIcon instead.
            */
-          img: ({ src, alt, title }) =>
-            typeof src === "string" ? (
+          img: ({ src, alt, title }) => {
+            const tech = typeof src === "string" ? /^tech:(.+)$/.exec(src) : null;
+            if (tech) return <TechIcon name={tech[1]} />;
+
+            return typeof src === "string" ? (
               <span className="notes-figure">
                 <a href={src} target="_blank" rel="noreferrer noopener">
                   {/* eslint-disable-next-line @next/next/no-img-element -- markdown images have no known size for next/image */}
@@ -199,7 +208,8 @@ export function Markdown({ children }: { children: string }) {
                 </a>
                 {title && <span className="notes-caption">{title}</span>}
               </span>
-            ) : null,
+            ) : null;
+          },
 
           blockquote: ({ children }) => {
             const marker = MARKER.exec(toText(children));

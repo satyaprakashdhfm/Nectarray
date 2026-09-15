@@ -42,6 +42,7 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "server-only": "^0.0.1",
+    "simple-icons": "^16.31.0",
     "sql.js": "^1.14.2",
     "unified": "^11.0.5",
     "zod": "^4.5.4"

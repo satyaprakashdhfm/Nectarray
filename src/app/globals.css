@@ -1488,3 +1488,13 @@ label:has(input[type="checkbox"]) {
   line-height: 1.5;
   color: var(--color-ink-faint);
 }
+
+/* A brand's own mark, sitting inline with its name in a tools table —
+   `![](tech:redis) Redis`. 1em sizes it off the table's own font-size,
+   which is what keeps it matched to the text next to it at every zoom
+   level rather than one fixed pixel size. */
+.tech-icon {
+  display: inline-block;
+  vertical-align: -0.125em;
+  margin-right: 0.375em;
+}
