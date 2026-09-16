@@ -51,6 +51,15 @@ type Site = {
   };
   palette: Palette;
   shape: Shape;
+  /**
+   * The hero photograph. Stock, licensed for commercial use, downloaded
+   * rather than hot-linked. A dashboard or a SaaS page has none on purpose —
+   * those products show their own interface, so the hero gets a chart or a
+   * chat instead, which is what the real ones do.
+   */
+  photo?: string;
+  /** One per item, for the grids that are made of pictures. */
+  tiles?: string[];
   /** Section heading above the main band. */
   bandTitle: string;
   items: { title: string; meta: string; sub?: string; tag?: string }[];
@@ -76,6 +85,7 @@ const SITES: Record<string, Site[]> = {
   layout: [
     {
       url: "thirtytwodental.in",
+      photo: "/samples/clinic-dental.webp",
       brand: "Thirtytwo Dental",
       topbar: "Indiranagar, Bengaluru · Open today till 8pm",
       nav: ["Treatments", "Our dentists", "Fees", "Reviews"],
@@ -119,6 +129,13 @@ const SITES: Record<string, Site[]> = {
     },
     {
       url: "saanjhstudio.com",
+      photo: "/samples/wedding-haldi.webp",
+      tiles: [
+        "/samples/wed-1.webp",
+        "/samples/wed-2.webp",
+        "/samples/wed-3.webp",
+        "/samples/wedding-haldi.webp",
+      ],
       brand: "SAANJH",
       topbar: "Now booking 2027 wedding dates",
       nav: ["Films", "Photographs", "About", "Pricing"],
@@ -165,6 +182,13 @@ const SITES: Record<string, Site[]> = {
   cart: [
     {
       url: "mittiliving.in",
+      photo: "/samples/pottery-shelf.webp",
+      tiles: [
+        "/samples/pot-1.webp",
+        "/samples/pot-2.webp",
+        "/samples/pot-3.webp",
+        "/samples/pottery-shelf.webp",
+      ],
       brand: "Mitti Living",
       topbar: "Free shipping over ₹999 · COD available · 7-day returns",
       nav: ["Cookware", "Tableware", "Storage", "Gifting"],
@@ -208,6 +232,13 @@ const SITES: Record<string, Site[]> = {
     },
     {
       url: "koralabel.com",
+      photo: "/samples/textile-market.webp",
+      tiles: [
+        "/samples/cloth-1.webp",
+        "/samples/cloth-2.webp",
+        "/samples/cloth-3.webp",
+        "/samples/textile-market.webp",
+      ],
       brand: "KORA",
       topbar: "New: Chanderi edit · Extra 10% on prepaid",
       nav: ["Women", "Men", "Handloom", "Sale"],
@@ -254,6 +285,7 @@ const SITES: Record<string, Site[]> = {
   gauge: [
     {
       url: "app.vahanops.in",
+      photo: "/samples/truck-highway.webp",
       brand: "Vahan Ops",
       topbar: "Live · 412 trips moving · last sync 14s ago",
       nav: ["Overview", "Fleet", "Trips", "Billing"],
@@ -343,6 +375,7 @@ const SITES: Record<string, Site[]> = {
   layers: [
     {
       url: "app.slotwise.in",
+      photo: "/samples/salon-interior.webp",
       brand: "Slotwise",
       topbar: "3 branches · 19 staff logins · today 84% booked",
       nav: ["Calendar", "Clients", "Staff", "Payouts"],
@@ -385,6 +418,7 @@ const SITES: Record<string, Site[]> = {
     },
     {
       url: "vidyalayos.com",
+      photo: "/samples/classroom.webp",
       brand: "Vidyalay OS",
       topbar: "Term 2 · Fee collection 78% · 4 reports pending",
       nav: ["Students", "Attendance", "Fees", "Exams"],
@@ -472,6 +506,7 @@ const SITES: Record<string, Site[]> = {
     },
     {
       url: "aarogyaassist.in",
+      photo: "/samples/clinic-reception.webp",
       brand: "Aarogya Assist",
       topbar: "Patient intake in Hindi, Tamil, Telugu & English",
       nav: ["How it works", "For clinics", "Security", "Demo"],
@@ -517,6 +552,7 @@ const SITES: Record<string, Site[]> = {
   smartphone: [
     {
       url: "daud.fit",
+      photo: "/samples/runner-road.webp",
       brand: "Daud",
       topbar: "iOS & Android · free for 7 days · no card",
       nav: ["Plans", "Coaches", "Stories", "Get app"],
@@ -608,15 +644,23 @@ const SITES: Record<string, Site[]> = {
 
 const WHATSAPP = "#25D366";
 
-/** A photograph, as a gradient. Small enough that a real one would smudge. */
+/**
+ * A photograph. Stock, licensed for commercial use, and served from our own
+ * public/ rather than hot-linked off somebody's CDN.
+ *
+ * Falls back to a brand gradient when a sample has no picture — which is
+ * most of the software ones, where a photo would be the wrong thing anyway.
+ */
 function Photo({
   site,
   h,
+  src,
   label,
   className = "",
 }: {
   site: Site;
   h: string;
+  src?: string;
   label?: string;
   className?: string;
 }) {
@@ -626,16 +670,29 @@ function Photo({
       className={`relative overflow-hidden rounded-lg ${className}`}
       style={{
         height: h,
-        background: `linear-gradient(135deg, ${p.brand} 0%, ${p.accent} 55%, ${p.soft} 100%)`,
+        background: src
+          ? p.soft
+          : `linear-gradient(135deg, ${p.brand} 0%, ${p.accent} 55%, ${p.soft} 100%)`,
       }}
     >
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(120% 80% at 80% 10%, rgba(255,255,255,0.35), transparent 60%)",
-        }}
-      />
+      {src ? (
+        /* eslint-disable-next-line @next/next/no-img-element -- fixed-size decoration inside a mock-up, not page content */
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover"
+        />
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(120% 80% at 80% 10%, rgba(255,255,255,0.35), transparent 60%)",
+          }}
+        />
+      )}
       {label && (
         <span
           className="absolute bottom-1 left-1 rounded px-1.5 py-0.5 text-[0.4375rem] font-semibold text-white"
@@ -644,6 +701,77 @@ function Photo({
           {label}
         </span>
       )}
+    </div>
+  );
+}
+
+/**
+ * What a dashboard or a SaaS product puts where a photo would go: its own
+ * interface. Real products in this category never lead with a stock photo.
+ */
+function UiPanel({ site }: { site: Site }) {
+  const p = site.palette;
+  const bars = [38, 62, 45, 78, 56, 88, 71];
+
+  return (
+    <div
+      className="flex h-full flex-col justify-between rounded-lg p-2"
+      style={{ background: p.soft, border: `1px solid ${p.line}` }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[0.4375rem] font-bold" style={{ color: p.ink }}>
+          {site.shape === "agent" ? "Live conversation" : "Last 7 days"}
+        </span>
+        <span className="text-[0.375rem] font-semibold" style={{ color: p.brand }}>
+          ●&nbsp;live
+        </span>
+      </div>
+
+      {site.shape === "agent" ? (
+        <div className="space-y-1">
+          <div
+            className="ml-auto w-[70%] rounded-md rounded-br-sm px-1.5 py-1 text-[0.375rem]"
+            style={{ background: p.brand, color: "#fff" }}
+          >
+            {site.items[0]?.title}
+          </div>
+          <div
+            className="w-[82%] rounded-md rounded-bl-sm px-1.5 py-1 text-[0.375rem]"
+            style={{ background: p.bg, color: p.muted, border: `1px solid ${p.line}` }}
+          >
+            Refunds are credited in 5–7 working days.
+            <span style={{ color: p.accent }}> [policy.pdf]</span>
+          </div>
+          <div
+            className="ml-auto w-[45%] rounded-md rounded-br-sm px-1.5 py-1 text-[0.375rem]"
+            style={{ background: p.brand, color: "#fff" }}
+          >
+            Thanks!
+          </div>
+        </div>
+      ) : (
+        <div className="flex h-[54%] items-end gap-[3px]">
+          {bars.map((height, n) => (
+            <span
+              key={n}
+              className="flex-1 rounded-sm"
+              style={{
+                height: `${height}%`,
+                background: n === bars.length - 2 ? p.brand : `${p.brand}55`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <span className="text-[0.5625rem] font-extrabold" style={{ color: p.ink }}>
+          {site.stats[0].value}
+        </span>
+        <span className="text-[0.375rem]" style={{ color: p.muted }}>
+          {site.stats[0].label}
+        </span>
+      </div>
     </div>
   );
 }
@@ -781,7 +909,7 @@ function Hero({ site }: { site: Site }) {
                 <span>9:41</span>
                 <span>▮▮▮</span>
               </div>
-              <Photo site={site} h="3rem" className="mx-1.5 rounded" />
+              <Photo site={site} src={site.photo} h="3rem" className="mx-1.5 rounded" />
               <div className="space-y-1 p-1.5">
                 {site.items.slice(0, 2).map((item) => (
                   <div
@@ -807,12 +935,15 @@ function Hero({ site }: { site: Site }) {
             </div>
           </div>
         </div>
-      ) : (
+      ) : site.photo ? (
         <Photo
           site={site}
+          src={site.photo}
           h="100%"
           label={site.shape === "clinic" ? "Our clinic" : undefined}
         />
+      ) : (
+        <UiPanel site={site} />
       )}
     </div>
   );
@@ -860,14 +991,19 @@ function Body({ site }: { site: Site }) {
   if (site.shape === "commerce") {
     return (
       <div className="grid grid-cols-4 gap-2 px-4 pb-3">
-        {site.items.map((item) => (
+        {site.items.map((item, n) => (
           <div
             key={item.title}
             className="overflow-hidden rounded-lg"
             style={{ border: `1px solid ${p.line}` }}
           >
             <div className="relative">
-              <Photo site={site} h="2.6rem" className="rounded-none" />
+              <Photo
+                site={site}
+                src={site.tiles?.[n]}
+                h="2.6rem"
+                className="rounded-none"
+              />
               {item.tag && (
                 <span
                   className="absolute top-1 left-1 rounded px-1 py-0.5 text-[0.375rem] font-bold text-white"
@@ -937,9 +1073,9 @@ function Body({ site }: { site: Site }) {
   if (site.shape === "studio") {
     return (
       <div className="grid grid-cols-4 gap-1.5 px-4 pb-3">
-        {site.items.map((item) => (
+        {site.items.map((item, n) => (
           <div key={item.title}>
-            <Photo site={site} h="3.2rem" />
+            <Photo site={site} src={site.tiles?.[n]} h="3.2rem" />
             <p className="mt-1 truncate text-[0.4375rem] font-bold" style={{ color: p.ink }}>
               {item.title}
             </p>
