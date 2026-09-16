@@ -1,225 +1,777 @@
+"use client";
+
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Lock, Phone } from "lucide-react";
+import { company } from "@/lib/content";
+
 /**
- * What each kind of build looks like when it is finished, as a schematic in a
- * browser frame.
+ * Two sample homepages per build, in a browser frame you can scroll.
  *
- * Deliberately a wireframe and not a screenshot. A grid of real-looking sites
- * on a services page is read as a portfolio, and anything that reads as a
- * portfolio has to be actual client work with permission to show it — a
- * plausible-looking mock-up passed off as a build is just a lie with rounded
- * corners. A schematic makes the shape of the thing clear, which is the
- * question a buyer actually has ("what am I getting?"), and claims nothing.
+ * These are our own designs, not screenshots of anybody's site. A grid of
+ * real companies' pages on a services page reads as a portfolio, and a
+ * portfolio has to be work you actually did and may show — so the brands
+ * here are invented, and the layouts are the shapes these sites really
+ * take: a clinic leads with booking, a shop leads with product, a
+ * dashboard leads with numbers.
  *
- * The address bar says yourbrand.com for the same reason: a placeholder
- * nobody can mistake for a real customer.
+ * The third slide is locked on purpose. The set we can show on a public
+ * page is small; the rest happen on a call.
  *
- * Everything is divs. No images to load, it recolours with the theme, and at
- * this size a real screenshot would be an unreadable smudge anyway.
+ * Colours are inline hex rather than theme tokens because each sample is
+ * its own brand — that is the point of showing two — and they must not
+ * shift when the site's own theme does.
  */
 
-/** A block of "text" — the wireframe's only real primitive. */
-function Bar({ w = "w-full", h = "h-2", tone = "bg-ink/10" }: Bar) {
-  return <span className={`block rounded-full ${w} ${h} ${tone}`} />;
-}
-type Bar = { w?: string; h?: string; tone?: string };
-
-/** A panel: the wireframe's other primitive. */
-function Box({ className = "", children }: Panel) {
-  return (
-    <div className={`border-line/70 bg-surface rounded-md border ${className}`}>
-      {children}
-    </div>
-  );
-}
-type Panel = { className?: string; children?: React.ReactNode };
-
-function Portfolio() {
-  return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span className="bg-brand/70 h-3 w-10 rounded" />
-        <div className="flex gap-1.5">
-          <Bar w="w-6" h="h-1.5" />
-          <Bar w="w-6" h="h-1.5" />
-          <Bar w="w-6" h="h-1.5" />
-        </div>
-      </div>
-      <Box className="flex flex-1 flex-col justify-center gap-2 p-4">
-        <Bar w="w-3/5" h="h-3.5" tone="bg-ink/25" />
-        <Bar w="w-2/5" h="h-3.5" tone="bg-ink/25" />
-        <Bar w="w-4/5" h="h-1.5" />
-        <span className="bg-brand/70 mt-1 h-4 w-16 rounded-full" />
-      </Box>
-      <div className="grid grid-cols-3 gap-2">
-        {[0, 1, 2].map((n) => (
-          <Box key={n} className="space-y-1.5 p-2">
-            <span className="bg-ink/8 block h-8 rounded" />
-            <Bar w="w-3/4" h="h-1.5" />
-          </Box>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Commerce() {
-  return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <span className="bg-brand/70 h-3 w-8 rounded" />
-        <Box className="h-4 flex-1" />
-        <span className="bg-ink/15 size-4 rounded" />
-      </div>
-      <div className="grid flex-1 grid-cols-4 gap-2">
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
-          <Box key={n} className="flex flex-col gap-1 p-1.5">
-            <span className="bg-ink/8 block flex-1 rounded" />
-            <Bar w="w-full" h="h-1" />
-            <Bar w="w-1/2" h="h-1" tone="bg-brand/60" />
-          </Box>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Dashboard() {
-  return (
-    <div className="flex h-full gap-2">
-      <div className="flex w-[18%] flex-col gap-1.5">
-        <span className="bg-brand/70 h-2.5 w-full rounded" />
-        {[0, 1, 2, 3].map((n) => (
-          <Bar key={n} h="h-1.5" />
-        ))}
-      </div>
-      <div className="flex flex-1 flex-col gap-2">
-        <div className="grid grid-cols-3 gap-2">
-          {[0, 1, 2].map((n) => (
-            <Box key={n} className="space-y-1 p-2">
-              <Bar w="w-1/2" h="h-1" />
-              <Bar w="w-3/4" h="h-2.5" tone="bg-ink/25" />
-            </Box>
-          ))}
-        </div>
-        <Box className="flex flex-1 items-end gap-1.5 p-2">
-          {[40, 65, 30, 80, 55, 70, 45, 90].map((h, n) => (
-            <span
-              key={n}
-              className="bg-brand/60 flex-1 rounded-t-sm"
-              style={{ height: `${h}%` }}
-            />
-          ))}
-        </Box>
-      </div>
-    </div>
-  );
-}
-
-function Platform() {
-  return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <span className="bg-brand/70 h-3 w-8 rounded" />
-        <Bar w="w-10" h="h-1.5" />
-        <Bar w="w-10" h="h-1.5" />
-        <span className="bg-ink/15 ml-auto size-4 rounded-full" />
-      </div>
-      <Box className="flex-1 overflow-hidden">
-        <div className="border-line/70 bg-mist flex items-center gap-2 border-b px-2 py-1.5">
-          <Bar w="w-1/4" h="h-1" />
-          <Bar w="w-1/5" h="h-1" />
-          <Bar w="w-1/6" h="h-1" />
-        </div>
-        {[0, 1, 2, 3, 4].map((n) => (
-          <div
-            key={n}
-            className="border-line/50 flex items-center gap-2 border-b px-2 py-[0.3rem] last:border-0"
-          >
-            <span className="bg-ink/12 size-2.5 shrink-0 rounded-full" />
-            <Bar w="w-1/3" h="h-1" />
-            <Bar w="w-1/5" h="h-1" />
-            <span
-              className={`ml-auto h-2 w-6 rounded-full ${n % 2 ? "bg-brand/50" : "bg-ink/10"}`}
-            />
-          </div>
-        ))}
-      </Box>
-    </div>
-  );
-}
-
-function Agent() {
-  return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <span className="bg-brand/70 size-4 rounded-full" />
-        <Bar w="w-16" h="h-1.5" />
-      </div>
-      <Box className="flex flex-1 flex-col gap-2 p-2.5">
-        <span className="bg-ink/8 ml-auto block h-5 w-1/2 rounded-lg rounded-br-sm" />
-        <div className="bg-brand/15 mr-auto w-3/5 space-y-1 rounded-lg rounded-bl-sm p-1.5">
-          <Bar h="h-1" tone="bg-brand/50" />
-          <Bar w="w-3/4" h="h-1" tone="bg-brand/50" />
-        </div>
-        <span className="bg-ink/8 ml-auto block h-4 w-2/5 rounded-lg rounded-br-sm" />
-        <div className="bg-brand/15 mr-auto w-1/2 space-y-1 rounded-lg rounded-bl-sm p-1.5">
-          <Bar h="h-1" tone="bg-brand/50" />
-        </div>
-      </Box>
-      <Box className="flex items-center gap-2 p-1.5">
-        <Bar w="w-1/3" h="h-1.5" />
-        <span className="bg-brand/70 ml-auto size-4 rounded-full" />
-      </Box>
-    </div>
-  );
-}
-
-function Mobile() {
-  return (
-    <div className="flex h-full items-center justify-center">
-      <div className="border-line bg-surface flex h-full w-[38%] flex-col gap-1.5 rounded-[0.85rem] border-2 p-1.5">
-        <span className="bg-ink/15 mx-auto h-1 w-6 rounded-full" />
-        <span className="bg-brand/70 h-2.5 w-10 rounded" />
-        {[0, 1, 2].map((n) => (
-          <Box key={n} className="flex items-center gap-1.5 p-1.5">
-            <span className="bg-ink/10 size-5 shrink-0 rounded" />
-            <span className="flex-1 space-y-1">
-              <Bar h="h-1" />
-              <Bar w="w-2/3" h="h-1" />
-            </span>
-          </Box>
-        ))}
-        <div className="border-line/70 mt-auto flex justify-around border-t pt-1.5">
-          {[0, 1, 2, 3].map((n) => (
-            <span
-              key={n}
-              className={`size-2.5 rounded ${n === 0 ? "bg-brand/70" : "bg-ink/12"}`}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Keyed off the category's icon, which is already unique per build. */
-const MOCKS: Record<string, { url: string; body: () => React.ReactElement }> = {
-  layout: { url: "yourbrand.com", body: Portfolio },
-  cart: { url: "yourbrand.com/shop", body: Commerce },
-  gauge: { url: "app.yourbrand.com/overview", body: Dashboard },
-  layers: { url: "app.yourbrand.com", body: Platform },
-  bot: { url: "yourbrand.com/assistant", body: Agent },
-  smartphone: { url: "yourbrand.com", body: Mobile },
+type Palette = {
+  /** Page ground. */ bg: string;
+  /** Headings. */ ink: string;
+  /** Body copy. */ muted: string;
+  /** The brand itself. */ brand: string;
+  /** Tint behind panels. */ soft: string;
 };
 
-export function SiteMock({ kind }: { kind: string }) {
-  const mock = MOCKS[kind] ?? MOCKS.layout;
-  const Body = mock.body;
+type Site = {
+  url: string;
+  brand: string;
+  nav: string[];
+  hero: { eyebrow: string; title: string; sub: string; cta: string };
+  palette: Palette;
+  shape: Shape;
+  items: { title: string; meta: string }[];
+  stats?: { value: string; label: string }[];
+  quote?: string;
+};
 
+type Shape =
+  | "portfolio"
+  | "commerce"
+  | "dashboard"
+  | "platform"
+  | "agent"
+  | "mobile";
+
+// --------------------------------------------------------------------------
+//  The samples
+// --------------------------------------------------------------------------
+
+const SITES: Record<string, Site[]> = {
+  layout: [
+    {
+      url: "meridiandental.in",
+      brand: "Meridian Dental",
+      nav: ["Treatments", "Our team", "Fees", "Contact"],
+      hero: {
+        eyebrow: "Koramangala, Bengaluru",
+        title: "Dentistry that explains itself.",
+        sub: "Same-week appointments, transparent pricing, and a plan you understand before anything starts.",
+        cta: "Book an appointment",
+      },
+      palette: {
+        bg: "#ffffff",
+        ink: "#0f2d2a",
+        muted: "#5b736f",
+        brand: "#0f8a7e",
+        soft: "#e9f6f4",
+      },
+      shape: "portfolio",
+      items: [
+        { title: "Implants", meta: "From ₹18,000" },
+        { title: "Root canal", meta: "Single sitting" },
+        { title: "Braces & aligners", meta: "EMI available" },
+      ],
+      stats: [
+        { value: "4.9★", label: "612 Google reviews" },
+        { value: "11 yrs", label: "In practice" },
+        { value: "Same week", label: "Appointments" },
+      ],
+      quote:
+        "They showed me the scan and told me what it would cost before touching anything.",
+    },
+    {
+      url: "aperturestudio.co",
+      brand: "APERTURE",
+      nav: ["Work", "Weddings", "About", "Enquire"],
+      hero: {
+        eyebrow: "Wedding & editorial",
+        title: "Photographs that still matter in ten years.",
+        sub: "Documentary-led coverage across India. Limited to eighteen weddings a year.",
+        cta: "Check your date",
+      },
+      palette: {
+        bg: "#12100e",
+        ink: "#f6f1ea",
+        muted: "#a99f93",
+        brand: "#d9a441",
+        soft: "#1e1a16",
+      },
+      shape: "portfolio",
+      items: [
+        { title: "Aditi & Rohan", meta: "Udaipur" },
+        { title: "Meera & Sam", meta: "Coorg" },
+        { title: "Isha & Dev", meta: "Goa" },
+      ],
+      stats: [
+        { value: "18", label: "Weddings a year" },
+        { value: "40+", label: "Cities shot in" },
+        { value: "2 wks", label: "Gallery delivery" },
+      ],
+      quote: "We got the gallery in twelve days and cried through all of it.",
+    },
+  ],
+
+  cart: [
+    {
+      url: "verdant.store",
+      brand: "Verdant",
+      nav: ["Plants", "Pots", "Care", "Cart (2)"],
+      hero: {
+        eyebrow: "Free delivery over ₹999",
+        title: "Plants that survive real flats.",
+        sub: "Low-light, low-effort, and honestly labelled. Replaced free if it dies in 30 days.",
+        cta: "Shop bestsellers",
+      },
+      palette: {
+        bg: "#ffffff",
+        ink: "#14301f",
+        muted: "#5d7a68",
+        brand: "#2f8f4e",
+        soft: "#eaf6ee",
+      },
+      shape: "commerce",
+      items: [
+        { title: "Snake Plant", meta: "₹449" },
+        { title: "Money Plant", meta: "₹299" },
+        { title: "ZZ Plant", meta: "₹649" },
+        { title: "Peace Lily", meta: "₹529" },
+      ],
+      stats: [
+        { value: "30-day", label: "Replacement" },
+        { value: "Same day", label: "Metro delivery" },
+        { value: "12k+", label: "Orders shipped" },
+      ],
+    },
+    {
+      url: "kilnandco.in",
+      brand: "Kiln & Co.",
+      nav: ["Tableware", "Vases", "Studio", "Bag (1)"],
+      hero: {
+        eyebrow: "Made in Jaipur",
+        title: "Stoneware, thrown by hand.",
+        sub: "Small batches from a six-person studio. Every piece slightly its own.",
+        cta: "Shop the new batch",
+      },
+      palette: {
+        bg: "#fdf8f4",
+        ink: "#3a2318",
+        muted: "#8a6c5b",
+        brand: "#c05f2c",
+        soft: "#f6e8dd",
+      },
+      shape: "commerce",
+      items: [
+        { title: "Dinner plate", meta: "₹1,250" },
+        { title: "Mug, ribbed", meta: "₹850" },
+        { title: "Serving bowl", meta: "₹2,100" },
+        { title: "Bud vase", meta: "₹980" },
+      ],
+      stats: [
+        { value: "6", label: "Potters" },
+        { value: "Small batch", label: "Never restocked twice" },
+        { value: "Ships in 3d", label: "Across India" },
+      ],
+    },
+  ],
+
+  gauge: [
+    {
+      url: "app.northwindops.com",
+      brand: "Northwind Ops",
+      nav: ["Overview", "Fleet", "Routes", "Billing"],
+      hero: {
+        eyebrow: "Live",
+        title: "Today's movement",
+        sub: "412 consignments in transit · 9 flagged for delay",
+        cta: "Export report",
+      },
+      palette: {
+        bg: "#0e1424",
+        ink: "#eef2fb",
+        muted: "#8e9ac0",
+        brand: "#4f7cff",
+        soft: "#182238",
+      },
+      shape: "dashboard",
+      items: [
+        { title: "TRK-4471 · Pune → Nashik", meta: "On time" },
+        { title: "TRK-2210 · Surat → Indore", meta: "Delayed 40m" },
+        { title: "TRK-8890 · Chennai → Hosur", meta: "On time" },
+        { title: "TRK-1043 · Delhi → Jaipur", meta: "Loading" },
+      ],
+      stats: [
+        { value: "412", label: "In transit" },
+        { value: "97.2%", label: "On-time" },
+        { value: "₹8.4L", label: "Billed today" },
+      ],
+    },
+    {
+      url: "pulsedesk.app/inbox",
+      brand: "PulseDesk",
+      nav: ["Inbox", "Assigned", "SLA", "Reports"],
+      hero: {
+        eyebrow: "Support queue",
+        title: "38 open · 6 breaching",
+        sub: "Median first reply 11 minutes, down from 34 last week.",
+        cta: "Assign to me",
+      },
+      palette: {
+        bg: "#ffffff",
+        ink: "#1c1338",
+        muted: "#6b6392",
+        brand: "#6d4aff",
+        soft: "#f1edff",
+      },
+      shape: "dashboard",
+      items: [
+        { title: "#4821 Refund not received", meta: "Breaching · 12m" },
+        { title: "#4822 Cannot log in", meta: "High" },
+        { title: "#4823 Change GST details", meta: "Normal" },
+        { title: "#4824 Bulk upload failing", meta: "High" },
+      ],
+      stats: [
+        { value: "38", label: "Open" },
+        { value: "11 min", label: "First reply" },
+        { value: "94%", label: "CSAT" },
+      ],
+    },
+  ],
+
+  layers: [
+    {
+      url: "app.coherebooks.com",
+      brand: "Cohere",
+      nav: ["Calendar", "Clients", "Staff", "Settings"],
+      hero: {
+        eyebrow: "Multi-branch",
+        title: "Every chair, every branch, one calendar.",
+        sub: "Roles, permissions and payouts for salons running more than one address.",
+        cta: "Open today",
+      },
+      palette: {
+        bg: "#ffffff",
+        ink: "#10233f",
+        muted: "#5c7291",
+        brand: "#1668d6",
+        soft: "#e8f1fd",
+      },
+      shape: "platform",
+      items: [
+        { title: "Indiranagar", meta: "8 staff · 92% booked" },
+        { title: "Jayanagar", meta: "5 staff · 71% booked" },
+        { title: "Whitefield", meta: "6 staff · 84% booked" },
+      ],
+      stats: [
+        { value: "3", label: "Branches" },
+        { value: "19", label: "Staff logins" },
+        { value: "₹3.1L", label: "This month" },
+      ],
+    },
+    {
+      url: "stacklane.io/projects",
+      brand: "StackLane",
+      nav: ["Projects", "Sprints", "People", "Docs"],
+      hero: {
+        eyebrow: "Sprint 24",
+        title: "Ship what you committed to.",
+        sub: "Work, review and release tracked in one place — without four tools disagreeing.",
+        cta: "New sprint",
+      },
+      palette: {
+        bg: "#0d1117",
+        ink: "#e8eef5",
+        muted: "#8fa1b5",
+        brand: "#19b8a6",
+        soft: "#161d26",
+      },
+      shape: "platform",
+      items: [
+        { title: "Checkout rewrite", meta: "In review · 4 left" },
+        { title: "Mobile onboarding", meta: "In progress · 9 left" },
+        { title: "Billing migration", meta: "Blocked · 2 left" },
+      ],
+      stats: [
+        { value: "31", label: "Done" },
+        { value: "15", label: "In flight" },
+        { value: "2", label: "Blocked" },
+      ],
+    },
+  ],
+
+  bot: [
+    {
+      url: "lumenassist.ai",
+      brand: "Lumen",
+      nav: ["Product", "Docs", "Pricing", "Sign in"],
+      hero: {
+        eyebrow: "Support copilot",
+        title: "It answers from your docs, or it says it doesn't know.",
+        sub: "Grounded in your own content, with every answer showing where it came from.",
+        cta: "Try the demo",
+      },
+      palette: {
+        bg: "#0b0a14",
+        ink: "#f1edff",
+        muted: "#9e96c4",
+        brand: "#8b5cf6",
+        soft: "#171429",
+      },
+      shape: "agent",
+      items: [
+        { title: "Where is my refund?", meta: "Answered · policy.pdf" },
+        { title: "Do you ship to Nepal?", meta: "Answered · shipping" },
+        { title: "Can I change my GST?", meta: "Handed to human" },
+      ],
+      stats: [
+        { value: "71%", label: "Deflected" },
+        { value: "1.8s", label: "Median reply" },
+        { value: "0", label: "Made-up answers" },
+      ],
+    },
+    {
+      url: "clara.health/intake",
+      brand: "Clara",
+      nav: ["How it works", "For clinics", "Security", "Book demo"],
+      hero: {
+        eyebrow: "Clinic intake",
+        title: "The form filled in by conversation.",
+        sub: "Patients answer in their own words; your staff get a structured record.",
+        cta: "See a sample intake",
+      },
+      palette: {
+        bg: "#ffffff",
+        ink: "#0d2b33",
+        muted: "#5a7d85",
+        brand: "#0d9aa8",
+        soft: "#e6f6f8",
+      },
+      shape: "agent",
+      items: [
+        { title: "Symptom summary", meta: "Structured" },
+        { title: "Medication history", meta: "Confirmed" },
+        { title: "Insurance details", meta: "Verified" },
+      ],
+      stats: [
+        { value: "6 min", label: "Saved per patient" },
+        { value: "98%", label: "Completed" },
+        { value: "DPDP", label: "Compliant" },
+      ],
+    },
+  ],
+
+  smartphone: [
+    {
+      url: "trailhead.fit",
+      brand: "Trailhead",
+      nav: ["Plans", "Coaches", "Stories", "Get app"],
+      hero: {
+        eyebrow: "iOS & Android",
+        title: "Train for the distance you actually signed up for.",
+        sub: "A plan that moves when your week does, built around one race date.",
+        cta: "Start free week",
+      },
+      palette: {
+        bg: "#101510",
+        ink: "#f0f7ec",
+        muted: "#9db298",
+        brand: "#84cc16",
+        soft: "#19211a",
+      },
+      shape: "mobile",
+      items: [
+        { title: "Easy 6 km", meta: "Today · Zone 2" },
+        { title: "Intervals 8×400", meta: "Thursday" },
+        { title: "Long run 18 km", meta: "Sunday" },
+      ],
+      stats: [
+        { value: "42 km", label: "This week" },
+        { value: "18 wks", label: "To race day" },
+        { value: "4.8★", label: "App Store" },
+      ],
+    },
+    {
+      url: "paisa.app",
+      brand: "Paisa",
+      nav: ["Features", "Security", "Support", "Download"],
+      hero: {
+        eyebrow: "UPI · Cards · Bills",
+        title: "Money that explains where it went.",
+        sub: "Automatic categories, shared expenses, and a monthly summary that reads like a sentence.",
+        cta: "Download",
+      },
+      palette: {
+        bg: "#ffffff",
+        ink: "#0b1f4d",
+        muted: "#5b6d95",
+        brand: "#2b56f5",
+        soft: "#e9eeff",
+      },
+      shape: "mobile",
+      items: [
+        { title: "Groceries", meta: "₹6,420 · 18%" },
+        { title: "Rent", meta: "₹24,000 · 52%" },
+        { title: "Eating out", meta: "₹3,180 · 9%" },
+      ],
+      stats: [
+        { value: "₹46k", label: "Spent" },
+        { value: "12", label: "Bills on auto" },
+        { value: "2 min", label: "To set up" },
+      ],
+    },
+  ],
+};
+
+// --------------------------------------------------------------------------
+//  Rendering one sample
+// --------------------------------------------------------------------------
+
+function Nav({ site }: { site: Site }) {
+  const p = site.palette;
   return (
     <div
-      className="border-line bg-mist overflow-hidden rounded-xl border shadow-[0_18px_40px_-24px_rgba(14,27,38,0.35)]"
-      aria-hidden
+      className="flex items-center justify-between px-4 py-3"
+      style={{ borderBottom: `1px solid ${p.soft}` }}
     >
+      <span
+        className="text-[0.6875rem] font-bold tracking-tight"
+        style={{ color: p.ink }}
+      >
+        {site.brand}
+      </span>
+      <div className="flex items-center gap-2.5">
+        {site.nav.map((item) => (
+          <span key={item} className="text-[0.5rem]" style={{ color: p.muted }}>
+            {item}
+          </span>
+        ))}
+        <span
+          className="rounded px-1.5 py-0.5 text-[0.5rem] font-semibold text-white"
+          style={{ background: p.brand }}
+        >
+          {site.shape === "commerce" ? "Bag" : "Get in touch"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Hero({ site }: { site: Site }) {
+  const p = site.palette;
+  const dark = site.shape === "dashboard";
+  return (
+    <div className="px-4 pt-4 pb-3" style={{ background: dark ? p.soft : "" }}>
+      <span
+        className="inline-block rounded-full px-1.5 py-0.5 text-[0.4375rem] font-semibold tracking-wide uppercase"
+        style={{ background: p.soft, color: p.brand }}
+      >
+        {site.hero.eyebrow}
+      </span>
+      <p
+        className="mt-2 text-[0.9375rem] leading-tight font-bold tracking-tight"
+        style={{ color: p.ink }}
+      >
+        {site.hero.title}
+      </p>
+      <p
+        className="mt-1.5 max-w-[26ch] text-[0.5625rem] leading-relaxed"
+        style={{ color: p.muted }}
+      >
+        {site.hero.sub}
+      </p>
+      <span
+        className="mt-2.5 inline-block rounded px-2.5 py-1 text-[0.5625rem] font-semibold text-white"
+        style={{ background: p.brand }}
+      >
+        {site.hero.cta}
+      </span>
+    </div>
+  );
+}
+
+function Stats({ site }: { site: Site }) {
+  const p = site.palette;
+  if (!site.stats) return null;
+  return (
+    <div className="grid grid-cols-3 gap-2 px-4 py-3">
+      {site.stats.map((stat) => (
+        <div
+          key={stat.label}
+          className="rounded-md px-2 py-1.5"
+          style={{ background: p.soft }}
+        >
+          <p className="text-[0.6875rem] font-bold" style={{ color: p.brand }}>
+            {stat.value}
+          </p>
+          <p className="text-[0.4375rem]" style={{ color: p.muted }}>
+            {stat.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The middle band, which is where the shapes actually differ. */
+function Body({ site }: { site: Site }) {
+  const p = site.palette;
+
+  if (site.shape === "commerce") {
+    return (
+      <div className="grid grid-cols-4 gap-2 px-4 pb-3">
+        {site.items.map((item) => (
+          <div key={item.title}>
+            <div
+              className="mb-1 rounded-md"
+              style={{ background: p.soft, paddingTop: "78%" }}
+            />
+            <p
+              className="truncate text-[0.5rem] font-semibold"
+              style={{ color: p.ink }}
+            >
+              {item.title}
+            </p>
+            <p className="text-[0.5rem]" style={{ color: p.brand }}>
+              {item.meta}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (site.shape === "dashboard" || site.shape === "platform") {
+    return (
+      <div className="space-y-1.5 px-4 pb-3">
+        {site.items.map((item) => (
+          <div
+            key={item.title}
+            className="flex items-center justify-between rounded-md px-2.5 py-2"
+            style={{ background: p.soft }}
+          >
+            <span className="text-[0.5rem]" style={{ color: p.ink }}>
+              {item.title}
+            </span>
+            <span
+              className="rounded-full px-1.5 py-0.5 text-[0.4375rem] font-semibold"
+              style={{ background: p.brand, color: "#fff" }}
+            >
+              {item.meta}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (site.shape === "agent") {
+    return (
+      <div className="space-y-1.5 px-4 pb-3">
+        {site.items.map((item, i) => (
+          <div key={item.title} className="space-y-1">
+            <div
+              className="ml-auto w-fit rounded-lg px-2 py-1 text-[0.5rem]"
+              style={{ background: p.brand, color: "#fff" }}
+            >
+              {item.title}
+            </div>
+            {i === 0 && (
+              <div
+                className="w-4/5 rounded-lg px-2 py-1.5 text-[0.5rem] leading-relaxed"
+                style={{ background: p.soft, color: p.muted }}
+              >
+                Refunds land in 5–7 working days.{" "}
+                <span style={{ color: p.brand }}>[policy.pdf, p.3]</span>
+              </div>
+            )}
+            <p className="text-[0.4375rem]" style={{ color: p.muted }}>
+              {item.meta}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (site.shape === "mobile") {
+    return (
+      <div className="flex gap-3 px-4 pb-3">
+        <div
+          className="w-[34%] shrink-0 space-y-1.5 rounded-xl p-2"
+          style={{ background: p.soft, border: `1px solid ${p.brand}22` }}
+        >
+          <div
+            className="mx-auto h-1 w-6 rounded-full"
+            style={{ background: p.muted }}
+          />
+          {site.items.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-md px-1.5 py-1"
+              style={{ background: site.palette.bg }}
+            >
+              <p
+                className="truncate text-[0.4375rem] font-semibold"
+                style={{ color: p.ink }}
+              >
+                {item.title}
+              </p>
+              <p className="text-[0.4375rem]" style={{ color: p.brand }}>
+                {item.meta}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div className="flex-1 space-y-1.5">
+          {site.items.map((item) => (
+            <div
+              key={item.title}
+              className="flex items-center justify-between rounded-md px-2 py-1.5"
+              style={{ background: p.soft }}
+            >
+              <span className="text-[0.5rem]" style={{ color: p.ink }}>
+                {item.title}
+              </span>
+              <span
+                className="text-[0.5rem] font-semibold"
+                style={{ color: p.brand }}
+              >
+                {item.meta}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // portfolio
+  return (
+    <div className="grid grid-cols-3 gap-2 px-4 pb-3">
+      {site.items.map((item) => (
+        <div key={item.title}>
+          <div
+            className="mb-1 rounded-md"
+            style={{ background: p.soft, paddingTop: "62%" }}
+          />
+          <p
+            className="truncate text-[0.5rem] font-semibold"
+            style={{ color: p.ink }}
+          >
+            {item.title}
+          </p>
+          <p className="text-[0.4375rem]" style={{ color: p.muted }}>
+            {item.meta}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Quote({ site }: { site: Site }) {
+  const p = site.palette;
+  if (!site.quote) return null;
+  return (
+    <div className="px-4 pb-3">
+      <div
+        className="rounded-md px-3 py-2.5 text-[0.5625rem] leading-relaxed italic"
+        style={{ background: p.soft, color: p.ink }}
+      >
+        &ldquo;{site.quote}&rdquo;
+      </div>
+    </div>
+  );
+}
+
+function Footer({ site }: { site: Site }) {
+  const p = site.palette;
+  return (
+    <div
+      className="flex items-center justify-between px-4 py-3"
+      style={{ background: p.soft }}
+    >
+      <span className="text-[0.5rem] font-bold" style={{ color: p.ink }}>
+        {site.brand}
+      </span>
+      <div className="flex gap-2">
+        {["Privacy", "Terms", "Contact"].map((item) => (
+          <span key={item} className="text-[0.4375rem]" style={{ color: p.muted }}>
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** One whole page, tall enough that it actually scrolls in the frame. */
+function Page({ site }: { site: Site }) {
+  return (
+    <div style={{ background: site.palette.bg }}>
+      <Nav site={site} />
+      <Hero site={site} />
+      <Stats site={site} />
+      <Body site={site} />
+      <Quote site={site} />
+      <Footer site={site} />
+    </div>
+  );
+}
+
+/**
+ * The third slide: the rest of the work, behind a call.
+ *
+ * No count. Any number here would be a claim on a commercial page that
+ * somebody has to be able to stand behind, and "more" is the honest
+ * version of one nobody is counting.
+ */
+function Locked() {
+  return (
+    <div className="bg-night relative flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+      <span className="grid size-10 place-items-center rounded-full bg-white/10">
+        <Lock className="size-4 text-white/80" strokeWidth={2} aria-hidden />
+      </span>
+      <div>
+        <p className="text-[0.8125rem] font-semibold text-white">
+          More builds in this category
+        </p>
+        <p className="mx-auto mt-1.5 max-w-[30ch] text-[0.6875rem] leading-relaxed text-white/55">
+          The rest are client work, so they are shown on a call rather than
+          posted publicly — along with what each one cost and how long it took.
+        </p>
+      </div>
+      <a
+        href={`tel:${company.phone.replace(/\s/g, "")}`}
+        className="bg-brand-solid text-cta-fg hover:bg-brand inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[0.6875rem] font-semibold transition-colors"
+      >
+        <Phone className="size-3" strokeWidth={2.5} aria-hidden />
+        Call to see them
+      </a>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------------------
+
+export function SiteMock({ kind }: { kind: string }) {
+  const sites = SITES[kind] ?? SITES.layout;
+  const slides = sites.length + 1; // the samples, then the locked one
+  const [i, setI] = useState(0);
+
+  const site = i < sites.length ? sites[i] : null;
+  const go = (step: number) => setI((n) => (n + step + slides) % slides);
+
+  return (
+    <div className="border-line bg-mist overflow-hidden rounded-xl border shadow-[0_18px_40px_-24px_rgba(14,27,38,0.35)]">
+      {/* Browser chrome */}
       <div className="border-line bg-surface flex items-center gap-2 border-b px-3 py-2">
         <span className="flex gap-1.5">
           <span className="bg-ink/15 size-2 rounded-full" />
@@ -227,11 +779,56 @@ export function SiteMock({ kind }: { kind: string }) {
           <span className="bg-ink/15 size-2 rounded-full" />
         </span>
         <span className="border-line bg-mist text-ink-faint ml-1 flex-1 truncate rounded-md border px-2.5 py-1 font-mono text-[0.625rem]">
-          {mock.url}
+          {site ? site.url : "nectarray.com/work"}
         </span>
       </div>
-      <div className="bg-canvas aspect-[16/10] p-3">
-        <Body />
+
+      {/* The page itself, scrollable inside the frame */}
+      <div className="relative">
+        <div className="h-[17rem] overflow-y-auto overscroll-contain">
+          {site ? <Page site={site} /> : <Locked />}
+        </div>
+
+        {/* Arrows */}
+        <button
+          type="button"
+          onClick={() => go(-1)}
+          aria-label="Previous sample"
+          className="text-ink hover:bg-surface absolute top-1/2 left-2 grid size-7 -translate-y-1/2 place-items-center rounded-full bg-white/85 shadow-md backdrop-blur transition-colors"
+        >
+          <ChevronLeft className="size-4" strokeWidth={2.5} aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => go(1)}
+          aria-label="Next sample"
+          className="text-ink hover:bg-surface absolute top-1/2 right-2 grid size-7 -translate-y-1/2 place-items-center rounded-full bg-white/85 shadow-md backdrop-blur transition-colors"
+        >
+          <ChevronRight className="size-4" strokeWidth={2.5} aria-hidden />
+        </button>
+      </div>
+
+      {/* Which sample, and what it is */}
+      <div className="border-line bg-surface flex items-center justify-between gap-3 border-t px-3 py-2">
+        <span className="text-ink-faint truncate text-[0.6875rem]">
+          {site ? `Sample ${i + 1} · ${site.brand}` : "The rest, on a call"}
+        </span>
+        <span className="flex shrink-0 gap-1.5">
+          {Array.from({ length: slides }).map((_, n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setI(n)}
+              aria-label={
+                n < sites.length ? `Sample ${n + 1}` : "More, on a call"
+              }
+              aria-current={n === i ? "true" : undefined}
+              className={`size-1.5 rounded-full transition-colors ${
+                n === i ? "bg-brand-deep" : "bg-ink/20 hover:bg-ink/40"
+              }`}
+            />
+          ))}
+        </span>
       </div>
     </div>
   );
