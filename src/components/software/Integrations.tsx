@@ -1,4 +1,4 @@
-import { BrandLogo } from "@/components/ui/BrandLogo";
+import { BrandChip } from "@/components/software/BrandChip";
 import { headGap, sectionPad, wideShell } from "@/components/software/layout";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/ui/SectionHead";
@@ -47,21 +47,9 @@ export function Integrations() {
                   </p>
                 )}
 
-                <ul className="mt-4 flex flex-wrap gap-1.5">
+                <ul className="mt-4 flex flex-wrap gap-2">
                   {group.brands.map((brand) => (
-                    <li
-                      key={brand.name}
-                      className="border-line bg-canvas flex items-center gap-1.5 rounded-md border px-2 py-1"
-                    >
-                      <BrandLogo
-                        name={brand.name}
-                        domain={brand.domain}
-                        className="size-3.5"
-                      />
-                      <span className="text-ink-soft text-[0.75rem] font-medium whitespace-nowrap">
-                        {brand.name}
-                      </span>
-                    </li>
+                    <BrandChip key={brand.name} brand={brand} />
                   ))}
                 </ul>
               </div>
