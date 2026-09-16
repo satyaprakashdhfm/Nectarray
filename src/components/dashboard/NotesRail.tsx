@@ -87,7 +87,11 @@ export function NotesRail({
     >
       {/* Course switch */}
       {modules.length > 1 && (
-        <div role="tablist" aria-label="Courses" className="tab-bar w-full">
+        <div
+          role="tablist"
+          aria-label="Courses"
+          className="tab-bar tab-bar-wrap w-full"
+        >
           {modules.map((module) => {
             const current = module.slug === active?.slug;
             return (
@@ -100,7 +104,9 @@ export function NotesRail({
                 // wants aria-selected for the screen reader — both, rather
                 // than one doing a job it was not meant for.
                 aria-current={current ? "page" : undefined}
-                className="tab flex-1 justify-center px-2 text-[0.8125rem]"
+                // Two to a row: enough basis that a third cannot squeeze in,
+                // and grow so the pair fills the line evenly.
+                className="tab grow basis-[calc(50%-0.125rem)] justify-center px-2 text-[0.8125rem]"
               >
                 {module.short}
               </IntentLink>

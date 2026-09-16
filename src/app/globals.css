@@ -621,6 +621,16 @@ label:has(input[type="checkbox"]) {
   }
 }
 
+/* The same strip where there is no room to scroll sideways — the notes rail
+   is 17rem wide and four readable course tabs do not fit on one line, so
+   they wrap instead of hiding the last one behind a scrollbar nobody sees.
+   Squared off, because a pill with two rows in it reads as a mistake. */
+@utility tab-bar-wrap {
+  flex-wrap: wrap;
+  overflow: visible;
+  border-radius: 1.25rem;
+}
+
 @utility tab {
   display: inline-flex;
   align-items: center;
