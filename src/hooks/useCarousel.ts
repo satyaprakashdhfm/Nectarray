@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /** How long a deliberate pick holds the rotation before it picks up again. */
 const RESUME = 10000;
@@ -27,8 +27,12 @@ const RESUME = 10000;
 export function useCarousel(count: number, dwell: number) {
   const [i, setI] = useState(0);
   const [snoozed, setSnoozed] = useState(false);
-  /** Bumped on every pick, so a second click restarts the ten seconds. */
-  const [nudge, setNudge] = useState(0);
+  /**
+   * When the panel was last touched. A ref rather than state because
+   * scrolling fires this dozens of times a second, and re-rendering the
+   * whole showcase on every wheel tick to restart a timer is not worth it.
+   */
+  const lastUsed = useRef(0);
   const [held, setHeld] = useState(false);
   const [mayAnimate, setMayAnimate] = useState(false);
 
@@ -50,11 +54,23 @@ export function useCarousel(count: number, dwell: number) {
     return () => clearTimeout(t);
   }, [running, i, count, dwell]);
 
+  /*
+   * Resume once the panel has been quiet for RESUME — not RESUME after the
+   * first touch. Each check looks at how long ago the last one was and, if
+   * that is still inside the window, waits out the remainder instead of
+   * starting the rotation under someone mid-scroll.
+   */
   useEffect(() => {
     if (!snoozed) return;
-    const t = setTimeout(() => setSnoozed(false), RESUME);
-    return () => clearTimeout(t);
-  }, [snoozed, nudge]);
+    let timer: ReturnType<typeof setTimeout>;
+    const check = () => {
+      const quietFor = Date.now() - lastUsed.current;
+      if (quietFor >= RESUME) setSnoozed(false);
+      else timer = setTimeout(check, RESUME - quietFor);
+    };
+    timer = setTimeout(check, RESUME);
+    return () => clearTimeout(timer);
+  }, [snoozed]);
 
   /**
    * Hold the rotation for RESUME without moving it.
@@ -66,8 +82,8 @@ export function useCarousel(count: number, dwell: number) {
    * change under you mid-scroll is the specific thing this prevents.
    */
   const snooze = () => {
+    lastUsed.current = Date.now();
     setSnoozed(true);
-    setNudge((k) => k + 1);
   };
 
   /** Show this one, and hold the rotation for RESUME. */
@@ -77,13 +93,22 @@ export function useCarousel(count: number, dwell: number) {
   };
 
   /**
-   * Spread onto the panel. A click anywhere inside it holds the rotation —
-   * captured, so it counts even when the click lands on something nested
-   * with its own handler. Keyboard focus holds too; the cursor alone does
-   * not, since on a wide screen it rests over the panel most of the time.
+   * Spread onto the panel. Anything that means "I am using this" holds the
+   * rotation: a click, a wheel, a scroll inside it, a drag on a phone.
+   *
+   * All captured, so they count even when the event lands on something
+   * nested with handlers of its own — the sample sites on /software scroll
+   * in their own box, and `scroll` does not bubble, so a capture listener on
+   * the panel is the only way an ancestor hears it at all.
+   *
+   * Keyboard focus holds too. The cursor merely resting over the panel does
+   * not, since on a wide screen it does that most of the time anyway.
    */
   const holdProps = {
     onPointerDownCapture: snooze,
+    onWheelCapture: snooze,
+    onScrollCapture: snooze,
+    onTouchMoveCapture: snooze,
     onFocusCapture: () => setHeld(true),
     onBlurCapture: () => setHeld(false),
   };
