@@ -6,7 +6,7 @@ import { software } from "@/lib/content";
 /**
  * What we build, as a showcase rather than a service list.
  *
- * The heading and the lede; BuildShowcase carries the six builds themselves.
+ * The heading and the lede; BuildShowcase carries the five builds themselves.
  *
  * A compact quote band used to sit between the two. The same ask closes the
  * page in full, and one screen after the hero — which already has a Get a

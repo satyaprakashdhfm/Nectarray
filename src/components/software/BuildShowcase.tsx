@@ -20,7 +20,7 @@ const { services } = software;
 const DWELL = 9000;
 
 /**
- * The six kinds of build, one at a time, with a schematic of the finished
+ * The five kinds of build, one at a time, with a sample of the finished
  * thing beside each.
  *
  * This was a three-column grid of cards. Six of them side by side meant every
@@ -114,7 +114,9 @@ export function BuildShowcase() {
             )}
           </div>
 
-          <SiteMock kind={service.icon} />
+          {/* Keyed, so a new category opens on its first sample rather
+              than on whichever slide the last one was left at. */}
+          <SiteMock key={service.icon} kind={service.icon} />
         </div>
 
         <div className="border-line bg-mist flex items-center gap-2 border-t p-2">
