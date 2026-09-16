@@ -105,7 +105,7 @@ export default async function AdminPlacementProfile({
               <div className="border-line bg-mist-deep overflow-hidden rounded-xl border">
                 {compile?.ok ? (
                   <iframe
-                    src={`data:application/pdf;base64,${Buffer.from(compile.pdf).toString("base64")}#view=FitH&navpanes=0`}
+                    src={`data:application/pdf;base64,${Buffer.from(compile.pdf).toString("base64")}#toolbar=0&navpanes=0&view=FitH`}
                     title={`${name}'s resume`}
                     className="h-[70vh] w-full"
                   />

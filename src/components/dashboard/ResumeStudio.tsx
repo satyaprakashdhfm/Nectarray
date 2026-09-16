@@ -357,7 +357,7 @@ export function ResumeStudio({
             {pdfUrl ? (
               <iframe
                 key={pdfUrl}
-                src={`${pdfUrl}#view=FitH&navpanes=0`}
+                src={`${pdfUrl}#toolbar=0&navpanes=0&view=FitH`}
                 title="Resume preview"
                 className="absolute inset-0 size-full"
               />
