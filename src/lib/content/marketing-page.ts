@@ -12,8 +12,13 @@ import type { Brand } from "./practices";
  * A service tile. `domain` only where the service is itself a product —
  * the tile then shows that product's mark instead of a lucide glyph, and
  * the ones that are disciplines rather than brands keep the glyph.
+ *
+ * `shot` is for the few where we can show the thing instead of describing it.
  */
-type Tile = IconCard & { domain?: string };
+type Tile = IconCard & {
+  domain?: string;
+  shot?: { src: string; alt: string; width: number; height: number };
+};
 
 /**
  * One move in the loop under the hero.
@@ -261,49 +266,97 @@ export const marketingPage: {
         icon: "search",
         title: "ChatGPT",
         domain: "openai.com",
-        body: "We ask it what your buyers ask and log what it says back, then work on what it reads to answer: your own pages, and the third-party sources it leans on when yours are thin.",
+        body: "The same question put to ChatGPT, and a different three businesses come back — named, ranked, pinned on a map, with the rating and whether each is open right now. We ask it what your buyers ask, log what comes back, and work on what it reads to answer: your own pages, and the third-party sources it leans on when yours are thin.",
+        shot: {
+          src: "/marketing/chatgpt-answer.webp",
+          width: 1600,
+          height: 800,
+          alt: "ChatGPT answering a question about the best cafes in Bengaluru with a map of pinned businesses and a ranked list naming each one and its neighbourhood.",
+        },
       },
       {
         icon: "bot",
         title: "Perplexity",
         domain: "perplexity.ai",
-        body: "Citation-led, so it rewards pages that answer precisely and say where the number came from. We write for that, and track which of your pages it actually cites.",
+        body: "Every line here is footnoted — and look at what it read to write them: two roundup articles, not one cafe's own website. Perplexity rewards pages that answer precisely and say where the figure came from, so the work is both halves: writing yours that way, and being in the third-party lists it actually cites.",
+        shot: {
+          src: "/marketing/perplexity-sources.webp",
+          width: 1600,
+          height: 800,
+          alt: "Perplexity answering a question about the best cafes in Bengaluru, each claim footnoted, with a sources panel listing the two articles it read.",
+        },
       },
       {
         icon: "sparkles",
         title: "Gemini",
         domain: "gemini.google.com",
-        body: "Leans harder on your Business Profile and on sources agreeing with each other, so the fix here is usually consistency across the web rather than more words on the site.",
+        body: "Asked for the best cafe in Bengaluru, it names four businesses, rates them, maps them and puts them in an order — and nobody paid for a place on that list. Gemini leans on your Business Profile and on sources that agree with each other, so the work here is consistency across the web rather than more words on your own site.",
+        shot: {
+          src: "/marketing/gemini-answer.webp",
+          width: 1600,
+          height: 800,
+          alt: "Gemini answering a question about the best cafes in Bengaluru with named businesses, ratings, opening hours and a map of each one.",
+        },
       },
       {
         icon: "globe",
         title: "Google Search",
         domain: "google.com",
-        body: "Still the biggest single source of intent: rankings, technical health, site architecture, the pages worth having, and the local map pack.",
+        body: "Three businesses hold the whole first screen here, and not one of them is a link — they are map listings, with ratings, a price band, a review quote and a route. Winning this is a Business Profile job as much as a website one: categories, hours, photographs, and reviews that say the word somebody searched for.",
+        shot: {
+          src: "/marketing/google-search-answer.webp",
+          width: 1600,
+          height: 800,
+          alt: "A Google search for the best cafes in Bengaluru, showing a Places pack of three businesses with ratings, prices and review quotes beside a map.",
+        },
       },
       {
         icon: "layers",
         title: "Google AI Overviews",
         domain: "google.com",
-        body: "The summary that now sits above the results and often answers instead of them. It lifts from pages that state one answer plainly, which is a writing problem before it is an SEO one.",
+        body: "Ask the same thing as a question and Google answers it above the results, naming one cafe before anything is clicked. Look at what it cites: Tripadvisor, an Instagram reel, a blog. Being the answer is a writing problem before it is an SEO one — and being in the sources it trusts is a separate job again.",
+        shot: {
+          src: "/marketing/google-ai-overview.webp",
+          width: 1600,
+          height: 800,
+          alt: "A Google AI Overview naming one cafe as the best in Bengaluru above the results, with Tripadvisor, Instagram and blog sources cited alongside.",
+        },
       },
       {
         icon: "video",
         title: "YouTube",
         domain: "youtube.com",
-        body: "The search engine people forget is one. We check what comes up for your category, and whether it is you explaining it or somebody selling against you.",
+        body: "The search engine everyone forgets is one. The same question here returns a food tour on 430,000 views and a tasting on 63,000 — two and three years old, still ranking, and not one of them made by a cafe. So there are two ways in: be in somebody's video, or shoot one that answers the question better and let it earn for the next three years.",
+        shot: {
+          src: "/marketing/youtube-search.webp",
+          width: 1600,
+          height: 800,
+          alt: "A YouTube search for the best cafes in Bengaluru returning creator food-tour videos with hundreds of thousands of views, none of them made by a cafe.",
+        },
       },
       {
         icon: "image",
         title: "Instagram",
         domain: "instagram.com",
-        body: "Both halves of it: what the search tab returns for your name and your category, and what the feed serves that audience while they are only scrolling.",
+        body: "A hashtag search returns a wall of reels — every tile a video, every one leading with its hook burned into the first frame. That is what being found here means, and it is not a tidy grid of posts on your profile: it is vertical video answering what somebody searched, yours or a creator's, plus what the feed serves that audience while they are only scrolling.",
+        shot: {
+          src: "/marketing/instagram-search.webp",
+          width: 1460,
+          height: 730,
+          alt: "An Instagram hashtag page for Bengaluru cafes, showing a grid where every tile is a reel with its hook written across the opening frame.",
+        },
       },
       {
         icon: "share",
         title: "Facebook",
         domain: "facebook.com",
-        body: "Search, groups, Marketplace and the feed — still where a lot of local demand starts, and where your page gets checked before anyone calls you.",
+        body: "Here the first answer is an advert — somebody bought the top of this page for the words somebody else typed. That is the one real difference between this surface and the assistants above it: a place in a Gemini answer cannot be bought, and a place here can. Search, groups, Marketplace and the feed are still where a lot of local demand starts.",
+        shot: {
+          src: "/marketing/facebook-search.webp",
+          width: 1400,
+          height: 700,
+          alt: "A Facebook search for the best cafe in Bengaluru, where the first result in the list is a paid advert rather than an organic post.",
+        },
       },
     ],
   },
@@ -312,28 +365,52 @@ export const marketingPage: {
   content: {
     eyebrow: "Content",
     title: "The half that makes the ads work",
-    lede: "Ads go much further when there is something behind them worth watching or reading, and it keeps working after the spend stops. We make it rather than only planning it — scripts, shoots, editing, graphics and copy — and it comes in four shapes. Most businesses need all four: a short video to be found with, a long one to be believed by, images to carry the offer, and writing that a search engine and an assistant can both read.",
+    lede: "Ads go much further when there is something behind them worth watching or reading, and it keeps working after the spend stops. We generate it with AI — scripted, made, edited and written here, at a pace and a price a film crew cannot match. Where you already have the real thing, send that instead: your kitchen, your team, your product on a table. We cut the campaign around your footage and make whatever is missing. Most businesses end up with both.",
     items: [
       {
         icon: "smartphone",
         title: "Short videos",
-        body: "Reels, Shorts and the paid cuts from them — vertical, hook first, built to be watched with the sound off and the thumb already moving.",
+        body: "Reels, Shorts and the paid cuts from them — vertical, hook first, built to be watched with the sound off and the thumb already moving. Generated here from a prompt and a product, or cut from the clips you filmed on a phone, and always in enough versions that one can be tested against another rather than posted and hoped for.",
+        shot: {
+          src: "/marketing/short-video.webp",
+          width: 1600,
+          height: 800,
+          alt: "One vertical video running as a reel on three phones, one for each of the short-form feeds.",
+        },
       },
       {
         icon: "video",
         title: "Long videos",
         domain: "youtube.com",
-        body: "Explainers, demos, walkthroughs and customer stories. The format that still earns search traffic two years later, and the one the shorts get cut from.",
+        body: "Explainers, demos, walkthroughs and customer stories — the format still earning search traffic two years later, and the one the shorts get cut from. If you would rather be the one on camera, you film it and we take the script, the edit, the thumbnail and every short that comes off it.",
+        shot: {
+          src: "/marketing/long-video.webp",
+          width: 1600,
+          height: 800,
+          alt: "A phone held up showing the YouTube logo, for the long-form half of the work.",
+        },
       },
       {
         icon: "image",
         title: "Images",
-        body: "Posts, carousels, product and lifestyle shots, and ad creative in enough versions that a test means something rather than being one guess against another.",
+        body: "Your own photograph on the left, the same one remade on the right — same cafe, same cup, better story. Posts, carousels, product shots and ad creative all work that way: send the picture you already have, or just the product, and the setting, the light and the styling are built around it in enough versions that a test means something.",
+        shot: {
+          src: "/marketing/images-content.webp",
+          width: 1600,
+          height: 800,
+          alt: "An ordinary photograph of a cafe table beside the same shot remade with AI, labelled original photo and AI-enhanced photo.",
+        },
       },
       {
         icon: "file",
         title: "Text & articles",
-        body: "Pages that answer one real question completely — definitions, comparisons, prices, limits — plus the copy carrying every ad, email and landing page.",
+        body: "Pages that answer one real question completely — definitions, comparisons, prices, limits — plus the copy carrying every ad, email and landing page. Written to be read by a person and quoted by an assistant, which is the same job twice over, and the half of the work that decides whether you turn up in section 01 at all.",
+        shot: {
+          src: "/marketing/text-articles.webp",
+          width: 1600,
+          height: 800,
+          alt: "A spread of written articles about a city's cafe scene, each with its own headline, standfirst and photograph.",
+        },
       },
     ],
   },

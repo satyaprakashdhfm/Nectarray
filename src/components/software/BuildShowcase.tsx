@@ -33,14 +33,17 @@ const DWELL = 9000;
  * useCarousel.
  */
 export function BuildShowcase() {
-  const { i, running, mayAnimate, pick, holdProps } = useCarousel(
-    services.length,
-    DWELL,
-  );
+  const { i, running, engaged, mayAnimate, pick, holdProps, hoverProps } =
+    useCarousel(services.length, DWELL);
   const rail = useRef<HTMLUListElement>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
+    // Never while someone is working the strip. This is what made a tab hard
+    // to hit: the rotation advanced mid-reach, the rail scrolled the new tab
+    // to the left edge, and the one being aimed at slid a hundred pixels
+    // sideways, so the click landed on its neighbour.
+    if (engaged) return;
     const box = rail.current;
     const tab = tabs.current[i];
     if (!box || !tab) return;
@@ -48,7 +51,7 @@ export function BuildShowcase() {
       left: Math.max(0, tab.offsetLeft - 8),
       behavior: mayAnimate ? "smooth" : "auto",
     });
-  }, [i, mayAnimate]);
+  }, [i, mayAnimate, engaged]);
 
   const service = services[i];
 
@@ -106,7 +109,10 @@ export function BuildShowcase() {
             <SiteMock key={service.icon} kind={service.icon} />
           </div>
 
-          <div className="border-line bg-mist flex items-center gap-2 border-t p-2">
+          <div
+            className="border-line bg-mist flex items-center gap-2 border-t p-2"
+            {...hoverProps}
+          >
             <div className="relative min-w-0 flex-1">
               {/* Fades hint that the strip scrolls. From xl up all five tabs
                 fit, so they would only wash out the ends of the first and

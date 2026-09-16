@@ -45,11 +45,13 @@ const toItem = (t: {
   title: string;
   body: string;
   domain?: string;
+  shot?: { src: string; alt: string; width: number; height: number };
 }): ShowcaseItem => ({
   icon: t.icon,
   title: t.title,
   body: t.body,
   logos: t.domain ? [{ name: t.title, domain: t.domain }] : undefined,
+  shot: t.shot,
 });
 
 /** Which content object each stage draws its heading from. */

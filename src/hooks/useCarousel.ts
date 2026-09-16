@@ -13,10 +13,12 @@ const RESUME = 10000;
  * who taps one tab out of curiosity has silently switched the thing off, and
  * nothing tells them why it went still.
  *
- * The cursor no longer pauses it either. On a wide screen the pointer rests
- * over the panel for most of the time the panel is on screen, so pausing on
- * hover meant the rotation almost never ran for the people most likely to be
- * watching it.
+ * The cursor over the panel no longer pauses it. On a wide screen the pointer
+ * rests over the panel for most of the time the panel is on screen, so pausing
+ * on hover meant the rotation almost never ran for the people most likely to
+ * be watching it. The cursor over the tab strip is a different matter and does
+ * hold it: that row is the control, and a cursor on it means someone is
+ * picking rather than reading.
  *
  * Keyboard focus does still hold it, and that is deliberate rather than an
  * oversight: content that moves on its own has to be stoppable without a
@@ -34,6 +36,12 @@ export function useCarousel(count: number, dwell: number) {
    */
   const lastUsed = useRef(0);
   const [held, setHeld] = useState(false);
+  /**
+   * The cursor resting on the tab strip. Separate from `held`, which is
+   * keyboard focus: someone can tab in and then move the mouse away, and one
+   * flag for both would let the mouse leaving cancel the keyboard's hold.
+   */
+  const [hovered, setHovered] = useState(false);
   const [mayAnimate, setMayAnimate] = useState(false);
 
   // Opt in only once the browser has said motion is welcome, so the markup
@@ -46,7 +54,14 @@ export function useCarousel(count: number, dwell: number) {
     return () => q.removeEventListener("change", sync);
   }, []);
 
-  const running = !snoozed && !held && mayAnimate && count > 1;
+  const running = !snoozed && !held && !hovered && mayAnimate && count > 1;
+
+  /**
+   * Someone is working the panel rather than watching it: they have picked,
+   * focused, or put the cursor on the strip. Callers use it to stop moving
+   * things about while that is true — see the rail in StageShowcase.
+   */
+  const engaged = snoozed || held || hovered;
 
   useEffect(() => {
     if (!running) return;
@@ -104,6 +119,16 @@ export function useCarousel(count: number, dwell: number) {
    * Keyboard focus holds too. The cursor merely resting over the panel does
    * not, since on a wide screen it does that most of the time anyway.
    */
+  /**
+   * Spread on the tab strip. A cursor sitting on the row of controls means
+   * somebody is choosing from it, and a strip that keeps rotating and
+   * re-scrolling while they aim is a strip that gets mis-clicked.
+   */
+  const hoverProps = {
+    onPointerEnter: () => setHovered(true),
+    onPointerLeave: () => setHovered(false),
+  };
+
   const holdProps = {
     onPointerDownCapture: snooze,
     onWheelCapture: snooze,
@@ -113,5 +138,14 @@ export function useCarousel(count: number, dwell: number) {
     onBlurCapture: () => setHeld(false),
   };
 
-  return { i, running, mayAnimate, pick, snooze, holdProps };
+  return {
+    i,
+    running,
+    engaged,
+    mayAnimate,
+    pick,
+    snooze,
+    holdProps,
+    hoverProps,
+  };
 }

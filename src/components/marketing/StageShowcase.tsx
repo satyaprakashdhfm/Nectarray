@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { useCarousel } from "@/hooks";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Icon } from "@/components/ui/Icon";
@@ -11,6 +12,13 @@ export type ShowcaseItem = {
   body: string;
   /** The real marks where the thing is a product; the glyph stands in otherwise. */
   logos?: { name: string; domain: string }[];
+  /**
+   * Evidence, where a picture of the thing beats another paragraph about it.
+   * A slide with one gives the whole panel over to it: no glyph, no heading,
+   * just the screenshot across the full width with the explanation beneath.
+   * The tab below is already labelled, so a heading would only repeat it.
+   */
+  shot?: { src: string; alt: string; width: number; height: number };
 };
 
 /** How long each service holds before the panel moves on. */
@@ -40,10 +48,8 @@ export function StageShowcase({
   label: string;
   items: ShowcaseItem[];
 }) {
-  const { i, running, mayAnimate, pick, holdProps } = useCarousel(
-    items.length,
-    DWELL,
-  );
+  const { i, running, engaged, mayAnimate, pick, holdProps, hoverProps } =
+    useCarousel(items.length, DWELL);
   const rail = useRef<HTMLUListElement>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -55,6 +61,11 @@ export function StageShowcase({
   // would drag the whole page along with it. `relative` on the list makes it
   // the offsetParent, so offsetLeft is already the scrollLeft we want.
   useEffect(() => {
+    // Never while someone is working the strip. This is what made a tab hard
+    // to hit: the rotation advanced mid-reach, the rail scrolled the new tab
+    // to the left edge, and the one being aimed at slid a hundred pixels
+    // sideways, so the click landed on its neighbour.
+    if (engaged) return;
     const box = rail.current;
     const tab = tabs.current[i];
     if (!box || !tab) return;
@@ -62,9 +73,18 @@ export function StageShowcase({
       left: Math.max(0, tab.offsetLeft - 8),
       behavior: mayAnimate ? "smooth" : "auto",
     });
-  }, [i, mayAnimate]);
+  }, [i, mayAnimate, engaged]);
 
   const item = items[i];
+
+  /**
+   * One window shape for the whole stage, taken from the first slide that has
+   * a picture. Every shot in a stage is cut to the same ratio, so the panel
+   * keeps its height as the rotation moves through it — a panel that grows
+   * and shrinks moves the tab strip under whoever is reaching for it.
+   */
+  const box = items.find((entry) => entry.shot)?.shot;
+  const window = box ? `${box.width} / ${box.height}` : undefined;
 
   return (
     <div className="card overflow-hidden p-2.5 sm:p-3" {...holdProps}>
@@ -74,40 +94,82 @@ export function StageShowcase({
           aria-live="polite"
           className="p-8 sm:p-10 lg:min-h-[19rem]"
         >
-          <div className="flex flex-wrap items-center gap-2.5">
-            {item.logos?.length ? (
-              item.logos.map((brand) => (
-                <span
-                  key={brand.name}
-                  className="border-line bg-surface grid size-12 place-items-center rounded-xl border"
-                  title={brand.name}
-                >
-                  <BrandLogo
-                    name={brand.name}
-                    domain={brand.domain}
-                    className="size-6"
-                  />
-                </span>
-              ))
-            ) : (
-              <span className="bg-brand-deep grid size-12 place-items-center rounded-xl text-white">
-                <Icon name={item.icon} className="size-6" />
-              </span>
-            )}
-          </div>
+          {item.shot ? (
+            <>
+              {/*
+               * Bled to the panel's edges: the negative margins cancel the
+               * padding, and the rounded, clipped box around this does the
+               * corners. A real answer at full width makes the point that a
+               * paragraph about assistants cannot.
+               */}
+              {/*
+               * The pictures are cut to the window rather than fitted inside
+               * it. Letting each keep its own shape left a black band under
+               * the shorter ones, which read as the screenshot being broken.
+               * Cover crops instead: the captures lose a little of the bottom
+               * chrome or the empty ground at the right, which is what was
+               * trimmed out of the files themselves anyway.
+               */}
+              <div
+                className="border-line -mx-8 -mt-8 overflow-hidden border-b bg-[#0e0f11] sm:-mx-10 sm:-mt-10"
+                style={{ aspectRatio: window }}
+              >
+                <Image
+                  src={item.shot.src}
+                  alt={item.shot.alt}
+                  width={item.shot.width}
+                  height={item.shot.height}
+                  sizes="(min-width: 1024px) 50rem, 94vw"
+                  className="h-full w-full object-cover object-top"
+                />
+              </div>
+              {/* Three lines' worth, so a short description and a long one
+                  leave the strip below in the same place. */}
+              <p className="text-ink-soft mt-7 text-[1rem] leading-relaxed lg:min-h-[7.5rem]">
+                {item.body}
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {item.logos?.length ? (
+                  item.logos.map((brand) => (
+                    <span
+                      key={brand.name}
+                      className="border-line bg-surface grid size-12 place-items-center rounded-xl border"
+                      title={brand.name}
+                    >
+                      <BrandLogo
+                        name={brand.name}
+                        domain={brand.domain}
+                        className="size-6"
+                      />
+                    </span>
+                  ))
+                ) : (
+                  <span className="bg-brand-deep grid size-12 place-items-center rounded-xl text-white">
+                    <Icon name={item.icon} className="size-6" />
+                  </span>
+                )}
+              </div>
 
-          <h3 className="display text-ink mt-6 text-[1.5rem] sm:text-[1.875rem]">
-            {item.title}
-          </h3>
-          <p className="text-ink-soft mt-4 max-w-xl text-[1rem] leading-relaxed">
-            {item.body}
-          </p>
+              <h3 className="display text-ink mt-6 text-[1.5rem] sm:text-[1.875rem]">
+                {item.title}
+              </h3>
+              <p className="text-ink-soft mt-4 max-w-xl text-[1rem] leading-relaxed">
+                {item.body}
+              </p>
+            </>
+          )}
         </div>
 
         {/* The strip, along the bottom in the style of the reference: one
             segment per service, the live one filled, scrolling sideways
             because ten of these will never fit across a column. */}
-        <div className="border-line bg-mist flex items-center gap-2 border-t p-2">
+        <div
+          className="border-line bg-mist flex items-center gap-2 border-t p-2"
+          {...hoverProps}
+        >
           {/* A fade at each end rather than a scrollbar: it says there is more
               of the strip without spending a row on saying it, and the tabs
               slide under it as the panel advances. */}
