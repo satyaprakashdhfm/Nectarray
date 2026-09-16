@@ -290,72 +290,79 @@ export default function AgenticAiPage() {
              * illustrations with content out to their edges, so they are
              * shown whole and centred instead of cropped to fill a box.
              */}
-            <div className="mt-12 space-y-14 lg:space-y-20">
+            <div className="mt-12 space-y-6">
               {families.map((family) => (
                 <Reveal key={family.id} delay={70}>
                   <article
                     id={family.id}
-                    className="grid scroll-mt-24 items-center gap-8 lg:grid-cols-2 lg:gap-14"
+                    className={`card to-surface relative scroll-mt-24 overflow-hidden bg-gradient-to-br p-6 pt-8 sm:p-8 sm:pt-10 lg:p-10 lg:pt-12 ${BRAND.tint}`}
                   >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`grid size-11 place-items-center rounded-xl text-white ${BRAND.chip}`}
-                        >
-                          <Icon name={family.icon} className="size-5" />
-                        </span>
-                        <span className="text-ink-faint font-mono text-[0.8125rem] tracking-[0.14em]">
-                          {family.index}
-                        </span>
-                      </div>
+                    {/* The accent along the top edge, so each build is a
+                        bounded thing on the page rather than a stretch of
+                        text that happens to have a picture beside it. */}
+                    <span
+                      className={`absolute inset-x-0 top-0 h-1 ${BRAND.rule}`}
+                      aria-hidden
+                    />
 
-                      <h3 className="display text-ink mt-5 text-[1.5rem] sm:text-[1.875rem]">
-                        {family.title}
-                      </h3>
-                      <p className="text-ink-soft mt-4 text-[0.9375rem] leading-relaxed">
-                        {family.summary}
-                      </p>
+                    <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`grid size-11 place-items-center rounded-xl text-white ${BRAND.chip}`}
+                          >
+                            <Icon name={family.icon} className="size-5" />
+                          </span>
+                          <span className="text-ink-faint font-mono text-[0.8125rem] tracking-[0.14em]">
+                            {family.index}
+                          </span>
+                        </div>
 
-                      {/* Hairlines rather than bullets: six of these read as
+                        <h3 className="display text-ink mt-5 text-[1.5rem] sm:text-[1.875rem]">
+                          {family.title}
+                        </h3>
+                        <p className="text-ink-soft mt-4 text-[0.9375rem] leading-relaxed">
+                          {family.summary}
+                        </p>
+
+                        {/* Hairlines rather than bullets: six of these read as
                           a list of what you get, and the rules keep them
                           apart without a glyph on every row shouting. */}
-                      <ul className="divide-line-soft border-line-soft mt-7 divide-y border-t">
-                        {family.items.map((item) => (
-                          <li key={item.name} className="flex gap-3 py-3.5">
-                            <Icon
-                              name="check"
-                              className="text-brand-deep mt-[0.3rem] size-3.5 shrink-0"
-                              strokeWidth={2.75}
-                            />
-                            <div className="min-w-0">
-                              <h4 className="text-ink text-[0.9375rem] font-semibold">
-                                {item.name}
-                              </h4>
-                              <p className="text-ink-soft mt-1 text-[0.8125rem] leading-[1.6]">
-                                {item.body}
-                              </p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                        <ul className="divide-line-soft border-line-soft mt-7 divide-y border-t">
+                          {family.items.map((item) => (
+                            <li key={item.name} className="flex gap-3 py-3.5">
+                              <Icon
+                                name="check"
+                                className="text-brand-deep mt-[0.3rem] size-3.5 shrink-0"
+                                strokeWidth={2.75}
+                              />
+                              <div className="min-w-0">
+                                <h4 className="text-ink text-[0.9375rem] font-semibold">
+                                  {item.name}
+                                </h4>
+                                <p className="text-ink-soft mt-1 text-[0.8125rem] leading-[1.6]">
+                                  {item.body}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
 
-                    {/* The frame the stage panels on /marketing use: the card,
-                        a little breathing room, and the picture inside its own
-                        bordered window so it is presented rather than pasted
-                        onto the page. */}
-                    <figure className="card overflow-hidden p-2.5 sm:p-3">
-                      <div className="border-line bg-canvas overflow-hidden rounded-xl border">
+                      {/* A window inside the card rather than a second card on
+                        top of one: the mat sets the picture off the panel it
+                        sits on, and the hairline gives it its own edge. */}
+                      <figure className="border-line bg-canvas overflow-hidden rounded-2xl border p-2 shadow-[0_18px_40px_-28px_rgba(14,27,38,0.45)] sm:p-2.5">
                         <Image
                           src={family.shot.src}
                           alt={family.shot.alt}
                           width={family.shot.width}
                           height={family.shot.height}
-                          sizes="(min-width: 1024px) 34rem, 94vw"
-                          className="h-auto w-full"
+                          sizes="(min-width: 1024px) 32rem, 92vw"
+                          className="border-line-soft h-auto w-full rounded-xl border"
                         />
-                      </div>
-                    </figure>
+                      </figure>
+                    </div>
                   </article>
                 </Reveal>
               ))}
