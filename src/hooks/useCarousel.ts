@@ -56,18 +56,37 @@ export function useCarousel(count: number, dwell: number) {
     return () => clearTimeout(t);
   }, [snoozed, nudge]);
 
-  /** Show this one, and hold the rotation for RESUME. */
-  const pick = (next: number) => {
-    setI(((next % count) + count) % count);
+  /**
+   * Hold the rotation for RESUME without moving it.
+   *
+   * Every call restarts the countdown, so the panel stays put while someone
+   * is working in it and only carries on once they have been still for ten
+   * seconds. The panels are not always just something to look at — the one
+   * on /software has a whole site to browse inside it, and having the tab
+   * change under you mid-scroll is the specific thing this prevents.
+   */
+  const snooze = () => {
     setSnoozed(true);
     setNudge((k) => k + 1);
   };
 
-  /** Spread onto the panel: keyboard focus holds, the cursor does not. */
+  /** Show this one, and hold the rotation for RESUME. */
+  const pick = (next: number) => {
+    setI(((next % count) + count) % count);
+    snooze();
+  };
+
+  /**
+   * Spread onto the panel. A click anywhere inside it holds the rotation —
+   * captured, so it counts even when the click lands on something nested
+   * with its own handler. Keyboard focus holds too; the cursor alone does
+   * not, since on a wide screen it rests over the panel most of the time.
+   */
   const holdProps = {
+    onPointerDownCapture: snooze,
     onFocusCapture: () => setHeld(true),
     onBlurCapture: () => setHeld(false),
   };
 
-  return { i, running, mayAnimate, pick, holdProps };
+  return { i, running, mayAnimate, pick, snooze, holdProps };
 }

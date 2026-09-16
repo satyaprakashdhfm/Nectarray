@@ -10,8 +10,14 @@ import { software } from "@/lib/content";
 
 const { services } = software;
 
-/** How long a build holds before the panel moves on. */
-const DWELL = 4000;
+/**
+ * How long a build holds before the panel moves on.
+ *
+ * Longer than the other showcases on the site because there is more to do
+ * here than read: each panel carries two sample sites you can scroll
+ * through, so four seconds moved on while people were still looking.
+ */
+const DWELL = 9000;
 
 /**
  * The six kinds of build, one at a time, with a schematic of the finished
