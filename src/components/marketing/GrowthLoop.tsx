@@ -11,7 +11,7 @@ const { loop } = marketingPage;
    Ring geometry
 
    Everything below is derived from these three numbers, so moving a node or
-   widening the gap around one is a single edit rather than five hand-placed
+   widening the gap around one is a single edit rather than a set of hand-placed
    coordinates. Angles run clockwise from the top, which is the direction a
    reader expects a cycle to turn.
 --------------------------------------------------------------------------- */
@@ -40,7 +40,7 @@ const nodes = loop.stages.map((stage, i) => {
   };
 });
 
-/** One arrowed arc per gap between neighbouring nodes, including 05 back to 01. */
+/** One arrowed arc per gap between neighbouring nodes, including the last back to 01. */
 const arcs = nodes.map((node, i) => {
   const from = node.angle + CLEARANCE;
   const to = node.angle + STEP - CLEARANCE;
@@ -123,7 +123,7 @@ export function GrowthLoop({ children }: { children?: React.ReactNode }) {
           </svg>
 
           {/* The hub names whatever is selected, so the wheel is readable at a
-            glance instead of being five unlabelled dots. */}
+            glance instead of being four unlabelled dots. */}
           <div className="pointer-events-none absolute inset-0 grid place-items-center">
             <div className="text-center">
               <span className="text-brand-deep font-mono text-[0.72rem] font-semibold">
@@ -161,7 +161,7 @@ export function GrowthLoop({ children }: { children?: React.ReactNode }) {
                block that pushes the panel off screen. ── */}
         <div
           role="tablist"
-          aria-label="The five stages"
+          aria-label="The four stages"
           className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-wrap lg:px-0"
         >
           {loop.stages.map((s, i) => (

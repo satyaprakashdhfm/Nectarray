@@ -12,8 +12,8 @@ export const pillars: Practice[] = [
       "Paid search, paid social, SEO and content — and the analytics that prove which of them worked.",
     points: [
       "Meta & Google Ads",
-      "SEO & content",
-      "Social management",
+      "SEO & marketplace",
+      "Video & content",
       "Analytics & CRO",
     ],
     href: "/marketing",
@@ -85,6 +85,15 @@ export const marketing: {
   lede: "We start by finding where your buyers already spend their time, then run those channels properly and move the budget towards whatever is earning it.",
   channels: [
     {
+      icon: "cart",
+      title: "Marketplace Ads",
+      logos: [
+        { name: "Amazon", domain: "amazon.in" },
+        { name: "Flipkart", domain: "flipkart.com" },
+      ],
+      body: "Amazon and Flipkart: sponsored product and brand campaigns, listing and catalogue optimisation, and feed management that keeps Shopping in step with what is actually in stock.",
+    },
+    {
       icon: "target",
       title: "Meta Ads",
       logos: [
@@ -92,69 +101,40 @@ export const marketing: {
         { name: "Instagram", domain: "instagram.com" },
         { name: "Facebook", domain: "facebook.com" },
       ],
-      body: "Facebook and Instagram campaigns — full-funnel structure, creative testing at volume, Advantage+ where it earns its place, and Conversions API so iOS traffic stops disappearing.",
+      body: "Instagram and Facebook — full-funnel structure, creative testing at volume, Advantage+ where it earns its place, and Conversions API so iOS traffic stops disappearing from the reports.",
     },
     {
-      icon: "search",
-      title: "Google Ads",
-      logos: [
-        { name: "Google Ads", domain: "ads.google.com" },
-        { name: "YouTube", domain: "youtube.com" },
-      ],
-      body: "Search, Performance Max, Shopping, YouTube and Demand Gen. Tight keyword and negative hygiene, landing pages built by our own engineers, bidding tuned to margin rather than clicks.",
+      icon: "video",
+      title: "YouTube Ads",
+      logos: [{ name: "YouTube", domain: "youtube.com" }],
+      body: "In-stream, in-feed and Shorts, cut from the videos we already shoot for you rather than a television spot resized. Bought through Google Ads and measured alongside the rest of it.",
     },
     {
       icon: "globe",
-      title: "SEO & Content",
+      title: "Google SEO",
       logos: [
         { name: "Google", domain: "google.com" },
         { name: "Search Console", domain: "search.google.com" },
       ],
-      body: "Technical audits, site architecture, programmatic pages, local and Maps optimisation, plus a genuine editorial calendar — not 500-word filler.",
+      body: "The results you do not pay for: technical audits, site architecture, programmatic pages, local and Maps optimisation, plus a genuine editorial calendar — not 500-word filler.",
     },
     {
-      icon: "share",
-      title: "Social & Content Management",
-      logos: [
-        { name: "Instagram", domain: "instagram.com" },
-        { name: "LinkedIn", domain: "linkedin.com" },
-        { name: "YouTube", domain: "youtube.com" },
-      ],
-      body: "Instagram, LinkedIn and YouTube handled end to end: monthly calendar, shoots, reels and short-form edits, carousels, captions, scheduling, community replies and reporting.",
+      icon: "search",
+      title: "Google Ads",
+      logos: [{ name: "Google Ads", domain: "ads.google.com" }],
+      body: "Search, Shopping, Performance Max and Demand Gen. Tight keyword and negative hygiene, landing pages built by our own engineers, bidding tuned to margin rather than clicks.",
     },
     {
       icon: "briefcase",
-      title: "LinkedIn & B2B",
+      title: "LinkedIn Ads",
       logos: [{ name: "LinkedIn", domain: "linkedin.com" }],
-      body: "For longer sales cycles: LinkedIn Ads, founder-led content, lead-gen forms and outbound sequences that feed a CRM instead of a spreadsheet.",
+      body: "For longer B2B cycles: targeting by job title and company, founder-led content behind the spend, and lead-gen forms that feed a CRM instead of a spreadsheet.",
     },
     {
       icon: "message",
-      title: "WhatsApp & Lifecycle",
-      logos: [
-        { name: "WhatsApp Business", domain: "business.whatsapp.com" },
-        { name: "Mailchimp", domain: "mailchimp.com" },
-      ],
-      body: "WhatsApp Business API, email and SMS flows — abandoned cart, onboarding, win-back and retention journeys wired to your store or CRM.",
-    },
-    {
-      icon: "chart",
-      title: "Analytics & CRO",
-      logos: [
-        { name: "Google Analytics", domain: "analytics.google.com" },
-        { name: "Tag Manager", domain: "tagmanager.google.com" },
-      ],
-      body: "GA4 and GTM done correctly, server-side tracking, offline conversion imports, dashboards you actually read, and A/B tests on the pages that carry the revenue.",
-    },
-    {
-      icon: "cart",
-      title: "Marketplace & Commerce",
-      logos: [
-        { name: "Amazon", domain: "amazon.in" },
-        { name: "Flipkart", domain: "flipkart.com" },
-        { name: "Shopify", domain: "shopify.com" },
-      ],
-      body: "Amazon and Flipkart ad management, listing and catalogue optimisation, and feed management for Shopping campaigns.",
+      title: "WhatsApp Status Ads",
+      logos: [{ name: "WhatsApp Business", domain: "business.whatsapp.com" }],
+      body: "Ads in the Updates tab where Meta has rolled them out, plus click-to-WhatsApp campaigns that land in a chat — answered by a person, or by an agent that qualifies and books.",
     },
   ],
   note: "Not sure which channels fit? The first thing we do is tell you which ones to skip.",

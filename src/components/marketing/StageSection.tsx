@@ -9,8 +9,8 @@ import {
  * One stage of the loop, as a section.
  *
  * The explanation down the left, the stage's services in a showcase panel on
- * the right. All five are the same shape on purpose: the page used to change
- * layout every other section, so nothing signalled that these five belong to
+ * the right. All four are the same shape on purpose: the page used to change
+ * layout every other section, so nothing signalled that these four belong to
  * the sequence the wheel just described.
  *
  * `ground` alternates from the caller so no two neighbours share a colour,

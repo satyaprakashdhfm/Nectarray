@@ -11,8 +11,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { company, marketing, marketingPage } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-const { hero, loop, brand, aiSearch, analytics, read, cta, meta } =
-  marketingPage;
+const { hero, loop, find, content, measure, cta, meta } = marketingPage;
 
 /**
  * Eyebrow with the accent rule the SectionHead component draws.
@@ -55,28 +54,26 @@ const toItem = (t: {
 
 /** Which content object each stage draws its heading from. */
 const STAGE_COPY: Record<string, { title: string; lede: string }> = {
-  "01": { title: aiSearch.title, lede: aiSearch.lede },
-  "02": { title: brand.title, lede: brand.lede },
+  "01": { title: find.title, lede: find.lede },
+  "02": { title: content.title, lede: content.lede },
   "03": {
     title: "Every console that can send you a customer",
     lede: marketing.lede,
   },
-  "04": { title: analytics.title, lede: analytics.lede },
-  "05": { title: read.title, lede: read.lede },
+  "04": { title: measure.title, lede: measure.lede },
 };
 
 /** And the services it shows. */
 const STAGE_ITEMS: Record<string, ShowcaseItem[]> = {
-  "01": aiSearch.items.map(toItem),
-  "02": brand.items.map(toItem),
+  "01": find.items.map(toItem),
+  "02": content.items.map(toItem),
   "03": marketing.channels.map((c) => ({
     icon: c.icon,
     title: c.title,
     body: c.body,
     logos: c.logos,
   })),
-  "04": analytics.items.map(toItem),
-  "05": read.items.map(toItem),
+  "04": measure.items.map(toItem),
 };
 
 /** Service schema scoped to this page. */
@@ -96,7 +93,7 @@ function StructuredData() {
         hasOfferCatalog: {
           "@type": "OfferCatalog",
           name: "Marketing services",
-          itemListElement: [...brand.items, ...aiSearch.items].map((item) => ({
+          itemListElement: [...content.items, ...find.items].map((item) => ({
             "@type": "Offer",
             itemOffered: {
               "@type": "Service",
@@ -126,11 +123,10 @@ function StructuredData() {
  * doing the work instead. The service families are tile grids on the wider
  * `shell-wide` gutter, so a reader takes a section in at a glance.
  *
- * The AI search section carries an explicit statement of what the work is
- * not. Visibility inside an assistant cannot be bought or guaranteed, and
- * the honest version of that claim is also the more persuasive one — every
- * competitor promising a spot in ChatGPT is promising something they do not
- * control.
+ * Stage 01 carries an explicit statement of what the work is not. Visibility
+ * inside an assistant cannot be bought or guaranteed, and the honest version
+ * of that claim is also the more persuasive one — every competitor promising
+ * a spot in ChatGPT is promising something they do not control.
  */
 export default function MarketingPage() {
   return (
@@ -298,7 +294,7 @@ export default function MarketingPage() {
           </div>
         </section>
 
-        {/* ── The five stages ────────────────────────────── */}
+        {/* ── The four stages ────────────────────────────── */}
         {/*
          * Driven off the same list the wheel is drawn from, so a stage cannot
          * exist in one and not the other. `items` is the only per-stage part

@@ -14,9 +14,11 @@ import { company } from "@/lib/content";
  * scripts, fonts and trackers running inside ours would be slower, heavier
  * and one broken CDN away from an empty box.
  *
- * Every one is credited under the frame. Several licences require it (CC BY
- * for Furni, Freepik's for the phone screens), and none of these are our
- * client work, so the credit is also what keeps the panel honest.
+ * A credit line used to sit under the frame on every slide, naming the
+ * template and its licence. It answered a question nobody was asking and put
+ * another studio's name in the middle of our own work. `source` keeps the
+ * provenance in the data where we can check it, and SampleCredits at the foot
+ * of the section carries the two attributions the licences actually require.
  */
 
 type Sample = {
@@ -27,7 +29,8 @@ type Sample = {
   width: number;
   height: number;
   device: "desktop" | "mobile";
-  credit: { label: string; href: string };
+  /** Where it came from. Provenance for us; not rendered. */
+  source: string;
 };
 
 const SAMPLES: Record<string, Sample[]> = {
@@ -39,7 +42,8 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 5466,
       device: "desktop",
-      credit: { label: "Folio by Laurent Begey · MIT", href: "https://themewagon.com/themes/folio-html/" },
+      source:
+        "Folio by Laurent Begey · MIT · https://themewagon.com/themes/folio-html/",
     },
     {
       name: "Grunge",
@@ -48,7 +52,8 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 5732,
       device: "desktop",
-      credit: { label: "Grunge by Jess Gaspar · MIT", href: "https://themewagon.com/themes/grunge/" },
+      source:
+        "Grunge by Jess Gaspar · MIT · https://themewagon.com/themes/grunge/",
     },
   ],
   cart: [
@@ -59,7 +64,7 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 5325,
       device: "desktop",
-      credit: { label: "Furni by Untree.co · CC BY 3.0", href: "https://untree.co/" },
+      source: "Furni by Untree.co · CC BY 3.0 · https://untree.co/",
     },
     {
       name: "Sarab",
@@ -68,7 +73,8 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 9000,
       device: "desktop",
-      credit: { label: "Sarab by Bestwpware · MIT", href: "https://themewagon.com/themes/sarab/" },
+      source:
+        "Sarab by Bestwpware · MIT · https://themewagon.com/themes/sarab/",
     },
   ],
   gauge: [
@@ -79,7 +85,8 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 900,
       device: "desktop",
-      credit: { label: "Orbit by Benjamin Njami · MIT", href: "https://themewagon.com/themes/orbit/" },
+      source:
+        "Orbit by Benjamin Njami · MIT · https://themewagon.com/themes/orbit/",
     },
     {
       name: "DeskApp",
@@ -88,7 +95,8 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 1755,
       device: "desktop",
-      credit: { label: "DeskApp by Ankit Hingarajiya · MIT", href: "https://github.com/dropways/deskapp" },
+      source:
+        "DeskApp by Ankit Hingarajiya · MIT · https://github.com/dropways/deskapp",
     },
   ],
   layers: [
@@ -99,7 +107,8 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 7118,
       device: "desktop",
-      credit: { label: "NexusAI by Bestwpware · MIT", href: "https://themewagon.com/themes/nexusai/" },
+      source:
+        "NexusAI by Bestwpware · MIT · https://themewagon.com/themes/nexusai/",
     },
     {
       name: "DataNova",
@@ -108,7 +117,8 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 1440,
       height: 5436,
       device: "desktop",
-      credit: { label: "DataNova by Emil Gulamov · MIT", href: "https://themewagon.com/themes/datanova/" },
+      source:
+        "DataNova by Emil Gulamov · MIT · https://themewagon.com/themes/datanova/",
     },
   ],
   smartphone: [
@@ -119,7 +129,7 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 638,
       height: 1281,
       device: "mobile",
-      credit: { label: "Designed by Freepik", href: "http://www.freepik.com" },
+      source: "Designed by Freepik · http://www.freepik.com",
     },
     {
       name: "Explore",
@@ -128,7 +138,7 @@ const SAMPLES: Record<string, Sample[]> = {
       width: 736,
       height: 1447,
       device: "mobile",
-      credit: { label: "Designed by Freepik", href: "http://www.freepik.com" },
+      source: "Designed by Freepik · http://www.freepik.com",
     },
   ],
 };
@@ -205,6 +215,45 @@ function Locked() {
   );
 }
 
+/**
+ * The attribution the licences oblige us to carry, once, under the section.
+ *
+ * Two of the ten samples come with a condition attached: Furni is CC BY, and
+ * Freepik's free licence asks for the credit by name. The other eight are MIT,
+ * which governs the code we ran rather than a picture of what it rendered, so
+ * they are not named here.
+ *
+ * Small and at the end on purpose. It is a licence notice, not a caption, and
+ * it should not read as if the work in the frame above were being disowned.
+ */
+export function SampleCredits() {
+  const link =
+    "text-ink-faint hover:text-ink-soft underline underline-offset-2";
+  return (
+    <p className="text-ink-faint mt-3 text-center text-[0.6875rem]">
+      Sample pages are licensed templates, shown as they ship —{" "}
+      <a
+        href="https://untree.co/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={link}
+      >
+        Furni by Untree.co
+      </a>{" "}
+      under CC BY 3.0, phone screens{" "}
+      <a
+        href="http://www.freepik.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={link}
+      >
+        designed by Freepik
+      </a>
+      .
+    </p>
+  );
+}
+
 export function SiteMock({ kind }: { kind: string }) {
   const samples = SAMPLES[kind] ?? SAMPLES.layout;
   const slides = samples.length + 1; // the samples, then the locked one
@@ -274,29 +323,17 @@ export function SiteMock({ kind }: { kind: string }) {
         </button>
       </div>
 
-      {/* Which sample, whose it is, and where we are */}
-      <div className="border-line bg-surface flex items-center justify-between gap-3 border-t px-3 py-2">
-        {sample ? (
-          <a
-            href={sample.credit.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-ink-faint hover:text-ink-soft truncate text-[0.6875rem] transition-colors"
-          >
-            Template: {sample.credit.label}
-          </a>
-        ) : (
-          <span className="text-ink-faint truncate text-[0.6875rem]">
-            Client work, shown on a call
-          </span>
-        )}
+      {/* Where we are in the set */}
+      <div className="border-line bg-surface flex items-center justify-center border-t px-3 py-2.5">
         <span className="flex shrink-0 gap-1.5">
           {Array.from({ length: slides }).map((_, n) => (
             <button
               key={n}
               type="button"
               onClick={() => setI(n)}
-              aria-label={n < samples.length ? `Sample ${n + 1}` : "More, on a call"}
+              aria-label={
+                n < samples.length ? `Sample ${n + 1}` : "More, on a call"
+              }
               aria-current={n === i ? "true" : undefined}
               className={`size-1.5 rounded-full transition-colors ${
                 n === i ? "bg-brand-deep" : "bg-ink/20 hover:bg-ink/40"
