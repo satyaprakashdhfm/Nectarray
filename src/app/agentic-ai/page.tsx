@@ -274,58 +274,88 @@ export default function AgenticAiPage() {
             </Reveal>
 
             {/*
-             * One panel per build rather than a tile grid, because each of
-             * these is now described properly and a tile that lists six
-             * items as bare names tells a buyer nothing about any of them.
-             * The panel splits instead: what it is on the left, and what is
-             * in it across two columns on the right, so it still reads
-             * across the page and not only down it.
+             * One build per row, the explanation on the left and the picture
+             * on the right — the same way round every time, and the same way
+             * round as the stages on /marketing. Alternating them was a
+             * decoration that cost a reader the line their eye had settled
+             * into.
+             *
+             * This replaced two dense panels of six paragraphs each. The
+             * picture carries what those paragraphs were describing — the
+             * channels an agent works across, the clients and systems a
+             * server sits between — so each line underneath is now a name
+             * and a single clause, which is what a buyer scans anyway.
+             *
+             * `items-center` rather than a stretched column: the shots are
+             * illustrations with content out to their edges, so they are
+             * shown whole and centred instead of cropped to fill a box.
              */}
-            <div className="mt-10 space-y-4">
-              {families.map((family, i) => (
-                <Reveal key={family.id} delay={(i % 3) * 70}>
+            <div className="mt-12 space-y-14 lg:space-y-20">
+              {families.map((family) => (
+                <Reveal key={family.id} delay={70}>
                   <article
                     id={family.id}
-                    className={`card to-surface relative scroll-mt-24 overflow-hidden bg-gradient-to-br p-6 pt-7 sm:p-8 sm:pt-9 ${BRAND.tint}`}
+                    className="grid scroll-mt-24 items-center gap-8 lg:grid-cols-2 lg:gap-14"
                   >
-                    <span
-                      className={`absolute inset-x-0 top-0 h-1 ${BRAND.rule}`}
-                      aria-hidden
-                    />
-
-                    <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
-                      <header>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-3">
                         <span
                           className={`grid size-11 place-items-center rounded-xl text-white ${BRAND.chip}`}
                         >
                           <Icon name={family.icon} className="size-5" />
                         </span>
-                        <h3 className="display text-ink mt-5 text-[1.5rem] sm:text-[1.75rem]">
-                          {family.title}
-                        </h3>
-                        <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
-                          {family.summary}
-                        </p>
-                      </header>
+                        <span className="text-ink-faint font-mono text-[0.8125rem] tracking-[0.14em]">
+                          {family.index}
+                        </span>
+                      </div>
 
-                      <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+                      <h3 className="display text-ink mt-5 text-[1.5rem] sm:text-[1.875rem]">
+                        {family.title}
+                      </h3>
+                      <p className="text-ink-soft mt-4 text-[0.9375rem] leading-relaxed">
+                        {family.summary}
+                      </p>
+
+                      {/* Hairlines rather than bullets: six of these read as
+                          a list of what you get, and the rules keep them
+                          apart without a glyph on every row shouting. */}
+                      <ul className="divide-line-soft border-line-soft mt-7 divide-y border-t">
                         {family.items.map((item) => (
-                          <li key={item.name}>
-                            <h4 className="text-ink flex items-start gap-2 text-[0.9375rem] font-semibold">
-                              <Icon
-                                name="check"
-                                className="text-brand-deep mt-[0.2rem] size-3.5 shrink-0"
-                                strokeWidth={2.75}
-                              />
-                              {item.name}
-                            </h4>
-                            <p className="text-ink-soft mt-1.5 pl-[1.375rem] text-[0.8125rem] leading-[1.6]">
-                              {item.body}
-                            </p>
+                          <li key={item.name} className="flex gap-3 py-3.5">
+                            <Icon
+                              name="check"
+                              className="text-brand-deep mt-[0.3rem] size-3.5 shrink-0"
+                              strokeWidth={2.75}
+                            />
+                            <div className="min-w-0">
+                              <h4 className="text-ink text-[0.9375rem] font-semibold">
+                                {item.name}
+                              </h4>
+                              <p className="text-ink-soft mt-1 text-[0.8125rem] leading-[1.6]">
+                                {item.body}
+                              </p>
+                            </div>
                           </li>
                         ))}
                       </ul>
                     </div>
+
+                    {/* The frame the stage panels on /marketing use: the card,
+                        a little breathing room, and the picture inside its own
+                        bordered window so it is presented rather than pasted
+                        onto the page. */}
+                    <figure className="card overflow-hidden p-2.5 sm:p-3">
+                      <div className="border-line bg-canvas overflow-hidden rounded-xl border">
+                        <Image
+                          src={family.shot.src}
+                          alt={family.shot.alt}
+                          width={family.shot.width}
+                          height={family.shot.height}
+                          sizes="(min-width: 1024px) 34rem, 94vw"
+                          className="h-auto w-full"
+                        />
+                      </div>
+                    </figure>
                   </article>
                 </Reveal>
               ))}

@@ -123,11 +123,32 @@ export function StageShowcase({
                   className="h-full w-full object-cover object-top"
                 />
               </div>
-              {/* Three lines' worth, so a short description and a long one
-                  leave the strip below in the same place. */}
-              <p className="text-ink-soft mt-7 text-[1rem] leading-relaxed lg:min-h-[7.5rem]">
-                {item.body}
-              </p>
+              {/*
+               * Every description in the stage sits in the one grid cell, and
+               * all but the live one are hidden rather than unmounted. The
+               * cell is therefore as tall as the longest of them and never
+               * changes as the panel advances, which is what keeps the strip
+               * below from moving under a cursor reaching for a tab.
+               *
+               * This replaced a flat three-line minimum. Three lines is right
+               * for the assistant answers in 01 and a line too many for the
+               * ad consoles in 03, where it left a band of empty panel above
+               * the strip. Measuring the stage's own copy costs nothing and
+               * is never wrong. `invisible` is visibility, not display, so
+               * the hidden ones hold the space without being read out.
+               */}
+              <div className="mt-7 grid">
+                {items.map((entry, n) => (
+                  <p
+                    key={entry.title}
+                    className={`text-ink-soft col-start-1 row-start-1 text-[1rem] leading-relaxed ${
+                      n === i ? "" : "invisible"
+                    }`}
+                  >
+                    {entry.body}
+                  </p>
+                ))}
+              </div>
             </>
           ) : (
             <>
@@ -156,9 +177,20 @@ export function StageShowcase({
               <h3 className="display text-ink mt-6 text-[1.5rem] sm:text-[1.875rem]">
                 {item.title}
               </h3>
-              <p className="text-ink-soft mt-4 max-w-xl text-[1rem] leading-relaxed">
-                {item.body}
-              </p>
+              {/* Stacked the same way, so a stage with no pictures holds its
+                  height too. */}
+              <div className="mt-4 grid max-w-xl">
+                {items.map((entry, n) => (
+                  <p
+                    key={entry.title}
+                    className={`text-ink-soft col-start-1 row-start-1 text-[1rem] leading-relaxed ${
+                      n === i ? "" : "invisible"
+                    }`}
+                  >
+                    {entry.body}
+                  </p>
+                ))}
+              </div>
             </>
           )}
         </div>

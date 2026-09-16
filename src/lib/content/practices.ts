@@ -77,7 +77,11 @@ export const marketing: {
    * more than one, so it is a list — a single mark cannot stand for
    * "Amazon and Flipkart" without misleading someone.
    */
-  channels: (IconCard & { logos: Brand[] })[];
+  channels: (IconCard & {
+    logos: Brand[];
+    /** The console itself, cut to the same window as every other panel shot. */
+    shot?: { src: string; alt: string; width: number; height: number };
+  })[];
   note: string;
 } = {
   eyebrow: "Growth & Marketing",
@@ -87,6 +91,12 @@ export const marketing: {
     {
       icon: "cart",
       title: "Marketplace Ads",
+      shot: {
+        src: "/marketing/ads-marketplace.webp",
+        width: 1600,
+        height: 800,
+        alt: "An illustration of an Amazon search for wireless headphones: the sponsored row across the top marked as paid placements, and the organic results beneath it.",
+      },
       logos: [
         { name: "Amazon", domain: "amazon.in" },
         { name: "Flipkart", domain: "flipkart.com" },
@@ -96,6 +106,12 @@ export const marketing: {
     {
       icon: "target",
       title: "Meta Ads",
+      shot: {
+        src: "/marketing/ads-meta.webp",
+        width: 1600,
+        height: 800,
+        alt: "An illustration of Meta Business Suite: boosting a post on one side, and Ads Manager on the other with live campaigns, an ad preview for Facebook and Instagram, and the results.",
+      },
       logos: [
         { name: "Meta", domain: "meta.com" },
         { name: "Instagram", domain: "instagram.com" },
@@ -106,12 +122,24 @@ export const marketing: {
     {
       icon: "video",
       title: "YouTube Ads",
+      shot: {
+        src: "/marketing/ads-youtube.webp",
+        width: 1600,
+        height: 800,
+        alt: "An illustration of a skippable in-stream ad running on YouTube on a desktop and a phone, with the ad formats listed underneath.",
+      },
       logos: [{ name: "YouTube", domain: "youtube.com" }],
       body: "In-stream, in-feed and Shorts, cut from the videos we already shoot for you rather than a television spot resized. Bought through Google Ads and measured alongside the rest of it.",
     },
     {
       icon: "globe",
       title: "Google SEO",
+      shot: {
+        src: "/marketing/ads-google-seo.webp",
+        width: 1600,
+        height: 800,
+        alt: "An illustration of the same search before and after SEO, one brand moving from nowhere into the first result, with the work that moves it listed underneath.",
+      },
       logos: [
         { name: "Google", domain: "google.com" },
         { name: "Search Console", domain: "search.google.com" },
@@ -121,20 +149,26 @@ export const marketing: {
     {
       icon: "search",
       title: "Google Ads",
+      shot: {
+        src: "/marketing/ads-google.webp",
+        width: 1600,
+        height: 800,
+        alt: "An illustration of a Google search for running shoes: the Shopping ads marked at the top of the page, and the organic results below them.",
+      },
       logos: [{ name: "Google Ads", domain: "ads.google.com" }],
       body: "Search, Shopping, Performance Max and Demand Gen. Tight keyword and negative hygiene, landing pages built by our own engineers, bidding tuned to margin rather than clicks.",
     },
     {
       icon: "briefcase",
       title: "LinkedIn Ads",
+      shot: {
+        src: "/marketing/ads-linkedin.webp",
+        width: 1600,
+        height: 800,
+        alt: "An illustration of a promoted post in the LinkedIn feed on a desktop and a phone, with the targeting options and an example of ad performance beside it.",
+      },
       logos: [{ name: "LinkedIn", domain: "linkedin.com" }],
       body: "For longer B2B cycles: targeting by job title and company, founder-led content behind the spend, and lead-gen forms that feed a CRM instead of a spreadsheet.",
-    },
-    {
-      icon: "message",
-      title: "WhatsApp Status Ads",
-      logos: [{ name: "WhatsApp Business", domain: "business.whatsapp.com" }],
-      body: "Ads in the Updates tab where Meta has rolled them out, plus click-to-WhatsApp campaigns that land in a chat — answered by a person, or by an agent that qualifies and books.",
     },
   ],
   note: "Not sure which channels fit? The first thing we do is tell you which ones to skip.",

@@ -43,7 +43,10 @@ export function AgentDomains() {
   const [done, setDone] = useState(0);
 
   const item = domains.items[i];
-  const screen = screenFor(item.industry);
+  // Its own sample output where the team has one, and the worked example
+  // already written for that trade where it does not — every team has one or
+  // the other now, so the panel never falls back to the ticking task list.
+  const screen = item.screen ?? screenFor(item.industry);
 
   // The task list starts again whenever the team does, however it changed.
   // Adjusted during render rather than in an effect: React throws away the

@@ -58,14 +58,21 @@ export const marketingPage: {
   };
   find: { eyebrow: string; title: string; lede: string; items: Tile[] };
   content: { eyebrow: string; title: string; lede: string; items: Tile[] };
-  measure: { eyebrow: string; title: string; lede: string; items: Tile[] };
+  /** The one stage shown as a single picture: everything it covers is in
+   *  the shot, so the copy beside it summarises rather than lists. */
+  measure: {
+    eyebrow: string;
+    title: string;
+    lede: string;
+    shot: { src: string; alt: string; width: number; height: number };
+  };
   cta: { title: string; body: string; primary: Link; secondary: Link };
 } = {
   meta: {
     title:
-      "Growth marketing — paid social, Google Ads and SEO, marketplace and WhatsApp, content and measurement",
+      "Growth marketing — paid social, Google Ads and SEO, marketplace ads, content and measurement",
     description:
-      "Meta, Google, YouTube, LinkedIn, marketplace and WhatsApp advertising, the video, images and writing that make them work, and marketing mix modelling to say which of them moved revenue. Plus tracking what ChatGPT, Gemini, Perplexity and Google's AI answers say about you.",
+      "Meta, Google, YouTube, LinkedIn and marketplace advertising, the video, images and writing that make them work, and marketing mix modelling to say which of them moved revenue. Plus tracking what ChatGPT, Gemini, Perplexity and Google's AI answers say about you.",
   },
 
   hero: {
@@ -80,7 +87,7 @@ export const marketingPage: {
     primaryCta: { label: "Get a plan", href: "/contact#enquiry" },
     secondaryCta: { label: "See the channels", href: "#run" },
     stats: [
-      { value: "7", label: "Channels run in-house" },
+      { value: "6", label: "Channels run in-house" },
       { value: "20+", label: "Platforms and consoles" },
       { value: "4", label: "Practices under one roof" },
     ],
@@ -206,13 +213,6 @@ export const marketingPage: {
             body: "For longer B2B cycles: targeting by job and company, and lead-gen that feeds a CRM.",
             logos: [{ name: "LinkedIn", domain: "linkedin.com" }],
           },
-          {
-            title: "WhatsApp status ads",
-            body: "Ads in the Updates tab, and click-to-WhatsApp campaigns that open a chat instead of a form.",
-            logos: [
-              { name: "WhatsApp Business", domain: "business.whatsapp.com" },
-            ],
-          },
         ],
       },
       {
@@ -225,31 +225,15 @@ export const marketingPage: {
         services: [
           {
             title: "Marketing mix modelling",
-            body: "What each channel really contributed, once they stop being measured one at a time.",
+            body: "What each channel really contributed, once they stop being measured one at a time — with holdout tests to check it.",
           },
           {
-            title: "Incrementality testing",
-            body: "Geo and holdout tests answering the only question that matters: would this sale have happened anyway?",
+            title: "Attribution & budget",
+            body: "One model across channels, turned into next month's spend plan instead of an argument about whose number is right.",
           },
           {
-            title: "Attribution you can defend",
-            body: "One model across channels, so Meta and Google stop both claiming the same conversion.",
-          },
-          {
-            title: "GA4 & Tag Manager",
-            body: "Set up correctly, with server-side tracking so ad blockers and iOS stop deleting a third of the data.",
-            logos: [
-              { name: "Google Analytics", domain: "analytics.google.com" },
-              { name: "Tag Manager", domain: "tagmanager.google.com" },
-            ],
-          },
-          {
-            title: "Dashboards that say something",
-            body: "One view of spend, pipeline and revenue, with the model's read on it — not twelve charts and no conclusion.",
-          },
-          {
-            title: "The monthly call",
-            body: "What worked, what gets more, what stops — written down, so the next month starts with a plan.",
+            title: "Dashboards & the monthly call",
+            body: "One view of spend, pipeline and revenue, and a call that names what changes — not twelve charts and no conclusion.",
           },
         ],
       },
@@ -419,50 +403,13 @@ export const marketingPage: {
   measure: {
     eyebrow: "Measurement & reporting",
     title: "One read on what actually moved revenue",
-    lede: "Every ad platform claims the same sale, so the totals never add up. We model the whole mix together, test it against what really happened, and put the answer into one dashboard and one call a month that names what changes. Modelling nobody reads is not measurement, and a dashboard with no model behind it is decoration.",
-    items: [
-      {
-        icon: "chart",
-        title: "Marketing mix modelling",
-        body: "Models every channel together — including offline and brand spend the pixels never see — to show what each one really contributed.",
-      },
-      {
-        icon: "target",
-        title: "Incrementality testing",
-        body: "Geo and holdout tests that answer the only question that matters: would this sale have happened anyway?",
-      },
-      {
-        icon: "share",
-        title: "Attribution you can defend",
-        body: "One model applied across channels, so Meta and Google stop both claiming the same conversion and the totals reconcile.",
-      },
-      {
-        icon: "gauge",
-        title: "Budget allocation & forecasting",
-        body: "The model turned into a spend plan, with what a 30% increase is likely to return before you commit it — and the uncertainty stated rather than hidden.",
-      },
-      {
-        icon: "database",
-        title: "Cohorts, LTV & payback",
-        body: "What a customer is worth over time and how long they take to pay back, so acquisition targets come from margin rather than a guess.",
-      },
-      {
-        icon: "plug",
-        title: "GA4, Tag Manager & server-side",
-        domain: "analytics.google.com",
-        body: "Set up correctly the first time: clean events, consent handled, no double counting, and conversions sent server to server so iOS and ad blockers stop deleting a third of your data.",
-      },
-      {
-        icon: "workflow",
-        title: "CRO & A/B testing",
-        body: "Tests on the pages that carry the revenue — checkout, pricing, the main landing page — not on button colours.",
-      },
-      {
-        icon: "notebook",
-        title: "Dashboards & the monthly call",
-        body: "One view of spend, pipeline and revenue with the model's read on it, and a call each month on what worked, what gets more and what stops.",
-      },
-    ],
+    lede: "Every ad platform claims the same sale, so the totals never add up. We model the whole mix in one place — online, offline and the brand spend no pixel ever sees — then check that model against geo and holdout tests, which answer whether a sale would have happened anyway. What comes out is an attribution you can defend, a spend plan you can run scenarios against before committing the money, and one dashboard with the model behind it. Then a call each month that names what changes: what worked, what gets more, what stops.",
+    shot: {
+      src: "/marketing/measure-dashboard.webp",
+      width: 1536,
+      height: 1024,
+      alt: "A marketing mix modelling dashboard: incremental revenue and ROAS across the top, each channel's real contribution, modelled revenue against actual, a geo holdout test, and a scenario planner comparing spend plans.",
+    },
   },
 
   cta: {

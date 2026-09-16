@@ -375,7 +375,7 @@ export const academy: {
       },
       {
         q: "What are the notes, exactly?",
-        a: "A written reference for every topic we cover, kept in your dashboard rather than handed out as slides. Each one has the explanation, a worked example with its output beside it, and practice questions at the end. They are edited as the course runs  + EM +  if a session throws up a better way to explain something, the note is updated that week and you see the new one.",
+        a: "A written reference for every topic we cover, kept in your dashboard rather than handed out as slides. Each one has the explanation, a worked example with its output beside it, and practice questions at the end. They are edited as the course runs — if a session throws up a better way to explain something, the note is updated that week and you see the new one.",
       },
       {
         q: "What is the practice environment?",
@@ -383,7 +383,7 @@ export const academy: {
       },
       {
         q: "Do I keep any of it afterwards?",
-        a: "Yes. Your login stays, so the notes and the practice environment stay with you  + EM +  including the updates made after your cohort finishes. The programme ends with a technical mock interview and a written roadmap specific to where you are and what you are targeting.",
+        a: "Yes. Your login stays, so the notes and the practice environment stay with you — including the updates made after your cohort finishes. The programme ends with a technical mock interview and a written roadmap specific to where you are and what you are targeting.",
       },
     ],
 

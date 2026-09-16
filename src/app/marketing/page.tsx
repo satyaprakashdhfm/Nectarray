@@ -65,8 +65,8 @@ const STAGE_COPY: Record<string, { title: string; lede: string }> = {
   "04": { title: measure.title, lede: measure.lede },
 };
 
-/** And the services it shows. */
-const STAGE_ITEMS: Record<string, ShowcaseItem[]> = {
+/** And the services it shows — except 04, which is one picture instead. */
+const STAGE_ITEMS: Record<string, ShowcaseItem[] | undefined> = {
   "01": find.items.map(toItem),
   "02": content.items.map(toItem),
   "03": marketing.channels.map((c) => ({
@@ -74,8 +74,13 @@ const STAGE_ITEMS: Record<string, ShowcaseItem[]> = {
     title: c.title,
     body: c.body,
     logos: c.logos,
+    shot: c.shot,
   })),
-  "04": measure.items.map(toItem),
+};
+
+/** The stages shown whole, as one shot with no strip under it. */
+const STAGE_SHOT: Record<string, typeof measure.shot | undefined> = {
+  "04": measure.shot,
 };
 
 /** Service schema scoped to this page. */
@@ -312,6 +317,7 @@ export default function MarketingPage() {
             title={STAGE_COPY[stage.n].title}
             lede={STAGE_COPY[stage.n].lede}
             items={STAGE_ITEMS[stage.n]}
+            shot={STAGE_SHOT[stage.n]}
             ground={i % 2 === 0 ? "bg-canvas" : "bg-mist-deep"}
             texture={i % 2 === 0}
           />

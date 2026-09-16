@@ -25,7 +25,10 @@ export const agenticAiPage = {
     /** Overlaid on the hero panel, the way /academy badges its card. */
     panel: {
       badge: "The tooling",
-      lines: ["Built on harnesses.", "Not from scratch."] as [string, string],
+      lines: ["Proven harnesses.", "Wired into your stack."] as [
+        string,
+        string,
+      ],
     },
     primaryCta: { label: "Start an agent", href: "/contact#enquiry" },
     secondaryCta: { label: "See what we build", href: "#capabilities" },
@@ -41,31 +44,37 @@ export const agenticAiPage = {
       icon: "bot",
       title: "Agents that do the work",
       summary:
-        "An agent given one job somebody currently does by hand, wired into the systems that job already touches. Customer conversations on every channel, yes  + EM +  but equally the reconciliation, the chasing, the triage and the weekly report. It answers from your own documentation and data, cites where each answer came from, and stops for a person the moment a person is wanted.",
+        "One job somebody currently does by hand, wired into the systems that job already touches — the conversations on every channel, and equally the triage, the chasing and the weekly report. It answers from your own data, says where each answer came from, and stops for a person the moment a person is wanted.",
+      shot: {
+        src: "/agentic/agents.webp",
+        width: 1536,
+        height: 1024,
+        alt: "One agent at the centre of the channels it works across — web chat, a phone call, WhatsApp, a ticket queue, a CRM record and internal documents — with the systems it reads from ranged underneath.",
+      },
       items: [
         {
           name: "Support agent on your site",
-          body: "Reads your documentation, policies and product catalogue, and answers from them with a link to the source. You mark the topics that always go to a human, and it routes those with the full conversation attached.",
+          body: "Answers from your own documentation, with the source linked.",
         },
         {
           name: "Voice agent on the phone",
-          body: "Takes inbound calls and makes outbound ones — bookings, reminders, order status, qualification. Every call arrives in your inbox afterwards as a recording, a transcript and a short summary of what was agreed.",
+          body: "Inbound and outbound calls, each one recorded, transcribed and summarised.",
         },
         {
           name: "WhatsApp agent",
-          body: "The same agent on WhatsApp Business API, where most Indian customers already are. Order status, appointments, delivery updates and FAQs, and your team can take over the same thread mid-conversation.",
+          body: "The same agent where most of your customers already are.",
         },
         {
           name: "Ticket raising and resolution",
-          body: "Opens the ticket itself, with the priority, the category and the customer's details already filled in from the conversation. It resolves what it can end to end, and tracks the rest to closure so nothing sits unanswered.",
+          body: "Opens the ticket already filled in, and closes what it can itself.",
         },
         {
           name: "Sales and qualification",
-          body: "Asks the questions your team would ask, books the call on a real calendar, and writes the lead into your CRM with every answer attached, ready for someone to pick up.",
+          body: "Qualifies, books the call, writes the lead into your CRM.",
         },
         {
           name: "Internal helpdesk",
-          body: "The staff-facing version, over your SOPs, contracts, past tickets and spreadsheets. It answers the questions your senior people currently answer forty times a week.",
+          body: "Your SOPs and past tickets, answering staff instead of your seniors.",
         },
       ],
     },
@@ -75,27 +84,33 @@ export const agenticAiPage = {
       icon: "plug",
       title: "Custom MCP servers, for any system",
       summary:
-        "Model Context Protocol is the standard way an AI client gets safe, typed access to a system. We build the server that exposes yours, once, and from then on every AI tool you adopt can work with your data through it — with the permissions and the audit trail enforced on the server where they hold.",
+        "Model Context Protocol is the standard way an AI client gets safe, typed access to a system. We build the server that exposes yours once, and from then on every AI tool you adopt works through it — with the permissions and the audit trail enforced on the server, where they hold.",
+      shot: {
+        src: "/agentic/mcp-server.webp",
+        width: 1536,
+        height: 1024,
+        alt: "One MCP server in the middle: the AI clients that connect to it on one side, the business systems it exposes as tools on the other, and the choice of hosting it yourself or with us underneath.",
+      },
       items: [
         {
           name: "Your systems as tools",
-          body: "Your CRM, database, ticketing, inventory and internal APIs wrapped as MCP tools with proper schemas, so a model calls them the way your own engineers would.",
+          body: "CRM, database, ticketing, inventory and internal APIs, properly typed.",
         },
         {
           name: "Permissions on the server",
-          body: "Access decided per user and per role in the server itself. A salesperson's agent sees their own pipeline, and that is the whole of what it can reach.",
+          body: "Decided per user and per role, where the rule actually holds.",
         },
         {
           name: "Writes that are deliberate",
-          body: "Reads run freely. Anything that changes state — a refund, a cancellation, a message going out — is a separate tool, confirmed before it runs, rate-limited, and written to an audit log you can query later.",
+          body: "Reads run freely; anything that changes state is confirmed and logged.",
         },
         {
           name: "One integration, every client",
-          body: "Because it speaks MCP, the same server serves Claude, your own product, an internal tool, and whatever client you adopt next year. You build the integration once and reuse it.",
+          body: "Built once, and reused by whatever AI tool you adopt next year.",
         },
         {
           name: "Hosted wherever it belongs",
-          body: "Runs on your own infrastructure where the data has to stay inside it, or we host and operate it for you. The code is yours in both cases.",
+          body: "Your infrastructure or ours. The code is yours either way.",
         },
       ],
     },
@@ -692,7 +707,10 @@ export const agenticAiPage = {
                 ],
                 tone: "warn",
               },
-              { cells: ["Slots freed", "14", "", "This week"], tone: "total" },
+              {
+              cells: ["Slots freed", "14", "", "This week"],
+              tone: "total",
+            },
               {
                 cells: ["Refilled", "11", "", "Average 19 minutes"],
                 tone: "total",
@@ -809,6 +827,36 @@ export const agenticAiPage = {
         label: "Sales",
         icon: "target",
         body: "Research, follow-up and CRM hygiene — the work that gets skipped when the pipeline is busy, which is exactly when it costs you.",
+        screen: {
+          file: "Enquiries — overnight.xlsx",
+          columns: ["Enquiry", "Fit", "Value", "Next step"],
+          rows: [
+            {
+              cells: ["Lindqvist Interiors", "84 — close fit", "₹12,00,000", "Reply drafted, call offered"],
+              tone: "good",
+            },
+            {
+              cells: ["Okafor Logistics", "71 — worth a call", "₹4,50,000", "Reply drafted"],
+            },
+            {
+              cells: ["Moreau Retail", "66 — one question open", "Not stated", "Asked for volumes"],
+              tone: "warn",
+            },
+            {
+              cells: ["Tanaka Foods", "38 — wrong size for us", "₹60,000", "Polite decline drafted"],
+              tone: "muted",
+            },
+            {
+              cells: ["Enquiries overnight", "14", "", "All read and logged"],
+              tone: "total",
+            },
+            {
+              cells: ["Waiting on you", "4", "", "Nothing sent unreviewed"],
+              tone: "total",
+            },
+          ],
+          sheets: ["Enquiries", "Scoring", "CRM log"],
+        },
         steps: [
           "Read the new enquiry and the company behind it",
           "Score it against what actually closes for you",
@@ -839,6 +887,36 @@ export const agenticAiPage = {
         label: "Marketing",
         icon: "megaphone",
         body: "The repetitive half: briefs, variants, tagging and the weekly report nobody has time to assemble.",
+        screen: {
+          file: "Last week — by channel.xlsx",
+          columns: ["Channel", "Spend", "Leads", "The read"],
+          rows: [
+            {
+              cells: ["Google Ads", "₹1,84,000", "212", "Cost per lead down 18%"],
+              tone: "good",
+            },
+            {
+              cells: ["Meta Ads", "₹1,20,000", "96", "Flat — the creative is tired"],
+              tone: "warn",
+            },
+            {
+              cells: ["YouTube", "₹64,000", "31", "Reach up, leads thin"],
+            },
+            {
+              cells: ["Marketplace", "₹48,000", "—", "Sales up 9% on sponsored"],
+              tone: "good",
+            },
+            {
+              cells: ["Total", "₹4,16,000", "339", "₹1,227 a lead"],
+              tone: "total",
+            },
+            {
+              cells: ["Next round", "6 variants drafted", "", "Queued for your approval"],
+              tone: "muted",
+            },
+          ],
+          sheets: ["By channel", "Creative queue", "GA4"],
+        },
         steps: [
           "Pull last week from the ad platforms and GA4",
           "Write the read: what moved, what did not",
@@ -853,6 +931,35 @@ export const agenticAiPage = {
         label: "Operations & logistics",
         icon: "workflow",
         body: "Chasing status across systems that do not talk to each other, and telling somebody before it becomes a problem.",
+        screen: {
+          file: "Exceptions — today.xlsx",
+          columns: ["Order", "What is wrong", "Owner", "Status"],
+          rows: [
+            {
+              cells: ["#48219", "Courier has not moved it in three days", "Dispatch", "Escalated, customer told"],
+              tone: "warn",
+            },
+            {
+              cells: ["#48260", "Short by two units", "Warehouse", "Substitute offered"],
+            },
+            {
+              cells: ["#48311", "Address unreachable twice", "Support", "Customer messaged"],
+            },
+            {
+              cells: ["#48342", "Delivered but never invoiced", "Accounts", "Invoice raised"],
+              tone: "good",
+            },
+            {
+              cells: ["Orders moving today", "1,284", "", "Across three couriers"],
+              tone: "total",
+            },
+            {
+              cells: ["Needed a person", "4", "", "The rest cleared itself"],
+              tone: "total",
+            },
+          ],
+          sheets: ["Exceptions", "Courier feed", "Stock"],
+        },
         steps: [
           "Watch orders, stock and courier feeds",
           "Spot what is late, short or stuck",
@@ -867,6 +974,37 @@ export const agenticAiPage = {
         label: "People & hiring",
         icon: "briefcase",
         body: "Screening, scheduling and the onboarding checklist — the admin around hiring, not the judgement in it.",
+        screen: {
+          file: "Shortlist — backend engineer.xlsx",
+          columns: ["Candidate", "Evidence against the brief", "Screen", "Next"],
+          rows: [
+            {
+              cells: ["Ana Ferreira", "Payments at scale, four years", "Passed", "Tue 11:00, both free"],
+              tone: "good",
+            },
+            {
+              cells: ["Mariam Haddad", "Strong Postgres, no Go yet", "Passed", "Wed 15:30, both free"],
+              tone: "good",
+            },
+            {
+              cells: ["Karel Novak", "Good fit, 90-day notice", "Held", "Asked about start date"],
+              tone: "warn",
+            },
+            {
+              cells: ["24 others", "Below the brief on experience", "—", "Declined, with a reason"],
+              tone: "muted",
+            },
+            {
+              cells: ["Applications read", "27", "", "In full, not keyword-matched"],
+              tone: "total",
+            },
+            {
+              cells: ["To interview", "3", "", "Slots already offered"],
+              tone: "total",
+            },
+          ],
+          sheets: ["Shortlist", "Applications", "Onboarding"],
+        },
         steps: [
           "Read the applications against the real brief",
           "Summarise each one, evidence attached",
@@ -897,6 +1035,37 @@ export const agenticAiPage = {
         label: "Legal & compliance",
         icon: "notebook",
         body: "Reading the long documents and telling you which three clauses are not standard. A first pass, not an opinion.",
+        screen: {
+          file: "MSA — first pass.xlsx",
+          columns: ["Clause", "Against your playbook", "Precedent", "Action"],
+          rows: [
+            {
+              cells: ["Payment terms", "Net 90, you hold at Net 30", "Never agreed before", "Flagged for counsel"],
+              tone: "bad",
+            },
+            {
+              cells: ["Liability cap", "1x fees, you hold at 2x", "Three signed at 2x", "Push back, precedent attached"],
+              tone: "warn",
+            },
+            {
+              cells: ["Termination", "30 days for convenience", "Two precedents", "Within policy"],
+              tone: "good",
+            },
+            {
+              cells: ["IP assignment", "Standard wording", "—", "No action"],
+              tone: "good",
+            },
+            {
+              cells: ["Clauses read", "112", "", "Nine minutes"],
+              tone: "total",
+            },
+            {
+              cells: ["Not standard", "3", "", "Sent to counsel, work done"],
+              tone: "total",
+            },
+          ],
+          sheets: ["Review", "Playbook", "Precedent"],
+        },
         steps: [
           "Read the contract against your own playbook",
           "Mark every clause that departs from it",
@@ -911,6 +1080,36 @@ export const agenticAiPage = {
         label: "Engineering & IT",
         icon: "code",
         body: "Triage, on-call noise and the tickets that are the same five questions in different words.",
+        screen: {
+          file: "On-call — last night.xlsx",
+          columns: ["Alert", "Service", "First diagnosis", "Action"],
+          rows: [
+            {
+              cells: ["p95 latency over 2s", "checkout-api", "Cache miss storm, seen four times", "Runbook step 2, recovered"],
+              tone: "good",
+            },
+            {
+              cells: ["5xx spike", "payments-webhook", "Upstream gateway retrying", "Watched, cleared itself"],
+              tone: "good",
+            },
+            {
+              cells: ["Disk at 91%", "reports-worker", "Log rotation stalled", "Cleared, ticket raised"],
+            },
+            {
+              cells: ["Queue depth climbing", "sync-jobs", "Nothing like it in 90 days", "Paged a human, 02:14"],
+              tone: "warn",
+            },
+            {
+              cells: ["Alerts overnight", "38", "", "One of them woke somebody"],
+              tone: "total",
+            },
+            {
+              cells: ["Tickets closed", "12", "", "The same five questions"],
+              tone: "total",
+            },
+          ],
+          sheets: ["Triage", "Runbooks", "Tickets"],
+        },
         steps: [
           "Read the alert and the logs around it",
           "Group it with the incidents it resembles",
@@ -925,6 +1124,36 @@ export const agenticAiPage = {
         label: "Data & reporting",
         icon: "database",
         body: "The recurring question somebody answers by hand every Monday, answered from the source instead of a stale export.",
+        screen: {
+          file: "Monday numbers.xlsx",
+          columns: ["Metric", "This week", "vs last", "Note"],
+          rows: [
+            {
+              cells: ["Revenue", "₹42,80,000", "+6%", "Two large orders, not a trend"],
+              tone: "good",
+            },
+            {
+              cells: ["Orders", "1,842", "+3%", "Average order value flat"],
+            },
+            {
+              cells: ["Refund rate", "2.4%", "+0.6pt", "One SKU, a sizing problem"],
+              tone: "warn",
+            },
+            {
+              cells: ["Gross margin", "38%", "−1pt", "Freight, not discounting"],
+              tone: "warn",
+            },
+            {
+              cells: ["Reconciled against", "Ledger and gateway", "", "Before it was sent"],
+              tone: "total",
+            },
+            {
+              cells: ["Delivered", "Monday 08:00", "", "Where the team already looks"],
+              tone: "muted",
+            },
+          ],
+          sheets: ["Summary", "Reconciliation", "Source query"],
+        },
         steps: [
           "Query the warehouse, not last week's export",
           "Check the numbers reconcile before sending",
@@ -937,8 +1166,8 @@ export const agenticAiPage = {
   },
 
   stack: {
-    title: "Built on harnesses, not from scratch",
-    body: "Every model and framework we would reach for, named. The harnesses below already solved streaming, tool calling, state, retries and tracing, so we build on them and spend the time on the part that is specific to you. Which model runs the job is a decision we make per task and can change later  + EM +  nothing in the build is welded to one vendor.",
+    title: "Built on proven harnesses, wired into your stack",
+    body: "Every model and framework we would reach for, named. The harnesses below already solved streaming, tool calling, state, retries and tracing, so we build on them and spend the time on the part that is specific to you. Which model runs the job is a decision we make per task and can change later — nothing in the build is welded to one vendor.",
     groups: [
       {
         label: "Models",
@@ -972,17 +1201,12 @@ export const agenticAiPage = {
         ],
       },
       {
-        label: "Orchestration",
+        label: "Orchestration & observability",
         brands: [
           { name: "Temporal", domain: "temporal.io" },
           { name: "Inngest", domain: "inngest.com" },
           { name: "n8n", domain: "n8n.io" },
           { name: "Vercel Cron", domain: "vercel.com" },
-        ],
-      },
-      {
-        label: "Evals & tracing",
-        brands: [
           { name: "LangSmith", domain: "smith.langchain.com" },
           { name: "Braintrust", domain: "braintrust.dev" },
           { name: "OpenTelemetry", domain: "opentelemetry.io" },
