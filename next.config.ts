@@ -3,6 +3,16 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  images: {
+    /*
+     * 90 is for the sample sites on /software: whole-page captures full of
+     * small text, which the default 75 visibly smears. Next 16 clamps any
+     * quality not listed here to the nearest one that is, silently — so
+     * without this, asking for 90 quietly got 75.
+     */
+    qualities: [75, 90],
+  },
+
   experimental: {
     /*
      * How long a navigated-to page stays in the client router cache.

@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { useCarousel } from "@/hooks";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { CategoryMark } from "@/components/software/CategoryMark";
 import { SiteMock } from "@/components/software/SiteMock";
 import { software } from "@/lib/content";
 
@@ -62,20 +61,7 @@ export function BuildShowcase() {
           className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-12 lg:p-10"
         >
           <div className="min-w-0">
-            <div
-              className="pointer-events-none relative size-16 select-none"
-              aria-hidden
-            >
-              <div className="bg-brand/15 absolute inset-3 rounded-full blur-xl" />
-              <CategoryMark
-                image={service.image}
-                icon={service.icon}
-                className="relative size-full"
-                fallbackClassName="p-3"
-              />
-            </div>
-
-            <h3 className="display text-ink mt-5 text-[1.5rem] sm:text-[1.875rem]">
+            <h3 className="display text-ink text-[1.5rem] sm:text-[1.875rem]">
               {service.title}
             </h3>
             <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
@@ -121,12 +107,15 @@ export function BuildShowcase() {
 
         <div className="border-line bg-mist flex items-center gap-2 border-t p-2">
           <div className="relative min-w-0 flex-1">
+            {/* Fades hint that the strip scrolls. From xl up all five tabs
+                fit, so they would only wash out the ends of the first and
+                last tab. */}
             <span
-              className="from-mist pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r to-transparent"
+              className="from-mist pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r to-transparent xl:hidden"
               aria-hidden
             />
             <span
-              className="from-mist pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l to-transparent"
+              className="from-mist pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l to-transparent xl:hidden"
               aria-hidden
             />
             <ul
@@ -135,8 +124,13 @@ export function BuildShowcase() {
               aria-label="What we build"
               className="relative flex [scrollbar-width:none] gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden"
             >
+              {/* flex-1 shares the row out evenly, so five tabs span the
+                  full width instead of bunching left and leaving a gap that
+                  reads as a missing sixth. shrink-0 keeps each at least its
+                  label's width, so on a narrow screen the strip scrolls
+                  rather than squashing them. */}
               {services.map((entry, n) => (
-                <li key={entry.title} className="shrink-0">
+                <li key={entry.title} className="flex-1 shrink-0">
                   <button
                     type="button"
                     role="tab"
@@ -145,7 +139,7 @@ export function BuildShowcase() {
                       tabs.current[n] = el;
                     }}
                     onClick={() => pick(n)}
-                    className={`relative flex items-center gap-2 overflow-hidden rounded-lg px-3 py-2 text-[0.8125rem] font-medium whitespace-nowrap transition-colors ${
+                    className={`relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg px-3 py-2 text-[0.8125rem] font-medium whitespace-nowrap transition-colors ${
                       n === i
                         ? "bg-brand-deep text-white"
                         : "text-ink-soft hover:bg-surface hover:text-ink"

@@ -36,8 +36,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "Folio",
       kind: "Freelance designer portfolio",
       image: "/samples/portfolio-b.webp",
-      width: 1000,
-      height: 3796,
+      width: 1440,
+      height: 5466,
       device: "desktop",
       credit: { label: "Folio by Laurent Begey · MIT", href: "https://themewagon.com/themes/folio-html/" },
     },
@@ -45,8 +45,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "Grunge",
       kind: "Creative studio portfolio",
       image: "/samples/portfolio-a.webp",
-      width: 1000,
-      height: 3981,
+      width: 1440,
+      height: 5732,
       device: "desktop",
       credit: { label: "Grunge by Jess Gaspar · MIT", href: "https://themewagon.com/themes/grunge/" },
     },
@@ -56,8 +56,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "Furni",
       kind: "Furniture & décor store",
       image: "/samples/shop-b.webp",
-      width: 1000,
-      height: 3698,
+      width: 1440,
+      height: 5325,
       device: "desktop",
       credit: { label: "Furni by Untree.co · CC BY 3.0", href: "https://untree.co/" },
     },
@@ -65,8 +65,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "Sarab",
       kind: "Restaurant & food ordering",
       image: "/samples/shop-a.webp",
-      width: 1000,
-      height: 6250,
+      width: 1440,
+      height: 9000,
       device: "desktop",
       credit: { label: "Sarab by Bestwpware · MIT", href: "https://themewagon.com/themes/sarab/" },
     },
@@ -76,8 +76,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "Orbit",
       kind: "Revenue & analytics dashboard",
       image: "/samples/dash-a.webp",
-      width: 1000,
-      height: 625,
+      width: 1440,
+      height: 900,
       device: "desktop",
       credit: { label: "Orbit by Benjamin Njami · MIT", href: "https://themewagon.com/themes/orbit/" },
     },
@@ -85,8 +85,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "DeskApp",
       kind: "Sales & inventory admin",
       image: "/samples/dash-b.webp",
-      width: 1000,
-      height: 1219,
+      width: 1440,
+      height: 1755,
       device: "desktop",
       credit: { label: "DeskApp by Ankit Hingarajiya · MIT", href: "https://github.com/dropways/deskapp" },
     },
@@ -96,8 +96,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "NexusAI",
       kind: "AI automation SaaS",
       image: "/samples/webapp-a.webp",
-      width: 1000,
-      height: 4943,
+      width: 1440,
+      height: 7118,
       device: "desktop",
       credit: { label: "NexusAI by Bestwpware · MIT", href: "https://themewagon.com/themes/nexusai/" },
     },
@@ -105,8 +105,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "DataNova",
       kind: "Analytics platform",
       image: "/samples/webapp-b.webp",
-      width: 1000,
-      height: 3775,
+      width: 1440,
+      height: 5436,
       device: "desktop",
       credit: { label: "DataNova by Emil Gulamov · MIT", href: "https://themewagon.com/themes/datanova/" },
     },
@@ -116,8 +116,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "Shop online",
       kind: "Furniture shopping app",
       image: "/samples/mobile-b.webp",
-      width: 460,
-      height: 924,
+      width: 638,
+      height: 1281,
       device: "mobile",
       credit: { label: "Designed by Freepik", href: "http://www.freepik.com" },
     },
@@ -125,8 +125,8 @@ const SAMPLES: Record<string, Sample[]> = {
       name: "Explore",
       kind: "Travel booking app",
       image: "/samples/mobile-a.webp",
-      width: 460,
-      height: 904,
+      width: 736,
+      height: 1447,
       device: "mobile",
       credit: { label: "Designed by Freepik", href: "http://www.freepik.com" },
     },
@@ -141,7 +141,11 @@ function Desktop({ sample }: { sample: Sample }) {
       alt={`${sample.name} home page`}
       width={sample.width}
       height={sample.height}
-      sizes="(min-width: 1024px) 34rem, 92vw"
+      // The frame's real width: just over half the page on desktop, capped
+      // where shell-wide stops growing. Under-stating this is what made it
+      // blurry — the browser fetched a 640px image for a 750px box.
+      sizes="(min-width: 1472px) 44rem, (min-width: 1024px) 55vw, 94vw"
+      quality={90}
       className="block h-auto w-full"
     />
   );
@@ -159,6 +163,7 @@ function Mobile({ sample }: { sample: Sample }) {
             width={sample.width}
             height={sample.height}
             sizes="15rem"
+            quality={90}
             className="block h-auto w-full"
           />
         </div>
