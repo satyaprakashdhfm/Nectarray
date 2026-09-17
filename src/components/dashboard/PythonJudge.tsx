@@ -24,6 +24,7 @@ import { CopyButton } from "@/components/dashboard/CopyButton";
 import {
   countdown,
   useSolution,
+  type Complexity,
   type SolutionState,
 } from "@/components/dashboard/use-solution";
 import { display, displayArgs } from "@/lib/judge";
@@ -81,6 +82,8 @@ type Failing = {
 
 type Verdict = {
   verdict: "accepted" | "wrong" | "timeout" | "error";
+  /** Set only on an accepted verdict — see the judge route for why. */
+  complexity?: Complexity | null;
   passed?: number;
   total?: number;
   ms?: number | null;
@@ -541,10 +544,23 @@ function Results({ run, solved }: { run: Run; solved: boolean }) {
     );
   }
 
-  const { failing, results } = run.verdict;
+  const { failing, results, complexity } = run.verdict;
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4">
+      {/* What it should cost, once it passes.
+          Here rather than in the statement: before you have solved it this is
+          a hint — O(n) time and O(1) space rules out sorting and rules out a
+          second pass with a dict — and after you have solved it, it is the
+          next question. Yours passed; is it this? That is where an interview
+          starts, and the judge cannot ask it for you. */}
+      {complexity && (
+        <div className="mb-4">
+          <p className="eyebrow mb-2">What the worked solution costs</p>
+          <ComplexityNote complexity={complexity} />
+        </div>
+      )}
+
       {/* One failing case, the way LeetCode shows it: enough to debug with,
           not enough to read the answer key off a run of wrong submissions. */}
       {failing && (
@@ -693,7 +709,11 @@ function ProblemList({
                       )}
                     >
                       {solved.includes(entry.id) ? (
-                        <Check className="size-2.5" strokeWidth={4} aria-hidden />
+                        <Check
+                          className="size-2.5"
+                          strokeWidth={4}
+                          aria-hidden
+                        />
                       ) : (
                         i + 1
                       )}
@@ -782,6 +802,79 @@ function SolutionButton({ solution }: { solution: SolutionState }) {
 }
 
 /** The revealed answer, with a copy button on it. */
+/**
+ * Time and space, the way an editorial prints them.
+ *
+ * Two terms and a line saying where they come from, because the figure on its
+ * own teaches nothing — "O(n log n)" is worth having only once you can see it
+ * is the sort, and that the sweep after it was never the problem.
+ *
+ * Space is auxiliary: what the method allocates beyond what it returns. That
+ * is the convention the textbooks use, and it is the only one under which
+ * "sort it in O(1) space" means anything at all.
+ */
+function ComplexityNote({
+  complexity,
+  tone = "light",
+}: {
+  complexity: Complexity;
+  tone?: "light" | "dark";
+}) {
+  const dark = tone === "dark";
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-3 py-2.5",
+        dark ? "border-white/10 bg-white/5" : "border-line bg-mist",
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        {(
+          [
+            ["Time", complexity.time],
+            ["Space", complexity.space],
+          ] as const
+        ).map(([label, value]) => (
+          <p key={label} className="flex items-baseline gap-1.5">
+            <span
+              className={cn(
+                "text-[0.6875rem] font-semibold tracking-[0.12em] uppercase",
+                dark ? "text-white/40" : "text-ink-faint",
+              )}
+            >
+              {label}
+            </span>
+            <span
+              className={cn(
+                "font-mono text-[0.875rem] font-semibold",
+                dark ? "text-white" : "text-ink",
+              )}
+            >
+              {value}
+            </span>
+          </p>
+        ))}
+      </div>
+      <p
+        className={cn(
+          "mt-1.5 text-[0.75rem] leading-relaxed",
+          dark ? "text-white/50" : "text-ink-soft",
+        )}
+      >
+        {complexity.note}
+      </p>
+      <p
+        className={cn(
+          "mt-1 text-[0.6875rem]",
+          dark ? "text-white/30" : "text-ink-faint",
+        )}
+      >
+        Space is what it allocates beyond the answer it returns.
+      </p>
+    </div>
+  );
+}
+
 function SolutionBlock({
   solution,
   language,
@@ -807,6 +900,11 @@ function SolutionBlock({
       <pre className="overflow-x-auto p-3 font-mono text-[0.75rem] leading-[1.6] whitespace-pre-wrap text-white/90">
         {solution.busy ? "Loading…" : (solution.text ?? "")}
       </pre>
+      {solution.complexity && (
+        <div className="border-night-line border-t p-3">
+          <ComplexityNote complexity={solution.complexity} tone="dark" />
+        </div>
+      )}
     </div>
   );
 }

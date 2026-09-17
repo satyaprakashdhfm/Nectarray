@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { practiceQuestions } from "@/lib/db/schema";
 import { AccessError, requireEnrolled } from "@/lib/auth/access";
-import { getProblem } from "@/lib/python-tests";
+import { getComplexity, getProblem } from "@/lib/python-tests";
 import { readClock } from "@/lib/practice-clock";
 
 /**
@@ -53,8 +53,12 @@ export async function GET(request: Request) {
     }
 
     if (question.track === "python") {
-      const problem = question.slug ? await getProblem(question.slug) : null;
-      if (!problem) {
+      // Both guards up front, so `slug` is narrowed for the lookup below
+      // rather than asserted. A question with no slug has no worked solution
+      // to hand over anyway — it is the same 404 either way.
+      const { slug } = question;
+      const problem = slug ? await getProblem(slug) : null;
+      if (!slug || !problem) {
         return NextResponse.json(
           { error: "No worked solution for this one." },
           { status: 404 },
@@ -64,6 +68,7 @@ export async function GET(request: Request) {
         ...clock,
         language: "python",
         solution: problem.solution_py,
+        complexity: await getComplexity(slug),
       });
     }
 

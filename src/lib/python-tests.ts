@@ -39,7 +39,24 @@ export type ProblemBrief = {
   /** The problem itself, written out. See content/python-statements.json. */
   statement: string;
   constraints: string[];
+  /** What the reference solution costs. Withheld until it is unlocked. */
+  complexity: Complexity | null;
 };
+
+/**
+ * The cost of the worked solution, in the two terms an interviewer asks for.
+ *
+ * Space is auxiliary — what the method allocates beyond the value it hands
+ * back — which is the convention every editorial uses and the one that makes
+ * "sort it in O(1) space" mean anything.
+ *
+ * Read off the solution in content/python-tests.json rather than off the
+ * canonical answer, because several of them differ: this first-missing-positive
+ * uses a set, so it is O(n) space and not the O(1) the textbook version gets.
+ * A figure that does not describe the code printed underneath it is worse than
+ * none.
+ */
+export type Complexity = { time: string; space: string; note: string };
 
 /**
  * What each problem actually asks.
@@ -50,7 +67,11 @@ export type ProblemBrief = {
  * came back to a page that could not tell them whether they had answered it.
  * The statements are ours now.
  */
-type Statement = { statement: string; constraints: string[] };
+type Statement = {
+  statement: string;
+  constraints: string[];
+  complexity?: Complexity;
+};
 
 const FILE = path.join(process.cwd(), "content", "python-tests.json");
 const STATEMENTS = path.join(
@@ -59,11 +80,7 @@ const STATEMENTS = path.join(
   "python-statements.json",
 );
 const SUITES = path.join(process.cwd(), "testcases");
-const INDEX = path.join(
-  process.cwd(),
-  "content",
-  "python-testcase-index.json",
-);
+const INDEX = path.join(process.cwd(), "content", "python-testcase-index.json");
 
 /** Read once per process; it is a static file and never changes at runtime. */
 let loaded: Promise<Map<string, JudgedProblem>> | null = null;
@@ -144,6 +161,20 @@ function allStatements(): Promise<Record<string, Statement>> {
 }
 
 /**
+ * What a problem's worked solution costs.
+ *
+ * Deliberately not part of the brief. The brief is sent to the browser for
+ * every problem on the sheet, and "O(n) time, O(1) space" is a strong hint —
+ * it rules out sorting, it rules out a second pass with a dict. It travels
+ * with the solution instead, through the endpoint that already waits fifteen
+ * minutes, and it comes back with an accepted verdict, where it is no longer
+ * a hint but the thing worth reading.
+ */
+export async function getComplexity(slug: string): Promise<Complexity | null> {
+  return (await allStatements())[slug]?.complexity ?? null;
+}
+
+/**
  * The public half of every problem, keyed by slug.
  *
  * The statement, the starter code and three worked cases — enough to solve
@@ -174,6 +205,7 @@ export async function briefs(): Promise<Record<string, ProblemBrief>> {
       samples: summary?.samples ?? problem.tests.cases.slice(0, 3),
       statement: written[slug]?.statement ?? "",
       constraints: written[slug]?.constraints ?? [],
+      complexity: null,
     };
   }
 
@@ -192,6 +224,7 @@ export async function briefs(): Promise<Record<string, ProblemBrief>> {
       samples: [],
       statement: entry.statement,
       constraints: entry.constraints,
+      complexity: null,
     };
   }
 

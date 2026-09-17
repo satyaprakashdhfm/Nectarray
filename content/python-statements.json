@@ -5,7 +5,12 @@
       "2 ≤ len(nums) ≤ 10⁴",
       "−10⁹ ≤ nums[i] ≤ 10⁹",
       "Exactly one valid pair exists"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "One pass, with a dict of value → index behind it."
+    }
   },
   "remove-duplicates-from-sorted-array": {
     "statement": "`nums` is sorted ascending and may repeat. Move the distinct values to the front, in order, and return `k` — how many there are.\n\nThe first `k` positions of `nums` must hold those distinct values when you return. Whatever is left beyond `k` does not matter. Do it in place: no second list.",
@@ -13,34 +18,59 @@
       "1 ≤ len(nums) ≤ 3 × 10⁴",
       "`nums` is sorted in non-decreasing order",
       "The list is checked as well as the return value"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "One pass, writing back into the list it reads."
+    }
   },
   "best-time-to-buy-and-sell-stock": {
     "statement": "`prices[i]` is the price of one share on day `i`. Buy on one day and sell on a later one. Return the largest profit available; if no day pair turns a profit, return `0`.\n\nOne buy and one sell — you cannot sell before you buy.",
     "constraints": [
       "1 ≤ len(prices) ≤ 10⁵",
       "0 ≤ prices[i] ≤ 10⁴"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "One pass holding the lowest price seen so far."
+    }
   },
   "majority-element": {
     "statement": "Return the value that appears more than ⌊n/2⌋ times in `nums`.\n\nYou may assume such a value always exists, so there is no empty case to handle.",
     "constraints": [
       "1 ≤ len(nums) ≤ 5 × 10⁴",
       "A majority element is guaranteed"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Boyer–Moore: one counter, one candidate."
+    }
   },
   "move-zeroes": {
     "statement": "Shift every `0` in `nums` to the end while the non-zero values keep their relative order.\n\nIn place — the list itself is what gets checked, not a copy you return.",
     "constraints": [
       "1 ≤ len(nums) ≤ 10⁴",
       "Return nothing; the list is inspected afterwards"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "One pass, swapping in place."
+    }
   },
   "contains-duplicate": {
     "statement": "Return `True` if any value appears at least twice in `nums`, and `False` if every element is distinct.",
     "constraints": [
       "1 ≤ len(nums) ≤ 10⁵"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "The set is the whole method, and it holds every distinct value."
+    }
   },
   "missing-number": {
     "statement": "`nums` holds `n` distinct numbers drawn from the range `0..n` — so exactly one of that range is absent. Return it.",
@@ -48,7 +78,12 @@
       "n == len(nums)",
       "1 ≤ n ≤ 10⁴",
       "All values are distinct and in range `0..n`"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "The sum of 0..n minus the sum of the list."
+    }
   },
   "plus-one": {
     "statement": "`digits` is a non-negative integer, one decimal digit per element, most significant first. Add one to it and return the digits of the result.\n\nMind the carry: `[9, 9]` becomes `[1, 0, 0]`, which is longer than it started.",
@@ -56,7 +91,12 @@
       "1 ≤ len(digits) ≤ 100",
       "0 ≤ digits[i] ≤ 9",
       "No leading zeros, except the number 0 itself"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "O(n) space because it copies rather than editing the argument."
+    }
   },
   "merge-sorted-array": {
     "statement": "`nums1` has length `m + n`: `m` sorted values followed by `n` zeros to be written over. `nums2` holds `n` sorted values. Merge them so `nums1` ends up sorted.\n\nIn place, into `nums1`. Filling from the back is easier than from the front.",
@@ -65,7 +105,12 @@
       "nums2.length == n",
       "Both inputs are sorted ascending",
       "Return nothing; `nums1` is inspected afterwards"
-    ]
+    ],
+    "complexity": {
+      "time": "O(m + n)",
+      "space": "O(1)",
+      "note": "Filled from the back, so nothing needs moving twice."
+    }
   },
   "squares-of-a-sorted-array": {
     "statement": "`nums` is sorted ascending and may contain negatives. Return the squares of its values, sorted ascending.\n\nSorting afterwards works. Doing it in one pass from both ends is the point of the exercise.",
@@ -73,14 +118,24 @@
       "1 ≤ len(nums) ≤ 10⁴",
       "−10⁴ ≤ nums[i] ≤ 10⁴",
       "`nums` is already sorted"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Two pointers inward; the output does not count as extra."
+    }
   },
   "intersection-of-two-arrays-ii": {
     "statement": "Return the values that appear in both `nums1` and `nums2`, keeping duplicates: a value present twice in one and three times in the other appears twice in the answer.\n\nThe order of the result does not matter — it is compared as a multiset.",
     "constraints": [
       "1 ≤ len(nums1), len(nums2) ≤ 1000",
       "Order of the result is not checked"
-    ]
+    ],
+    "complexity": {
+      "time": "O(m + n)",
+      "space": "O(m)",
+      "note": "One Counter over the first list, then a pass over the second."
+    }
   },
   "rotate-array": {
     "statement": "Rotate `nums` to the right by `k` places, so the last `k` values wrap around to the front.\n\nIn place. `k` can be larger than the list.",
@@ -88,7 +143,12 @@
       "1 ≤ len(nums) ≤ 10⁵",
       "0 ≤ k ≤ 10⁵",
       "Return nothing; the list is inspected afterwards"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "O(n) space because the slices build new lists. Reversing three times does it in O(1)."
+    }
   },
   "product-of-array-except-self": {
     "statement": "Return a list where each position holds the product of every value in `nums` except the one at that position.\n\nWithout division, and in linear time. Two passes — running products from the left, then from the right — get you there.",
@@ -96,14 +156,24 @@
       "2 ≤ len(nums) ≤ 10⁵",
       "Every product fits in a 32-bit integer",
       "Do not use division"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Two passes over the output array, no division."
+    }
   },
   "maximum-subarray": {
     "statement": "Return the largest sum obtainable from a contiguous, non-empty run of `nums`.\n\nAll-negative input is allowed, in which case the answer is the least negative value.",
     "constraints": [
       "1 ≤ len(nums) ≤ 10⁵",
       "The subarray must be contiguous and non-empty"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Kadane: the best run ending here, carried forward."
+    }
   },
   "sort-colors": {
     "statement": "`nums` holds only `0`, `1` and `2`. Sort it in place so the zeros come first, then the ones, then the twos.\n\nOne pass, no counting sort, no library sort — that is the exercise.",
@@ -111,7 +181,12 @@
       "1 ≤ len(nums) ≤ 300",
       "nums[i] is 0, 1 or 2",
       "Return nothing; the list is inspected afterwards"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Dutch national flag, one pass, three pointers."
+    }
   },
   "subarray-sum-equals-k": {
     "statement": "Return how many contiguous subarrays of `nums` sum to `k`.\n\nNegatives are allowed, so a sliding window will not do it. Running sums and a count of the ones already seen will.",
@@ -119,7 +194,12 @@
       "1 ≤ len(nums) ≤ 2 × 10⁴",
       "−1000 ≤ nums[i] ≤ 1000",
       "Subarrays are counted, not listed"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "Running sums, and a count of the ones already seen."
+    }
   },
   "find-the-duplicate-number": {
     "statement": "`nums` has `n + 1` values, each in the range `1..n`. By the pigeonhole principle at least one value repeats — and exactly one does. Return it.\n\nSolvable without modifying the list and in constant extra space.",
@@ -127,7 +207,12 @@
       "len(nums) == n + 1",
       "1 ≤ nums[i] ≤ n",
       "Exactly one value is repeated, possibly many times"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Floyd's cycle detection over the index → value graph."
+    }
   },
   "3sum": {
     "statement": "Return every distinct triple of values from `nums` that sums to zero.\n\nDistinct by value, not by index: `[-1, 0, 1]` belongs in the answer once, however many ways the list can produce it. Order does not matter, within a triple or between them — the judge compares them unordered.",
@@ -135,7 +220,12 @@
       "3 ≤ len(nums) ≤ 3000",
       "No duplicate triples",
       "Order is not checked, at either level"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n²)",
+      "space": "O(n)",
+      "note": "Sort, then a two-pointer sweep for each first element."
+    }
   },
   "container-with-most-water": {
     "statement": "`height[i]` is the height of a vertical line at position `i`. Pick two lines so the container they form with the x-axis holds the most water, and return that area.\n\nArea is the shorter of the two lines times the distance between them.",
@@ -143,7 +233,12 @@
       "2 ≤ len(height) ≤ 10⁵",
       "0 ≤ height[i] ≤ 10⁴",
       "The container is not tilted"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Two pointers, always moving the shorter side."
+    }
   },
   "merge-intervals": {
     "statement": "`intervals` is a list of `[start, end]` pairs. Merge every pair that overlaps or touches, and return the result sorted by start.",
@@ -151,35 +246,60 @@
       "1 ≤ len(intervals) ≤ 10⁴",
       "start ≤ end",
       "The result is sorted by start"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n log n)",
+      "space": "O(n)",
+      "note": "The sort dominates; the sweep after it is linear."
+    }
   },
   "set-matrix-zeroes": {
     "statement": "If any cell of the matrix is `0`, set its whole row and its whole column to `0`.\n\nIn place. The trap is doing it as you go: a zero you write is indistinguishable from a zero that was there, so the effect spreads.",
     "constraints": [
       "1 ≤ rows, cols ≤ 200",
       "Return nothing; the matrix is inspected afterwards"
-    ]
+    ],
+    "complexity": {
+      "time": "O(m × n)",
+      "space": "O(m + n)",
+      "note": "A set of rows and a set of columns, then one rewrite."
+    }
   },
   "spiral-matrix": {
     "statement": "Return every value of the matrix in spiral order — along the top row, down the right side, back along the bottom, up the left, then inward.",
     "constraints": [
       "1 ≤ rows, cols ≤ 10",
       "The matrix need not be square"
-    ]
+    ],
+    "complexity": {
+      "time": "O(m × n)",
+      "space": "O(1)",
+      "note": "Four bounds walking inward; each cell visited once."
+    }
   },
   "next-permutation": {
     "statement": "Rearrange `nums` into the next permutation in lexicographic order. If it is already the largest, wrap around to the smallest — the sorted-ascending one.\n\nIn place, constant extra space.",
     "constraints": [
       "1 ≤ len(nums) ≤ 100",
       "Return nothing; the list is inspected afterwards"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Find the pivot, swap, reverse the tail — all in place."
+    }
   },
   "first-missing-positive": {
     "statement": "Return the smallest positive integer that does not appear in `nums`.\n\nLinear time and constant extra space is the whole difficulty — which means using the list itself as the bookkeeping.",
     "constraints": [
       "1 ≤ len(nums) ≤ 10⁵",
       "The answer is always in `1..len(nums) + 1`"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "A set, so O(n) space — the O(1) version rearranges the list itself."
+    }
   },
   "median-of-two-sorted-arrays": {
     "statement": "Two sorted lists, `nums1` and `nums2`. Return the median of the two combined.\n\nMerging them is O(m + n) and will pass; the problem is really asking for the binary search on the shorter list.",
@@ -187,7 +307,12 @@
       "Both lists are sorted ascending",
       "They are not both empty",
       "A whole-number median comes back as a float, e.g. `2.0`"
-    ]
+    ],
+    "complexity": {
+      "time": "O((m + n) log(m + n))",
+      "space": "O(m + n)",
+      "note": "This merges and sorts. The binary search on the shorter list is O(log min(m, n))."
+    }
   },
   "reverse-string": {
     "statement": "Reverse the list of characters `s` in place.\n\nConstant extra space — two pointers walking towards each other, not a new list.",
@@ -195,21 +320,36 @@
       "1 ≤ len(s) ≤ 10⁵",
       "`s` is a list of one-character strings",
       "Return nothing; the list is inspected afterwards"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Two pointers walking towards each other."
+    }
   },
   "valid-palindrome": {
     "statement": "Return `True` if `s` reads the same forwards and backwards once you ignore case and drop everything that is not a letter or a digit.\n\nAn empty string, after that filtering, counts as a palindrome.",
     "constraints": [
       "1 ≤ len(s) ≤ 2 × 10⁵",
       "`s` may hold letters, digits, spaces and punctuation"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "O(n) space for the filtered copy and its reverse."
+    }
   },
   "valid-anagram": {
     "statement": "Return `True` if `t` is an anagram of `s` — the same characters, the same number of each, in some order.",
     "constraints": [
       "1 ≤ len(s), len(t) ≤ 5 × 10⁴",
       "Lowercase English letters"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Two Counters over a 26-letter alphabet."
+    }
   },
   "longest-common-prefix": {
     "statement": "Return the longest string that every entry of `strs` starts with. If there is no common prefix, return `\"\"`.",
@@ -217,21 +357,36 @@
       "1 ≤ len(strs) ≤ 200",
       "Entries may be empty",
       "Lowercase English letters"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n × m)",
+      "space": "O(m)",
+      "note": "n words, m the length of the prefix being trimmed."
+    }
   },
   "find-the-index-of-the-first-occurrence-in-a-string": {
     "statement": "Return the index of the first occurrence of `needle` in `haystack`, or `-1` if it does not occur.\n\nAn empty needle occurs at index `0`.",
     "constraints": [
       "1 ≤ len(haystack), len(needle) ≤ 10⁴",
       "Lowercase English letters"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n × m)",
+      "space": "O(1)",
+      "note": "Worst case for a plain scan. KMP does it in O(n + m)."
+    }
   },
   "first-unique-character-in-a-string": {
     "statement": "Return the index of the first character in `s` that appears exactly once, or `-1` if every character repeats.",
     "constraints": [
       "1 ≤ len(s) ≤ 10⁵",
       "Lowercase English letters"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Count, then scan. The counter holds at most 26 keys."
+    }
   },
   "isomorphic-strings": {
     "statement": "Return `True` if `s` and `t` are isomorphic: the characters of `s` can be replaced to get `t`, with each character mapping to exactly one other and no two characters mapping to the same one.\n\nThe mapping has to work both ways — that second half is what most first attempts miss.",
@@ -239,28 +394,48 @@
       "1 ≤ len(s) ≤ 5 × 10⁴",
       "len(s) == len(t)",
       "A character may map to itself"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Two maps, each bounded by the alphabet."
+    }
   },
   "ransom-note": {
     "statement": "Return `True` if `ransomNote` can be built from the letters in `magazine`, each letter of the magazine usable at most once.",
     "constraints": [
       "1 ≤ len(ransomNote), len(magazine) ≤ 10⁵",
       "Lowercase English letters"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n + m)",
+      "space": "O(1)",
+      "note": "Counter subtraction over a 26-letter alphabet."
+    }
   },
   "longest-substring-without-repeating-characters": {
     "statement": "Return the length of the longest substring of `s` with no repeated character.\n\nSubstring, not subsequence — it has to be contiguous. A sliding window whose left edge jumps past the last sighting of the offending character does it in one pass.",
     "constraints": [
       "0 ≤ len(s) ≤ 5 × 10⁴",
       "`s` may hold letters, digits, symbols and spaces"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "One pass; the window map is bounded by the character set."
+    }
   },
   "longest-palindromic-substring": {
     "statement": "Return the longest palindromic substring of `s`.\n\nWhere two answers tie in length either is accepted only if the tests say so — here the expected answer is the one that starts earliest, so expand around each centre from left to right and keep the first of an equal-length pair.",
     "constraints": [
       "1 ≤ len(s) ≤ 1000",
       "On a tie, the earliest-starting substring is expected"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n²)",
+      "space": "O(n)",
+      "note": "Expand around each of the 2n−1 centres."
+    }
   },
   "group-anagrams": {
     "statement": "Group the entries of `strs` so that words which are anagrams of each other end up in the same list.\n\nOrder does not matter, within a group or between them — the judge compares them unordered.",
@@ -268,7 +443,12 @@
       "1 ≤ len(strs) ≤ 10⁴",
       "Lowercase English letters",
       "Order is not checked, at either level"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n × m log m)",
+      "space": "O(n × m)",
+      "note": "Sorting each word is the cost; the key is the sorted word."
+    }
   },
   "string-to-integer-atoi": {
     "statement": "Implement `atoi`: read a leading integer out of `s` the way C's function does.\n\nSkip leading whitespace; take an optional `+` or `-`; read digits until a non-digit or the end; ignore everything after. No digits means `0`. Clamp the result to the 32-bit signed range, `−2³¹` to `2³¹ − 1`.",
@@ -276,7 +456,12 @@
       "0 ≤ len(s) ≤ 200",
       "Clamp out-of-range results rather than wrapping them",
       "Whitespace here means the space character"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "One pass, and a clamp at the end."
+    }
   },
   "longest-repeating-character-replacement": {
     "statement": "You may change at most `k` characters of `s`, each to any uppercase letter. Return the length of the longest run of one repeated character you can produce.\n\nA window is valid while its length minus the count of its most common character is at most `k`.",
@@ -284,7 +469,12 @@
       "1 ≤ len(s) ≤ 10⁵",
       "0 ≤ k ≤ len(s)",
       "Uppercase English letters"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Sliding window; the counter is bounded by the alphabet."
+    }
   },
   "sort-characters-by-frequency": {
     "statement": "Return `s` rearranged so that characters appear in descending order of how often they occur, with all copies of a character together.\n\nCharacters that occur equally often are ordered by first appearance in `s`, which is what a stable sort of a counter gives you.",
@@ -292,7 +482,12 @@
       "1 ≤ len(s) ≤ 5 × 10⁵",
       "Letters and digits, upper and lower case",
       "Ties broken by first appearance"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "Counting is linear; most_common sorts a bounded alphabet."
+    }
   },
   "minimum-window-substring": {
     "statement": "Return the shortest substring of `s` that contains every character of `t`, counting duplicates. If there is none, return `\"\"`.\n\nWhere two windows tie in length the earliest one is expected. Grow the window until it is valid, then shrink from the left while it stays valid.",
@@ -301,14 +496,24 @@
       "`t` may repeat characters, and the counts must be met",
       "Upper and lower case are different characters",
       "On a tie, the earliest window is expected"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n + m)",
+      "space": "O(n)",
+      "note": "Each index enters and leaves the window once."
+    }
   },
   "contains-duplicate-ii": {
     "statement": "Return `True` if `nums` holds two equal values whose indices are at most `k` apart.",
     "constraints": [
       "1 ≤ len(nums) ≤ 10⁵",
       "0 ≤ k ≤ 10⁵"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "Last index seen for each value."
+    }
   },
   "word-pattern": {
     "statement": "`pattern` is a string of letters and `s` is a sentence of space-separated words. Return `True` if the words follow the pattern: each letter maps to exactly one word and each word to exactly one letter.\n\nLike Isomorphic Strings, but over words — and the mapping has to hold both ways.",
@@ -316,7 +521,12 @@
       "1 ≤ len(pattern) ≤ 300",
       "`s` has single spaces between words and none at either end",
       "Lowercase English letters"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "Split into words, then map both ways."
+    }
   },
   "intersection-of-two-arrays": {
     "statement": "Return the values present in both `nums1` and `nums2`, each appearing once.\n\nUnlike its sequel, duplicates are collapsed. The order of the result is not checked.",
@@ -324,7 +534,12 @@
       "1 ≤ len(nums1), len(nums2) ≤ 1000",
       "Each value appears at most once in the result",
       "Order of the result is not checked"
-    ]
+    ],
+    "complexity": {
+      "time": "O(m + n)",
+      "space": "O(m + n)",
+      "note": "Two sets and their intersection."
+    }
   },
   "find-common-characters": {
     "statement": "Return the characters that appear in every string of `words`, including duplicates: a character present twice in all of them appears twice in the answer.\n\nThe order of the result is not checked.",
@@ -332,14 +547,24 @@
       "1 ≤ len(words) ≤ 100",
       "Lowercase English letters",
       "Order of the result is not checked"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n × m)",
+      "space": "O(1)",
+      "note": "One Counter per word, intersected down; each is bounded by the alphabet."
+    }
   },
   "unique-number-of-occurrences": {
     "statement": "Count how many times each value occurs in `arr`. Return `True` if no two values occur the same number of times.",
     "constraints": [
       "1 ≤ len(arr) ≤ 1000",
       "−1000 ≤ arr[i] ≤ 1000"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "Count the values, then count the counts."
+    }
   },
   "top-k-frequent-elements": {
     "statement": "Return the `k` values that occur most often in `nums`.\n\nThe order of the result is not checked. The answer is unique — no tie can straddle the cut-off.",
@@ -347,7 +572,12 @@
       "1 ≤ len(nums) ≤ 10⁵",
       "1 ≤ k ≤ number of distinct values",
       "Order of the result is not checked"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n log k)",
+      "space": "O(n)",
+      "note": "Counting is linear; most_common(k) keeps a heap of size k."
+    }
   },
   "longest-consecutive-sequence": {
     "statement": "Return the length of the longest run of consecutive integers that can be formed from the values in `nums`. They need not be adjacent in the list.\n\nLinear time is the point: put the values in a set and start counting only from a value whose predecessor is absent, so each run is walked once.",
@@ -355,7 +585,12 @@
       "0 ≤ len(nums) ≤ 10⁵",
       "The values need not be sorted",
       "Duplicates count once"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "A set, and each run walked from its start only."
+    }
   },
   "4sum-ii": {
     "statement": "Four lists of the same length. Return how many index quadruples `(i, j, k, l)` satisfy `nums1[i] + nums2[j] + nums3[k] + nums4[l] == 0`.\n\nBy indices, not by value, so repeated values are counted separately. Sum the first two lists into a counter, then look up the negation of each sum of the last two.",
@@ -363,7 +598,12 @@
       "1 ≤ n ≤ 200",
       "All four lists have length `n`",
       "Quadruples are counted, not listed"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n²)",
+      "space": "O(n²)",
+      "note": "Every sum of the first two lists, looked up from the last two."
+    }
   },
   "find-all-anagrams-in-a-string": {
     "statement": "Return the start index of every substring of `s` that is an anagram of `p`, in ascending order.\n\nThe windows are all the same length, so slide one of length `len(p)` and compare character counts as it moves.",
@@ -371,7 +611,12 @@
       "1 ≤ len(s), len(p) ≤ 3 × 10⁴",
       "Lowercase English letters",
       "Indices in ascending order"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "One window of fixed width; the counters are bounded."
+    }
   },
   "4sum": {
     "statement": "Given a list of integers `nums` and an integer `target`, return every **unique** quadruplet `[a, b, c, d]` from `nums` that adds up to `target`.\n\nThe four values must come from four *different* positions, but they may repeat in value. No quadruplet may appear twice in your answer, and both the quadruplets and the numbers inside them can come back in any order.\n\nSort the list first: with the outer two numbers fixed by a pair of loops, the remaining two are found by walking a pointer in from each end.",
@@ -380,7 +625,12 @@
       "−10⁹ ≤ nums[i] ≤ 10⁹",
       "−10⁹ ≤ target ≤ 10⁹",
       "The sum of four values can exceed 32 bits — Python integers do not overflow"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n³)",
+      "space": "O(n)",
+      "note": "Two nested loops over a sorted list, two pointers inside."
+    }
   },
   "count-subarrays-with-xor-k": {
     "statement": "Given a list of integers `nums` and an integer `k`, return how many **contiguous subarrays** have a bitwise XOR equal to `k`.\n\nCounting every subarray directly is quadratic. Let `run` be the XOR of everything up to the current index: a subarray ending here XORs to `k` exactly when some earlier prefix XORed to `run ^ k`, so keeping a tally of the prefixes seen so far answers each position in constant time.\n\nThe empty prefix counts — start the tally with `{0: 1}`, or you will miss every subarray that starts at index 0.",
@@ -389,7 +639,12 @@
       "0 ≤ nums[i] ≤ 10⁹",
       "0 ≤ k ≤ 10⁹",
       "Subarrays are contiguous; the empty subarray does not count"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "note": "Prefix xor, and a count of each prefix already seen."
+    }
   },
   "find-the-repeating-and-missing-number": {
     "statement": "A list `nums` of length `n` should hold every integer from `1` to `n` exactly once. One value appears **twice** and one is **missing**.\n\nReturn `[repeating, missing]`.\n\nXOR everything in the list against every number from `1` to `n`: what survives is `repeating ^ missing`, since every other value cancels. Any set bit in that result is a bit on which the two numbers differ, so it splits both the list and the range into two groups — each containing exactly one of them.",
@@ -398,7 +653,12 @@
       "Every value is between 1 and n",
       "Exactly one value repeats and exactly one is missing",
       "Solvable in O(n) time and O(1) extra space"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "note": "Xor everything, split on one differing bit."
+    }
   },
   "count-inversions": {
     "statement": "An **inversion** is a pair of positions `i < j` where `nums[i] > nums[j]` — two elements that are in the wrong order relative to each other. Return how many inversions `nums` contains.\n\nThe count is a measure of how far the list is from sorted: already sorted gives 0, and fully reversed gives every pair.\n\nChecking all pairs is quadratic. Count them during a merge sort instead: when the merge takes a value from the right half while `i` elements remain unused in the left, that value is smaller than every one of them, so it closes `i` inversions at once.",
@@ -407,6 +667,11 @@
       "−10⁹ ≤ nums[i] ≤ 10⁹",
       "Equal values are not an inversion — the comparison is strict",
       "The answer can exceed 32 bits"
-    ]
+    ],
+    "complexity": {
+      "time": "O(n log n)",
+      "space": "O(n)",
+      "note": "Merge sort, counting what crosses on each merge."
+    }
   }
 }
