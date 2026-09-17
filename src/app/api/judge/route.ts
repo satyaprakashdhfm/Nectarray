@@ -5,7 +5,6 @@ import { practiceProgress, practiceQuestions } from "@/lib/db/schema";
 import { currentUser } from "@/lib/auth/session";
 import { isCorrect } from "@/lib/judge";
 import { getComplexity, getProblem } from "@/lib/python-tests";
-import { fitGrowth } from "@/lib/growth";
 
 /**
  * Judging a Python submission.
@@ -128,10 +127,6 @@ export async function POST(request: Request) {
     solve_ms?: number;
     /** Peak RSS of the runner process, the interpreter included. */
     max_rss_kb?: number;
-    /** (input size, nanoseconds) for each case that ran. */
-    timings?: [number, number][];
-    /** (input size, peak bytes allocated) over a spread of sizes. */
-    allocations?: [number, number][];
   };
 
   try {
@@ -259,18 +254,6 @@ export async function POST(request: Request) {
         : null,
     results: results.map((r) => r.ok),
     failing,
-    /*
-     * The shape of the student's own answer, fitted to the cases that just
-     * ran rather than asserted by a model. Only on acceptance: before then it
-     * is a hint at the approach, which is what the fifteen-minute lock exists
-     * to withhold.
-     */
-    growth: accepted
-      ? {
-          time: fitGrowth(payload.timings ?? []),
-          space: fitGrowth(payload.allocations ?? []),
-        }
-      : null,
     /*
      * What the worked solution costs, on an accepted verdict only.
      *

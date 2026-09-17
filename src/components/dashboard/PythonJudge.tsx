@@ -27,7 +27,6 @@ import {
   type Complexity,
   type SolutionState,
 } from "@/components/dashboard/use-solution";
-import type { Growth } from "@/lib/growth";
 import { display, displayArgs } from "@/lib/judge";
 import { cn } from "@/lib/utils";
 
@@ -83,14 +82,10 @@ type Failing = {
 
 type Verdict = {
   verdict: "accepted" | "wrong" | "timeout" | "error";
-  /** Set only on an accepted verdict — see the judge route for why. */
-  complexity?: Complexity | null;
   /** Time inside the student's own calls, in milliseconds. */
   solveMs?: number | null;
   /** Peak memory of the run, interpreter included. */
   memoryMb?: number | null;
-  /** The shape of this submission, fitted to the cases that just ran. */
-  growth?: { time: Growth | null; space: Growth | null } | null;
   passed?: number;
   total?: number;
   ms?: number | null;
@@ -551,8 +546,7 @@ function Results({ run, solved }: { run: Run; solved: boolean }) {
     );
   }
 
-  const { failing, results, complexity, solveMs, memoryMb, growth } =
-    run.verdict;
+  const { failing, results, solveMs, memoryMb } = run.verdict;
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4">
@@ -561,14 +555,9 @@ function Results({ run, solved }: { run: Run; solved: boolean }) {
           complexity figure is a hint at the approach, and the fifteen-minute
           lock exists to stop the page handing those out. After it passes it
           is the next question, and the one an interview opens with. */}
-      {complexity && (
+      {(solveMs != null || memoryMb != null) && (
         <div className="mb-4">
-          <YourRun
-            solveMs={solveMs ?? null}
-            memoryMb={memoryMb ?? null}
-            growth={growth ?? null}
-            target={complexity}
-          />
+          <YourRun solveMs={solveMs ?? null} memoryMb={memoryMb ?? null} />
         </div>
       )}
 
@@ -825,30 +814,23 @@ function SolutionButton({ solution }: { solution: SolutionState }) {
  * "sort it in O(1) space" means anything at all.
  */
 /**
- * What this run cost, and what shape the code that produced it has.
+ * What this run cost.
  *
- * Every figure here is measured. The milliseconds and megabytes come off the
- * run; the exponents are least-squares fits of cost against input size over
- * the hundred cases that just executed, which on log-log axes is the slope of
- * a straight line. Nothing is asserted by a model — a student can disbelieve
- * a sentence, but 1.97 over inputs from sixty to two thousand is a fact with
- * its working attached.
- *
- * Where the measurement cannot support a claim it says so. A fit that is not
- * a line gets "could not tell" rather than a number dressed up as a finding,
- * and no band claims to separate O(n) from O(n log n) — over these input
- * sizes log n moves less than the noise does.
+ * Two measured numbers and nothing derived from them. There was a fitted
+ * complexity here — the exponent of cost against input size, read off the
+ * hundred cases — and on made-up code of known shape it was accurate, but on
+ * real submissions it too often landed on "could not tell": most of these
+ * problems cap their inputs low enough that the curve has nothing to bite on.
+ * A panel that shrugs is worse than a panel that does not ask, so it asks for
+ * less. The milliseconds already carry the lesson; a nested loop and a dict
+ * pass over the same cases are 705ms and 1.3ms, and that gap needs no label.
  */
 function YourRun({
   solveMs,
   memoryMb,
-  growth,
-  target,
 }: {
   solveMs: number | null;
   memoryMb: number | null;
-  growth: { time: Growth | null; space: Growth | null } | null;
-  target: Complexity;
 }) {
   const figure = (label: string, value: string) => (
     <p className="flex items-baseline gap-1.5">
@@ -859,28 +841,6 @@ function YourRun({
         {value}
       </span>
     </p>
-  );
-
-  const shape = (label: string, fitted: Growth | null) => (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-      <span className="text-ink-faint text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
-        {label}
-      </span>
-      {fitted?.label ? (
-        <>
-          <span className="text-ink text-[0.875rem] font-semibold">
-            {fitted.label}
-          </span>
-          <span className="text-ink-faint font-mono text-[0.75rem]">
-            measured n^{fitted.exponent}, fit {fitted.fit}
-          </span>
-        </>
-      ) : (
-        <span className="text-ink-soft text-[0.875rem]">
-          could not tell from these inputs
-        </span>
-      )}
-    </div>
   );
 
   return (
@@ -896,35 +856,15 @@ function YourRun({
         {memoryMb != null && figure("Memory", `${memoryMb} MB`)}
       </div>
 
-      {growth && (
-        <div className="border-line-soft mt-3 space-y-1.5 border-t pt-3">
-          {shape("Time", growth.time)}
-          {shape("Space", growth.space)}
-          {/* Said plainly, because a measured exponent invites exactly one
-              question and it should not need asking. */}
-          <p className="text-ink-faint pt-1 text-[0.75rem] leading-relaxed">
-            Fitted to how long your code took as the inputs grew, not read off
-            the code. Measurement cannot separate O(n) from O(n log n) at these
-            sizes, so one band covers both.
-          </p>
-        </div>
-      )}
-
+      {/* Runtime is the calls themselves — starting Python costs more than
+          most of these solutions do, and counting it would flatter every
+          answer equally. Memory is the whole process, which is why an O(1)
+          solution still reads in the tens of megabytes; what moves between
+          two submissions is the part the student wrote. */}
       <p className="text-ink-faint mt-2 text-[0.75rem] leading-relaxed">
         Runtime is time inside your own function calls. Memory is the peak for
         the run, the Python interpreter included.
       </p>
-
-      {/* The target, so the figures above have something to be measured
-          against. Second, and quieter: what you wrote is the subject here. */}
-      <div className="border-line-soft mt-3 border-t pt-3">
-        <p className="text-ink-faint text-[0.75rem] leading-relaxed">
-          <span className="text-ink-soft font-semibold">
-            The worked solution is {target.time} time, {target.space} space.
-          </span>{" "}
-          {target.note}
-        </p>
-      </div>
     </div>
   );
 }
