@@ -20,6 +20,15 @@ export type HrQuestion = {
   alsoAsked?: string[];
   /** When the question forks, which way this answer goes. */
   note?: string;
+  /**
+   * "guide" where the entry says how to build an answer rather than being
+   * one. Some questions are only answerable out of your own history — the
+   * challenge you faced, what you taught yourself, what you do at the
+   * weekend — and a model answer for those would be somebody else's life
+   * for a student to recite, which is the one thing that does not survive a
+   * follow-up question.
+   */
+  mode?: "guide";
   answer: string;
 };
 
@@ -91,23 +100,25 @@ export const HR_QUESTIONS: HrQuestion[] = [
       "How do you handle stress or pressure?",
       "Tell me about a time you had to hustle.",
     ],
-    note: "They may ask for a professional example or a personal one. This is the personal answer.",
+    note: "They may ask for a professional example or a personal one. Either works — pick the one you can say most about.",
+    mode: "guide",
     answer:
-      "When I started college I found it genuinely hard to balance my academic responsibilities against the need to build practical skills. At the same time I was working through a lot of personal uncertainty about life and about which career path to take. To deal with that, I read philosophy and psychology to get some clarity and some resilience, and in parallel I committed myself to learning machine learning and deep learning. It was a period of intense effort — I was developing the technical skill and the personal understanding at the same time — and it is what prepared me for what came after.",
+      "Pick one real situation and tell it in four beats: what you were responsible for, what actually made it hard — the constraint, not the feeling — the two or three things you did about it, and how it turned out, including what you would do differently. Keep the setup to two sentences; most of the answer should be what you did, because that is the only part they are assessing. Do not blame a teammate or a lecturer, and do not reach for something so small that it suggests nothing has ever been difficult.",
   },
   {
     id: "challenge-professional",
     question: "Describe a time when you had to learn something new quickly.",
-    note: "The professional answer to the same question.",
+    mode: "guide",
     answer:
-      "My focus was originally on AI and analytics, because that was my specialisation. But I realised that as a computer science student I also needed web development if I wanted the placements ahead of me to go well. Recognising the urgency, I researched how to learn it efficiently and then went at it properly. I picked up the skills quickly and put them to work on a project called Expense Tracker, built with Django, HTML, CSS and JavaScript. It broadened what I can do, and it showed me I can adapt and pick up a new technology fast when I need to.",
+      "Name the thing you had to learn and the deadline that made it urgent, then say how you actually learned it — the docs, a specific course, reading an existing codebase — rather than \"I researched it\". Finish with what you built using it and roughly how long it took; a realistic number is more convincing than a heroic one. The point of the story is the artefact at the end, so do not name a technology you cannot answer a single follow-up question about.",
   },
   {
     id: "outside-work",
     question: "What are you passionate about outside work?",
     alsoAsked: ["What are your hobbies?"],
+    mode: "guide",
     answer:
-      "I read a fair amount and I listen to podcasts, which is how I keep learning outside of anything formal. I follow MMA, particularly the UFC. I also play cricket occasionally and watch films, which I enjoy.",
+      "Name one or two real interests and give one current detail for each — what you are reading now, where you play — because the detail is what makes it sound true. Then stop: this is a breather between harder questions, not an opportunity. Two interests with a detail beat five without, inventing one to sound well-rounded falls apart at the first follow-up, and anything divisive or anything that sounds like it will cut into work is best left out.",
   },
   {
     id: "growth",
@@ -124,7 +135,6 @@ export const HR_QUESTIONS: HrQuestion[] = [
   {
     id: "your-questions",
     question: "Do you have any questions for me?",
-    note: "Never say no to this one. It is the cheapest way to look interested.",
     answer:
       "Based on the skills and the experience I've described, are there any additional skills or areas of expertise you would suggest I develop in order to do this job well?",
   },

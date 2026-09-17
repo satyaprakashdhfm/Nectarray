@@ -175,8 +175,21 @@ export function HrQuestions({ tabs }: { tabs: ReactNode }) {
 
                   <div className="border-line-soft mt-4 border-t pt-4">
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="eyebrow">An answer worth starting from</p>
-                      <CopyButton text={substitute(entry.answer, filled)} />
+                      {/* Say which it is. A few of these are guidance rather
+                          than a draft — the questions only answerable out of
+                          your own history — and labelling both "an answer" is
+                          how a student ends up reading advice aloud in an
+                          interview. */}
+                      <p className="eyebrow">
+                        {entry.mode === "guide"
+                          ? "How to answer this one"
+                          : "An answer worth starting from"}
+                      </p>
+                      {/* Nothing to copy where there is nothing to say: a
+                          paragraph of advice is not a draft. */}
+                      {entry.mode !== "guide" && (
+                        <CopyButton text={substitute(entry.answer, filled)} />
+                      )}
                     </div>
                     <Answer text={entry.answer} filled={filled} />
                   </div>
