@@ -108,7 +108,14 @@ export function AgentDomains() {
       {...outerHold}
     >
       {/* ── Narrow: the teams as a strip ─────────────────────────── */}
-      <div className="lg:hidden">
+      {/* min-w-0, or the strip below does not scroll — it stretches.
+          A grid item's min-width defaults to `auto`, which means "never
+          narrower than your contents", and the contents here are five team
+          tabs in a row. On a phone that laid this column out at 1612px; the
+          section's overflow-hidden then cut it off at the screen edge, so the
+          page did not scroll sideways, it simply lost everything past
+          "Customer su…". */}
+      <div className="min-w-0 lg:hidden">
         <div className="relative" {...hoverProps}>
           {/* A fade at each end rather than a scrollbar, the same as the
               strip on /marketing: it says there is more without spending a

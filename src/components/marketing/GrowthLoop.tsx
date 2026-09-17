@@ -154,7 +154,13 @@ export function GrowthLoop({ children }: { children?: React.ReactNode }) {
         </div>
       </div>
 
-      <div className="flex flex-col">
+      {/* min-w-0 is what makes the sideways scroll below actually happen.
+          A grid item's min-width is `auto`, meaning "do not shrink below your
+          contents" — so the tab rail's overflow-x-auto never got the chance
+          to scroll. It stretched this column to the width of four tabs laid
+          end to end instead, which on a phone laid the whole page out at
+          740px and left the content in the left half of the screen. */}
+      <div className="flex min-w-0 flex-col">
         {/* ── The rail. The real control: a tablist on every width, and the
                only one below lg, where the wheel would be too small to aim
                at. Scrolls sideways on a phone rather than wrapping into a

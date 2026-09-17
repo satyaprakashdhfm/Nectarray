@@ -445,7 +445,12 @@ export default function AgenticAiPage() {
               </Reveal>
             </div>
 
-            <dl className="mt-12 grid gap-6 lg:grid-cols-2">
+            {/* minmax(0,1fr) rather than a bare column. A grid track sizes
+                to the largest item's min-content by default, and "Model
+                Context Protocol" is a single unbreakable pill — so on a 320px
+                phone one chip in one card stretched the whole grid past the
+                screen. */}
+            <dl className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[repeat(2,minmax(0,1fr))]">
               {stack.groups.map((group, i) => (
                 <Reveal key={group.label} delay={(i % 2) * 70}>
                   <div className="card h-full p-6 sm:p-7">
@@ -465,7 +470,12 @@ export default function AgenticAiPage() {
                               domain={brand.domain}
                               className="size-8"
                             />
-                            <span className="text-ink text-[1rem] font-semibold whitespace-nowrap">
+                            {/* Wraps rather than never breaking. flex-wrap
+                                already keeps each pill on one line wherever
+                                there is room; this only matters for the
+                                longest names on the narrowest phones, where
+                                two lines beat a pill wider than the screen. */}
+                            <span className="text-ink text-[1rem] font-semibold">
                               {brand.name}
                             </span>
                           </li>
