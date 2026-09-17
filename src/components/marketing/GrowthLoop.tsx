@@ -162,7 +162,7 @@ export function GrowthLoop({ children }: { children?: React.ReactNode }) {
         <div
           role="tablist"
           aria-label="The four stages"
-          className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-wrap lg:px-0"
+          className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-wrap lg:px-0"
         >
           {loop.stages.map((s, i) => (
             <button
@@ -193,7 +193,7 @@ export function GrowthLoop({ children }: { children?: React.ReactNode }) {
           role="tabpanel"
           id={`loop-panel-${stage.n}`}
           aria-labelledby={`loop-tab-${stage.n}`}
-          className="card mt-4 flex flex-1 flex-col p-6 sm:p-8"
+          className="card mt-4 flex flex-1 flex-col p-5 sm:p-8"
         >
           <h3 className="display text-ink text-[1.5rem] sm:text-[1.75rem]">
             {stage.title}

@@ -87,12 +87,12 @@ export function StageShowcase({
   const window = box ? `${box.width} / ${box.height}` : undefined;
 
   return (
-    <div className="card overflow-hidden p-2.5 sm:p-3" {...holdProps}>
+    <div className="card overflow-hidden p-2 sm:p-2.5 lg:p-3" {...holdProps}>
       <div className="border-line bg-canvas overflow-hidden rounded-xl border">
         <div
           role="tabpanel"
           aria-live="polite"
-          className="p-8 sm:p-10 lg:min-h-[19rem]"
+          className="p-5 sm:p-8 lg:min-h-[19rem] lg:p-10"
         >
           {item.shot ? (
             <>
@@ -111,7 +111,7 @@ export function StageShowcase({
                * trimmed out of the files themselves anyway.
                */}
               <div
-                className="border-line -mx-8 -mt-8 overflow-hidden border-b bg-[#0e0f11] sm:-mx-10 sm:-mt-10"
+                className="border-line -mx-5 -mt-5 overflow-hidden border-b bg-[#0e0f11] sm:-mx-8 sm:-mt-8 lg:-mx-10 lg:-mt-10"
                 style={{ aspectRatio: window }}
               >
                 <Image
@@ -137,11 +137,11 @@ export function StageShowcase({
                * is never wrong. `invisible` is visibility, not display, so
                * the hidden ones hold the space without being read out.
                */}
-              <div className="mt-7 grid">
+              <div className="mt-5 grid sm:mt-7">
                 {items.map((entry, n) => (
                   <p
                     key={entry.title}
-                    className={`text-ink-soft col-start-1 row-start-1 text-[1rem] leading-relaxed ${
+                    className={`text-ink-soft col-start-1 row-start-1 text-[0.9375rem] leading-relaxed sm:text-[1rem] ${
                       n === i ? "" : "invisible"
                     }`}
                   >
@@ -183,7 +183,7 @@ export function StageShowcase({
                 {items.map((entry, n) => (
                   <p
                     key={entry.title}
-                    className={`text-ink-soft col-start-1 row-start-1 text-[1rem] leading-relaxed ${
+                    className={`text-ink-soft col-start-1 row-start-1 text-[0.9375rem] leading-relaxed sm:text-[1rem] ${
                       n === i ? "" : "invisible"
                     }`}
                   >

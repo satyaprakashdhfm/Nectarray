@@ -234,7 +234,7 @@ export default function AgenticAiPage() {
                       </p>
                     </div>
 
-                    <dl className="border-night-line grid grid-cols-3 gap-x-5 gap-y-4 border-t p-6 sm:p-7">
+                    <dl className="border-night-line grid grid-cols-3 gap-x-4 gap-y-4 border-t p-5 sm:gap-x-5 sm:p-7">
                       {hero.stats.map((stat) => (
                         <div key={stat.label}>
                           <dt className="sr-only">{stat.label}</dt>
@@ -295,7 +295,7 @@ export default function AgenticAiPage() {
                 <Reveal key={family.id} delay={70}>
                   <article
                     id={family.id}
-                    className={`card to-surface relative scroll-mt-24 overflow-hidden bg-gradient-to-br p-6 pt-8 sm:p-8 sm:pt-10 lg:p-10 lg:pt-12 ${BRAND.tint}`}
+                    className={`card to-surface relative scroll-mt-24 overflow-hidden bg-gradient-to-br p-5 pt-7 sm:p-8 sm:pt-10 lg:p-10 lg:pt-12 ${BRAND.tint}`}
                   >
                     {/* The accent along the top edge, so each build is a
                         bounded thing on the page rather than a stretch of
@@ -305,8 +305,18 @@ export default function AgenticAiPage() {
                       aria-hidden
                     />
 
-                    <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-                      <div className="min-w-0">
+                    {/*
+                      Placed rather than flowed, because the reading order
+                      differs by width. Narrow, it is one column and the
+                      picture belongs directly under the summary it
+                      illustrates — left to flow it would land after six
+                      list items, which on a phone is a screen and a half
+                      below the sentence it answers. Wide, the picture takes
+                      the right column across both rows and the text keeps
+                      the left.
+                    */}
+                    <div className="grid gap-7 lg:grid-cols-2 lg:gap-x-12">
+                      <div className="min-w-0 lg:col-start-1 lg:row-start-1">
                         <div className="flex items-center gap-3">
                           <span
                             className={`grid size-11 place-items-center rounded-xl text-white ${BRAND.chip}`}
@@ -324,44 +334,44 @@ export default function AgenticAiPage() {
                         <p className="text-ink-soft mt-4 text-[0.9375rem] leading-relaxed">
                           {family.summary}
                         </p>
-
-                        {/* Hairlines rather than bullets: six of these read as
-                          a list of what you get, and the rules keep them
-                          apart without a glyph on every row shouting. */}
-                        <ul className="divide-line-soft border-line-soft mt-7 divide-y border-t">
-                          {family.items.map((item) => (
-                            <li key={item.name} className="flex gap-3 py-3.5">
-                              <Icon
-                                name="check"
-                                className="text-brand-deep mt-[0.3rem] size-3.5 shrink-0"
-                                strokeWidth={2.75}
-                              />
-                              <div className="min-w-0">
-                                <h4 className="text-ink text-[0.9375rem] font-semibold">
-                                  {item.name}
-                                </h4>
-                                <p className="text-ink-soft mt-1 text-[0.8125rem] leading-[1.6]">
-                                  {item.body}
-                                </p>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
                       </div>
 
                       {/* A window inside the card rather than a second card on
                         top of one: the mat sets the picture off the panel it
                         sits on, and the hairline gives it its own edge. */}
-                      <figure className="border-line bg-canvas overflow-hidden rounded-2xl border p-2 shadow-[0_18px_40px_-28px_rgba(14,27,38,0.45)] sm:p-2.5">
+                      <figure className="border-line bg-canvas overflow-hidden rounded-2xl border p-2 shadow-[0_18px_40px_-28px_rgba(14,27,38,0.45)] sm:p-2.5 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
                         <Image
                           src={family.shot.src}
                           alt={family.shot.alt}
                           width={family.shot.width}
                           height={family.shot.height}
-                          sizes="(min-width: 1024px) 32rem, 92vw"
+                          sizes="(min-width: 1024px) 40rem, 92vw"
                           className="border-line-soft h-auto w-full rounded-xl border"
                         />
                       </figure>
+
+                      {/* Hairlines rather than bullets: six of these read as
+                          a list of what you get, and the rules keep them
+                          apart without a glyph on every row shouting. */}
+                      <ul className="divide-line-soft border-line-soft divide-y border-t lg:col-start-1 lg:row-start-2">
+                        {family.items.map((item) => (
+                          <li key={item.name} className="flex gap-3 py-3.5">
+                            <Icon
+                              name="check"
+                              className="text-brand-deep mt-[0.3rem] size-3.5 shrink-0"
+                              strokeWidth={2.75}
+                            />
+                            <div className="min-w-0">
+                              <h4 className="text-ink text-[0.9375rem] font-semibold">
+                                {item.name}
+                              </h4>
+                              <p className="text-ink-soft mt-1 text-[0.8125rem] leading-[1.6]">
+                                {item.body}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </article>
                 </Reveal>

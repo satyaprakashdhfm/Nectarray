@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCarousel } from "@/hooks";
 import { OutputScreen } from "@/components/agentic/OutputScreen";
 import { Icon } from "@/components/ui/Icon";
@@ -32,15 +32,24 @@ const screenFor = (id?: string) =>
  * for that already, so dropping a video in changes this one element and
  * nothing around it.
  *
+ * The control has two shapes. Wide, it is the column of ten on the left, open
+ * one carrying its description. Narrow, that column would be four hundred
+ * pixels of list before a reader reaches the thing it controls, and the
+ * description opening and closing under an auto-advancing rotation would move
+ * the page under their thumb every seven seconds. So below `lg` it is a strip
+ * that scrolls sideways, of the kind /marketing uses, with the description
+ * beneath it in a cell sized to the longest of them — fixed height, whichever
+ * team is live.
+ *
  * Auto-advancing at seven seconds, which is long enough to watch a task list
  * finish. Picking a team holds it for ten — see useCarousel.
  */
 export function AgentDomains() {
-  const { i, running, mayAnimate, pick, holdProps } = useCarousel(
-    domains.items.length,
-    DWELL,
-  );
+  const { i, running, engaged, mayAnimate, pick, holdProps, hoverProps } =
+    useCarousel(domains.items.length, DWELL);
   const [done, setDone] = useState(0);
+  const rail = useRef<HTMLUListElement>(null);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const item = domains.items[i];
   // Its own sample output where the team has one, and the worked example
@@ -64,14 +73,122 @@ export function AgentDomains() {
     return () => clearTimeout(t);
   }, [done, mayAnimate, item.steps.length]);
 
+  // The live chip pulled to the left edge of the strip, so the teams still to
+  // come arrive from the right. Never while someone is working it, or the
+  // chip being aimed at slides out from under the thumb. A no-op at `lg`,
+  // where the strip is display:none and every offset reads zero.
+  useEffect(() => {
+    if (engaged) return;
+    const box = rail.current;
+    const tab = tabs.current[i];
+    if (!box || !tab) return;
+    box.scrollTo({
+      left: Math.max(0, tab.offsetLeft - 8),
+      behavior: mayAnimate ? "smooth" : "auto",
+    });
+  }, [i, mayAnimate, engaged]);
+
+  /*
+   * Every hold except the one on scrolling, which goes on the panel instead.
+   *
+   * `onScrollCapture` hears a descendant scroll and cannot tell whose it
+   * was, and the effect above scrolls the strip every time the rotation
+   * advances — so left on the wrapper it would snooze the rotation that had
+   * just run, and each team would sit for its seven seconds plus the ten a
+   * deliberate pick buys. The panel is the part with something scrollable
+   * inside it (the spreadsheet), which is what that hold is for. A reader
+   * working the strip itself still holds it, through the touch, pointer and
+   * focus captures here and the cursor on the strip below.
+   */
+  const outerHold = { ...holdProps, onScrollCapture: undefined };
+
   return (
     <div
-      className="grid gap-8 lg:grid-cols-[17rem_1fr] lg:gap-10"
-      {...holdProps}
+      className="grid gap-6 lg:grid-cols-[17rem_1fr] lg:gap-10"
+      {...outerHold}
     >
-      {/* The list. Only the open one carries its description, so ten teams
-          fit in a column a reader takes in at once. */}
-      <div role="tablist" aria-label="Where an agent earns its place">
+      {/* ── Narrow: the teams as a strip ─────────────────────────── */}
+      <div className="lg:hidden">
+        <div className="relative" {...hoverProps}>
+          {/* A fade at each end rather than a scrollbar, the same as the
+              strip on /marketing: it says there is more without spending a
+              row on saying it. */}
+          <span
+            className="from-mist pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r to-transparent"
+            aria-hidden
+          />
+          <span
+            className="from-mist pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l to-transparent"
+            aria-hidden
+          />
+          <ul
+            ref={rail}
+            role="tablist"
+            aria-label={domains.eyebrow}
+            className="relative flex [scrollbar-width:none] gap-1.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden"
+          >
+            {domains.items.map((entry, n) => (
+              <li key={entry.id} className="shrink-0">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={n === i}
+                  ref={(el) => {
+                    tabs.current[n] = el;
+                  }}
+                  onClick={() => pick(n)}
+                  className={`relative flex items-center gap-2 overflow-hidden rounded-full border px-3.5 py-2 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors ${
+                    n === i
+                      ? "border-brand-deep bg-brand-deep text-white"
+                      : "border-line bg-surface text-ink-soft hover:border-brand hover:text-ink"
+                  }`}
+                >
+                  <Icon
+                    name={entry.icon}
+                    className={`size-4 shrink-0 ${n === i ? "text-white/80" : "text-ink-faint/70"}`}
+                  />
+                  {entry.label}
+
+                  {n === i && running && (
+                    <span
+                      key={i}
+                      className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-white/70"
+                      style={{
+                        animation: `showcase-run ${DWELL}ms linear forwards`,
+                      }}
+                      aria-hidden
+                    />
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Every description in the one cell, all but the live one hidden
+            rather than unmounted, so the cell is as tall as the longest and
+            the panel below never moves as the rotation advances. */}
+        <div className="mt-4 grid">
+          {domains.items.map((entry, n) => (
+            <p
+              key={entry.id}
+              className={`text-ink-soft col-start-1 row-start-1 text-[0.875rem] leading-relaxed ${
+                n === i ? "" : "invisible"
+              }`}
+            >
+              {entry.body}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Wide: the column. Only the open one carries its description,
+              so ten teams fit in a column a reader takes in at once. ── */}
+      <div
+        role="tablist"
+        aria-label={domains.eyebrow}
+        className="hidden lg:block"
+      >
         {domains.items.map((entry, n) => {
           const open = n === i;
           return (
@@ -120,12 +237,16 @@ export function AgentDomains() {
         })}
       </div>
 
-      <div className="card overflow-hidden p-2.5 sm:p-3" aria-live="polite">
+      <div
+        className="card min-w-0 overflow-hidden p-2 sm:p-2.5 lg:p-3"
+        aria-live="polite"
+        onScrollCapture={holdProps.onScrollCapture}
+      >
         <div className="border-line bg-canvas overflow-hidden rounded-xl border">
-          <div className="grid gap-6 p-5 sm:p-7 xl:grid-cols-[0.85fr_1.15fr] xl:gap-8">
+          <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 xl:grid-cols-[0.85fr_1.15fr] xl:gap-8 xl:p-7">
             {/* The ask, and what it reaches. */}
             <div className="min-w-0">
-              <div className="bg-night rounded-2xl p-5 text-white/80">
+              <div className="bg-night rounded-2xl p-4 text-white/80 sm:p-5">
                 <p className="text-[0.625rem] font-semibold tracking-[0.16em] text-white/40 uppercase">
                   What you ask for
                 </p>

@@ -251,7 +251,7 @@ export default function MarketingPage() {
                       </p>
                     </div>
 
-                    <dl className="border-night-line grid grid-cols-3 gap-x-5 gap-y-4 border-t p-6 sm:p-7">
+                    <dl className="border-night-line grid grid-cols-3 gap-x-4 gap-y-4 border-t p-5 sm:gap-x-5 sm:p-7">
                       {hero.stats.map((stat) => (
                         <div key={stat.label}>
                           <dt className="sr-only">{stat.label}</dt>

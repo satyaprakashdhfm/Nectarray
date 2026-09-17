@@ -91,7 +91,7 @@ export function StageSection({
             {shot ? (
               /* The same card the showcase sits in, so the four panels still
                  read as one set — this one just holds a picture and stops. */
-              <div className="card overflow-hidden p-2.5 sm:p-3">
+              <div className="card overflow-hidden p-2 sm:p-2.5 lg:p-3">
                 <div className="border-line bg-canvas overflow-hidden rounded-xl border">
                   <Image
                     src={shot.src}

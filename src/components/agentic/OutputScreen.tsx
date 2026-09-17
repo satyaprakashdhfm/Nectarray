@@ -35,14 +35,14 @@ export function OutputScreen({ screen }: { screen: Screen }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[30rem] text-left text-[0.8125rem]">
+        <table className="w-full min-w-[26rem] text-left text-[0.8125rem] sm:min-w-[30rem]">
           <thead className="bg-mist border-line-soft border-b">
             <tr>
               {screen.columns.map((column) => (
                 <th
                   key={column}
                   scope="col"
-                  className="text-ink-faint px-4 py-2.5 text-[0.6875rem] font-semibold tracking-[0.1em] whitespace-nowrap uppercase"
+                  className="text-ink-faint px-3 py-2.5 text-[0.6875rem] font-semibold tracking-[0.1em] whitespace-nowrap uppercase sm:px-4"
                 >
                   {column}
                 </th>
@@ -70,7 +70,7 @@ export function OutputScreen({ screen }: { screen: Screen }) {
                   return (
                     <td
                       key={i}
-                      className={`px-4 py-2.5 align-top ${
+                      className={`px-3 py-2.5 align-top sm:px-4 ${
                         i === 0 ? "whitespace-nowrap" : ""
                       } ${tone ?? (i === 0 ? "text-ink font-medium" : "text-ink-soft")}`}
                     >
