@@ -27,6 +27,7 @@ import {
   type Complexity,
   type SolutionState,
 } from "@/components/dashboard/use-solution";
+import type { Growth } from "@/lib/growth";
 import { display, displayArgs } from "@/lib/judge";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +89,8 @@ type Verdict = {
   solveMs?: number | null;
   /** Peak memory of the run, interpreter included. */
   memoryMb?: number | null;
+  /** The shape of this submission, fitted to the cases that just ran. */
+  growth?: { time: Growth | null; space: Growth | null } | null;
   passed?: number;
   total?: number;
   ms?: number | null;
@@ -417,12 +420,7 @@ export function PythonJudge({
 
           <div className="bg-surface flex min-h-0 flex-1 flex-col">
             <VerdictLine run={run} />
-            <Results
-              run={run}
-              solved={isSolved}
-              questionId={question.id}
-              source={code}
-            />
+            <Results run={run} solved={isSolved} />
           </div>
         </div>
 
@@ -540,17 +538,7 @@ function VerdictLine({ run }: { run: Run }) {
   );
 }
 
-function Results({
-  run,
-  solved,
-  questionId,
-  source,
-}: {
-  run: Run;
-  solved: boolean;
-  questionId: string;
-  source: string;
-}) {
+function Results({ run, solved }: { run: Run; solved: boolean }) {
   if (run.at !== "done") {
     return (
       <p className="text-ink-faint px-4 py-4 text-[0.875rem]">
@@ -563,7 +551,8 @@ function Results({
     );
   }
 
-  const { failing, results, complexity, solveMs, memoryMb } = run.verdict;
+  const { failing, results, complexity, solveMs, memoryMb, growth } =
+    run.verdict;
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4">
@@ -577,8 +566,7 @@ function Results({
           <YourRun
             solveMs={solveMs ?? null}
             memoryMb={memoryMb ?? null}
-            questionId={questionId}
-            source={source}
+            growth={growth ?? null}
             target={complexity}
           />
         </div>
@@ -837,55 +825,31 @@ function SolutionButton({ solution }: { solution: SolutionState }) {
  * "sort it in O(1) space" means anything at all.
  */
 /**
- * What this run cost, and what the code that produced it costs.
+ * What this run cost, and what shape the code that produced it has.
  *
- * Four figures in two pairs, because each half of each pair is worthless
- * without the other. "47 ms" means nothing on its own — fast or slow against
- * what? — and "O(n²)" is a claim a student has no reason to believe. Put the
- * measurement next to the shape and each one argues for the other: the nested
- * loop is why it took 700ms, and the 700ms is why the nested loop matters.
+ * Every figure here is measured. The milliseconds and megabytes come off the
+ * run; the exponents are least-squares fits of cost against input size over
+ * the hundred cases that just executed, which on log-log axes is the slope of
+ * a straight line. Nothing is asserted by a model — a student can disbelieve
+ * a sentence, but 1.97 over inputs from sixty to two thousand is a fact with
+ * its working attached.
  *
- * The milliseconds and megabytes come back with the verdict. The shape of the
- * student's own code is read afterwards, on a second request, so a verdict is
- * never held up waiting for a model to answer.
+ * Where the measurement cannot support a claim it says so. A fit that is not
+ * a line gets "could not tell" rather than a number dressed up as a finding,
+ * and no band claims to separate O(n) from O(n log n) — over these input
+ * sizes log n moves less than the noise does.
  */
 function YourRun({
   solveMs,
   memoryMb,
-  questionId,
-  source,
+  growth,
   target,
 }: {
   solveMs: number | null;
   memoryMb: number | null;
-  questionId: string;
-  source: string;
+  growth: { time: Growth | null; space: Growth | null } | null;
   target: Complexity;
 }) {
-  const [mine, setMine] = useState<Complexity | null>(null);
-  const [state, setState] = useState<"idle" | "working" | "failed">("idle");
-
-  const analyse = useCallback(() => {
-    setState("working");
-    void (async () => {
-      try {
-        const response = await fetch("/api/judge/analyse", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId, source }),
-        });
-        const result = (await response.json()) as Complexity & {
-          error?: string;
-        };
-        if (!response.ok) throw new Error(result.error ?? "No.");
-        setMine({ time: result.time, space: result.space, note: result.note });
-        setState("idle");
-      } catch {
-        setState("failed");
-      }
-    })();
-  }, [questionId, source]);
-
   const figure = (label: string, value: string) => (
     <p className="flex items-baseline gap-1.5">
       <span className="text-ink-faint text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
@@ -895,6 +859,28 @@ function YourRun({
         {value}
       </span>
     </p>
+  );
+
+  const shape = (label: string, fitted: Growth | null) => (
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+      <span className="text-ink-faint text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+        {label}
+      </span>
+      {fitted?.label ? (
+        <>
+          <span className="text-ink text-[0.875rem] font-semibold">
+            {fitted.label}
+          </span>
+          <span className="text-ink-faint font-mono text-[0.75rem]">
+            measured n^{fitted.exponent}, fit {fitted.fit}
+          </span>
+        </>
+      ) : (
+        <span className="text-ink-soft text-[0.875rem]">
+          could not tell from these inputs
+        </span>
+      )}
+    </div>
   );
 
   return (
@@ -908,46 +894,26 @@ function YourRun({
             solveMs < 1 ? "<1 ms" : `${Math.round(solveMs)} ms`,
           )}
         {memoryMb != null && figure("Memory", `${memoryMb} MB`)}
-        {mine && figure("Time", mine.time)}
-        {mine && figure("Space", mine.space)}
       </div>
 
-      {/* Runtime is the calls themselves — starting Python costs more than
-          most of these solutions do, and counting it would flatter every
-          answer equally. Memory is the whole process, which is why an O(1)
-          solution still reads in the tens of megabytes; what moves between
-          two submissions is the part the student wrote. */}
+      {growth && (
+        <div className="border-line-soft mt-3 space-y-1.5 border-t pt-3">
+          {shape("Time", growth.time)}
+          {shape("Space", growth.space)}
+          {/* Said plainly, because a measured exponent invites exactly one
+              question and it should not need asking. */}
+          <p className="text-ink-faint pt-1 text-[0.75rem] leading-relaxed">
+            Fitted to how long your code took as the inputs grew, not read off
+            the code. Measurement cannot separate O(n) from O(n log n) at these
+            sizes, so one band covers both.
+          </p>
+        </div>
+      )}
+
       <p className="text-ink-faint mt-2 text-[0.75rem] leading-relaxed">
         Runtime is time inside your own function calls. Memory is the peak for
         the run, the Python interpreter included.
       </p>
-
-      {mine ? (
-        <p className="text-ink-soft border-line-soft mt-3 border-t pt-3 text-[0.8125rem] leading-relaxed">
-          {mine.note}
-        </p>
-      ) : (
-        <div className="border-line-soft mt-3 border-t pt-3">
-          <button
-            type="button"
-            onClick={analyse}
-            disabled={state === "working"}
-            className="border-line bg-surface text-ink hover:border-brand inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors disabled:opacity-50"
-          >
-            {state === "working" && (
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-            )}
-            {state === "working"
-              ? "Reading your code…"
-              : "What is my complexity?"}
-          </button>
-          {state === "failed" && (
-            <p className="text-amber-deep mt-2 text-[0.75rem]">
-              Could not read it just now. Try again in a moment.
-            </p>
-          )}
-        </div>
-      )}
 
       {/* The target, so the figures above have something to be measured
           against. Second, and quieter: what you wrote is the subject here. */}

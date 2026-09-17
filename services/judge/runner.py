@@ -52,6 +52,21 @@ def jsonable(value):
     return repr(value)
 
 
+def input_size(value) -> int:
+    """How big one argument is, for growth measurement.
+
+    The length of the longest sequence it contains. A list of lists counts by
+    its total, a string by its characters, a bare int as nothing — an int is
+    not what makes a solution slow, the thing it indexes into is.
+    """
+    if isinstance(value, str):
+        return len(value)
+    if isinstance(value, (list, tuple)):
+        inner = sum(input_size(v) for v in value)
+        return inner if inner else len(value)
+    return 0
+
+
 def peak_memory_kb() -> int:
     """Peak resident set size for this process, in kilobytes.
 
@@ -64,6 +79,50 @@ def peak_memory_kb() -> int:
     submissions is the part the student controls.
     """
     return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+
+
+def measure_allocations(namespace, entry, cases, copy):
+    """Peak bytes allocated per call, over a spread of input sizes.
+
+    A second pass, and a short one: tracemalloc roughly triples the cost of
+    the code it watches, so running it over all hundred cases would be slower
+    than the submission deserves and would corrupt the timings besides. Twelve
+    cases spanning the size range are enough to tell O(1) from O(n).
+
+    Peak *during the call* and not the process total, which is what makes this
+    a measure of the answer rather than of the interpreter.
+    """
+    import tracemalloc
+
+    sized = sorted(
+        (
+            (max((input_size(a) for a in c["args"]), default=0), c)
+            for c in cases
+        ),
+        key=lambda pair: pair[0],
+    )
+    sized = [pair for pair in sized if pair[0] > 0]
+    if len(sized) < 4:
+        return []
+
+    step = max(1, len(sized) // 12)
+    chosen = sized[::step][-12:]
+
+    out = []
+    for size, case in chosen:
+        args = copy.deepcopy(case["args"])
+        try:
+            method = getattr(namespace["Solution"](), entry)
+            tracemalloc.start()
+            method(*args)
+            _, peak = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            out.append([size, peak])
+        except Exception:
+            if tracemalloc.is_tracing():
+                tracemalloc.stop()
+            return []  # A throw here makes every later figure meaningless.
+    return out
 
 
 def main() -> None:
@@ -109,15 +168,24 @@ def main() -> None:
     # Neither tells a student anything about the code they wrote, so the
     # clock covers the call and stops.
     solve_ns = 0
+    # (size, nanoseconds) per case, so the web app can fit a growth curve to
+    # the real inputs rather than to invented ones. Nothing extra is executed
+    # for this: the cases have to run anyway, and they already range from two
+    # elements to a couple of thousand.
+    timings = []
     for case in cases:
         args = copy.deepcopy(case["args"])
+        size = max((input_size(a) for a in args), default=0)
         try:
             method = getattr(namespace["Solution"](), entry, None)
             if method is None:
                 done({"fatal": f"Solution has no method called {entry}."})
             call_started = time.perf_counter_ns()
             returned = method(*args)
-            solve_ns += time.perf_counter_ns() - call_started
+            elapsed = time.perf_counter_ns() - call_started
+            solve_ns += elapsed
+            if size:
+                timings.append([size, elapsed])
 
             kind = compare["kind"]
             if kind == "inplace":
@@ -137,7 +205,14 @@ def main() -> None:
             line = traceback.format_exc(limit=1).strip().split("\n")[-1]
             results.append({"error": line})
 
-    done({"results": results, "solve_ms": round(solve_ns / 1_000_000, 3)})
+    done(
+        {
+            "results": results,
+            "solve_ms": round(solve_ns / 1_000_000, 3),
+            "timings": timings,
+            "allocations": measure_allocations(namespace, entry, cases, copy),
+        }
+    )
 
 
 if __name__ == "__main__":
