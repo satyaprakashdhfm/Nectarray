@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { practiceProgress, practiceQuestions } from "@/lib/db/schema";
 import { currentUser } from "@/lib/auth/session";
 import { isCorrect } from "@/lib/judge";
-import { getComplexity, getProblem } from "@/lib/python-tests";
+import { getProblem } from "@/lib/python-tests";
 
 /**
  * Judging a Python submission.
@@ -254,14 +254,5 @@ export async function POST(request: Request) {
         : null,
     results: results.map((r) => r.ok),
     failing,
-    /*
-     * What the worked solution costs, on an accepted verdict only.
-     *
-     * Before you have solved it that is a hint — "O(n) time, O(1) space"
-     * rules out sorting and rules out a second pass with a dict. After you
-     * have solved it, it is the question worth asking next: mine passed, but
-     * is it this? Which is the question an interview opens with.
-     */
-    complexity: accepted && row.slug ? await getComplexity(row.slug) : null,
   });
 }

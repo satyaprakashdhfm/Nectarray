@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { practiceQuestions } from "@/lib/db/schema";
 import { AccessError, requireEnrolled } from "@/lib/auth/access";
-import { getComplexity, getProblem } from "@/lib/python-tests";
+import { getProblem } from "@/lib/python-tests";
 import { readClock } from "@/lib/practice-clock";
 
 /**
@@ -68,7 +68,6 @@ export async function GET(request: Request) {
         ...clock,
         language: "python",
         solution: problem.solution_py,
-        complexity: await getComplexity(slug),
       });
     }
 

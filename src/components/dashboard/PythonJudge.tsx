@@ -24,7 +24,6 @@ import { CopyButton } from "@/components/dashboard/CopyButton";
 import {
   countdown,
   useSolution,
-  type Complexity,
   type SolutionState,
 } from "@/components/dashboard/use-solution";
 import { display, displayArgs } from "@/lib/judge";
@@ -816,14 +815,12 @@ function SolutionButton({ solution }: { solution: SolutionState }) {
 /**
  * What this run cost.
  *
- * Two measured numbers and nothing derived from them. There was a fitted
- * complexity here — the exponent of cost against input size, read off the
- * hundred cases — and on made-up code of known shape it was accurate, but on
- * real submissions it too often landed on "could not tell": most of these
- * problems cap their inputs low enough that the curve has nothing to bite on.
- * A panel that shrugs is worse than a panel that does not ask, so it asks for
- * less. The milliseconds already carry the lesson; a nested loop and a dict
- * pass over the same cases are 705ms and 1.3ms, and that gap needs no label.
+ * Two measured numbers and nothing else. There was a fitted complexity here
+ * and a reference figure under it, and both went: the fit landed on "could
+ * not tell" too often to be worth a student's attention, and the reference
+ * answered a question nobody had asked yet. The milliseconds carry the lesson
+ * on their own — a nested loop and a dict pass over the same cases are 705ms
+ * and 1.3ms, and that gap argues better than a caption does.
  */
 function YourRun({
   solveMs,
@@ -846,8 +843,12 @@ function YourRun({
   return (
     <div className="border-line bg-mist rounded-xl border p-3.5">
       <p className="eyebrow mb-2.5">Your run</p>
-
       <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+        {/* Runtime is the calls themselves: starting Python costs more than
+            most of these solutions do, and counting it would flatter every
+            answer equally. Memory is the whole process, which is why an O(1)
+            answer still reads in the tens of megabytes — what moves between
+            two submissions is the part the student wrote. */}
         {solveMs != null &&
           figure(
             "Runtime",
@@ -855,78 +856,6 @@ function YourRun({
           )}
         {memoryMb != null && figure("Memory", `${memoryMb} MB`)}
       </div>
-
-      {/* Runtime is the calls themselves — starting Python costs more than
-          most of these solutions do, and counting it would flatter every
-          answer equally. Memory is the whole process, which is why an O(1)
-          solution still reads in the tens of megabytes; what moves between
-          two submissions is the part the student wrote. */}
-      <p className="text-ink-faint mt-2 text-[0.75rem] leading-relaxed">
-        Runtime is time inside your own function calls. Memory is the peak for
-        the run, the Python interpreter included.
-      </p>
-    </div>
-  );
-}
-
-function ComplexityNote({
-  complexity,
-  tone = "light",
-}: {
-  complexity: Complexity;
-  tone?: "light" | "dark";
-}) {
-  const dark = tone === "dark";
-  return (
-    <div
-      className={cn(
-        "rounded-lg border px-3 py-2.5",
-        dark ? "border-white/10 bg-white/5" : "border-line bg-mist",
-      )}
-    >
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        {(
-          [
-            ["Time", complexity.time],
-            ["Space", complexity.space],
-          ] as const
-        ).map(([label, value]) => (
-          <p key={label} className="flex items-baseline gap-1.5">
-            <span
-              className={cn(
-                "text-[0.6875rem] font-semibold tracking-[0.12em] uppercase",
-                dark ? "text-white/40" : "text-ink-faint",
-              )}
-            >
-              {label}
-            </span>
-            <span
-              className={cn(
-                "font-mono text-[0.875rem] font-semibold",
-                dark ? "text-white" : "text-ink",
-              )}
-            >
-              {value}
-            </span>
-          </p>
-        ))}
-      </div>
-      <p
-        className={cn(
-          "mt-1.5 text-[0.75rem] leading-relaxed",
-          dark ? "text-white/50" : "text-ink-soft",
-        )}
-      >
-        {complexity.note}
-      </p>
-      <p
-        className={cn(
-          "mt-1 text-[0.6875rem]",
-          dark ? "text-white/30" : "text-ink-faint",
-        )}
-      >
-        Space is what it allocates beyond the answer it returns.
-      </p>
     </div>
   );
 }
@@ -956,11 +885,6 @@ function SolutionBlock({
       <pre className="overflow-x-auto p-3 font-mono text-[0.75rem] leading-[1.6] whitespace-pre-wrap text-white/90">
         {solution.busy ? "Loading…" : (solution.text ?? "")}
       </pre>
-      {solution.complexity && (
-        <div className="border-night-line border-t p-3">
-          <ComplexityNote complexity={solution.complexity} tone="dark" />
-        </div>
-      )}
     </div>
   );
 }

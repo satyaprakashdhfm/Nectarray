@@ -19,9 +19,6 @@ import { useCallback, useEffect, useState } from "react";
 
 export const WAIT_MS = 15 * 60 * 1000;
 
-/** What the worked solution costs. Arrives with it, never before it. */
-export type Complexity = { time: string; space: string; note: string };
-
 export type SolutionState = {
   /** Milliseconds left before the answer can be read; 0 once it can. */
   remaining: number;
@@ -30,7 +27,6 @@ export type SolutionState = {
   busy: boolean;
   text: string | null;
   note: string | null;
-  complexity: Complexity | null;
   error: string;
   toggle: () => void;
 };
@@ -49,10 +45,7 @@ export function useSolution(
    * one you already opened does not fetch it again.
    */
   const [fetched, setFetched] = useState<
-    Record<
-      string,
-      { text: string; note: string | null; complexity: Complexity | null }
-    >
+    Record<string, { text: string; note: string | null }>
   >({});
   const [openFor, setOpenFor] = useState<string | null>(null);
   const [busyFor, setBusyFor] = useState<string | null>(null);
@@ -132,7 +125,6 @@ export function useSolution(
         const result = (await response.json()) as {
           solution?: string;
           note?: string | null;
-          complexity?: Complexity | null;
           error?: string;
         };
         if (!response.ok) throw new Error(result.error ?? "Not available.");
@@ -141,7 +133,6 @@ export function useSolution(
           [questionId]: {
             text: result.solution ?? "",
             note: result.note ?? null,
-            complexity: result.complexity ?? null,
           },
         }));
       } catch (err) {
@@ -163,7 +154,6 @@ export function useSolution(
     busy,
     text: held?.text ?? null,
     note: held?.note ?? null,
-    complexity: held?.complexity ?? null,
     error: failure && failure.id === questionId ? failure.message : "",
     toggle,
   };

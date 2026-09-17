@@ -161,20 +161,6 @@ function allStatements(): Promise<Record<string, Statement>> {
 }
 
 /**
- * What a problem's worked solution costs.
- *
- * Deliberately not part of the brief. The brief is sent to the browser for
- * every problem on the sheet, and "O(n) time, O(1) space" is a strong hint —
- * it rules out sorting, it rules out a second pass with a dict. It travels
- * with the solution instead, through the endpoint that already waits fifteen
- * minutes, and it comes back with an accepted verdict, where it is no longer
- * a hint but the thing worth reading.
- */
-export async function getComplexity(slug: string): Promise<Complexity | null> {
-  return (await allStatements())[slug]?.complexity ?? null;
-}
-
-/**
  * The public half of every problem, keyed by slug.
  *
  * The statement, the starter code and three worked cases — enough to solve
