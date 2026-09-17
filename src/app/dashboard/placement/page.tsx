@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Placement tools: the self-introduction and the resume.
+ * Placement tools: the self-introduction, the resume and the HR round.
  *
  * Both are the student's own and scoped to them — a read without the user id
  * here would hand one student's resume to another.
@@ -55,7 +55,7 @@ export default async function PlacementPage({
   return (
     <PlacementTools
       userId={user.id}
-      initialTool={tool === "resume" ? "resume" : "intro"}
+      initialTool={tool === "resume" || tool === "hr" ? tool : "intro"}
       intro={profile?.intro ?? defaultIntro(user)}
       files={files}
       pdfName={resumePdfName(user)}

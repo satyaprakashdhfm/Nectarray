@@ -1,20 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, MessageSquareText } from "lucide-react";
+import { FileText, MessageSquareText, Users } from "lucide-react";
 import type { ResumeFiles } from "@/lib/resume-files";
+import { HrQuestions } from "./HrQuestions";
 import { IntroEditor } from "./IntroEditor";
 import { ResumeStudio } from "./ResumeStudio";
 
-export type PlacementTool = "intro" | "resume";
+export type PlacementTool = "intro" | "resume" | "hr";
 
 const TOOLS = [
   { id: "intro", label: "Self-introduction", icon: MessageSquareText },
   { id: "resume", label: "Resume", icon: FileText },
+  { id: "hr", label: "HR questions", icon: Users },
 ] as const;
 
 /**
- * The two tools, switched here rather than by navigating.
+ * The three tools, switched here rather than by navigating.
  *
  * A link per tab would re-render the page on the server and throw away
  * whatever was typed in the other tool. Both stay mounted instead, and the
@@ -88,6 +90,9 @@ export function PlacementTools({
           />
         </div>
       )}
+      <div hidden={tool !== "hr"}>
+        <HrQuestions tabs={tabs} />
+      </div>
     </>
   );
 }
