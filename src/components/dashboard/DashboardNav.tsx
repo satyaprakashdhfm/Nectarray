@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -35,6 +36,21 @@ const TABS = [
  */
 export function DashboardNav() {
   const pathname = usePathname();
+  const strip = useRef<HTMLUListElement>(null);
+
+  /*
+   * Bring the current tab into view.
+   *
+   * On a phone the strip is scrolled and the tab you are on can be off the
+   * right edge — so Placement showed a Placement page under a strip that
+   * appeared to say you were on Dashboard. Nearest, so an already-visible tab
+   * does not drag the strip around under the reader for no reason.
+   */
+  useEffect(() => {
+    strip.current
+      ?.querySelector("[data-active]")
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [pathname]);
 
   return (
     <nav
@@ -42,37 +58,57 @@ export function DashboardNav() {
       className="border-line bg-canvas sticky top-[var(--app-header)] z-40 border-b"
     >
       <div className="shell flex h-[var(--app-nav)] items-center">
-        <ul className="tab-bar">
-          {TABS.map((tab) => {
-            // Only the index tab needs an exact match; the rest own a subtree.
-            // /dashboard/projects is folded into Assignments but still a
-            // real, bookmarkable route — the Assignments tab claims it too,
-            // rather than leaving a visitor on an old link with nothing lit.
-            const active =
-              tab.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(tab.href) ||
-                  (tab.href === "/dashboard/assignments" &&
-                    pathname.startsWith("/dashboard/projects"));
+        {/* min-w-0 so the strip inside may shrink and scroll, and a fade at
+            each end so it is visible that it does. Five tabs need about 630px
+            and a phone has 350 of them, so Placement and Support were simply
+            off the edge with nothing to suggest they existed. */}
+        <div className="relative min-w-0 flex-1">
+          {/* from-surface, not from-canvas: canvas is #fbfcfc and the pill's
+              interior is #ffffff, so a fade between them is a 1.5% difference
+              and reads as nothing at all. Inset by the pill's border and
+              rounded to its corner, so the last tab dissolves into the pill
+              rather than being chopped off at it. */}
+          <span
+            className="from-surface pointer-events-none absolute inset-y-px left-px z-10 w-8 rounded-l-full bg-gradient-to-r to-transparent"
+            aria-hidden
+          />
+          <span
+            className="from-surface pointer-events-none absolute inset-y-px right-px z-10 w-8 rounded-r-full bg-gradient-to-l to-transparent"
+            aria-hidden
+          />
+          <ul ref={strip} className="tab-bar">
+            {TABS.map((tab) => {
+              // Only the index tab needs an exact match; the rest own a subtree.
+              // /dashboard/projects is folded into Assignments but still a
+              // real, bookmarkable route — the Assignments tab claims it too,
+              // rather than leaving a visitor on an old link with nothing lit.
+              const active =
+                tab.href === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname.startsWith(tab.href) ||
+                    (tab.href === "/dashboard/assignments" &&
+                      pathname.startsWith("/dashboard/projects"));
 
-            return (
-              <li key={tab.href}>
-                <Link
-                  href={tab.href}
-                  aria-current={active ? "page" : undefined}
-                  className="tab"
-                >
-                  <tab.icon
-                    className="size-[1.0625rem]"
-                    strokeWidth={1.9}
-                    aria-hidden
-                  />
-                  {tab.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+              return (
+                <li key={tab.href}>
+                  <Link
+                    href={tab.href}
+                    aria-current={active ? "page" : undefined}
+                    data-active={active ? "" : undefined}
+                    className="tab"
+                  >
+                    <tab.icon
+                      className="size-[1.0625rem] shrink-0"
+                      strokeWidth={1.9}
+                      aria-hidden
+                    />
+                    {tab.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
     </nav>
   );

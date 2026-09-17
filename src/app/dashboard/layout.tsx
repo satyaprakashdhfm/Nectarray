@@ -29,9 +29,18 @@ export default async function DashboardLayout({
       <ThemeScript />
       <ThemeCleanup />
       <header className="border-night-line bg-night sticky top-0 z-50 border-b">
-        <div className="shell flex h-[72px] items-center justify-between gap-6">
-          <Logo markClassName="size-9" wordClassName="text-[1.25rem]" />
-          <div className="flex items-center gap-4">
+        {/* Four controls and a wordmark do not fit across a phone. They were
+            not wrapping, either — the account chip simply sat on top of the
+            word "NectArray" and "Sign out" broke onto two lines inside its
+            own pill. Below sm the mark stands in for the wordmark and the
+            sign-out button loses its label, which is enough room for the rest
+            to sit properly. */}
+        <div className="shell flex h-[72px] items-center justify-between gap-3 sm:gap-6">
+          <Logo
+            markClassName="size-9"
+            wordClassName="hidden text-[1.25rem] sm:inline"
+          />
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
             {/* The greeting was a dead label. Same spot, same name, but it
                 opens the account now — which is where a student looks for
                 it. */}

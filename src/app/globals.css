@@ -614,6 +614,10 @@ label:has(input[type="checkbox"]) {
   border-radius: 9999px;
   background-color: var(--color-surface);
   max-width: 100%;
+  /* A flex item's min-width is `auto`, and min-width beats max-width — so
+     without this the max-width above is decoration and the strip pushes its
+     row wider than the screen instead of scrolling inside it. */
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
   &::-webkit-scrollbar {
