@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Lock, Phone } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  Phone,
+} from "lucide-react";
 import { company } from "@/lib/content";
 
 /**
@@ -260,12 +266,40 @@ export function SiteMock({ kind }: { kind: string }) {
   const [i, setI] = useState(0);
   const page = useRef<HTMLDivElement>(null);
 
+  /*
+   * Whether to say there is more page below.
+   *
+   * These are whole home pages in a frame a quarter their height — a 5,466px
+   * capture in 26rem — and nothing about a still image says it moves. The
+   * arrows either side are for changing sample, so a reader who wants to see
+   * the rest of a page has no reason to think they can.
+   *
+   * Shown only when the content genuinely overflows, which rules out the
+   * locked slide and the one dashboard sample that fits, and taken away the
+   * moment they scroll: it has done its job by then, and a hint that stays is
+   * just something in front of the work.
+   */
+  const [showHint, setShowHint] = useState(false);
+
   const sample = i < samples.length ? samples[i] : null;
   const go = (step: number) => setI((n) => (n + step + slides) % slides);
 
   // A new page starts at its top, not wherever the last one was scrolled to.
   useEffect(() => {
-    page.current?.scrollTo({ top: 0 });
+    const box = page.current;
+    if (!box) return;
+    box.scrollTo({ top: 0 });
+
+    /*
+     * Measured after paint rather than during it. next/image reserves the
+     * right box from the width and height it is given, so this is usually
+     * right immediately — but a frame's grace costs nothing and covers the
+     * case where it is not.
+     */
+    const id = requestAnimationFrame(() =>
+      setShowHint(box.scrollHeight > box.clientHeight + 8),
+    );
+    return () => cancelAnimationFrame(id);
   }, [i, kind]);
 
   return (
@@ -294,6 +328,13 @@ export function SiteMock({ kind }: { kind: string }) {
       <div className="relative">
         <div
           ref={page}
+          onScroll={(event) => {
+            // Gone once they have moved, and not brought back by scrolling
+            // up again — they know now.
+            if (showHint && event.currentTarget.scrollTop > 16) {
+              setShowHint(false);
+            }
+          }}
           className="bg-surface h-[26rem] overflow-y-auto overscroll-contain"
         >
           {!sample ? (
@@ -304,6 +345,21 @@ export function SiteMock({ kind }: { kind: string }) {
             <Desktop key={sample.image} sample={sample} />
           )}
         </div>
+
+        {/* aria-hidden: it describes a gesture rather than naming a control,
+            and a screen reader announces a scrollable region by itself. */}
+        <span
+          aria-hidden
+          className={`bg-night/75 pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full py-1 pr-1.5 pl-2.5 text-[0.625rem] font-semibold text-white/90 backdrop-blur transition-opacity duration-300 ${
+            showHint ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          Scroll
+          <ChevronDown
+            className="size-3 animate-bounce motion-reduce:animate-none"
+            strokeWidth={2.5}
+          />
+        </span>
 
         <button
           type="button"
