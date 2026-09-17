@@ -105,16 +105,11 @@ export function HrQuestions({ tabs }: { tabs: ReactNode }) {
       <div className="shell-narrow py-8 lg:py-10">
         <h1 className="display text-ink text-[1.75rem]">The HR round</h1>
         <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
-          These are the questions that keep coming up. For each one: what the
-          interviewer is actually listening for, how to build an answer, a
-          frame to fill in, and the ways it usually goes wrong.
-        </p>
-        <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
-          There are no model answers here on purpose. HR asks a follow-up, and
-          a paragraph you did not live through has nothing behind it — the only
-          answer that survives the second question is one made of your own
-          examples. Fill the frames with what you have actually done, then say
-          each one out loud until it sounds like you talking.
+          These are the questions that keep coming up, and an answer to each
+          worth starting from. Do not learn them by heart — HR is listening for
+          the follow-up, and a recited paragraph falls apart at the first one.
+          Read them for the shape, then write each one again in your own words
+          and out loud.
         </p>
 
         {/* ── Fill the blanks once ─────────────────────────────────── */}
@@ -166,62 +161,24 @@ export function HrQuestions({ tabs }: { tabs: ReactNode }) {
                   <h2 className="text-ink text-[1.0625rem] leading-snug font-semibold">
                     {entry.question}
                   </h2>
+
                   {entry.alsoAsked && (
                     <p className="text-ink-faint mt-1.5 text-[0.8125rem] leading-relaxed">
                       Also asked as: {entry.alsoAsked.join(" · ")}
                     </p>
                   )}
+                  {entry.note && (
+                    <p className="border-amber/30 bg-amber-wash text-ink-soft mt-2.5 rounded-lg border px-3 py-2 text-[0.8125rem] leading-relaxed">
+                      {entry.note}
+                    </p>
+                  )}
 
-                  <p className="text-ink-soft border-line-soft mt-3 border-t pt-3 text-[0.9375rem] leading-relaxed">
-                    <span className="text-ink font-semibold">
-                      What they are really asking.{" "}
-                    </span>
-                    {entry.asking}
-                  </p>
-
-                  <div className="mt-4">
-                    <p className="eyebrow mb-2">How to build the answer</p>
-                    <ol className="space-y-1.5">
-                      {entry.structure.map((step, n) => (
-                        <li
-                          key={n}
-                          className="text-ink-soft flex gap-2.5 text-[0.9375rem] leading-relaxed"
-                        >
-                          <span className="text-brand-deep font-mono text-[0.8125rem] font-bold">
-                            {n + 1}
-                          </span>
-                          <span className="min-w-0">{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-
-                  <div className="border-line bg-mist mt-4 rounded-xl border p-3.5">
-                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                      <p className="eyebrow">A frame to fill in</p>
-                      <CopyButton text={substitute(entry.skeleton, filled)} />
+                  <div className="border-line-soft mt-4 border-t pt-4">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="eyebrow">An answer worth starting from</p>
+                      <CopyButton text={substitute(entry.answer, filled)} />
                     </div>
-                    <Skeleton text={entry.skeleton} filled={filled} />
-                  </div>
-
-                  <div className="mt-4">
-                    <p className="eyebrow mb-2">What sinks this answer</p>
-                    <ul className="space-y-1.5">
-                      {entry.avoid.map((line, n) => (
-                        <li
-                          key={n}
-                          className="text-ink-soft flex gap-2.5 text-[0.875rem] leading-relaxed"
-                        >
-                          <span
-                            className="text-amber-deep shrink-0"
-                            aria-hidden
-                          >
-                            &times;
-                          </span>
-                          <span className="min-w-0">{line}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <Answer text={entry.answer} filled={filled} />
                   </div>
                 </div>
               </div>
@@ -233,49 +190,50 @@ export function HrQuestions({ tabs }: { tabs: ReactNode }) {
   );
 }
 
-/** The skeleton with the known fields filled, for the clipboard. */
+/** The answer with the blanks filled, for the clipboard. */
 function substitute(text: string, filled: Filled): string {
-  return text.replace(/\{([^}]+)\}/g, (whole, key: string) => {
-    const field = HR_FIELDS.find((f) => f.key === key);
-    if (!field) return whole; // Guidance, not a field. Copy it as written.
-    return filled[field.key]?.trim() || whole;
+  return text.replace(/\{(\w+)\}/g, (whole, key: string) => {
+    const value = filled[key as HrFieldKey]?.trim();
+    return value || whole;
   });
 }
 
 /**
- * The frame, with two kinds of brace in it.
+ * The answer, with anything still blank marked rather than hidden.
  *
- * {company} is a field the student has filled in at the top, and once filled
- * it should read as ordinary prose — it is their sentence now. Everything
- * else in braces is an instruction about what belongs there, and it stays
- * visibly an instruction, because the failure this page exists to prevent is
- * somebody reading a brace out loud in an interview.
+ * A filled value reads as ordinary prose — it is the student's answer now. An
+ * unfilled one stays visibly a placeholder, because the failure this page
+ * exists to prevent is somebody reading a sentence aloud with a brace in it.
  */
-function Skeleton({ text, filled }: { text: string; filled: Filled }) {
+function Answer({ text, filled }: { text: string; filled: Filled }) {
   return (
-    <p className="text-ink-soft text-[0.9375rem] leading-relaxed">
-      {text.split(/(\{[^}]+\})/g).map((part, i) => {
-        const match = /^\{([^}]+)\}$/.exec(part);
-        if (!match) return part;
+    <div className="space-y-3">
+      {text.split("\n\n").map((paragraph, p) => (
+        <p key={p} className="text-ink-soft text-[0.9375rem] leading-relaxed">
+          {paragraph.split(/(\{\w+\})/g).map((part, i) => {
+            const match = /^\{(\w+)\}$/.exec(part);
+            if (!match) return part;
 
-        const field = HR_FIELDS.find((f) => f.key === match[1]);
-        const value = field ? filled[field.key]?.trim() : undefined;
-        if (value)
-          return (
-            <span key={i} className="text-ink font-semibold">
-              {value}
-            </span>
-          );
+            const field = HR_FIELDS.find((f) => f.key === match[1]);
+            const value = filled[match[1] as HrFieldKey]?.trim();
+            if (value)
+              return (
+                <span key={i} className="text-ink font-semibold">
+                  {value}
+                </span>
+              );
 
-        return (
-          <span
-            key={i}
-            className="border-amber/40 bg-amber-wash text-amber-deep mx-0.5 rounded border border-dashed px-1.5 py-0.5 text-[0.875rem] font-medium"
-          >
-            {field ? field.label : match[1]}
-          </span>
-        );
-      })}
-    </p>
+            return (
+              <span
+                key={i}
+                className="border-amber/40 bg-amber-wash text-amber-deep mx-0.5 rounded border border-dashed px-1.5 py-0.5 text-[0.875rem] font-semibold"
+              >
+                {field?.label ?? match[1]}
+              </span>
+            );
+          })}
+        </p>
+      ))}
+    </div>
   );
 }
