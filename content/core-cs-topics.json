@@ -1,0 +1,135 @@
+{
+  "coa": {
+    "match": [
+      "organization",
+      "organisation",
+      "architecture",
+      "coa"
+    ],
+    "topics": [
+      "Computer system organization: CPU, memory, I/O and storage",
+      "Instruction Set Architecture and machine instructions",
+      "x86/x86-64 architecture",
+      "Binary, hexadecimal and number representations",
+      "Integer, signed-number and floating-point representation",
+      "ASCII, Unicode, UTF-8, UTF-16 and UTF-32",
+      "Bits, bytes, words and memory addressing",
+      "CPU registers and their roles",
+      "General-purpose, instruction-pointer, control and SIMD registers",
+      "Instruction cycle: fetch, decode, execute and write-back",
+      "Clock cycles, frequency and instruction latency",
+      "CPU pipelines and hazards",
+      "Instruction-level parallelism and superscalar execution",
+      "Cache memory: L1, L2 and L3",
+      "RAM, memory hierarchy and locality",
+      "Buses and CPU-memory communication",
+      "ALU, control unit and datapath",
+      "Branch prediction and speculative execution",
+      "Multicore CPUs and parallel execution",
+      "SIMD/vector processing and AVX",
+      "GPU architecture and CPU vs GPU execution",
+      "FLOPs, throughput and memory bandwidth",
+      "Interrupts, DMA and I/O organization",
+      "Virtualization and hardware acceleration",
+      "Power, thermal limits and processor performance trade-offs"
+    ]
+  },
+  "os": {
+    "match": [
+      "operating",
+      "unix"
+    ],
+    "topics": [
+      "OS purpose, components and kernel",
+      "Hardware-to-software stack",
+      "Boot process: firmware, bootloader, kernel and initramfs",
+      "Processes, PIDs and process states",
+      "fork, exec and wait system calls",
+      "CPU scheduling and context switching",
+      "Threads and multithreading",
+      "IPC: pipes, shared memory, semaphores and message queues",
+      "Synchronization, race conditions and deadlocks",
+      "Virtual memory and memory management",
+      "Paging and page tables",
+      "File systems and storage organization",
+      "Linux/Unix file-system hierarchy",
+      "Files, directories, links and file descriptors",
+      "Linux permissions, ownership and chmod",
+      "Users, groups, sudo and privileges",
+      "Bash and shell scripting",
+      "Environment variables and PATH",
+      "Essential Unix commands and pipelines",
+      "systemd and service management",
+      "Linux networking and service inspection",
+      "Logs, monitoring and troubleshooting",
+      "Virtual machines and hypervisors",
+      "Containers, namespaces and cgroups",
+      "POSIX, SSH and Linux administration"
+    ]
+  },
+  "cn": {
+    "match": [
+      "network"
+    ],
+    "topics": [
+      "Networking fundamentals and communication models",
+      "OSI and TCP/IP models",
+      "IP addressing: IPv4, IPv6, public/private, static/dynamic IP",
+      "MAC addresses and IP vs MAC",
+      "Subnetting, CIDR and address planning",
+      "ARP, ICMP and network discovery",
+      "Ethernet, switching and MAC tables",
+      "Routers, switches, gateways, hubs and topologies",
+      "LAN, WAN, VLAN and broadcast/collision domains",
+      "TCP vs UDP",
+      "Ports, sockets and client-server communication",
+      "DNS hierarchy, resolution and record types",
+      "DHCP and default gateway",
+      "HTTP/HTTPS, methods, status codes, cookies, sessions and CORS",
+      "SSH, SFTP and remote access",
+      "NAT, PAT and port forwarding",
+      "Firewalls, DMZ, proxies and reverse proxies",
+      "TLS, certificates and secure communication",
+      "VPN and secure connectivity",
+      "Wi-Fi, Bluetooth, 5G and wireless basics",
+      "Latency, bandwidth, throughput, packet loss and jitter",
+      "Network troubleshooting: ping, traceroute, nslookup/dig, netstat/ss, curl",
+      "Wireshark and packet analysis",
+      "CDN, caching and load balancing",
+      "Cloud, edge and basic IoT networking"
+    ]
+  },
+  "dbms": {
+    "match": [
+      "database",
+      "dbms"
+    ],
+    "topics": [
+      "Database fundamentals and DBMS architecture",
+      "Relational data model",
+      "Tables, rows, columns and data types",
+      "Primary, foreign, candidate and unique keys",
+      "Constraints and data integrity",
+      "SQL: SELECT, INSERT, UPDATE, DELETE",
+      "Filtering, sorting, grouping and aggregates",
+      "JOINs",
+      "Subqueries, CTEs and views",
+      "Database schemas and namespaces",
+      "Normalization: 1NF, 2NF, 3NF",
+      "Indexes and B-tree concepts",
+      "Query execution and optimization",
+      "Transactions and ACID",
+      "Concurrency and isolation levels",
+      "Locks and deadlocks",
+      "Stored procedures, functions and triggers",
+      "Roles, privileges and access control",
+      "Row-Level Security and policies",
+      "Password hashing and cryptographic extensions",
+      "PostgreSQL architecture and administration basics",
+      "OLTP vs OLAP",
+      "ETL vs ELT",
+      "NoSQL: document, key-value, wide-column and graph",
+      "Redis, search engines, vector databases and modern data platforms"
+    ]
+  }
+}

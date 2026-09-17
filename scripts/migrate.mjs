@@ -392,6 +392,79 @@ async function syncLessons() {
   );
 }
 
+/**
+ * Fills in the core-CS subjects table wherever a lesson carries one.
+ *
+ * A surgical edit rather than a sync. The student lessons were rewritten in
+ * the admin panel and content/lessons/ is a snapshot of a database with half
+ * as many lessons in it, so writing a whole body from a file would throw that
+ * rewrite away — which is what repo_owned being off is there to prevent. This
+ * touches one table inside one section and leaves every other byte alone.
+ *
+ * It keeps each lesson's own wording: the heading, the prose above the table
+ * and the column headers are whatever that lesson already said. Only the
+ * second cell of each row is replaced, matched by what the first cell calls
+ * the subject — so the student version and the teaching version each keep
+ * their voice and both end up with the same hundred topics.
+ *
+ * Idempotent by content: a row already holding its topics is left alone, so
+ * this costs one query on every deploy after the first and changes nothing.
+ */
+async function patchSubjectsTable() {
+  const file = path.join("content", "core-cs-topics.json");
+  if (!fs.existsSync(file)) return;
+
+  const subjects = Object.values(JSON.parse(fs.readFileSync(file, "utf8")));
+
+  const lessons = await sql`
+    select l.id, l.title, m.slug as module, l.body_md
+      from lessons l
+      join modules m on m.id = l.module_id
+     where l.body_md ilike '%subjects%to keep in mind%'
+        or l.body_md ilike '%subjects worth keeping in mind%'
+  `;
+
+  let touched = 0;
+  for (const lesson of lessons) {
+    const body = lesson.body_md ?? "";
+
+    /*
+     * A markdown table row whose first cell names one of the four subjects.
+     * Matched on the row rather than on position, so a reordered or
+     * relabelled table still lands on the right one.
+     */
+    const patched = body.replace(/^\|([^|\n]+)\|([^\n]*)\|\s*$/gm, (row, first, rest) => {
+      const name = first.toLowerCase();
+      if (/^\s*:?-+/.test(first)) return row; // The separator row.
+
+      const subject = subjects.find((s) =>
+        s.match.some((word) => name.includes(word)),
+      );
+      if (!subject) return row;
+
+      const filled = subject.topics.join(" · ");
+      if (rest.includes(subject.topics[0]) && rest.includes(subject.topics.at(-1))) {
+        return row; // Already carries them.
+      }
+      return `|${first}| ${filled} |`;
+    });
+
+    if (patched === body) continue;
+
+    await sql`update lessons set body_md = ${patched}, updated_at = now() where id = ${lesson.id}`;
+    console.log(
+      `[migrate] subjects table: filled in ${lesson.module}/${lesson.title}`,
+    );
+    touched += 1;
+  }
+
+  console.log(
+    touched === 0
+      ? `[migrate] subjects table: nothing to do (${lessons.length} lesson(s) checked)`
+      : `[migrate] subjects table: ${touched} lesson(s) updated`,
+  );
+}
+
 async function report() {
   const [counts] = await sql`
     select (select count(*) from modules)            as modules,
@@ -418,6 +491,7 @@ const ok = await applySchema();
 if (ok) {
   await copyContent();
   await syncLessons();
+  await patchSubjectsTable();
   await report();
 }
 await sql.end({ timeout: 5 });
