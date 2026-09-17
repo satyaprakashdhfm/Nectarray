@@ -14,6 +14,7 @@ web app, away from anything the student's code can reach.
 import json
 import resource
 import sys
+import time
 
 # Generous enough for the intended solutions, tight enough that a runaway one
 # dies quickly. The CPU limit is per-process and counts seconds of CPU, not
@@ -51,6 +52,20 @@ def jsonable(value):
     return repr(value)
 
 
+def peak_memory_kb() -> int:
+    """Peak resident set size for this process, in kilobytes.
+
+    ru_maxrss is in kilobytes on Linux and bytes on macOS; the judge runs on
+    Linux, so this is taken as given rather than guessed at from the platform.
+
+    It is the whole process, which means it includes the interpreter itself —
+    the same thing every online judge reports, and the reason a solution that
+    allocates nothing still shows several megabytes. What varies between two
+    submissions is the part the student controls.
+    """
+    return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+
+
 def main() -> None:
     payload = json.load(sys.stdin)
     apply_limits()
@@ -71,6 +86,7 @@ def main() -> None:
     sys.stderr = io.StringIO()
 
     def done(result):
+        result.setdefault("max_rss_kb", peak_memory_kb())
         real_stdout.write(json.dumps(result))
         real_stdout.flush()
         sys.exit(0)
@@ -85,13 +101,23 @@ def main() -> None:
         done({"fatal": "No class named Solution was defined."})
 
     results = []
+    # The submission's own time, and nothing else's.
+    #
+    # The wall time the parent measures is mostly the cost of starting a
+    # Python interpreter — tens of milliseconds before a line of the
+    # submission runs — and deep-copying a hundred large inputs is ours too.
+    # Neither tells a student anything about the code they wrote, so the
+    # clock covers the call and stops.
+    solve_ns = 0
     for case in cases:
         args = copy.deepcopy(case["args"])
         try:
             method = getattr(namespace["Solution"](), entry, None)
             if method is None:
                 done({"fatal": f"Solution has no method called {entry}."})
+            call_started = time.perf_counter_ns()
             returned = method(*args)
+            solve_ns += time.perf_counter_ns() - call_started
 
             kind = compare["kind"]
             if kind == "inplace":
@@ -111,7 +137,7 @@ def main() -> None:
             line = traceback.format_exc(limit=1).strip().split("\n")[-1]
             results.append({"error": line})
 
-    done({"results": results})
+    done({"results": results, "solve_ms": round(solve_ns / 1_000_000, 3)})
 
 
 if __name__ == "__main__":

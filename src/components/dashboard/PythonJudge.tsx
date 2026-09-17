@@ -84,6 +84,10 @@ type Verdict = {
   verdict: "accepted" | "wrong" | "timeout" | "error";
   /** Set only on an accepted verdict — see the judge route for why. */
   complexity?: Complexity | null;
+  /** Time inside the student's own calls, in milliseconds. */
+  solveMs?: number | null;
+  /** Peak memory of the run, interpreter included. */
+  memoryMb?: number | null;
   passed?: number;
   total?: number;
   ms?: number | null;
@@ -413,7 +417,12 @@ export function PythonJudge({
 
           <div className="bg-surface flex min-h-0 flex-1 flex-col">
             <VerdictLine run={run} />
-            <Results run={run} solved={isSolved} />
+            <Results
+              run={run}
+              solved={isSolved}
+              questionId={question.id}
+              source={code}
+            />
           </div>
         </div>
 
@@ -531,7 +540,17 @@ function VerdictLine({ run }: { run: Run }) {
   );
 }
 
-function Results({ run, solved }: { run: Run; solved: boolean }) {
+function Results({
+  run,
+  solved,
+  questionId,
+  source,
+}: {
+  run: Run;
+  solved: boolean;
+  questionId: string;
+  source: string;
+}) {
   if (run.at !== "done") {
     return (
       <p className="text-ink-faint px-4 py-4 text-[0.875rem]">
@@ -544,20 +563,24 @@ function Results({ run, solved }: { run: Run; solved: boolean }) {
     );
   }
 
-  const { failing, results, complexity } = run.verdict;
+  const { failing, results, complexity, solveMs, memoryMb } = run.verdict;
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4">
-      {/* What it should cost, once it passes.
-          Here rather than in the statement: before you have solved it this is
-          a hint — O(n) time and O(1) space rules out sorting and rules out a
-          second pass with a dict — and after you have solved it, it is the
-          next question. Yours passed; is it this? That is where an interview
-          starts, and the judge cannot ask it for you. */}
+      {/* What your run cost, and what your code costs — once it passes.
+          Here rather than in the statement: before you have solved it, a
+          complexity figure is a hint at the approach, and the fifteen-minute
+          lock exists to stop the page handing those out. After it passes it
+          is the next question, and the one an interview opens with. */}
       {complexity && (
         <div className="mb-4">
-          <p className="eyebrow mb-2">What the worked solution costs</p>
-          <ComplexityNote complexity={complexity} />
+          <YourRun
+            solveMs={solveMs ?? null}
+            memoryMb={memoryMb ?? null}
+            questionId={questionId}
+            source={source}
+            target={complexity}
+          />
         </div>
       )}
 
@@ -813,6 +836,133 @@ function SolutionButton({ solution }: { solution: SolutionState }) {
  * is the convention the textbooks use, and it is the only one under which
  * "sort it in O(1) space" means anything at all.
  */
+/**
+ * What this run cost, and what the code that produced it costs.
+ *
+ * Four figures in two pairs, because each half of each pair is worthless
+ * without the other. "47 ms" means nothing on its own — fast or slow against
+ * what? — and "O(n²)" is a claim a student has no reason to believe. Put the
+ * measurement next to the shape and each one argues for the other: the nested
+ * loop is why it took 700ms, and the 700ms is why the nested loop matters.
+ *
+ * The milliseconds and megabytes come back with the verdict. The shape of the
+ * student's own code is read afterwards, on a second request, so a verdict is
+ * never held up waiting for a model to answer.
+ */
+function YourRun({
+  solveMs,
+  memoryMb,
+  questionId,
+  source,
+  target,
+}: {
+  solveMs: number | null;
+  memoryMb: number | null;
+  questionId: string;
+  source: string;
+  target: Complexity;
+}) {
+  const [mine, setMine] = useState<Complexity | null>(null);
+  const [state, setState] = useState<"idle" | "working" | "failed">("idle");
+
+  const analyse = useCallback(() => {
+    setState("working");
+    void (async () => {
+      try {
+        const response = await fetch("/api/judge/analyse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ questionId, source }),
+        });
+        const result = (await response.json()) as Complexity & {
+          error?: string;
+        };
+        if (!response.ok) throw new Error(result.error ?? "No.");
+        setMine({ time: result.time, space: result.space, note: result.note });
+        setState("idle");
+      } catch {
+        setState("failed");
+      }
+    })();
+  }, [questionId, source]);
+
+  const figure = (label: string, value: string) => (
+    <p className="flex items-baseline gap-1.5">
+      <span className="text-ink-faint text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+        {label}
+      </span>
+      <span className="text-ink font-mono text-[0.9375rem] font-semibold">
+        {value}
+      </span>
+    </p>
+  );
+
+  return (
+    <div className="border-line bg-mist rounded-xl border p-3.5">
+      <p className="eyebrow mb-2.5">Your run</p>
+
+      <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+        {solveMs != null &&
+          figure(
+            "Runtime",
+            solveMs < 1 ? "<1 ms" : `${Math.round(solveMs)} ms`,
+          )}
+        {memoryMb != null && figure("Memory", `${memoryMb} MB`)}
+        {mine && figure("Time", mine.time)}
+        {mine && figure("Space", mine.space)}
+      </div>
+
+      {/* Runtime is the calls themselves — starting Python costs more than
+          most of these solutions do, and counting it would flatter every
+          answer equally. Memory is the whole process, which is why an O(1)
+          solution still reads in the tens of megabytes; what moves between
+          two submissions is the part the student wrote. */}
+      <p className="text-ink-faint mt-2 text-[0.75rem] leading-relaxed">
+        Runtime is time inside your own function calls. Memory is the peak for
+        the run, the Python interpreter included.
+      </p>
+
+      {mine ? (
+        <p className="text-ink-soft border-line-soft mt-3 border-t pt-3 text-[0.8125rem] leading-relaxed">
+          {mine.note}
+        </p>
+      ) : (
+        <div className="border-line-soft mt-3 border-t pt-3">
+          <button
+            type="button"
+            onClick={analyse}
+            disabled={state === "working"}
+            className="border-line bg-surface text-ink hover:border-brand inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors disabled:opacity-50"
+          >
+            {state === "working" && (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            )}
+            {state === "working"
+              ? "Reading your code…"
+              : "What is my complexity?"}
+          </button>
+          {state === "failed" && (
+            <p className="text-amber-deep mt-2 text-[0.75rem]">
+              Could not read it just now. Try again in a moment.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* The target, so the figures above have something to be measured
+          against. Second, and quieter: what you wrote is the subject here. */}
+      <div className="border-line-soft mt-3 border-t pt-3">
+        <p className="text-ink-faint text-[0.75rem] leading-relaxed">
+          <span className="text-ink-soft font-semibold">
+            The worked solution is {target.time} time, {target.space} space.
+          </span>{" "}
+          {target.note}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ComplexityNote({
   complexity,
   tone = "light",

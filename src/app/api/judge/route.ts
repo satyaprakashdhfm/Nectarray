@@ -121,7 +121,12 @@ export async function POST(request: Request) {
     results?: { got?: unknown; error?: string }[];
     fatal?: string;
     timeout?: boolean;
+    /** Wall time for the whole subprocess, interpreter startup included. */
     ms?: number;
+    /** The submission's own time: the calls, and nothing around them. */
+    solve_ms?: number;
+    /** Peak RSS of the runner process, the interpreter included. */
+    max_rss_kb?: number;
   };
 
   try {
@@ -233,6 +238,20 @@ export async function POST(request: Request) {
     passed,
     total: cases.length,
     ms: payload.ms ?? null,
+    /*
+     * Two numbers, and the useful one is the second.
+     *
+     * `ms` is the whole subprocess, which on a fast solution is almost
+     * entirely the cost of starting Python — a student who halves their
+     * runtime would watch it barely move. `solveMs` is the time inside their
+     * own function calls, so an O(n²) loop and an O(n) pass over the same
+     * input read 705ms against 1.3ms rather than 740ms against 36ms.
+     */
+    solveMs: payload.solve_ms ?? null,
+    memoryMb:
+      payload.max_rss_kb != null
+        ? Math.round((payload.max_rss_kb / 1024) * 10) / 10
+        : null,
     results: results.map((r) => r.ok),
     failing,
     /*
