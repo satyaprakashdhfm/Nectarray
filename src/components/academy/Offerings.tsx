@@ -38,7 +38,7 @@ export function Offerings() {
         </Reveal>
 
         <div className="mt-14 lg:mt-16">
-          <Carousel label="offerings">
+          <Carousel label="offerings" auto>
             {academy.course.offerings.map((offering, i) => (
               <Slide key={offering.title}>
                 <article className="card flex h-full flex-col p-7 text-center sm:p-8">
