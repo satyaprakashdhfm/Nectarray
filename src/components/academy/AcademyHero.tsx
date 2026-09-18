@@ -159,13 +159,21 @@ export function AcademyHero() {
                     fill
                     sizes="(min-width: 1024px) 46vw, (min-width: 640px) 90vw, 100vw"
                     loading="eager"
-                    className="relative object-cover"
+                    className="object-cover"
                   />
 
                   {/* Scrim, so the badge and the line over the desk keep
-                      their contrast whatever sits behind them. */}
+                      their contrast whatever sits behind them.
+
+                      It fades to night at zero alpha rather than to
+                      `transparent`. Tailwind v4 interpolates gradients in
+                      oklab, and `transparent` is black with no alpha there, so
+                      fading to it drags every stop toward black — the picture
+                      under the top half came out muddy rather than clear.
+                      Same colour at both ends, only the alpha moving, and the
+                      interpolation space stops mattering. */}
                   <div
-                    className="from-night/95 via-night/40 pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent"
+                    className="from-night/95 via-night/40 to-night/0 pointer-events-none absolute inset-0 bg-gradient-to-t"
                     aria-hidden
                   />
 

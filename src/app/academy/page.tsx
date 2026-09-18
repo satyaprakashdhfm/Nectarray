@@ -4,7 +4,6 @@ import { AboutCourse } from "@/components/academy/AboutCourse";
 import { AuthLauncher } from "@/components/auth/AuthLauncher";
 import { AcademyFaq } from "@/components/academy/AcademyFaq";
 import { Curriculum } from "@/components/academy/Curriculum";
-import { EnrolForm } from "@/components/academy/EnrolForm";
 import { AcademyHero } from "@/components/academy/AcademyHero";
 import { FloatingActions } from "@/components/academy/FloatingActions";
 import { StudentVoices } from "@/components/academy/StudentVoices";
@@ -21,9 +20,12 @@ export const metadata: Metadata = pageMetadata({
 });
 
 /**
- * The course page. No PageCta at the end — the page already closes on its
- * own enrolment form, and a second "get in touch" band under it would be
- * asking twice for the same thing.
+ * The course page. It used to close on a three-step application form. That is
+ * gone: the page now ends on the FAQs and sends anyone ready to apply to
+ * /contact, which is where every other practice page sends them, so there is
+ * one enquiry form on the site rather than two that answer to different
+ * places. EnrolForm is still in the tree, unimported, for whenever it is
+ * wanted back.
  *
  * No in-page sub-nav either. It sat directly under the site header as a
  * second sticky bar with its own Enrol button, so every scroll happened
@@ -44,7 +46,6 @@ export default function AcademyPage() {
         <Offerings />
         <StudentVoices />
         <AcademyFaq />
-        <EnrolForm />
       </main>
       <Footer />
       <FloatingActions />

@@ -16,7 +16,7 @@ export function Offerings() {
   return (
     <section
       id="offerings"
-      className="border-line bg-mist relative border-y py-16 sm:py-20"
+      className="bg-surface relative py-16 sm:py-20"
       aria-labelledby="offerings-title"
     >
       <div className="shell-wide">
@@ -32,7 +32,7 @@ export function Offerings() {
             Our <span className="ink-gradient">Offerings</span>
           </h2>
           <p className="lede mx-auto mt-5 max-w-2xl text-center">
-            Six things a live class of five makes possible, every session, for
+            Seven things a live class of five makes possible, every session, for
             every person in the room.
           </p>
         </Reveal>
@@ -54,26 +54,6 @@ export function Offerings() {
                   <p className="text-ink-soft mt-3 text-[0.9375rem] leading-relaxed">
                     {offering.body}
                   </p>
-
-                  <div className="border-line-soft mt-6 border-t pt-5 text-left">
-                    <p className="text-ink text-[0.875rem] font-semibold">
-                      Course highlights:
-                    </p>
-                    <ul className="mt-3 space-y-2">
-                      {offering.points.map((point) => (
-                        <li
-                          key={point}
-                          className="text-ink-soft flex gap-2.5 text-[0.875rem] leading-relaxed"
-                        >
-                          <span
-                            className="border-brand-deep mt-[0.45rem] size-1.5 shrink-0 rounded-full border-[1.5px]"
-                            aria-hidden
-                          />
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 </article>
               </Slide>
             ))}
