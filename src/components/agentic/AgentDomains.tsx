@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { useCarousel } from "@/hooks";
-import { OutputScreen } from "@/components/agentic/OutputScreen";
 import { Icon } from "@/components/ui/Icon";
 import { agenticAiPage } from "@/lib/content/agentic-ai";
 
-const { domains, industries } = agenticAiPage;
+const { domains } = agenticAiPage;
 
 /** How long a domain holds before the list moves on. */
 const DWELL = 7000;
-/** And how fast its task list ticks itself off inside that. */
-const TICK = 1100;
-
-/** The worked example already written for a trade, where there is one. */
-const screenFor = (id?: string) =>
-  id ? industries.find((entry) => entry.id === id)?.tabs[0].screen : undefined;
 
 /**
  * Every kind of work an agent can take on, as a list you read down with the
@@ -26,11 +20,15 @@ const screenFor = (id?: string) =>
  * three worked examples with no list. They are one thing now: pick the team,
  * and get the ask, the systems it reaches, and what comes back.
  *
- * What comes back is the spreadsheet where a worked example has been written
- * for that trade, and the agent's own task list emptying itself where one has
- * not. Films of real runs will replace the task list — the panel is framed
- * for that already, so dropping a video in changes this one element and
- * nothing around it.
+ * What comes back is the agent's own console for that team. These replaced a
+ * hand-drawn panel — the ask in a dark block, the systems as chips, a task
+ * list ticking itself off, and a spreadsheet of the result — which the
+ * captures now carry better and in one piece. Keeping both would have shown
+ * the same prompt and the same connectors twice, side by side.
+ *
+ * Every capture is cut to one window, so the panel holds its height as the
+ * rotation moves through the ten. A panel that grew and shrank would move the
+ * strip under a thumb already reaching for it.
  *
  * The control has two shapes. Wide, it is the column of ten on the left, open
  * one carrying its description. Narrow, that column would be four hundred
@@ -41,37 +39,17 @@ const screenFor = (id?: string) =>
  * beneath it in a cell sized to the longest of them — fixed height, whichever
  * team is live.
  *
- * Auto-advancing at seven seconds, which is long enough to watch a task list
- * finish. Picking a team holds it for ten — see useCarousel.
+ * Auto-advancing at seven seconds, which is long enough to take a console in
+ * without reading every row of it. Picking a team holds it for ten — see
+ * useCarousel.
  */
 export function AgentDomains() {
   const { i, running, engaged, mayAnimate, pick, holdProps, hoverProps } =
     useCarousel(domains.items.length, DWELL);
-  const [done, setDone] = useState(0);
   const rail = useRef<HTMLUListElement>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const item = domains.items[i];
-  // Its own sample output where the team has one, and the worked example
-  // already written for that trade where it does not — every team has one or
-  // the other now, so the panel never falls back to the ticking task list.
-  const screen = item.screen ?? screenFor(item.industry);
-
-  // The task list starts again whenever the team does, however it changed.
-  // Adjusted during render rather than in an effect: React throws away the
-  // in-progress output and re-renders before painting, so the panel is never
-  // caught showing the previous team's list already ticked off.
-  const [shownFor, setShownFor] = useState(i);
-  if (shownFor !== i) {
-    setShownFor(i);
-    setDone(0);
-  }
-
-  useEffect(() => {
-    if (!mayAnimate || done >= item.steps.length) return;
-    const t = setTimeout(() => setDone((n) => n + 1), TICK);
-    return () => clearTimeout(t);
-  }, [done, mayAnimate, item.steps.length]);
 
   // The live chip pulled to the left edge of the strip, so the teams still to
   // come arrive from the right. Never while someone is working it, or the
@@ -89,16 +67,17 @@ export function AgentDomains() {
   }, [i, mayAnimate, engaged]);
 
   /*
-   * Every hold except the one on scrolling, which goes on the panel instead.
+   * Every hold except the one on scrolling, which is dropped.
    *
    * `onScrollCapture` hears a descendant scroll and cannot tell whose it
    * was, and the effect above scrolls the strip every time the rotation
-   * advances — so left on the wrapper it would snooze the rotation that had
-   * just run, and each team would sit for its seven seconds plus the ten a
-   * deliberate pick buys. The panel is the part with something scrollable
-   * inside it (the spreadsheet), which is what that hold is for. A reader
-   * working the strip itself still holds it, through the touch, pointer and
-   * focus captures here and the cursor on the strip below.
+   * advances — so left on it would snooze the rotation that had just run,
+   * and each team would sit for its seven seconds plus the ten a deliberate
+   * pick buys. It used to sit on the panel instead, which had the one
+   * genuinely scrollable thing in here, a spreadsheet wider than its column.
+   * The captures replaced that, so the strip is now the only scroller left,
+   * and a reader working it is already held by the touch, pointer and focus
+   * captures here and by the cursor on the strip below.
    */
   const outerHold = { ...holdProps, onScrollCapture: undefined };
 
@@ -244,83 +223,30 @@ export function AgentDomains() {
         })}
       </div>
 
+      {/*
+       * No aria-live. The alt on these runs to a couple of sentences, and a
+       * region that re-read one every seven seconds would queue announcements
+       * faster than a screen reader could finish them. The tabs carry the
+       * state instead: aria-selected moves with the rotation, and the panel is
+       * here to be read deliberately.
+       */}
       <div
         className="card min-w-0 overflow-hidden p-2 sm:p-2.5 lg:p-3"
-        aria-live="polite"
-        onScrollCapture={holdProps.onScrollCapture}
+        role="tabpanel"
       >
         <div className="border-line bg-canvas overflow-hidden rounded-xl border">
-          <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 xl:grid-cols-[0.85fr_1.15fr] xl:gap-8 xl:p-7">
-            {/* The ask, and what it reaches. */}
-            <div className="min-w-0">
-              <div className="bg-night rounded-2xl p-4 text-white/80 sm:p-5">
-                <p className="text-[0.625rem] font-semibold tracking-[0.16em] text-white/40 uppercase">
-                  What you ask for
-                </p>
-                <p className="mt-2.5 text-[0.875rem] leading-relaxed">
-                  {item.prompt}
-                </p>
-                <p className="mt-5 text-[0.625rem] font-semibold tracking-[0.16em] text-white/40 uppercase">
-                  Connected to
-                </p>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {item.connectors.map((connector) => (
-                    <span
-                      key={connector}
-                      className="rounded-lg bg-white/10 px-2.5 py-1.5 text-[0.75rem] font-medium text-white/85"
-                    >
-                      {connector}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <p className="text-ink-faint mt-5 text-[0.625rem] font-semibold tracking-[0.16em] uppercase">
-                What it does
-              </p>
-              <ol className="mt-2.5 space-y-1.5">
-                {item.steps.map((step, n) => {
-                  const complete = n < done;
-                  return (
-                    <li
-                      key={step}
-                      className={`flex items-start gap-2.5 text-[0.8125rem] leading-snug transition-opacity duration-500 ${
-                        n <= done ? "opacity-100" : "opacity-45"
-                      }`}
-                    >
-                      <span
-                        className={`mt-[0.1rem] grid size-4 shrink-0 place-items-center rounded-full border text-[0.5625rem] transition-colors duration-300 ${
-                          complete
-                            ? "border-brand-deep bg-brand-deep text-white"
-                            : "border-line text-ink-faint"
-                        }`}
-                        aria-hidden
-                      >
-                        {complete ? (
-                          <Icon name="check" className="size-2.5" />
-                        ) : (
-                          n + 1
-                        )}
-                      </span>
-                      <span className={complete ? "text-ink-soft" : "text-ink"}>
-                        {step}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
-
-            {/* And what comes back. */}
-            {screen ? (
-              <OutputScreen screen={screen} />
-            ) : (
-              <div className="border-line bg-mist text-ink-faint grid min-h-[14rem] place-items-center rounded-2xl border border-dashed p-6 text-center text-[0.8125rem]">
-                A worked example for this team is on its way. Ask us and we will
-                walk you through one on a call.
-              </div>
-            )}
-          </div>
+          {/* Keyed on the team, so React swaps the element rather than
+              pointing the old one at a new src — which would otherwise leave
+              the outgoing capture on screen until the new one had arrived. */}
+          <Image
+            key={item.id}
+            src={item.shot.src}
+            alt={item.shot.alt}
+            width={item.shot.width}
+            height={item.shot.height}
+            sizes="(min-width: 1024px) 68rem, 94vw"
+            className="h-auto w-full"
+          />
         </div>
       </div>
     </div>

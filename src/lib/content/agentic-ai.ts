@@ -813,6 +813,12 @@ export const agenticAiPage = {
         label: "Finance & accounts",
         icon: "chart",
         body: "Reconciliation, chasing and the month-end scramble. The agent does the matching and brings you only what refuses to match.",
+        shot: {
+          src: "/agentic/domains/finance.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A finance agent's console. On the left it answers a question about the cash position with the balance in each account and the settlements still pending; on the right, the books and payment gateways it is connected to, the week's inflows and outflows, and a table of the twenty-seven transactions it could not match.",
+        },
         steps: [
           "Pull the ledger and the settlement file",
           "Match line by line, flag the gaps",
@@ -827,6 +833,12 @@ export const agenticAiPage = {
         label: "Sales",
         icon: "target",
         body: "Research, follow-up and CRM hygiene — the work that gets skipped when the pipeline is busy, which is exactly when it costs you.",
+        shot: {
+          src: "/agentic/domains/sales.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A sales agent's console. On the left it reports what it did with last night's eight enquiries — five replies sent, three follow-ups scheduled, one held for review; on the right, each enquiry with where it came from, how well it fits, what it is worth and the next step already taken.",
+        },
         screen: {
           file: "Enquiries — overnight.xlsx",
           columns: ["Enquiry", "Fit", "Value", "Next step"],
@@ -873,6 +885,12 @@ export const agenticAiPage = {
         label: "Customer support",
         icon: "message",
         body: "Answering on the channel it arrived on, from your real documentation, and knowing when to stop and fetch a person.",
+        shot: {
+          src: "/agentic/domains/support.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A customer support agent's console. A table of the morning's tickets shows the channel each arrived on and the action the agent took on it, one of them escalated to a person for a damaged item; beside it, the live conversation where it looks up an order and sends the customer a tracking link.",
+        },
         steps: [
           "Read the message and find the order behind it",
           "Answer from your docs, cite where it came from",
@@ -887,6 +905,12 @@ export const agenticAiPage = {
         label: "Marketing",
         icon: "megaphone",
         body: "The repetitive half: briefs, variants, tagging and the weekly report nobody has time to assemble.",
+        shot: {
+          src: "/agentic/domains/marketing.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A marketing agent's console. Across the top, the week's reach, engagement and conversions, then the run from brief to variants to tagging to publishing; below, the campaigns in flight by channel, and on the right the agent handing over the weekly report and three fresh ad variants for approval.",
+        },
         screen: {
           file: "Last week — by channel.xlsx",
           columns: ["Channel", "Spend", "Leads", "The read"],
@@ -931,6 +955,12 @@ export const agenticAiPage = {
         label: "Operations & logistics",
         icon: "workflow",
         body: "Chasing status across systems that do not talk to each other, and telling somebody before it becomes a problem.",
+        shot: {
+          src: "/agentic/domains/operations.webp",
+          width: 1536,
+          height: 1024,
+          alt: "An operations agent's control tower. A live map traces shipments across India with one flagged as delayed near Hyderabad; alongside it the day's alerts — a customs hold, a low stock warning, a courier changing its estimate — and on the right the agent notifying that customer and raising the ticket itself.",
+        },
         screen: {
           file: "Exceptions — today.xlsx",
           columns: ["Order", "What is wrong", "Owner", "Status"],
@@ -974,6 +1004,12 @@ export const agenticAiPage = {
         label: "People & hiring",
         icon: "briefcase",
         body: "Screening, scheduling and the onboarding checklist — the admin around hiring, not the judgement in it.",
+        shot: {
+          src: "/agentic/domains/people.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A hiring agent's console. The pipeline runs across five columns from applied to hired, with the day's interviews and an onboarding checklist beneath it; on the right the agent offers to shortlist, book the rounds and draft the offer letters, and flags the three offers waiting on an approval.",
+        },
         screen: {
           file: "Shortlist — backend engineer.xlsx",
           columns: ["Candidate", "Evidence against the brief", "Screen", "Next"],
@@ -1021,6 +1057,12 @@ export const agenticAiPage = {
         label: "Clinics & patient care",
         icon: "shield",
         body: "Confirmations, cancellations and pre-authorisations. The desk work around care, never the care itself.",
+        shot: {
+          src: "/agentic/domains/clinics.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A clinic assistant's console. The day's twenty-eight appointments are listed with each visit type and whether it is confirmed, arrived or cancelled; beside them the pre-authorisation requests waiting on insurers, and an agent that confirms, reschedules, chases the authorisation and sends the reminders — and stops at anything clinical.",
+        },
         steps: [
           "Confirm tomorrow's list before tomorrow arrives",
           "Refill a cancelled slot from the waiting list",
@@ -1035,6 +1077,12 @@ export const agenticAiPage = {
         label: "Legal & compliance",
         icon: "notebook",
         body: "Reading the long documents and telling you which three clauses are not standard. A first pass, not an opinion.",
+        shot: {
+          src: "/agentic/domains/legal.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A contract review agent's console. The documents it has read are listed with the counterparty and what it found in each; on the right it summarises a master service agreement as three non-standard clauses — a termination notice period, a liability cap and a missing data deletion timeline — each marked with how far it departs from the playbook.",
+        },
         screen: {
           file: "MSA — first pass.xlsx",
           columns: ["Clause", "Against your playbook", "Precedent", "Action"],
@@ -1080,6 +1128,12 @@ export const agenticAiPage = {
         label: "Engineering & IT",
         icon: "code",
         body: "Triage, on-call noise and the tickets that are the same five questions in different words.",
+        shot: {
+          src: "/agentic/domains/engineering.webp",
+          width: 1536,
+          height: 1024,
+          alt: "An engineering agent's console. A triage queue ranks the issues needing attention and an overnight chart shows where the alerts clustered; below, eighteen tickets that were all one VPN problem in different words, and a table setting the time spent on manual triage before the agent against the time spent now.",
+        },
         screen: {
           file: "On-call — last night.xlsx",
           columns: ["Alert", "Service", "First diagnosis", "Action"],
@@ -1124,6 +1178,12 @@ export const agenticAiPage = {
         label: "Data & reporting",
         icon: "database",
         body: "The recurring question somebody answers by hand every Monday, answered from the source instead of a stale export.",
+        shot: {
+          src: "/agentic/domains/reporting.webp",
+          width: 1536,
+          height: 1024,
+          alt: "A reporting agent's console. It lists the questions asked most often and the warehouses and spreadsheets it reads them from, with the recurring reports it already sends on a schedule; on the right it answers a question about last week's signups by region with a chart built from live data rather than an export.",
+        },
         screen: {
           file: "Monday numbers.xlsx",
           columns: ["Metric", "This week", "vs last", "Note"],
