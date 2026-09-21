@@ -157,12 +157,10 @@ export const modules = pgTable("modules", {
   /**
    * Who the module is written for: "student" or "admin".
    *
-   * The same course is taught from two sets of notes. Students read a short,
-   * precise version; whoever is teaching reads the long one, with the
-   * background and the asides that would only slow a beginner down. Rather
-   * than a second body column on every lesson, the long set is its own
-   * module — so it carries its own lesson list, its own day labels and its
-   * own positions, and neither version constrains the shape of the other.
+   * Only "student" modules are shown anywhere: students and whoever is
+   * teaching read the same notes. The "admin" modules are an older, longer
+   * teaching version of each course, kept in the table but read by no page —
+   * which is why every student-facing query still filters on this column.
    *
    * Defaulting to "student" matters: every existing module is one, and a new
    * module is far more likely to be. An admin module has to say so.

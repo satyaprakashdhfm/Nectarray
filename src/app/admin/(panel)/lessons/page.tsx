@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 import { createLesson } from "../actions";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   lessons as lessonsTable,
@@ -20,160 +20,94 @@ import {
  */
 export const dynamic = "force-dynamic";
 
-type Lesson = {
-  id: string;
-  title: string;
-  is_published: boolean;
-  position: number;
-  body_md: string | null;
-};
+/**
+ * The Notes tab's front door.
+ *
+ * Same move as the student notes index: it opens the first lesson of the
+ * chosen course rather than listing what the rail beside it already lists.
+ * `?new=1` — the "New lesson" button on every lesson — stops here instead
+ * and shows the form, with that lesson's course already picked. So does a
+ * course that has no lessons yet, since there is nothing to open.
+ */
+export default async function AdminNotesIndex({
+  searchParams,
+}: {
+  searchParams: Promise<{ module?: string; new?: string }>;
+}) {
+  const { module: wanted, new: adding } = await searchParams;
 
-export default async function AdminLessonsPage() {
-  // The teaching version of the same course lives at /admin/teaching, as a
-  // read-only view rather than a list of edit links — there is nothing to
-  // edit through this page but the short notes students actually see.
-  const [moduleRows, lessonRows] = await Promise.all([
-    db
-      .select({
-        id: modulesTable.id,
-        title: modulesTable.title,
-        position: modulesTable.position,
-        audience: modulesTable.audience,
-      })
-      .from(modulesTable)
-      .orderBy(asc(modulesTable.position)),
-    db
-      .select({
-        id: lessonsTable.id,
-        module_id: lessonsTable.moduleId,
-        title: lessonsTable.title,
-        is_published: lessonsTable.isPublished,
-        position: lessonsTable.position,
-        body_md: lessonsTable.bodyMd,
-      })
-      .from(lessonsTable)
-      .orderBy(asc(lessonsTable.position)),
-  ]);
+  // Students and whoever is teaching read the same notes; the old teaching
+  // modules are still in the table, but nothing shows them any more.
+  const rows = await db
+    .select({
+      id: modulesTable.id,
+      slug: modulesTable.slug,
+      title: modulesTable.title,
+      lessonId: lessonsTable.id,
+    })
+    .from(modulesTable)
+    .leftJoin(lessonsTable, eq(lessonsTable.moduleId, modulesTable.id))
+    .where(eq(modulesTable.audience, "student"))
+    .orderBy(asc(modulesTable.position), asc(lessonsTable.position));
 
-  // Hung together here rather than by a nested select, which was a second
-  // query per module. Filtered to student modules only — see above.
-  const modules = moduleRows
-    .filter((module) => module.audience === "student")
-    .map((module) => ({
-      ...module,
-      lessons: lessonRows.filter((lesson) => lesson.module_id === module.id),
-    }));
+  const chosen = rows.filter((row) => row.slug === wanted);
+  const first = (chosen.length ? chosen : rows).find(
+    (row) => row.lessonId,
+  )?.lessonId;
+
+  if (adding !== "1" && first) redirect(`/admin/lessons/${first}`);
+
+  const modules = [...new Map(rows.map((row) => [row.id, row])).values()];
 
   const field =
     "w-full rounded-xl border border-line bg-surface px-4 py-3 text-[0.9375rem] text-ink focus:border-brand focus:outline-none";
+  const label = "text-ink mb-2 block text-[0.8125rem] font-semibold";
 
   return (
-    <>
-      <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
-        Student Notes
-      </h1>
-      <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem] leading-relaxed">
-        The short version enrolled students actually see, editable here.
-        Unpublished lessons stay invisible to them, whatever their enrolment
-        status.
+    <form action={createLesson} className="card p-6 sm:p-7">
+      <h1 className="display text-ink text-[1.5rem]">New lesson</h1>
+      <p className="text-ink-soft mt-2 text-[0.9375rem] leading-relaxed">
+        Added as a draft at the end of its course, and opened in the editor.
       </p>
 
-      {/* New lesson ------------------------------------------------------ */}
-      <form action={createLesson} className="card mt-8 p-6">
-        <div className="grid gap-4 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
-          <div>
-            <label
-              className="text-ink mb-2 block text-[0.8125rem] font-semibold"
-              htmlFor="new-module"
-            >
-              Module
-            </label>
-            <select id="new-module" name="module_id" className={field}>
-              {(modules ?? []).map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.title}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              className="text-ink mb-2 block text-[0.8125rem] font-semibold"
-              htmlFor="new-title"
-            >
-              Title
-            </label>
-            <input
-              id="new-title"
-              name="title"
-              placeholder="Decorators and closures"
-              className={field}
-            />
-          </div>
-          <button
-            type="submit"
-            className="bg-ink hover:bg-brand-deep text-cta-fg inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[0.9375rem] font-semibold transition-colors"
+      <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
+        <div>
+          <label className={label} htmlFor="new-module">
+            Course
+          </label>
+          <select
+            id="new-module"
+            name="module_id"
+            defaultValue={chosen[0]?.id}
+            className={field}
           >
-            <Plus className="size-4" strokeWidth={2.5} aria-hidden />
-            Add
-          </button>
+            {modules.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.title}
+              </option>
+            ))}
+          </select>
         </div>
-      </form>
-
-      <div className="mt-8 space-y-8">
-        {(modules ?? []).map((module) => (
-          <section key={module.id}>
-            <h2 className="eyebrow flex items-center gap-2">{module.title}</h2>
-            <div className="card mt-4 overflow-hidden">
-              {module.lessons.length === 0 ? (
-                <p className="text-ink-faint p-6 text-[0.9375rem]">
-                  No lessons in this module yet.
-                </p>
-              ) : (
-                <ul>
-                  {(module.lessons as Lesson[])
-                    .sort((a, b) => a.position - b.position)
-                    .map((lesson) => (
-                      <li key={lesson.id}>
-                        <Link
-                          href={`/admin/lessons/${lesson.id}`}
-                          className="border-line-soft hover:bg-mist flex items-center justify-between gap-4 border-b p-5 transition-colors last:border-0"
-                        >
-                          <span className="min-w-0">
-                            <span className="text-ink text-[0.9375rem] font-semibold">
-                              {lesson.title}
-                            </span>
-                            <span className="text-ink-faint ml-3 text-[0.8125rem]">
-                              {lesson.body_md
-                                ? `${Math.round(lesson.body_md.length / 1000)} KB`
-                                : "empty"}
-                            </span>
-                          </span>
-                          <span className="flex shrink-0 items-center gap-3">
-                            <span
-                              className={`rounded-full px-3 py-1 text-[0.75rem] font-semibold ${
-                                lesson.is_published
-                                  ? "bg-leaf-wash text-leaf-deep"
-                                  : "bg-mist text-ink-faint"
-                              }`}
-                            >
-                              {lesson.is_published ? "published" : "draft"}
-                            </span>
-                            <Pencil
-                              className="text-ink-faint size-4"
-                              strokeWidth={2}
-                              aria-hidden
-                            />
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
-              )}
-            </div>
-          </section>
-        ))}
+        <div>
+          <label className={label} htmlFor="new-title">
+            Title
+          </label>
+          <input
+            id="new-title"
+            name="title"
+            placeholder="Decorators and closures"
+            required
+            className={field}
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-ink hover:bg-brand-deep text-cta-fg inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[0.9375rem] font-semibold transition-colors"
+        >
+          <Plus className="size-4" strokeWidth={2.5} aria-hidden />
+          Add
+        </button>
       </div>
-    </>
+    </form>
   );
 }

@@ -190,10 +190,11 @@ export async function updateLesson(formData: FormData) {
     })
     .where(eq(lessons.id, id));
 
-  revalidatePath("/admin/lessons");
-  revalidatePath(`/admin/lessons/${id}`);
-  revalidatePath(`/dashboard/notes/${id}`);
-  redirect("/admin/lessons");
+  // The layouts, not just the page: both rails list the title, and the admin
+  // one marks drafts. Back to the lesson itself, so the save is seen rendered.
+  revalidatePath("/admin/lessons", "layout");
+  revalidatePath("/dashboard/notes", "layout");
+  redirect(`/admin/lessons/${id}`);
 }
 
 /** Adds an empty lesson to a module, ready to be written into. */
@@ -223,6 +224,6 @@ export async function createLesson(formData: FormData) {
     })
     .returning({ id: lessons.id });
 
-  revalidatePath("/admin/lessons");
-  redirect(`/admin/lessons/${data.id}`);
+  revalidatePath("/admin/lessons", "layout");
+  redirect(`/admin/lessons/${data.id}?edit=1`);
 }

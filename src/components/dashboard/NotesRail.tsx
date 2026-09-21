@@ -12,8 +12,8 @@ export type RailLesson = {
   position: number;
   /**
    * Not yet unlocked for this student's batch: listed, so the course still
-   * reads as a whole, but not a link and not openable. The admin's teaching
-   * view leaves this unset — whoever is teaching sees all of it.
+   * reads as a whole, but not a link and not openable. The admin's notes
+   * view leaves this unset — an admin opens every lesson.
    */
   locked?: boolean;
 };
@@ -46,11 +46,11 @@ export function NotesRail({
   progress = true,
 }: {
   modules: RailModule[];
-  /** Where a lesson link points — the admin's read-only teaching view reuses this same rail. */
+  /** Where a lesson link points — the admin's notes view reuses this same rail. */
   basePath?: string;
   /** Distance from the top of the viewport to stick under, as a CSS length — the dashboard has a second nav row below its header, the admin panel doesn't. */
   stickyTop?: string;
-  /** Off for the teaching view, where every lesson is open and a full bar says nothing. */
+  /** Off for the admin's notes view, where every lesson is open and a full bar says nothing. */
   progress?: boolean;
 }) {
   const pathname = usePathname();

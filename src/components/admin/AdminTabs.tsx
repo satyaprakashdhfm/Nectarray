@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen,
   Briefcase,
   CalendarDays,
   Inbox,
@@ -15,9 +14,8 @@ import {
 const TABS = [
   { href: "/admin", label: "Students", icon: Users },
   { href: "/admin/cohort", label: "Class", icon: CalendarDays },
-  { href: "/admin/lessons", label: "Student Notes", icon: NotebookPen },
+  { href: "/admin/lessons", label: "Notes", icon: NotebookPen },
   { href: "/admin/unlocking", label: "Unlocking", icon: LockOpen },
-  { href: "/admin/teaching", label: "Teacher Notes", icon: BookOpen },
   { href: "/admin/placement", label: "Placement", icon: Briefcase },
   { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
 ];
