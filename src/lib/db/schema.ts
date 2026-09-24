@@ -500,6 +500,104 @@ export const academyEnquiries = pgTable("academy_enquiries", {
 });
 
 // ---------------------------------------------------------------------------
+//  The business: client work, search and ads, across the four services
+// ---------------------------------------------------------------------------
+
+/**
+ * A piece of client work for one service — marketing, software or ai.
+ *
+ * The academy is not here: its money is on `enrolments`, one row per
+ * student, and the revenue page reads it from there.
+ */
+export const clientProjects = pgTable(
+  "client_projects",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** marketing · software · ai */
+    service: text().notNull(),
+    client: text().notNull(),
+    title: text().notNull(),
+    /** lead · proposal · active · on_hold · delivered · lost */
+    status: text().notNull().default("lead"),
+    /** The agreed price, in rupees. Null while it is still a conversation. */
+    value: numeric(),
+    startsOn: date("starts_on"),
+    dueOn: date("due_on"),
+    note: text(),
+    createdAt: now(),
+  },
+  (table) => [index("client_projects_service_idx").on(table.service)],
+);
+
+/** Money actually received against a project. Revenue is the sum of these. */
+export const clientPayments = pgTable(
+  "client_payments",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => clientProjects.id, { onDelete: "cascade" }),
+    amount: numeric().notNull(),
+    receivedOn: date("received_on").notNull(),
+    ref: text(),
+    createdAt: now(),
+  },
+  (table) => [index("client_payments_project_idx").on(table.projectId)],
+);
+
+/**
+ * A search term a service's pages should rank for.
+ *
+ * `position` is typed in until Search Console is connected; after that the
+ * sync writes it and `checked_on` says when.
+ */
+export const seoKeywords = pgTable("seo_keywords", {
+  id: uuid().primaryKey().defaultRandom(),
+  /** marketing · software · ai · academy */
+  service: text().notNull(),
+  keyword: text().notNull(),
+  /** The page meant to rank, as a path — /marketing, /blog/… */
+  targetPath: text("target_path"),
+  position: numeric(),
+  checkedOn: date("checked_on"),
+  createdAt: now(),
+});
+
+/** The blog plan: one row per post, from idea to published. */
+export const blogPosts = pgTable("blog_posts", {
+  id: uuid().primaryKey().defaultRandom(),
+  service: text().notNull(),
+  title: text().notNull(),
+  keyword: text(),
+  /** idea · writing · published */
+  status: text().notNull().default("idea"),
+  url: text(),
+  publishedOn: date("published_on"),
+  createdAt: now(),
+});
+
+/**
+ * An ad campaign and what it cost and brought in.
+ *
+ * Entered by hand until the Google Ads and Meta APIs are connected; the
+ * figures are totals to date, not per day.
+ */
+export const adCampaigns = pgTable("ad_campaigns", {
+  id: uuid().primaryKey().defaultRandom(),
+  service: text().notNull(),
+  /** google · meta · linkedin · amazon · other */
+  platform: text().notNull(),
+  name: text().notNull(),
+  /** active · paused · ended */
+  status: text().notNull().default("active"),
+  spend: numeric().notNull().default("0"),
+  clicks: integer().notNull().default(0),
+  leads: integer().notNull().default(0),
+  startedOn: date("started_on"),
+  createdAt: now(),
+});
+
+// ---------------------------------------------------------------------------
 //  Relations, for the query builder
 // ---------------------------------------------------------------------------
 

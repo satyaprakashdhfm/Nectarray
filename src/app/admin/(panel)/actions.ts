@@ -42,7 +42,7 @@ export async function setEnrolmentStatus(formData: FormData) {
   await assertAdmin();
   await db.update(enrolments).set({ status }).where(eq(enrolments.id, id));
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/students");
   revalidatePath("/dashboard");
 }
 
@@ -58,7 +58,7 @@ export async function createEnrolment(formData: FormData) {
     .values({ userId, cohortId, status: "accepted" })
     .onConflictDoNothing();
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/students");
 }
 
 export async function updateCohort(formData: FormData) {
@@ -163,7 +163,8 @@ export async function updatePayment(formData: FormData) {
     })
     .where(eq(enrolments.id, id));
 
-  revalidatePath("/admin");
+  // Academy fees count towards revenue, so the whole panel is refreshed.
+  revalidatePath("/admin", "layout");
 }
 
 /** Saves a lesson's notes. The markdown is stored exactly as typed. */
