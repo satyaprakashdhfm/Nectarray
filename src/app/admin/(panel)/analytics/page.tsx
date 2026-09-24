@@ -2,7 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { adCampaigns } from "@/lib/db/schema";
 import {
-  ConnectionCard,
+  ConnectionStrip,
   Empty,
   PageHead,
   Section,
@@ -67,6 +67,7 @@ export default async function AdminAnalyticsPage({
         title="Ads & Analytics"
         lede="What the ads cost and brought in, and — once Analytics is connected — the traffic each service's pages get."
       />
+      <ConnectionStrip ids={["analytics", "googleAds", "metaAds"]} />
       <ServiceFilter basePath="/admin/analytics" current={service} />
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -80,37 +81,29 @@ export default async function AdminAnalyticsPage({
       </div>
 
       <Section title="Traffic">
-        <div className="grid gap-4 lg:grid-cols-[2fr_3fr]">
-          <ConnectionCard id="analytics" />
-          <div className="card p-5">
-            <p className="eyebrow">Split by page</p>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {pages.map((s) => (
-                <li
-                  key={s.id}
-                  className="flex items-center justify-between gap-3 text-[0.8125rem]"
-                >
-                  <span className="text-ink font-semibold">{s.label}</span>
-                  <code className="text-ink-soft font-mono text-[0.75rem]">
-                    {s.path}/…
-                  </code>
-                </li>
-              ))}
-            </ul>
-            <p className="text-ink-faint mt-3 text-[0.75rem]">
-              Visitors, sessions and sources per service appear here once GA4 is
-              connected.
-            </p>
-          </div>
+        <div className="card p-5">
+          <p className="eyebrow">Split by page</p>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {pages.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center justify-between gap-3 text-[0.8125rem]"
+              >
+                <span className="text-ink font-semibold">{s.label}</span>
+                <code className="text-ink-soft font-mono text-[0.75rem]">
+                  {s.path}/…
+                </code>
+              </li>
+            ))}
+          </ul>
+          <p className="text-ink-faint mt-3 text-[0.75rem]">
+            Visitors, sessions and sources per service appear here once GA4 is
+            connected.
+          </p>
         </div>
       </Section>
 
       <Section title="Campaigns">
-        <div className="mb-4 grid gap-4 sm:grid-cols-2">
-          <ConnectionCard id="googleAds" />
-          <ConnectionCard id="metaAds" />
-        </div>
-
         {campaigns.length === 0 ? (
           <Empty>No campaigns yet.</Empty>
         ) : (

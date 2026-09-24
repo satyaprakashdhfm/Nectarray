@@ -2,7 +2,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { blogPosts, seoKeywords } from "@/lib/db/schema";
 import {
-  ConnectionCard,
+  ConnectionStrip,
   Empty,
   PageHead,
   Section,
@@ -80,22 +80,20 @@ export default async function AdminSeoPage({
         title="SEO"
         lede="Keywords each service should rank for, and the blog posts planned to win them."
       />
+      <ConnectionStrip ids={["searchConsole"]} />
       <ServiceFilter basePath="/admin/seo" current={service} />
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[2fr_3fr]">
-        <ConnectionCard id="searchConsole" />
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Stat label="Keywords" value={String(keywords.length)} />
-          <Stat
-            label="On page 1"
-            value={String(topTen)}
-            hint="Position 10 or better"
-          />
-          <Stat
-            label="Posts published"
-            value={`${published} / ${posts.length}`}
-          />
-        </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <Stat label="Keywords" value={String(keywords.length)} />
+        <Stat
+          label="On page 1"
+          value={String(topTen)}
+          hint="Position 10 or better"
+        />
+        <Stat
+          label="Posts published"
+          value={`${published} / ${posts.length}`}
+        />
       </div>
 
       <Section title="Keywords">

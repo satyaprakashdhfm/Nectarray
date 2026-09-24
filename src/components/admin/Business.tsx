@@ -131,46 +131,43 @@ export function ServiceFilter({
 }
 
 /**
- * Whether an outside source is ready. Reads only which variables are set,
- * never their values.
+ * Which outside sources this page needs, and whether each is connected —
+ * one pill apiece, at the top of the page. Reads only whether the variables
+ * are set, never their values.
  */
-export function ConnectionCard({ id }: { id: ConnectionId }) {
-  const connection = CONNECTIONS[id];
-  const missing = missingEnv(id);
-  const ready = missing.length === 0;
-
+export function ConnectionStrip({ ids }: { ids: ConnectionId[] }) {
   return (
-    <div className="card p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <Plug className="text-ink-faint size-4" aria-hidden />
-          <h3 className="text-ink text-[0.9375rem] font-semibold">
-            {connection.label}
-          </h3>
-        </div>
-        <span
-          className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold whitespace-nowrap ${
-            ready
-              ? "bg-leaf-wash text-leaf-deep"
-              : "bg-amber-wash text-amber-deep"
-          }`}
-        >
-          {ready ? "Keys set" : "Waiting for access"}
-        </span>
-      </div>
-      <p className="text-ink-soft mt-2 text-[0.8125rem]">{connection.gives}</p>
-      {!ready && (
-        <p className="text-ink-faint mt-3 text-[0.75rem]">
-          Needs in Railway:{" "}
-          {missing.map((name, i) => (
-            <span key={name}>
-              {i > 0 && ", "}
-              <code className="text-ink-soft font-mono">{name}</code>
+    <ul className="mt-5 flex flex-wrap gap-2">
+      {ids.map((id) => {
+        const missing = missingEnv(id);
+        const ready = missing.length === 0;
+        return (
+          <li
+            key={id}
+            title={
+              ready
+                ? `${CONNECTIONS[id].label}: ${CONNECTIONS[id].gives}`
+                : `Needs in Railway: ${missing.join(", ")}`
+            }
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[0.8125rem] font-semibold ${
+              ready
+                ? "border-leaf/40 bg-leaf-wash text-leaf-deep"
+                : "border-line bg-surface text-ink-soft"
+            }`}
+          >
+            <Plug className="size-3.5" aria-hidden />
+            {CONNECTIONS[id].label}
+            <span
+              className={`rounded-full px-2 py-0.5 text-[0.6875rem] ${
+                ready ? "bg-leaf/20" : "bg-amber-wash text-amber-deep"
+              }`}
+            >
+              {ready ? "Connected" : "Not connected"}
             </span>
-          ))}
-        </p>
-      )}
-    </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
