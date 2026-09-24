@@ -1,8 +1,15 @@
 import Link from "next/link";
-import { createEnrolment, setEnrolmentStatus, updatePayment } from "../actions";
-import { desc, eq, isNotNull } from "drizzle-orm";
+import {
+  createBatch,
+  createEnrolment,
+  setEnrolmentStatus,
+  setStudentBatch,
+  updatePayment,
+} from "../actions";
+import { asc, desc, eq, isNotNull, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
+  batches as batchesTable,
   cohorts as cohortsTable,
   enrolmentCodes,
   enrolments,
@@ -57,6 +64,7 @@ type Row = {
   last_name: string | null;
   phone: string | null;
   role: string;
+  batch_id: string | null;
   created_at: Date;
   enrolments: Enrolment[];
 };
@@ -85,9 +93,15 @@ const day = (value: string | Date | null | undefined) =>
  * and they were spread across three pages and the database.
  */
 export default async function AdminStudentsPage() {
-  const [people, enrolmentRows, cohorts, codes, questions, progress] =
+  const [people, enrolmentRows, cohorts, codes, questions, progress, batches] =
     await Promise.all([
-      db.select().from(users).orderBy(desc(users.createdAt)),
+      // Admins have accounts too, but they are not students: not listed,
+      // not counted.
+      db
+        .select()
+        .from(users)
+        .where(ne(users.role, "admin"))
+        .orderBy(desc(users.createdAt)),
       db.select().from(enrolments).orderBy(desc(enrolments.createdAt)),
       db
         .select({ id: cohortsTable.id, name: cohortsTable.name })
@@ -112,6 +126,10 @@ export default async function AdminStudentsPage() {
           question_id: practiceProgress.questionId,
         })
         .from(practiceProgress),
+      db
+        .select({ id: batchesTable.id, name: batchesTable.name })
+        .from(batchesTable)
+        .orderBy(asc(batchesTable.createdAt)),
     ]);
 
   /*
@@ -126,6 +144,7 @@ export default async function AdminStudentsPage() {
     last_name: person.lastName,
     phone: person.phone,
     role: person.role,
+    batch_id: person.batchId,
     created_at: person.createdAt,
     enrolments: enrolmentRows
       .filter((entry) => entry.userId === person.id)
@@ -176,6 +195,202 @@ export default async function AdminStudentsPage() {
   const field =
     "w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[0.8125rem] text-ink focus:border-brand focus:outline-none";
 
+  const renderRow = (row: Row) => {
+    const enrolment = row.enrolments?.[0];
+    const name =
+      displayName([row.first_name, row.last_name].filter(Boolean).join(" ")) ||
+      "—";
+    const code = codeFor.get(row.id);
+    const solved = solvedBy.get(row.id) ?? { sql: 0, python: 0 };
+
+    return (
+      <tr
+        key={row.id}
+        className="border-line-soft border-b align-top last:border-0"
+      >
+        <td className="px-4 py-4">
+          <Link
+            href={`/admin/placement/${row.id}`}
+            className="text-ink hover:text-brand-deep block text-[0.9375rem] font-semibold transition-colors"
+          >
+            {name}
+          </Link>
+          <span className="text-ink-soft block text-[0.8125rem]">
+            {row.email ?? "—"}
+          </span>
+          <span className="text-ink-faint block text-[0.8125rem]">
+            {row.phone ?? "no phone"}
+          </span>
+          {row.role === "admin" && (
+            <span className="text-amber-deep text-[0.75rem] font-semibold">
+              admin
+            </span>
+          )}
+        </td>
+
+        <td className="px-4 py-4">
+          <form action={setStudentBatch} className="flex gap-1.5">
+            <input type="hidden" name="user_id" value={row.id} />
+            <select
+              name="batch_id"
+              defaultValue={row.batch_id ?? ""}
+              aria-label={`Batch for ${name}`}
+              className={field}
+            >
+              <option value="">No batch</option>
+              {batches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep shrink-0 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+            >
+              Move
+            </button>
+          </form>
+        </td>
+
+        <td className="text-ink-soft px-4 py-4 text-[0.8125rem] whitespace-nowrap">
+          {day(enrolment?.created_at ?? row.created_at)}
+        </td>
+
+        <td className="px-4 py-4">
+          {code ? (
+            <>
+              <span className="text-ink block font-mono text-[0.8125rem] font-semibold tracking-wide">
+                {code.code}
+              </span>
+              {code.note && (
+                <span className="text-ink-faint block text-[0.75rem]">
+                  {code.note}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-ink-faint text-[0.8125rem]">
+              added by hand
+            </span>
+          )}
+        </td>
+
+        <td className="px-4 py-4 whitespace-nowrap">
+          <Bar label="SQL" done={solved.sql} total={totals.sql} />
+          <Bar label="Py" done={solved.python} total={totals.python} />
+        </td>
+
+        <td className="px-4 py-4">
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-[0.75rem] font-semibold whitespace-nowrap ${
+              TONE[enrolment?.status ?? ""] ?? "bg-mist text-ink-faint"
+            }`}
+          >
+            {enrolment?.status ?? "no application"}
+          </span>
+
+          {enrolment ? (
+            <form action={setEnrolmentStatus} className="mt-2 flex gap-1.5">
+              <input type="hidden" name="id" value={enrolment.id} />
+              <select
+                name="status"
+                defaultValue={enrolment.status}
+                aria-label={`Status for ${name}`}
+                className={field}
+              >
+                {STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="bg-ink hover:bg-brand-deep text-cta-fg shrink-0 rounded-lg px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+              >
+                Save
+              </button>
+            </form>
+          ) : defaultCohort ? (
+            <form action={createEnrolment} className="mt-2">
+              <input type="hidden" name="user_id" value={row.id} />
+              <input type="hidden" name="cohort_id" value={defaultCohort.id} />
+              <button
+                type="submit"
+                className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+              >
+                Add to {defaultCohort.name}
+              </button>
+            </form>
+          ) : (
+            <span className="text-ink-faint mt-2 block text-[0.8125rem]">
+              No class exists
+            </span>
+          )}
+        </td>
+
+        <td className="px-4 py-4">
+          {enrolment ? (
+            <form action={updatePayment} className="space-y-1.5">
+              <input type="hidden" name="id" value={enrolment.id} />
+              <input
+                name="amount_paid"
+                type="number"
+                min={0}
+                step="1"
+                inputMode="numeric"
+                defaultValue={enrolment.amount_paid ?? ""}
+                placeholder="Amount ₹"
+                aria-label={`Amount paid by ${name}`}
+                className={field}
+              />
+              <input
+                name="paid_on"
+                type="date"
+                defaultValue={enrolment.paid_on ?? ""}
+                aria-label={`Payment date for ${name}`}
+                className={field}
+              />
+              <input
+                name="payment_ref"
+                defaultValue={enrolment.payment_ref ?? ""}
+                placeholder="UPI / receipt ref"
+                aria-label={`Payment reference for ${name}`}
+                className={field}
+              />
+              <button
+                type="submit"
+                className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep w-full rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+              >
+                Save payment
+              </button>
+            </form>
+          ) : (
+            <span className="text-ink-faint text-[0.8125rem]">—</span>
+          )}
+        </td>
+      </tr>
+    );
+  };
+
+  // One table per batch, in the order they were made, then everyone not yet
+  // in one. An empty batch still shows, so a new one is visible straight away.
+  const groups = [
+    ...batches.map((b) => ({
+      id: b.id,
+      name: b.name,
+      rows: rows.filter((r) => r.batch_id === b.id),
+    })),
+    {
+      id: "none",
+      name: "No batch",
+      rows: rows.filter(
+        (r) => !r.batch_id || !batches.some((b) => b.id === r.batch_id),
+      ),
+    },
+  ].filter((g) => g.id !== "none" || g.rows.length > 0);
+
   return (
     <>
       <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
@@ -187,9 +402,25 @@ export default async function AdminStudentsPage() {
         them.
       </p>
 
+      <form action={createBatch} className="mt-5 flex max-w-sm gap-1.5">
+        <input
+          name="name"
+          required
+          placeholder={`Batch ${batches.length + 1}`}
+          aria-label="New batch name"
+          className={field}
+        />
+        <button
+          type="submit"
+          className="bg-ink hover:bg-brand-deep text-cta-fg shrink-0 rounded-lg px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+        >
+          New batch
+        </button>
+      </form>
+
       {/* Summary --------------------------------------------------------- */}
       <div className="mt-7 grid gap-4 sm:grid-cols-3">
-        <Stat label="Accounts" value={String(rows.length)} />
+        <Stat label="Students" value={String(rows.length)} />
         <Stat label="Enrolled" value={String(enrolled)} />
         <Stat
           label="Collected"
@@ -204,198 +435,43 @@ export default async function AdminStudentsPage() {
           </p>
         </div>
       ) : (
-        <div className="card mt-6 overflow-x-auto">
-          <table className="w-full min-w-[68rem] text-left">
-            <thead>
-              <tr className="border-line-soft border-b">
-                {[
-                  "Student",
-                  "Joined",
-                  "Code",
-                  "Progress",
-                  "Status",
-                  "Payment",
-                ].map((head) => (
-                  <th
-                    key={head}
-                    className="text-ink-faint px-4 py-3.5 text-[0.6875rem] font-semibold tracking-[0.1em] uppercase"
-                  >
-                    {head}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const enrolment = row.enrolments?.[0];
-                const name =
-                  displayName(
-                    [row.first_name, row.last_name].filter(Boolean).join(" "),
-                  ) || "—";
-                const code = codeFor.get(row.id);
-                const solved = solvedBy.get(row.id) ?? { sql: 0, python: 0 };
-
-                return (
-                  <tr
-                    key={row.id}
-                    className="border-line-soft border-b align-top last:border-0"
-                  >
-                    <td className="px-4 py-4">
-                      <Link
-                        href={`/admin/placement/${row.id}`}
-                        className="text-ink hover:text-brand-deep block text-[0.9375rem] font-semibold transition-colors"
-                      >
-                        {name}
-                      </Link>
-                      <span className="text-ink-soft block text-[0.8125rem]">
-                        {row.email ?? "—"}
-                      </span>
-                      <span className="text-ink-faint block text-[0.8125rem]">
-                        {row.phone ?? "no phone"}
-                      </span>
-                      {row.role === "admin" && (
-                        <span className="text-amber-deep text-[0.75rem] font-semibold">
-                          admin
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="text-ink-soft px-4 py-4 text-[0.8125rem] whitespace-nowrap">
-                      {day(enrolment?.created_at ?? row.created_at)}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      {code ? (
-                        <>
-                          <span className="text-ink block font-mono text-[0.8125rem] font-semibold tracking-wide">
-                            {code.code}
-                          </span>
-                          {code.note && (
-                            <span className="text-ink-faint block text-[0.75rem]">
-                              {code.note}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-ink-faint text-[0.8125rem]">
-                          added by hand
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <Bar label="SQL" done={solved.sql} total={totals.sql} />
-                      <Bar
-                        label="Py"
-                        done={solved.python}
-                        total={totals.python}
-                      />
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-[0.75rem] font-semibold whitespace-nowrap ${
-                          TONE[enrolment?.status ?? ""] ??
-                          "bg-mist text-ink-faint"
-                        }`}
-                      >
-                        {enrolment?.status ?? "no application"}
-                      </span>
-
-                      {enrolment ? (
-                        <form
-                          action={setEnrolmentStatus}
-                          className="mt-2 flex gap-1.5"
+        <div className="mt-6 space-y-8">
+          {groups.map((group) => (
+            <section key={group.id}>
+              <h2 className="text-ink mb-3 text-[1.125rem] font-semibold">
+                {group.name}{" "}
+                <span className="text-ink-faint text-[0.875rem] font-normal">
+                  · {group.rows.length}{" "}
+                  {group.rows.length === 1 ? "student" : "students"}
+                </span>
+              </h2>
+              <div className="card overflow-x-auto">
+                <table className="w-full min-w-[68rem] text-left">
+                  <thead>
+                    <tr className="border-line-soft border-b">
+                      {[
+                        "Student",
+                        "Batch",
+                        "Joined",
+                        "Code",
+                        "Progress",
+                        "Status",
+                        "Payment",
+                      ].map((head) => (
+                        <th
+                          key={head}
+                          className="text-ink-faint px-4 py-3.5 text-[0.6875rem] font-semibold tracking-[0.1em] uppercase"
                         >
-                          <input type="hidden" name="id" value={enrolment.id} />
-                          <select
-                            name="status"
-                            defaultValue={enrolment.status}
-                            aria-label={`Status for ${name}`}
-                            className={field}
-                          >
-                            {STATUSES.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            type="submit"
-                            className="bg-ink hover:bg-brand-deep text-cta-fg shrink-0 rounded-lg px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
-                          >
-                            Save
-                          </button>
-                        </form>
-                      ) : defaultCohort ? (
-                        <form action={createEnrolment} className="mt-2">
-                          <input type="hidden" name="user_id" value={row.id} />
-                          <input
-                            type="hidden"
-                            name="cohort_id"
-                            value={defaultCohort.id}
-                          />
-                          <button
-                            type="submit"
-                            className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
-                          >
-                            Add to {defaultCohort.name}
-                          </button>
-                        </form>
-                      ) : (
-                        <span className="text-ink-faint mt-2 block text-[0.8125rem]">
-                          No class exists
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      {enrolment ? (
-                        <form action={updatePayment} className="space-y-1.5">
-                          <input type="hidden" name="id" value={enrolment.id} />
-                          <input
-                            name="amount_paid"
-                            type="number"
-                            min={0}
-                            step="1"
-                            inputMode="numeric"
-                            defaultValue={enrolment.amount_paid ?? ""}
-                            placeholder="Amount ₹"
-                            aria-label={`Amount paid by ${name}`}
-                            className={field}
-                          />
-                          <input
-                            name="paid_on"
-                            type="date"
-                            defaultValue={enrolment.paid_on ?? ""}
-                            aria-label={`Payment date for ${name}`}
-                            className={field}
-                          />
-                          <input
-                            name="payment_ref"
-                            defaultValue={enrolment.payment_ref ?? ""}
-                            placeholder="UPI / receipt ref"
-                            aria-label={`Payment reference for ${name}`}
-                            className={field}
-                          />
-                          <button
-                            type="submit"
-                            className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep w-full rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
-                          >
-                            Save payment
-                          </button>
-                        </form>
-                      ) : (
-                        <span className="text-ink-faint text-[0.8125rem]">
-                          —
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                          {head}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>{group.rows.map(renderRow)}</tbody>
+                </table>
+              </div>
+            </section>
+          ))}
         </div>
       )}
     </>

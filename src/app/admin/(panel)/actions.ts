@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { cohorts, enrolments, lessonReleases, lessons } from "@/lib/db/schema";
+import {
+  batches,
+  cohorts,
+  enrolments,
+  lessonReleases,
+  lessons,
+  users,
+} from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/access";
 
 /**
@@ -44,6 +51,30 @@ export async function setEnrolmentStatus(formData: FormData) {
 
   revalidatePath("/admin/students");
   revalidatePath("/dashboard");
+}
+
+/** A new batch. Admin-only, like everything about batches. */
+export async function createBatch(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) throw new Error("Give the batch a name.");
+
+  await assertAdmin();
+  await db.insert(batches).values({ name }).onConflictDoNothing();
+  revalidatePath("/admin/students");
+}
+
+/** Puts a student in a batch, or takes them out of one when left blank. */
+export async function setStudentBatch(formData: FormData) {
+  const userId = String(formData.get("user_id") ?? "");
+  const batchId = String(formData.get("batch_id") ?? "");
+  if (!userId) throw new Error("Missing student.");
+
+  await assertAdmin();
+  await db
+    .update(users)
+    .set({ batchId: batchId || null })
+    .where(eq(users.id, userId));
+  revalidatePath("/admin/students");
 }
 
 /** Enrol someone who signed up but never applied — e.g. paid over the phone. */

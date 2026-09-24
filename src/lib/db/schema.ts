@@ -53,6 +53,20 @@ export const users = pgTable("users", {
    * and "has proved they read that inbox" are different questions.
    */
   emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  /**
+   * Which batch a student was taught in. Admin-only: no student-facing page
+   * reads it, so a student never learns there are batches at all.
+   */
+  batchId: uuid("batch_id").references(() => batches.id, {
+    onDelete: "set null",
+  }),
+  createdAt: now(),
+});
+
+/** A group of students taught together — Batch 1, Batch 2. Admin-only. */
+export const batches = pgTable("batches", {
+  id: uuid().primaryKey().defaultRandom(),
+  name: text().notNull().unique(),
   createdAt: now(),
 });
 
@@ -656,6 +670,11 @@ export const projectSubmissionsRelations = relations(
   }),
 );
 
-export type User = typeof users.$inferSelect;
+/**
+ * A signed-in user, as every page sees them. `batchId` is left out: batches
+ * are for admins, and a field that is never loaded cannot reach a student's
+ * browser by way of a prop.
+ */
+export type User = Omit<typeof users.$inferSelect, "batchId">;
 export type Lesson = typeof lessons.$inferSelect;
 export type Enrolment = typeof enrolments.$inferSelect;

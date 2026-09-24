@@ -77,9 +77,18 @@ export default async function AdminPanelLayout({
         </div>
       </header>
 
-      <div className="shell py-8 lg:py-10">
-        <AdminTabs />
-        <main id="main">{children}</main>
+      {/*
+       * Wider than the site's shell: these pages are tables and figures, and
+       * at 80rem a wide screen left a third of itself empty. The sidebar
+       * sticks under the 72px header and scrolls on its own if it must.
+       */}
+      <div className="mx-auto w-full max-w-[112rem] px-4 sm:px-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8 lg:px-8">
+        <aside className="lg:border-line py-5 lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:overflow-y-auto lg:border-r lg:py-6 lg:pr-4">
+          <AdminTabs />
+        </aside>
+        <main id="main" className="min-w-0 pb-12 lg:py-6">
+          {children}
+        </main>
       </div>
     </div>
   );

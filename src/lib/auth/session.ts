@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
-import { and, eq, gt, lt } from "drizzle-orm";
+import { and, eq, getTableColumns, gt, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sessions, users, type User } from "@/lib/db/schema";
 
@@ -153,8 +153,9 @@ export async function currentUser(
   const token = (await cookies()).get(NAMES[realm].session)?.value;
   if (!token) return null;
 
+  const { batchId: _batch, ...userColumns } = getTableColumns(users);
   const rows = await db
-    .select({ user: users, expiresAt: sessions.expiresAt })
+    .select({ user: userColumns, expiresAt: sessions.expiresAt })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(

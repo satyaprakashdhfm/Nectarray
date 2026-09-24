@@ -122,88 +122,92 @@ export default async function AdminRevenuePage() {
         </div>
       </Section>
 
-      <Section title="Last six months">
-        <div className="card p-5">
-          <div className="flex h-44 items-end gap-3 sm:gap-6">
-            {months.map((m) => {
-              const total = m.byService.reduce((t, s) => t + s.amount, 0);
-              return (
-                <div
-                  key={m.key}
-                  className="flex h-full flex-1 flex-col justify-end"
-                >
-                  <p className="text-ink-faint mb-1 text-center text-[0.6875rem]">
-                    {total ? rupees.format(total) : ""}
-                  </p>
+      <div className="xl:grid xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-6">
+        <Section title="Last six months">
+          <div className="card p-5">
+            <div className="flex h-44 items-end gap-3 sm:gap-6">
+              {months.map((m) => {
+                const total = m.byService.reduce((t, s) => t + s.amount, 0);
+                return (
                   <div
-                    className="flex w-full flex-col-reverse overflow-hidden rounded-md"
-                    style={{ height: `${(total / peak) * 100}%` }}
-                    title={`${m.label}: ${rupees.format(total)}`}
+                    key={m.key}
+                    className="flex h-full flex-1 flex-col justify-end"
                   >
-                    {m.byService.map((s) =>
-                      s.amount ? (
-                        <div
-                          key={s.service}
-                          className={BAR[s.service]}
-                          style={{ height: `${(s.amount / total) * 100}%` }}
-                          title={`${serviceLabel(s.service)}: ${rupees.format(s.amount)}`}
-                        />
-                      ) : null,
-                    )}
+                    <p className="text-ink-faint mb-1 text-center text-[0.6875rem]">
+                      {total ? rupees.format(total) : ""}
+                    </p>
+                    <div
+                      className="flex w-full flex-col-reverse overflow-hidden rounded-md"
+                      style={{ height: `${(total / peak) * 100}%` }}
+                      title={`${m.label}: ${rupees.format(total)}`}
+                    >
+                      {m.byService.map((s) =>
+                        s.amount ? (
+                          <div
+                            key={s.service}
+                            className={BAR[s.service]}
+                            style={{ height: `${(s.amount / total) * 100}%` }}
+                            title={`${serviceLabel(s.service)}: ${rupees.format(s.amount)}`}
+                          />
+                        ) : null,
+                      )}
+                    </div>
+                    <p className="text-ink-soft mt-2 text-center text-[0.75rem] font-semibold">
+                      {m.label}
+                    </p>
                   </div>
-                  <p className="text-ink-soft mt-2 text-center text-[0.75rem] font-semibold">
-                    {m.label}
-                  </p>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <ul className="text-ink-soft mt-4 flex flex-wrap gap-4 text-[0.75rem]">
+              {SERVICES.map((s) => (
+                <li key={s.id} className="inline-flex items-center gap-1.5">
+                  <span className={`size-2 rounded-full ${BAR[s.id]}`} />
+                  {s.label}
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="text-ink-soft mt-4 flex flex-wrap gap-4 text-[0.75rem]">
-            {SERVICES.map((s) => (
-              <li key={s.id} className="inline-flex items-center gap-1.5">
-                <span className={`size-2 rounded-full ${BAR[s.id]}`} />
-                {s.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </Section>
+        </Section>
 
-      <Section title="Latest payments">
-        {money.receipts.length === 0 ? (
-          <Empty>No payments recorded yet.</Empty>
-        ) : (
-          <div className="card overflow-x-auto">
-            <table className="w-full min-w-[36rem] text-left">
-              <thead>
-                <tr className="border-line-soft border-b">
-                  {["Received", "Service", "From", "For", "Amount"].map((h) => (
-                    <th key={h} className={th}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {money.receipts.slice(0, 12).map((r, i) => (
-                  <tr
-                    key={i}
-                    className="border-line-soft border-b last:border-0"
-                  >
-                    <td className={`${td} whitespace-nowrap`}>{day(r.on)}</td>
-                    <td className={td}>{serviceLabel(r.service)}</td>
-                    <td className={`${td} text-ink`}>{r.from}</td>
-                    <td className={td}>{r.what}</td>
-                    <td className={`${td} text-ink font-semibold`}>
-                      {rupees.format(r.amount)}
-                    </td>
+        <Section title="Latest payments">
+          {money.receipts.length === 0 ? (
+            <Empty>No payments recorded yet.</Empty>
+          ) : (
+            <div className="card overflow-x-auto">
+              <table className="w-full min-w-[36rem] text-left">
+                <thead>
+                  <tr className="border-line-soft border-b">
+                    {["Received", "Service", "From", "For", "Amount"].map(
+                      (h) => (
+                        <th key={h} className={th}>
+                          {h}
+                        </th>
+                      ),
+                    )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Section>
+                </thead>
+                <tbody>
+                  {money.receipts.slice(0, 12).map((r, i) => (
+                    <tr
+                      key={i}
+                      className="border-line-soft border-b last:border-0"
+                    >
+                      <td className={`${td} whitespace-nowrap`}>{day(r.on)}</td>
+                      <td className={td}>{serviceLabel(r.service)}</td>
+                      <td className={`${td} text-ink`}>{r.from}</td>
+                      <td className={td}>{r.what}</td>
+                      <td className={`${td} text-ink font-semibold`}>
+                        {rupees.format(r.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Section>
+      </div>
     </>
   );
 }

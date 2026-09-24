@@ -30,10 +30,10 @@ export const td = "px-4 py-3 text-[0.8125rem] text-ink-soft align-top";
 export function PageHead({ title, lede }: { title: string; lede: string }) {
   return (
     <>
-      <h1 className="display text-ink text-[1.875rem] sm:text-[2.25rem]">
+      <h1 className="display text-ink text-[1.75rem] sm:text-[2rem]">
         {title}
       </h1>
-      <p className="text-ink-soft mt-3 max-w-2xl text-[0.9375rem]">{lede}</p>
+      <p className="text-ink-soft mt-2 max-w-3xl text-[0.9375rem]">{lede}</p>
     </>
   );
 }
@@ -66,7 +66,7 @@ export function Section({
   aside?: React.ReactNode;
 }) {
   return (
-    <section className="mt-10">
+    <section className="mt-8">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <h2 className="text-ink text-[1.125rem] font-semibold">{title}</h2>
         {aside}

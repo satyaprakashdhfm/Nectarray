@@ -42,7 +42,9 @@ const ACADEMY = [
 type Tab = (typeof TABS)[number];
 
 /**
- * The panel's tab strips.
+ * The panel's navigation: a sticky sidebar on desktop, with the academy's
+ * pages nested under Academy, and horizontal strips on a phone, where a
+ * sidebar would take half the screen.
  *
  * A client component only because the selected tab has to be worked out from
  * the path, and the layout that holds it is a server component.
@@ -60,17 +62,65 @@ export function AdminTabs() {
         ? pathname === "/admin"
         : pathname.startsWith(tab.href);
 
+  const academyActive = (tab: Tab) => pathname.startsWith(tab.href);
+
   return (
-    <nav aria-label="Admin" className="mb-8 space-y-3">
-      <Strip tabs={TABS} isActive={active} />
-      {inAcademy && (
-        <Strip
-          tabs={ACADEMY}
-          isActive={(tab) => pathname.startsWith(tab.href)}
-          label="Academy"
-        />
-      )}
+    <nav aria-label="Admin">
+      <div className="mb-6 space-y-3 lg:hidden">
+        <Strip tabs={TABS} isActive={active} />
+        {inAcademy && (
+          <Strip tabs={ACADEMY} isActive={academyActive} label="Academy" />
+        )}
+      </div>
+
+      <ul className="hidden space-y-0.5 lg:block">
+        {TABS.map((tab) => (
+          <li key={tab.href}>
+            <SideLink tab={tab} active={active(tab)} />
+            {tab.label === "Academy" && (
+              <ul className="border-line mt-0.5 ml-[1.1rem] space-y-0.5 border-l pl-2">
+                {ACADEMY.map((sub) => (
+                  <li key={sub.href}>
+                    <SideLink tab={sub} active={academyActive(sub)} small />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
     </nav>
+  );
+}
+
+function SideLink({
+  tab,
+  active,
+  small = false,
+}: {
+  tab: Tab;
+  active: boolean;
+  small?: boolean;
+}) {
+  return (
+    <Link
+      href={tab.href}
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-2.5 rounded-lg px-3 font-semibold transition-colors ${
+        small ? "py-1.5 text-[0.8125rem]" : "py-2 text-[0.875rem]"
+      } ${
+        active
+          ? "bg-brand-solid text-cta-fg"
+          : "text-ink-soft hover:bg-surface hover:text-ink"
+      }`}
+    >
+      <tab.icon
+        className={small ? "size-3.5" : "size-4"}
+        strokeWidth={1.9}
+        aria-hidden
+      />
+      {tab.label}
+    </Link>
   );
 }
 
