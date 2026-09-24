@@ -26,7 +26,11 @@ export default async function AdminPlacementProfile({
 }) {
   const { id } = await params;
 
-  const [person] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  const [person] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
   if (!person) notFound();
 
   const [profile] = await db
@@ -36,11 +40,13 @@ export default async function AdminPlacementProfile({
     .limit(1);
 
   const name =
-    displayName([person.firstName, person.lastName].filter(Boolean).join(" ")) ||
-    person.email;
+    displayName(
+      [person.firstName, person.lastName].filter(Boolean).join(" "),
+    ) || person.email;
 
   const files = asResumeFiles(profile?.resumeFiles);
-  const compile = files && compilerConfigured() ? await compileResume(files) : null;
+  const compile =
+    files && compilerConfigured() ? await compileResume(files) : null;
 
   return (
     <>
@@ -72,7 +78,10 @@ export default async function AdminPlacementProfile({
           <p className="text-ink-faint mt-3 text-[0.875rem]">
             Hasn&rsquo;t written one — they see the starter template when they
             open the tab. See it on the{" "}
-            <Link href="/admin/placement" className="text-brand-deep underline underline-offset-2">
+            <Link
+              href="/admin/placement"
+              className="text-brand-deep underline underline-offset-2"
+            >
               Placement overview
             </Link>
             .
@@ -83,7 +92,11 @@ export default async function AdminPlacementProfile({
       {/* Resume ------------------------------------------------------------- */}
       <section className="card mt-6 p-6">
         <h2 className="text-ink flex items-center gap-2 text-[1.0625rem] font-semibold">
-          <FileText className="text-brand-deep size-4" strokeWidth={2} aria-hidden />
+          <FileText
+            className="text-brand-deep size-4"
+            strokeWidth={2}
+            aria-hidden
+          />
           Resume
         </h2>
 

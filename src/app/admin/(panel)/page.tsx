@@ -7,8 +7,8 @@ import {
   td,
   th,
 } from "@/components/admin/Business";
-import { SERVICES, rupees, serviceLabel } from "@/lib/business";
-import { lastSixMonths, loadMoney, totals } from "@/lib/business-data";
+import { REVENUE_LINES, rupees, serviceLabel } from "@/lib/business";
+import { lastMonths, loadMoney, totals } from "@/lib/business-data";
 
 /* Rendered per request: it is all live figures from the database. */
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ const SERVICE_HREF: Record<string, string> = {
   marketing: "/admin/services/marketing",
   software: "/admin/services/software",
   ai: "/admin/services/ai",
+  software_ai: "/admin/development",
   academy: "/admin/students",
 };
 
@@ -24,6 +25,7 @@ const BAR: Record<string, string> = {
   marketing: "bg-amber",
   software: "bg-brand",
   ai: "bg-leaf",
+  software_ai: "bg-brand-solid",
   academy: "bg-teal",
 };
 
@@ -43,8 +45,8 @@ const day = (value: string) =>
 export default async function AdminRevenuePage() {
   const money = await loadMoney();
   const all = totals(money, null);
-  const rows = SERVICES.map((s) => ({ ...s, ...totals(money, s.id) }));
-  const months = lastSixMonths(money.receipts);
+  const rows = REVENUE_LINES.map((s) => ({ ...s, ...totals(money, [s.id]) }));
+  const months = lastMonths(money.receipts);
   const peak = Math.max(
     1,
     ...months.map((m) => m.byService.reduce((t, s) => t + s.amount, 0)),
@@ -160,7 +162,7 @@ export default async function AdminRevenuePage() {
               })}
             </div>
             <ul className="text-ink-soft mt-4 flex flex-wrap gap-4 text-[0.75rem]">
-              {SERVICES.map((s) => (
+              {REVENUE_LINES.map((s) => (
                 <li key={s.id} className="inline-flex items-center gap-1.5">
                   <span className={`size-2 rounded-full ${BAR[s.id]}`} />
                   {s.label}

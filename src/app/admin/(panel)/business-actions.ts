@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   adCampaigns,
@@ -89,6 +89,51 @@ export async function createProject(form: FormData) {
     dueOn: optional(form, "due_on"),
     note: optional(form, "note"),
   });
+  done();
+}
+
+/** Every field of a project, as typed in its Edit panel. */
+export async function updateProject(form: FormData) {
+  await requireAdmin();
+  const id = text(form, "id");
+  const client = text(form, "client");
+  const title = text(form, "title");
+  if (!id) throw new Error("Missing project.");
+  if (!client || !title)
+    throw new Error("A project needs a client and a title.");
+  const value = amount(form, "value", "Value");
+
+  await db
+    .update(clientProjects)
+    .set({
+      service: service(form, true),
+      client,
+      title,
+      status: projectStatus(text(form, "status")),
+      value: value === null ? null : String(value),
+      startsOn: optional(form, "starts_on"),
+      dueOn: optional(form, "due_on"),
+      note: optional(form, "note"),
+    })
+    .where(eq(clientProjects.id, id));
+  done();
+}
+
+/**
+ * Adds to a project's agreed value — extra scope, a second phase. Done in
+ * SQL so two top-ups at once both land.
+ */
+export async function topUpProject(form: FormData) {
+  await requireAdmin();
+  const id = text(form, "id");
+  const extra = amount(form, "top_up", "Top-up");
+  if (!id) throw new Error("Missing project.");
+  if (!extra) throw new Error("Enter the amount to add.");
+
+  await db
+    .update(clientProjects)
+    .set({ value: sql`coalesce(${clientProjects.value}, 0) + ${extra}` })
+    .where(eq(clientProjects.id, id));
   done();
 }
 

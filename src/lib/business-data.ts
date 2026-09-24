@@ -8,7 +8,7 @@ import {
   enrolments,
   users,
 } from "@/lib/db/schema";
-import { SERVICES, num, type ServiceId } from "@/lib/business";
+import { REVENUE_LINES, num } from "@/lib/business";
 
 /**
  * Every rupee received, from every service, as one list.
@@ -18,7 +18,7 @@ import { SERVICES, num, type ServiceId } from "@/lib/business";
  * between the two, so a fee edited on the students page is the same fee here.
  */
 export type Receipt = {
-  service: ServiceId;
+  service: string;
   amount: number;
   on: string;
   from: string;
@@ -61,7 +61,7 @@ export async function loadMoney() {
 
   const receipts: Receipt[] = [
     ...payments.map((p) => ({
-      service: p.service as ServiceId,
+      service: p.service,
       amount: num(p.amount),
       on: p.on,
       from: p.client,
@@ -95,13 +95,16 @@ export async function loadMoney() {
 
 export type Money = Awaited<ReturnType<typeof loadMoney>>;
 
-/** Totals for one service, or for everything when `service` is null. */
-export function totals(money: Money, service: ServiceId | null) {
+/**
+ * Totals for a set of recorded services — ["software", "software_ai"] for
+ * the Software tab — or for everything when `services` is null.
+ */
+export function totals(money: Money, services: readonly string[] | null) {
   const today = new Date().toISOString();
   const month = today.slice(0, 7);
   const year = today.slice(0, 4);
   const mine = <T extends { service: string }>(rows: T[]) =>
-    service ? rows.filter((r) => r.service === service) : rows;
+    services ? rows.filter((r) => services.includes(r.service)) : rows;
 
   const receipts = mine(money.receipts);
   const projects = mine(money.projects);
@@ -132,21 +135,30 @@ export function totals(money: Money, service: ServiceId | null) {
   };
 }
 
-/** The last six calendar months, oldest first, with what came in each. */
-export function lastSixMonths(receipts: Receipt[]) {
+/**
+ * The last `count` calendar months, oldest first, with what came in each,
+ * split by revenue line.
+ */
+export function lastMonths(receipts: Receipt[], count = 6) {
   const now = new Date();
-  return Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (count - 1) + i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const byService = REVENUE_LINES.map((s) => ({
+      service: s.id as string,
+      amount: receipts
+        .filter((r) => r.service === s.id && r.on.startsWith(key))
+        .reduce((t, r) => t + r.amount, 0),
+    }));
     return {
       key,
       label: d.toLocaleDateString("en-IN", { month: "short" }),
-      byService: SERVICES.map((s) => ({
-        service: s.id,
-        amount: receipts
-          .filter((r) => r.service === s.id && r.on.startsWith(key))
-          .reduce((t, r) => t + r.amount, 0),
-      })),
+      longLabel: d.toLocaleDateString("en-IN", {
+        month: "long",
+        year: "numeric",
+      }),
+      byService,
+      total: byService.reduce((t, s) => t + s.amount, 0),
     };
   });
 }

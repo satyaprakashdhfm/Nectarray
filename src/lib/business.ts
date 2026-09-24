@@ -14,11 +14,34 @@ export const SERVICES = [
 
 export type ServiceId = (typeof SERVICES)[number]["id"];
 
-/** The academy's money is on enrolments, so only these three take projects. */
-export const PROJECT_SERVICES = SERVICES.filter((s) => s.id !== "academy");
+/**
+ * What a client project can be recorded under. The academy is not one — its
+ * money is on enrolments. `software_ai` is a single job that is both a build
+ * and an agent: it shows on the Software tab and the Agentic AI tab, and its
+ * money is counted once, on its own line.
+ */
+export const PROJECT_SERVICES = [
+  { id: "marketing", label: "Marketing" },
+  { id: "software", label: "Software" },
+  { id: "ai", label: "Agentic AI" },
+  { id: "software_ai", label: "Software + AI" },
+] as const;
+
+/** Which recorded services each development tab shows. */
+export const TAB_SERVICES: Record<string, string[]> = {
+  marketing: ["marketing"],
+  software: ["software", "software_ai"],
+  ai: ["ai", "software_ai"],
+};
+
+/** The lines revenue is split into: every project service, then the academy. */
+export const REVENUE_LINES = [
+  ...PROJECT_SERVICES,
+  { id: "academy", label: "Academy" },
+] as const;
 
 export const serviceLabel = (id: string) =>
-  SERVICES.find((s) => s.id === id)?.label ?? id;
+  REVENUE_LINES.find((s) => s.id === id)?.label ?? id;
 
 export const isService = (id: string): id is ServiceId =>
   SERVICES.some((s) => s.id === id);

@@ -63,8 +63,8 @@ export default async function AdminPlacementPage() {
         <code className="text-ink-soft font-mono text-[0.8125rem]">
           /dashboard/placement
         </code>
-        . The two starting points are below; {written} of {rows.length}{" "}
-        accounts have written past them.
+        . The two starting points are below; {written} of {rows.length} accounts
+        have written past them.
       </p>
 
       {/* The templates ---------------------------------------------------- */}
@@ -98,8 +98,8 @@ export default async function AdminPlacementPage() {
           </p>
           <p className="text-ink-faint mt-1.5 text-[0.8125rem]">
             The one template every student edits, with their name and email
-            filled in from their account. Change the file to change the
-            starting point for everybody who hasn&rsquo;t saved their own yet.
+            filled in from their account. Change the file to change the starting
+            point for everybody who hasn&rsquo;t saved their own yet.
           </p>
           <pre className="bg-night mt-4 max-h-64 overflow-auto rounded-lg p-4 font-mono text-[0.75rem] leading-relaxed whitespace-pre-wrap text-white/80">
             {templateTex}
@@ -158,7 +158,11 @@ export default async function AdminPlacementPage() {
                       className="text-brand-deep hover:text-brand inline-flex items-center gap-1 text-[0.8125rem] font-semibold transition-colors"
                     >
                       View
-                      <ChevronRight className="size-3.5" strokeWidth={2.5} aria-hidden />
+                      <ChevronRight
+                        className="size-3.5"
+                        strokeWidth={2.5}
+                        aria-hidden
+                      />
                     </Link>
                   </td>
                 </tr>
