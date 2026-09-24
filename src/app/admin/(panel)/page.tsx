@@ -59,7 +59,7 @@ export default async function AdminRevenuePage() {
         lede="Money received across all four services. Record client payments on each service's tab and academy fees on the Students page."
       />
 
-      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat label="This month" value={rupees.format(all.month)} />
         <Stat label="This year" value={rupees.format(all.year)} />
         <Stat label="All time" value={rupees.format(all.all)} />
@@ -135,7 +135,7 @@ export default async function AdminRevenuePage() {
                     key={m.key}
                     className="flex h-full flex-1 flex-col justify-end"
                   >
-                    <p className="text-ink-faint mb-1 text-center text-[0.6875rem]">
+                    <p className="text-ink-faint mb-1 hidden text-center text-[0.6875rem] sm:block">
                       {total ? rupees.format(total) : ""}
                     </p>
                     <div

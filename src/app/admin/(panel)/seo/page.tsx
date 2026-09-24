@@ -83,7 +83,7 @@ export default async function AdminSeoPage({
       <ConnectionStrip ids={["searchConsole"]} />
       <ServiceFilter basePath="/admin/seo" current={service} />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <Stat label="Keywords" value={String(keywords.length)} />
         <Stat
           label="On page 1"

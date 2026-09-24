@@ -70,7 +70,7 @@ export default async function AdminAnalyticsPage({
       <ConnectionStrip ids={["analytics", "googleAds", "metaAds"]} />
       <ServiceFilter basePath="/admin/analytics" current={service} />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat label="Ad spend" value={rupees.format(spend)} />
         <Stat label="Clicks" value={clicks.toLocaleString("en-IN")} />
         <Stat label="Leads" value={leads.toLocaleString("en-IN")} />

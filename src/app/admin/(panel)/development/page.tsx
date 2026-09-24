@@ -35,7 +35,7 @@ export default async function DevelopmentPage() {
         lede="All client work across Marketing, Software and Agentic AI — each project is also on its own service's tab."
       />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
         <Stat label="This month" value={rupees.format(t.month)} />
         <Stat label="Total received" value={rupees.format(t.all)} />
         <Stat label="Still owed" value={rupees.format(t.outstanding)} />

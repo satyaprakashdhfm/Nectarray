@@ -48,9 +48,11 @@ export function Stat({
   hint?: string;
 }) {
   return (
-    <div className="card p-5">
+    <div className="card min-w-0 p-4 sm:p-5">
       <p className="eyebrow">{label}</p>
-      <p className="display text-ink mt-1.5 text-[1.5rem]">{value}</p>
+      <p className="display text-ink mt-1.5 text-[1.25rem] break-words sm:text-[1.5rem]">
+        {value}
+      </p>
       {hint && <p className="text-ink-faint mt-1 text-[0.75rem]">{hint}</p>}
     </div>
   );

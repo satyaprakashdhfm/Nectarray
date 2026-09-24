@@ -104,7 +104,7 @@ export function AdminTabs() {
 
   return (
     <nav aria-label="Admin">
-      <div className="mb-6 space-y-3 lg:hidden">
+      <div className="mb-6 space-y-3 xl:hidden">
         <Strip
           tabs={[...TOP, ...GROUPS]}
           isActive={(tab) =>
@@ -120,7 +120,7 @@ export function AdminTabs() {
         )}
       </div>
 
-      <ul className="hidden space-y-0.5 lg:block">
+      <ul className="hidden space-y-0.5 xl:block">
         {TOP.map((tab) => (
           <li key={tab.href}>
             <SideLink tab={tab} active={tabActive(tab)} />
