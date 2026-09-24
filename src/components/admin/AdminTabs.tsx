@@ -83,8 +83,12 @@ const GROUPS: Group[] = [
  */
 export function AdminTabs() {
   const pathname = usePathname();
-  // Only what the admin toggled; a group left alone is open while you are in it.
-  const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  /*
+   * One group open at a time, like an accordion: opening Development closes
+   * Academy. Until the admin clicks one, the group holding the current page
+   * is the open one; null means they closed it.
+   */
+  const [chosen, setChosen] = useState<string | null | undefined>(undefined);
 
   const tabActive = (tab: Tab) =>
     tab.href === "/admin"
@@ -96,6 +100,7 @@ export function AdminTabs() {
   const groupActive = (group: Group) =>
     group.owns.some((path) => pathname.startsWith(path));
   const current = GROUPS.find(groupActive);
+  const openGroup = chosen === undefined ? (current?.label ?? null) : chosen;
 
   return (
     <nav aria-label="Admin">
@@ -122,15 +127,13 @@ export function AdminTabs() {
           </li>
         ))}
         {GROUPS.map((group) => {
-          const open = toggled[group.label] ?? groupActive(group);
+          const open = openGroup === group.label;
           return (
             <li key={group.label} className="pt-2">
               <button
                 type="button"
                 aria-expanded={open}
-                onClick={() =>
-                  setToggled((t) => ({ ...t, [group.label]: !open }))
-                }
+                onClick={() => setChosen(open ? null : group.label)}
                 className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[0.875rem] font-semibold transition-colors ${
                   groupActive(group)
                     ? "text-ink"
