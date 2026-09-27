@@ -1,9 +1,13 @@
 import "server-only";
 import { SERVICES, type ServiceId } from "@/lib/business";
+import type { SeoPage } from "@/lib/content/seo-pages";
+import { siteUrl } from "@/lib/seo";
 import {
   daysAgo,
   ga4Reports,
+  inspectUrl,
   searchConsole,
+  searchConsoleBase,
   type Ga4Report,
   type Result,
   type SearchRow,
@@ -177,4 +181,123 @@ export async function getSearch(
       ),
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+//  Per page, for the SEO tab
+// ---------------------------------------------------------------------------
+
+export type Ranked = { query: string; position: number | null };
+
+export type IndexState =
+  | { state: "indexed"; crawled: string | null }
+  | { state: "waiting" | "other" | "error"; label: string };
+
+export type PageReport = {
+  page: SeoPage;
+  url: string;
+  index: IndexState;
+  main: Ranked;
+  /** Average position across every search the page was shown for. */
+  avgPosition: number | null;
+  searches: number;
+  impressions: number;
+  clicks: number;
+  also: Ranked[];
+  /** The page's other top searches, by times shown, not already targeted. */
+  extra: { query: string; position: number }[];
+};
+
+/** A Search Console page URL as a path: https://x.com/blog/a/ → /blog/a */
+const pathKey = (url: string) => {
+  try {
+    return new URL(url).pathname.replace(/\/$/, "") || "/";
+  } catch {
+    return url;
+  }
+};
+
+function indexState(
+  result: Awaited<ReturnType<typeof inspectUrl>>,
+): IndexState {
+  if (result.error !== undefined) {
+    return { state: "error", label: "Could not check" };
+  }
+  const status = result.data.inspectionResult?.indexStatusResult;
+  const coverage = (status?.coverageState ?? "").toLowerCase();
+  if (status?.verdict === "PASS" || coverage.includes("indexed, not")) {
+    return { state: "indexed", crawled: status?.lastCrawlTime ?? null };
+  }
+  if (coverage.includes("discovered")) {
+    return { state: "waiting", label: "Found, waiting" };
+  }
+  if (coverage.includes("crawled")) {
+    return { state: "waiting", label: "Read, not added yet" };
+  }
+  if (coverage.includes("unknown")) {
+    return { state: "other", label: "Not found yet" };
+  }
+  return { state: "other", label: status?.coverageState || "Not in Google" };
+}
+
+/**
+ * Every tracked page with what Google says about it: whether it is indexed,
+ * where it ranks for its main search and its close ones, and what else it is
+ * being shown for. Two Search Console queries cover all the pages; the index
+ * check is one call per page, kept for six hours.
+ */
+export async function getPageReports(
+  pages: SeoPage[],
+): Promise<Result<{ rows: PageReport[]; from: string; to: string }>> {
+  const from = daysAgo(WINDOW_DAYS);
+  const to = daysAgo(0);
+  const base = { startDate: from, endDate: to };
+  const origin = searchConsoleBase(siteUrl);
+
+  const [byPage, byPageQuery, inspections] = await Promise.all([
+    searchConsole({ ...base, dimensions: ["page"], rowLimit: 1000 }),
+    searchConsole({ ...base, dimensions: ["page", "query"], rowLimit: 25000 }),
+    Promise.all(pages.map((p) => inspectUrl(`${origin}${p.path}`))),
+  ]);
+  if (byPage.error !== undefined) return { error: byPage.error };
+  if (byPageQuery.error !== undefined) return { error: byPageQuery.error };
+
+  const totals = new Map<string, SearchRow>();
+  for (const row of byPage.data) totals.set(pathKey(row.keys?.[0] ?? ""), row);
+
+  const queries = new Map<string, SearchRow[]>();
+  for (const row of byPageQuery.data) {
+    const key = pathKey(row.keys?.[0] ?? "");
+    queries.set(key, [...(queries.get(key) ?? []), row]);
+  }
+
+  const rows = pages.map((page, i): PageReport => {
+    const mine = queries.get(page.path) ?? [];
+    const positionOf = (q: string) =>
+      mine.find((r) => (r.keys?.[1] ?? "").toLowerCase() === q.toLowerCase())
+        ?.position ?? null;
+    const targeted = new Set(
+      [page.main, ...page.also].map((q) => q.toLowerCase()),
+    );
+    const total = totals.get(page.path);
+
+    return {
+      page,
+      url: `${origin}${page.path}`,
+      index: indexState(inspections[i]),
+      main: { query: page.main, position: positionOf(page.main) },
+      avgPosition: total?.position ?? null,
+      searches: mine.length,
+      impressions: total?.impressions ?? 0,
+      clicks: total?.clicks ?? 0,
+      also: page.also.map((q) => ({ query: q, position: positionOf(q) })),
+      extra: mine
+        .filter((r) => !targeted.has((r.keys?.[1] ?? "").toLowerCase()))
+        .sort((a, b) => b.impressions - a.impressions)
+        .slice(0, 3)
+        .map((r) => ({ query: r.keys?.[1] ?? "", position: r.position })),
+    };
+  });
+
+  return { data: { rows, from, to } };
 }

@@ -29,7 +29,8 @@ type Group = Tab & { children: Tab[]; owns: string[] };
 const TOP: Tab[] = [
   { href: "/admin", label: "Revenue", icon: IndianRupee },
   { href: "/admin/seo", label: "SEO", icon: Search },
-  { href: "/admin/analytics", label: "Ads & Analytics", icon: ChartLine },
+  { href: "/admin/analytics", label: "Analytics", icon: ChartLine },
+  { href: "/admin/ads", label: "Ads", icon: Megaphone },
 ];
 
 /** Client work, and the academy — each a group that opens and closes. */

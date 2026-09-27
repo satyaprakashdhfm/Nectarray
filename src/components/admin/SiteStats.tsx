@@ -264,7 +264,7 @@ export function TrafficPanel({
 function SearchTable({
   title,
   rows,
-  isPage,
+  isPage = false,
 }: {
   title: string;
   rows: SearchRow[];
@@ -320,35 +320,36 @@ function SearchTable({
   );
 }
 
-export function SearchPanel({ result }: { result: Result<Search> }) {
-  if (result.error !== undefined) {
-    return <ConnectionError source="Search Console" error={result.error} />;
-  }
+/** The four whole-site search numbers. Nothing when Search Console failed; the pages table below says why. */
+export function SearchStats({ result }: { result: Result<Search> }) {
+  if (result.error !== undefined) return null;
   const s = result.data;
-
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <Stat label="Clicks" value={count(s.clicks)} />
-        <Stat
-          label="Times shown"
-          value={count(s.impressions)}
-          hint="Impressions"
-        />
-        <Stat label="Click rate" value={`${(s.ctr * 100).toFixed(1)}%`} />
-        <Stat
-          label="Avg. position"
-          value={s.position ? s.position.toFixed(1) : "—"}
-        />
-      </div>
-      <div className="grid gap-4 xl:grid-cols-2">
-        <SearchTable title="Search term" rows={s.queries} />
-        <SearchTable title="Page" rows={s.pages} isPage />
-      </div>
-      <p className="text-ink-faint text-[0.75rem]">
-        Last {WINDOW_DAYS} days. Google adds search data two to three days late,
-        so the newest days fill in over time.
-      </p>
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <Stat label="Clicks" value={count(s.clicks)} />
+      <Stat
+        label="Times shown"
+        value={count(s.impressions)}
+        hint="Impressions"
+      />
+      <Stat label="Click rate" value={`${(s.ctr * 100).toFixed(1)}%`} />
+      <Stat
+        label="Avg. position"
+        value={s.position ? s.position.toFixed(1) : "—"}
+      />
     </div>
+  );
+}
+
+/** The site's top search terms, whichever page they land on. */
+export function TopSearches({ result }: { result: Result<Search> }) {
+  if (result.error !== undefined) return null;
+  return (
+    <>
+      <SearchTable title="Search term" rows={result.data.queries} />
+      <p className="text-ink-faint mt-2 text-[0.75rem]">
+        Last {WINDOW_DAYS} days, whole site.
+      </p>
+    </>
   );
 }

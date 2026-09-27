@@ -17,8 +17,10 @@ import {
   th,
 } from "@/components/admin/Business";
 import { BLOG_STATUSES, isService, num, serviceLabel } from "@/lib/business";
-import { SearchPanel } from "@/components/admin/SiteStats";
-import { getSearch } from "@/lib/site-stats";
+import { SeoPages } from "@/components/admin/SeoPages";
+import { SearchStats, TopSearches } from "@/components/admin/SiteStats";
+import { SEO_PAGES } from "@/lib/content/seo-pages";
+import { getPageReports, getSearch } from "@/lib/site-stats";
 import {
   addBlogPost,
   addKeyword,
@@ -45,12 +47,13 @@ const day = (value: string | null) =>
     : "";
 
 /**
- * Search: the terms each service should rank for, and the blog plan that
- * goes after them.
+ * Search, page by page. The top is the whole site's numbers; then every page
+ * with the search it is written for, whether Google has it, and where it
+ * ranks; then the site's top search terms. The keyword list and the blog
+ * plan below are the working notes that feed the pages.
  *
- * Clicks, impressions and positions come live from Search Console. A
- * tracked keyword shows Google's average position beside the one typed in,
- * when the site was shown for exactly that search.
+ * Everything from Google is read live from Search Console. The pages and
+ * their target searches are in src/lib/content/seo-pages.ts.
  */
 export default async function AdminSeoPage({
   searchParams,
@@ -60,7 +63,8 @@ export default async function AdminSeoPage({
   const { service: wanted } = await searchParams;
   const service = wanted && isService(wanted) ? wanted : null;
 
-  const [keywords, posts, search] = await Promise.all([
+  const pages = SEO_PAGES.filter((p) => !service || p.service === service);
+  const [keywords, posts, search, reports] = await Promise.all([
     db
       .select()
       .from(seoKeywords)
@@ -72,38 +76,30 @@ export default async function AdminSeoPage({
       .where(service ? eq(blogPosts.service, service) : undefined)
       .orderBy(desc(blogPosts.createdAt)),
     getSearch(service),
+    getPageReports(pages),
   ]);
   const google = (keyword: string) =>
     search.data?.positionOf.get(keyword.trim().toLowerCase());
-
-  const ranked = keywords.filter((k) => k.position !== null);
-  const topTen = ranked.filter((k) => num(k.position) <= 10).length;
-  const published = posts.filter((p) => p.status === "published").length;
 
   return (
     <>
       <PageHead
         title="SEO"
-        lede="How the site does in Google search, the keywords each service should rank for, and the blog posts planned to win them."
+        lede="Every page on the site, the search it is written to win, and what Google says about it."
       />
       <ConnectionStrip ids={["searchConsole"]} />
       <ServiceFilter basePath="/admin/seo" current={service} />
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <Stat label="Keywords" value={String(keywords.length)} />
-        <Stat
-          label="On page 1"
-          value={String(topTen)}
-          hint="Position 10 or better"
-        />
-        <Stat
-          label="Posts published"
-          value={`${published} / ${posts.length}`}
-        />
+      <div className="mt-6">
+        <SearchStats result={search} />
       </div>
 
-      <Section title="Google search">
-        <SearchPanel result={search} />
+      <Section title="Pages">
+        <SeoPages result={reports} />
+      </Section>
+
+      <Section title="Top search terms">
+        <TopSearches result={search} />
       </Section>
 
       <Section title="Keywords">

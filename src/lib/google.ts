@@ -114,10 +114,14 @@ async function accessToken(): Promise<Result<string>> {
 const cache = new Map<string, { at: number; data: unknown }>();
 const TTL = 10 * 60_000;
 
-async function call<T>(url: string, payload: object): Promise<Result<T>> {
+async function call<T>(
+  url: string,
+  payload: object,
+  ttl = TTL,
+): Promise<Result<T>> {
   const key = url + JSON.stringify(payload);
   const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < TTL) return { data: hit.data as T };
+  if (hit && Date.now() - hit.at < ttl) return { data: hit.data as T };
 
   const auth = await accessToken();
   if (auth.error !== undefined) return { error: auth.error };
@@ -206,6 +210,38 @@ export async function searchConsole(
   );
   if (result.error !== undefined) return { error: result.error };
   return { data: result.data.rows ?? [] };
+}
+
+/** Where the Search Console property lives, for building page URLs. */
+export function searchConsoleBase(fallback: string): string {
+  const site = process.env.SEARCH_CONSOLE_SITE_URL?.trim() ?? "";
+  return site.startsWith("http") ? site.replace(/\/$/, "") : fallback;
+}
+
+export type Inspection = {
+  inspectionResult?: {
+    indexStatusResult?: {
+      verdict?: string;
+      coverageState?: string;
+      lastCrawlTime?: string;
+    };
+  };
+};
+
+/**
+ * Whether Google has a page in its index, and when it last read it.
+ *
+ * Kept for six hours: the URL Inspection API allows 2,000 checks a day per
+ * property, and a page's index status does not change by the minute.
+ */
+export async function inspectUrl(url: string): Promise<Result<Inspection>> {
+  const site = process.env.SEARCH_CONSOLE_SITE_URL?.trim();
+  if (!site) return { error: "SEARCH_CONSOLE_SITE_URL is not set." };
+  return call<Inspection>(
+    "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect",
+    { inspectionUrl: url, siteUrl: site },
+    6 * 60 * 60_000,
+  );
 }
 
 /** YYYY-MM-DD, `days` ago, in India's calendar. */

@@ -109,7 +109,7 @@ export default async function ServicePage({
             </p>
           </Link>
           <Link
-            href={`/admin/analytics?service=${service.id}`}
+            href={`/admin/ads?service=${service.id}`}
             className="card hover:border-brand block p-5 transition-colors"
           >
             <p className="eyebrow">Ads</p>
