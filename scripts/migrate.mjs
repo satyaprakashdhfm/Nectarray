@@ -184,6 +184,46 @@ async function applySchema() {
         SELECT 1 FROM practice_questions q
          WHERE q.track = 'python' AND q.slug = v.slug
       )`,
+    /*
+     * The first eleven articles, entered in the SEO tab's blog plan as
+     * published, and the search term each one targets added to its keywords
+     * so Search Console fills in their positions. Keyed on the URL and the
+     * keyword, so a re-run, or a row the admin has already edited, is left
+     * alone.
+     */
+    `INSERT INTO blog_posts (service, title, keyword, url, published_on, status)
+     SELECT v.service, v.title, v.keyword, v.url, v.published_on, 'published'
+       FROM (VALUES
+        ('ai', 'Jev in LangChain: a decision model for the choices your agent makes', 'ai agent development', '/blog/jev-langchain-decision-model', DATE '2026-09-27'),
+        ('ai', 'What an AI agent development company builds, and how to hire one', 'ai agent development company', '/blog/ai-agent-development-company', DATE '2026-09-26'),
+        ('ai', 'AI agent, chatbot or automation: which one your business needs', 'ai agent development company', '/blog/ai-agent-vs-chatbot-vs-automation', DATE '2026-09-25'),
+        ('software', 'How much custom software development costs in India in 2026', 'custom software development services', '/blog/custom-software-development-cost-india', DATE '2026-09-24'),
+        ('software', 'How to choose a custom software development company: 12 questions', 'custom software development company', '/blog/choose-custom-software-development-company', DATE '2026-09-23'),
+        ('software', 'Custom software or off the shelf: when bespoke is worth paying for', 'bespoke software development', '/blog/custom-software-vs-off-the-shelf', DATE '2026-09-22'),
+        ('academy', 'Data science course with placement: how to check the promise', 'data science course with placement', '/blog/data-science-course-with-placement', DATE '2026-09-21'),
+        ('academy', 'Data analytics or data science: which course gets you hired first', 'data analytics course with placement', '/blog/data-analytics-vs-data-science-course', DATE '2026-09-20'),
+        ('academy', 'A 12-week Python and SQL roadmap for your first data job', 'python and sql course online', '/blog/python-sql-roadmap-first-data-job', DATE '2026-09-19'),
+        ('marketing', 'Digital marketing for a small business: where the first budget goes', 'digital marketing agency for small business', '/blog/digital-marketing-for-small-business', DATE '2026-09-18'),
+        ('marketing', 'Hiring a social media marketing agency for a small business', 'social media marketing agency for small business', '/blog/social-media-marketing-agency-small-business', DATE '2026-09-17')
+       ) AS v(service, title, keyword, url, published_on)
+      WHERE NOT EXISTS (SELECT 1 FROM blog_posts b WHERE b.url = v.url)`,
+    `INSERT INTO seo_keywords (service, keyword, target_path)
+     SELECT v.service, v.keyword, v.target_path
+       FROM (VALUES
+        ('ai', 'ai agent development', '/blog/jev-langchain-decision-model'),
+        ('ai', 'ai agent development company', '/blog/ai-agent-development-company'),
+        ('software', 'custom software development services', '/blog/custom-software-development-cost-india'),
+        ('software', 'custom software development company', '/blog/choose-custom-software-development-company'),
+        ('software', 'bespoke software development', '/blog/custom-software-vs-off-the-shelf'),
+        ('academy', 'data science course with placement', '/blog/data-science-course-with-placement'),
+        ('academy', 'data analytics course with placement', '/blog/data-analytics-vs-data-science-course'),
+        ('academy', 'python and sql course online', '/blog/python-sql-roadmap-first-data-job'),
+        ('marketing', 'digital marketing agency for small business', '/blog/digital-marketing-for-small-business'),
+        ('marketing', 'social media marketing agency for small business', '/blog/social-media-marketing-agency-small-business')
+       ) AS v(service, keyword, target_path)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM seo_keywords k WHERE lower(k.keyword) = lower(v.keyword)
+      )`,
   ];
 
   let applied = 0;
