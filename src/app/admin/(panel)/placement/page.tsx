@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import Link from "next/link";
-import { ChevronRight, FileText, MessageSquareText } from "lucide-react";
+import { ChevronRight, FileText, MessageSquareText, Users } from "lucide-react";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { placementProfiles, users } from "@/lib/db/schema";
@@ -66,6 +66,29 @@ export default async function AdminPlacementPage() {
         . The two starting points are below; {written} of {rows.length} accounts
         have written past them.
       </p>
+
+      {/* The HR round, the one part of these tools an admin writes. ------ */}
+      <Link
+        href="/admin/placement/hr"
+        className="card hover:border-brand mt-7 flex items-center gap-4 p-5 transition-colors"
+      >
+        <span className="bg-brand-wash text-brand-deep grid size-10 shrink-0 place-items-center rounded-xl">
+          <Users className="size-5" strokeWidth={2} aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="text-ink block text-[0.9375rem] font-semibold">
+            HR questions
+          </span>
+          <span className="text-ink-soft block text-[0.8125rem]">
+            Edit the questions and answers every student sees.
+          </span>
+        </span>
+        <ChevronRight
+          className="text-ink-faint size-4 shrink-0"
+          strokeWidth={2.5}
+          aria-hidden
+        />
+      </Link>
 
       {/* The templates ---------------------------------------------------- */}
       <div className="mt-7 grid gap-5 lg:grid-cols-2">

@@ -490,6 +490,23 @@ export const placementProfiles = pgTable("placement_profiles", {
   updatedAt: now(),
 });
 
+/**
+ * The HR round, as the admin has written it. Empty until the first save, and
+ * until then the page shows the questions in src/lib/content/hr-questions.ts.
+ */
+export const hrQuestions = pgTable("hr_questions", {
+  id: uuid().primaryKey().defaultRandom(),
+  position: integer().notNull(),
+  question: text().notNull(),
+  /** Other wordings of the same question, one per entry. */
+  alsoAsked: jsonb("also_asked").$type<string[]>().notNull().default([]),
+  note: text(),
+  /** Advice on building an answer rather than an answer to copy. */
+  isGuide: boolean("is_guide").notNull().default(false),
+  answer: text().notNull(),
+  updatedAt: now(),
+});
+
 // ---------------------------------------------------------------------------
 //  Enquiries
 // ---------------------------------------------------------------------------

@@ -4,8 +4,8 @@ import { useSyncExternalStore, type ReactNode } from "react";
 import { CopyButton } from "@/components/dashboard/CopyButton";
 import {
   HR_FIELDS,
-  HR_QUESTIONS,
   type HrFieldKey,
+  type HrQuestion,
 } from "@/lib/content/hr-questions";
 import { cn } from "@/lib/utils";
 import { PlacementBar } from "./PlacementBar";
@@ -80,7 +80,14 @@ function subscribe(listener: () => void): () => void {
  * answer goes wrong is the candidate leaving last week's company name in the
  * middle of a paragraph.
  */
-export function HrQuestions({ tabs }: { tabs: ReactNode }) {
+export function HrQuestions({
+  tabs,
+  questions,
+}: {
+  tabs: ReactNode;
+  /** As the admin last saved them, or the built-in set. */
+  questions: HrQuestion[];
+}) {
   const filled = useSyncExternalStore(subscribe, read, () => EMPTY);
 
   const set = (key: HrFieldKey, value: string) =>
@@ -151,7 +158,7 @@ export function HrQuestions({ tabs }: { tabs: ReactNode }) {
 
         {/* ── The questions ────────────────────────────────────────── */}
         <ol className="mt-8 space-y-5">
-          {HR_QUESTIONS.map((entry, i) => (
+          {questions.map((entry, i) => (
             <li key={entry.id} className="card p-5 sm:p-6">
               <div className="flex items-start gap-3">
                 <span className="bg-brand-wash text-brand-deep mt-0.5 grid size-6 shrink-0 place-items-center rounded-full font-mono text-[0.75rem] font-bold">
@@ -159,7 +166,7 @@ export function HrQuestions({ tabs }: { tabs: ReactNode }) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-ink text-[1.0625rem] leading-snug font-semibold">
-                    {entry.question}
+                    {substitute(entry.question, filled)}
                   </h2>
 
                   {entry.alsoAsked && (

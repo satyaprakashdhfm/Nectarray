@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FileText, FolderGit2, MessageSquareText, Users } from "lucide-react";
+import type { HrQuestion } from "@/lib/content/hr-questions";
 import type { ResumeFiles } from "@/lib/resume-files";
 import { HrQuestions } from "./HrQuestions";
 import { IntroEditor } from "./IntroEditor";
@@ -32,6 +33,7 @@ export function PlacementTools({
   initialProject,
   intro,
   files,
+  hrQuestions,
   pdfName,
   compilerReady,
 }: {
@@ -40,6 +42,7 @@ export function PlacementTools({
   initialProject?: string;
   intro: string;
   files: ResumeFiles;
+  hrQuestions: HrQuestion[];
   pdfName: string;
   compilerReady: boolean;
 }) {
@@ -100,7 +103,7 @@ export function PlacementTools({
         </div>
       )}
       <div hidden={tool !== "hr"}>
-        <HrQuestions tabs={tabs} />
+        <HrQuestions tabs={tabs} questions={hrQuestions} />
       </div>
       {projectsOpened && (
         <div hidden={tool !== "projects"}>

@@ -8,6 +8,7 @@ import {
   batches,
   cohorts,
   enrolments,
+  hrQuestions,
   lessonReleases,
   lessons,
   users,
@@ -258,4 +259,54 @@ export async function createLesson(formData: FormData) {
 
   revalidatePath("/admin/lessons", "layout");
   redirect(`/admin/lessons/${data.id}?edit=1`);
+}
+
+export type HrQuestionInput = {
+  question: string;
+  alsoAsked: string[];
+  note: string;
+  isGuide: boolean;
+  answer: string;
+};
+
+/**
+ * The HR questions, saved as a whole list in the order given.
+ *
+ * Replaced rather than patched one by one: the editor adds, removes and
+ * reorders freely, and the list the admin is looking at when they press save
+ * is exactly the list students should see.
+ */
+export async function saveHrQuestions(
+  input: HrQuestionInput[],
+): Promise<{ error?: string }> {
+  await assertAdmin();
+
+  const list = input.map((q) => ({
+    question: String(q.question ?? "").trim(),
+    alsoAsked: (Array.isArray(q.alsoAsked) ? q.alsoAsked : [])
+      .map((a) => String(a).trim())
+      .filter(Boolean),
+    note: String(q.note ?? "").trim() || null,
+    isGuide: Boolean(q.isGuide),
+    answer: String(q.answer ?? "").trim(),
+  }));
+
+  if (list.length === 0) return { error: "Keep at least one question." };
+  const blank = list.findIndex((q) => !q.question || !q.answer);
+  if (blank !== -1) {
+    return {
+      error: `Question ${blank + 1} needs both a question and an answer.`,
+    };
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(hrQuestions);
+    await tx
+      .insert(hrQuestions)
+      .values(list.map((q, position) => ({ ...q, position })));
+  });
+
+  revalidatePath("/admin/placement/hr");
+  revalidatePath("/dashboard/placement");
+  return {};
 }

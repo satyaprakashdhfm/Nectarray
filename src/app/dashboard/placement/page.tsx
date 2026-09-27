@@ -5,6 +5,7 @@ import { PlacementTools } from "@/components/dashboard/PlacementTools";
 import { db } from "@/lib/db";
 import { placementProfiles } from "@/lib/db/schema";
 import { getAccess } from "@/lib/auth/access";
+import { getHrQuestions } from "@/lib/hr-questions";
 import {
   asResumeFiles,
   defaultIntro,
@@ -38,7 +39,7 @@ export default async function PlacementPage({
     );
   }
 
-  const [{ tool, project }, [profile]] = await Promise.all([
+  const [{ tool, project }, [profile], hrQuestions] = await Promise.all([
     searchParams,
     db
       .select({
@@ -48,6 +49,7 @@ export default async function PlacementPage({
       .from(placementProfiles)
       .where(eq(placementProfiles.userId, user.id))
       .limit(1),
+    getHrQuestions(),
   ]);
 
   const files =
@@ -64,6 +66,7 @@ export default async function PlacementPage({
       initialProject={project}
       intro={profile?.intro ?? defaultIntro(user)}
       files={files}
+      hrQuestions={hrQuestions}
       pdfName={resumePdfName(user)}
       compilerReady={Boolean(process.env.LATEX_URL && process.env.LATEX_TOKEN)}
     />
