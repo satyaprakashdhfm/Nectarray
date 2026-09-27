@@ -4,15 +4,22 @@ import {
   Section,
   ServiceFilter,
 } from "@/components/admin/Business";
-import { SERVICES, isService } from "@/lib/business";
-import { TrafficPanel } from "@/components/admin/SiteStats";
-import { getTraffic } from "@/lib/site-stats";
+import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
+import { LiveVisitors } from "@/components/admin/LiveVisitors";
+import {
+  DAYS,
+  getAnalytics,
+  getOwnRecords,
+  getRealtime,
+} from "@/lib/analytics-report";
+import { isService } from "@/lib/business";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Site traffic from GA4, for the whole site or the pages under one service's
- * path. Ad campaigns have their own tab.
+ * Everyone who opened the site, whatever brought them, from GA4, with the
+ * sign-ins and enquiries from our own tables beside it. Ad campaigns have
+ * their own tab.
  */
 export default async function AdminAnalyticsPage({
   searchParams,
@@ -22,29 +29,30 @@ export default async function AdminAnalyticsPage({
   const { service: wanted } = await searchParams;
   const service = wanted && isService(wanted) ? wanted : null;
 
-  const traffic = await getTraffic(service);
+  const [report, own, live] = await Promise.all([
+    getAnalytics(service),
+    getOwnRecords(),
+    getRealtime(),
+  ]);
 
   return (
     <>
       <PageHead
         title="Analytics"
-        lede="Visitors, where they came from and which pages they read, from Google Analytics."
+        lede={`Everyone who opened the site, whatever brought them: Google, Instagram, WhatsApp, an ad, or typing the address. Last ${DAYS} days.`}
       />
       <ConnectionStrip ids={["analytics"]} />
-      <ServiceFilter basePath="/admin/analytics" current={service} />
 
-      <Section
-        title="Traffic"
-        aside={
-          <span className="text-ink-faint text-[0.75rem]">
-            {service
-              ? `Pages under ${SERVICES.find((x) => x.id === service)!.path}`
-              : "Whole site"}
-          </span>
-        }
-      >
-        <TrafficPanel result={traffic} filtered={Boolean(service)} />
+      <Section title="On the site right now">
+        <p className="text-ink-soft -mt-1 mb-3 text-[0.8125rem]">
+          People with the site open in the last 30 minutes, from Google
+          Analytics. Updates every minute.
+        </p>
+        <LiveVisitors initial={live} />
       </Section>
+
+      <ServiceFilter basePath="/admin/analytics" current={service} />
+      <AnalyticsReport result={report} own={own} filtered={Boolean(service)} />
     </>
   );
 }

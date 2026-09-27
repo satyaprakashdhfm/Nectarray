@@ -186,6 +186,21 @@ export async function ga4Reports(
   return { data: result.data.reports ?? [] };
 }
 
+/**
+ * Who is on the site now: GA4's realtime report, the last 30 minutes.
+ * Kept for 50 seconds, so a page polling once a minute always gets fresh
+ * numbers and a dozen open tabs still cost one request.
+ */
+export async function ga4Realtime(request: object): Promise<Result<Ga4Report>> {
+  const property = ga4Property();
+  if (!property) return { error: "GA4_PROPERTY_ID is not set." };
+  return call<Ga4Report>(
+    `https://analyticsdata.googleapis.com/v1beta/properties/${property}:runRealtimeReport`,
+    request,
+    50_000,
+  );
+}
+
 // ---------------------------------------------------------------------------
 //  Search Console
 // ---------------------------------------------------------------------------
