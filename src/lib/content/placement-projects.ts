@@ -103,7 +103,7 @@ export const PLACEMENT_PROJECTS: PlacementProject[] = [
       },
     ],
     zipName: "ai-invoice-auditor.zip",
-    zipBytes: 273671,
+    zipBytes: 277647,
     guideName: "AI-Invoice-Auditor-Technical-Guide.pdf",
     guidePages: 5,
   },
