@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Placement tools: the self-introduction, the resume and the HR round.
+ * Placement tools: the self-introduction, the resume, the HR round and the
+ * projects to show in an interview.
  *
  * Both are the student's own and scoped to them — a read without the user id
  * here would hand one student's resume to another.
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 export default async function PlacementPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tool?: string }>;
+  searchParams: Promise<{ tool?: string; project?: string }>;
 }) {
   const { user, active, status } = await getAccess();
   if (!active || !user) {
@@ -37,7 +38,7 @@ export default async function PlacementPage({
     );
   }
 
-  const [{ tool }, [profile]] = await Promise.all([
+  const [{ tool, project }, [profile]] = await Promise.all([
     searchParams,
     db
       .select({
@@ -55,7 +56,12 @@ export default async function PlacementPage({
   return (
     <PlacementTools
       userId={user.id}
-      initialTool={tool === "resume" || tool === "hr" ? tool : "intro"}
+      initialTool={
+        tool === "resume" || tool === "hr" || tool === "projects"
+          ? tool
+          : "intro"
+      }
+      initialProject={project}
       intro={profile?.intro ?? defaultIntro(user)}
       files={files}
       pdfName={resumePdfName(user)}

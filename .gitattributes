@@ -1,0 +1,4 @@
+# Downloads served byte for byte. Without this, a PDF with no NUL in its
+# first few kilobytes is taken for text and its line endings get rewritten.
+*.pdf binary
+*.zip binary
