@@ -26,6 +26,8 @@ import {
   rupees,
   serviceLabel,
 } from "@/lib/business";
+import { TrafficPanel } from "@/components/admin/SiteStats";
+import { getTraffic } from "@/lib/site-stats";
 import {
   addCampaign,
   deleteCampaign,
@@ -37,10 +39,9 @@ export const dynamic = "force-dynamic";
 /**
  * Paid ads and site traffic, for all services or one.
  *
- * Campaign figures are typed in until the Google Ads and Meta APIs are
- * connected. Traffic waits on GA4: the cards say which variables it still
- * needs, and each service's pages are listed so the split is settled before
- * the data arrives.
+ * Traffic is read live from GA4, for the whole site or the pages under
+ * one service's path. Campaign figures are typed in until the Google Ads and
+ * Meta APIs are connected.
  */
 export default async function AdminAnalyticsPage({
   searchParams,
@@ -50,60 +51,52 @@ export default async function AdminAnalyticsPage({
   const { service: wanted } = await searchParams;
   const service = wanted && isService(wanted) ? wanted : null;
 
-  const campaigns = await db
-    .select()
-    .from(adCampaigns)
-    .where(service ? eq(adCampaigns.service, service) : undefined)
-    .orderBy(desc(adCampaigns.createdAt));
+  const [campaigns, traffic] = await Promise.all([
+    db
+      .select()
+      .from(adCampaigns)
+      .where(service ? eq(adCampaigns.service, service) : undefined)
+      .orderBy(desc(adCampaigns.createdAt)),
+    getTraffic(service),
+  ]);
 
   const spend = campaigns.reduce((t, c) => t + num(c.spend), 0);
   const clicks = campaigns.reduce((n, c) => n + c.clicks, 0);
   const leads = campaigns.reduce((n, c) => n + c.leads, 0);
-  const pages = service ? SERVICES.filter((s) => s.id === service) : SERVICES;
 
   return (
     <>
       <PageHead
         title="Ads & Analytics"
-        lede="What the ads cost and brought in, and — once Analytics is connected — the traffic each service's pages get."
+        lede="The traffic each service's pages get, from Google Analytics, and what the ads cost and brought in."
       />
       <ConnectionStrip ids={["analytics", "googleAds", "metaAds"]} />
       <ServiceFilter basePath="/admin/analytics" current={service} />
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <Stat label="Ad spend" value={rupees.format(spend)} />
-        <Stat label="Clicks" value={clicks.toLocaleString("en-IN")} />
-        <Stat label="Leads" value={leads.toLocaleString("en-IN")} />
-        <Stat
-          label="Cost per lead"
-          value={leads ? rupees.format(spend / leads) : "—"}
-        />
-      </div>
-
-      <Section title="Traffic">
-        <div className="card p-5">
-          <p className="eyebrow">Split by page</p>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-            {pages.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between gap-3 text-[0.8125rem]"
-              >
-                <span className="text-ink font-semibold">{s.label}</span>
-                <code className="text-ink-soft font-mono text-[0.75rem]">
-                  {s.path}/…
-                </code>
-              </li>
-            ))}
-          </ul>
-          <p className="text-ink-faint mt-3 text-[0.75rem]">
-            Visitors, sessions and sources per service appear here once GA4 is
-            connected.
-          </p>
-        </div>
+      <Section
+        title="Traffic"
+        aside={
+          <span className="text-ink-faint text-[0.75rem]">
+            {service
+              ? `Pages under ${SERVICES.find((x) => x.id === service)!.path}`
+              : "Whole site"}
+          </span>
+        }
+      >
+        <TrafficPanel result={traffic} filtered={Boolean(service)} />
       </Section>
 
       <Section title="Campaigns">
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <Stat label="Ad spend" value={rupees.format(spend)} />
+          <Stat label="Clicks" value={clicks.toLocaleString("en-IN")} />
+          <Stat label="Leads" value={leads.toLocaleString("en-IN")} />
+          <Stat
+            label="Cost per lead"
+            value={leads ? rupees.format(spend / leads) : "—"}
+          />
+        </div>
+
         {campaigns.length === 0 ? (
           <Empty>No campaigns yet.</Empty>
         ) : (

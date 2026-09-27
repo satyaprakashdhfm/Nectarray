@@ -17,6 +17,8 @@ import {
   th,
 } from "@/components/admin/Business";
 import { BLOG_STATUSES, isService, num, serviceLabel } from "@/lib/business";
+import { SearchPanel } from "@/components/admin/SiteStats";
+import { getSearch } from "@/lib/site-stats";
 import {
   addBlogPost,
   addKeyword,
@@ -46,8 +48,9 @@ const day = (value: string | null) =>
  * Search: the terms each service should rank for, and the blog plan that
  * goes after them.
  *
- * Positions are typed in until Search Console is connected — the card at
- * the top says what that still needs.
+ * Clicks, impressions and positions come live from Search Console. A
+ * tracked keyword shows Google's average position beside the one typed in,
+ * when the site was shown for exactly that search.
  */
 export default async function AdminSeoPage({
   searchParams,
@@ -57,7 +60,7 @@ export default async function AdminSeoPage({
   const { service: wanted } = await searchParams;
   const service = wanted && isService(wanted) ? wanted : null;
 
-  const [keywords, posts] = await Promise.all([
+  const [keywords, posts, search] = await Promise.all([
     db
       .select()
       .from(seoKeywords)
@@ -68,7 +71,10 @@ export default async function AdminSeoPage({
       .from(blogPosts)
       .where(service ? eq(blogPosts.service, service) : undefined)
       .orderBy(desc(blogPosts.createdAt)),
+    getSearch(service),
   ]);
+  const google = (keyword: string) =>
+    search.data?.positionOf.get(keyword.trim().toLowerCase());
 
   const ranked = keywords.filter((k) => k.position !== null);
   const topTen = ranked.filter((k) => num(k.position) <= 10).length;
@@ -78,7 +84,7 @@ export default async function AdminSeoPage({
     <>
       <PageHead
         title="SEO"
-        lede="Keywords each service should rank for, and the blog posts planned to win them."
+        lede="How the site does in Google search, the keywords each service should rank for, and the blog posts planned to win them."
       />
       <ConnectionStrip ids={["searchConsole"]} />
       <ServiceFilter basePath="/admin/seo" current={service} />
@@ -96,19 +102,25 @@ export default async function AdminSeoPage({
         />
       </div>
 
+      <Section title="Google search">
+        <SearchPanel result={search} />
+      </Section>
+
       <Section title="Keywords">
         {keywords.length === 0 ? (
           <Empty>No keywords yet.</Empty>
         ) : (
           <div className="card overflow-x-auto">
-            <table className="w-full min-w-[46rem] text-left">
+            <table className="w-full min-w-[52rem] text-left">
               <thead>
                 <tr className="border-line-soft border-b">
-                  {["Keyword", "Service", "Page", "Position", ""].map((h) => (
-                    <th key={h} className={th}>
-                      {h}
-                    </th>
-                  ))}
+                  {["Keyword", "Service", "Page", "Google", "Position", ""].map(
+                    (h) => (
+                      <th key={h} className={th}>
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -123,6 +135,16 @@ export default async function AdminSeoPage({
                     <td className={td}>{serviceLabel(k.service)}</td>
                     <td className={`${td} font-mono text-[0.75rem]`}>
                       {k.targetPath ?? "—"}
+                    </td>
+                    <td className={`${td} text-ink font-semibold tabular-nums`}>
+                      {google(k.keyword)?.toFixed(1) ?? (
+                        <span
+                          className="text-ink-faint font-normal"
+                          title="Not shown for this exact search in the last 28 days"
+                        >
+                          —
+                        </span>
+                      )}
                     </td>
                     <td className={td}>
                       <form

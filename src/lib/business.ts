@@ -72,15 +72,15 @@ export const platformLabel = (id: string) =>
  * What each outside source needs before it can feed the dashboard.
  *
  * Only whether the variables are set is ever read here — never their
- * values — so this is safe to render. Nothing calls these APIs yet; the
- * cards say what is still missing.
+ * values — so this is safe to render. Search Console and GA4 are read live
+ * through src/lib/google.ts; the ad platforms are not called yet.
  */
 export const CONNECTIONS = {
   searchConsole: {
     label: "Google Search Console",
     gives:
       "Clicks, impressions and average position for every page and search term",
-    env: ["GSC_SITE_URL", "GOOGLE_SERVICE_ACCOUNT_JSON"],
+    env: ["SEARCH_CONSOLE_SITE_URL", "GOOGLE_SERVICE_ACCOUNT_JSON"],
   },
   analytics: {
     label: "Google Analytics 4",
