@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Check,
   Code,
@@ -13,11 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
-import {
-  UI_CATEGORIES,
-  UI_COMPONENTS,
-  type UiComponent,
-} from "@/lib/content/ui-library";
+import type { UiComponent } from "@/lib/content/ui-library";
 import { ROLES, paletteCss, paletteVars, usePalette } from "@/lib/palette";
 import { useNarrow } from "@/lib/use-narrow";
 import { cn } from "@/lib/utils";
@@ -47,6 +44,8 @@ const ATTRIBUTES: [RegExp, string][] = [
   [/\sstroke-linecap="/g, ' strokeLinecap="'],
   [/\sstroke-linejoin="/g, ' strokeLinejoin="'],
   [/\sstroke-dasharray="/g, ' strokeDasharray="'],
+  [/\sfill-rule="/g, ' fillRule="'],
+  [/\sclip-rule="/g, ' clipRule="'],
   [/\stext-anchor="/g, ' textAnchor="'],
   [/\sfont-size="/g, ' fontSize="'],
   [/\sfont-family="/g, ' fontFamily="'],
@@ -65,60 +64,74 @@ function toJsx(html: string): string {
       .replace(/\schecked(?=[\s/>])/g, " defaultChecked")
       .replace(/(<(?:input|textarea)[^>]*?)\svalue="/g, '$1 defaultValue="')
       .replace(/\srows="(\d+)"/g, " rows={$1}")
+      .replace(/<!--([\s\S]*?)-->/g, "{/*$1*/}")
   );
 }
+
+export type CategoryCount = { id: string; label: string; count: number };
 
 /**
  * The component library: pick a category, see each component live in the
  * chosen palette at laptop, tablet or phone width, and copy its code.
+ *
+ * The server sends only the components on screen (the whole library is
+ * hundreds of kilobytes of HTML), so changing category or searching goes
+ * through the URL and the page re-renders with the new set.
  */
 export function ElementLibrary({
-  initialCategory,
+  categories,
+  total,
+  category,
+  blurb,
+  query,
+  components,
 }: {
-  initialCategory: string;
+  categories: CategoryCount[];
+  total: number;
+  category: string;
+  blurb: string | null;
+  query: string;
+  components: UiComponent[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [pending, startTransition] = useTransition();
   const palette = usePalette();
   const vars = useMemo(() => paletteVars(palette), [palette]);
-  const [category, setCategory] = useState(
-    UI_CATEGORIES.some((c) => c.id === initialCategory)
-      ? initialCategory
-      : "all",
-  );
-  const [query, setQuery] = useState("");
+  const [typed, setTyped] = useState(query);
   // Until one is picked: phone width on a phone, where a scaled-down
   // laptop layout is too small to read, and laptop width elsewhere.
   const [chosen, setDevice] = useState<Device | null>(null);
   const narrow = useNarrow();
   const device: Device = chosen ?? (narrow ? "phone" : "desktop");
+  const width = DEVICES.find((d) => d.id === device)!.width;
   const [copiedCss, setCopiedCss] = useState(false);
 
-  const counts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const c of UI_COMPONENTS) {
-      map.set(c.category, (map.get(c.category) ?? 0) + 1);
-    }
-    return map;
-  }, []);
-
-  const q = query.trim().toLowerCase();
-  const shown = UI_COMPONENTS.filter(
-    (c) =>
-      (category === "all" || c.category === category) &&
-      (!q ||
-        c.name.toLowerCase().includes(q) ||
-        c.note.toLowerCase().includes(q) ||
-        c.category.includes(q)),
-  );
-  const current = UI_CATEGORIES.find((c) => c.id === category);
-  const width = DEVICES.find((d) => d.id === device)!.width;
-
-  function choose(id: string) {
-    setCategory(id);
-    const url = new URL(window.location.href);
-    if (id === "all") url.searchParams.delete("category");
-    else url.searchParams.set("category", id);
-    window.history.replaceState(null, "", url);
+  function go(next: { category?: string; q?: string }) {
+    const params = new URLSearchParams();
+    const c = next.category ?? category;
+    const q = (next.q ?? typed).trim();
+    if (c !== "all") params.set("category", c);
+    if (q) params.set("q", q);
+    const search = params.toString();
+    startTransition(() =>
+      router.replace(search ? `${pathname}?${search}` : pathname, {
+        scroll: false,
+      }),
+    );
   }
+
+  // Search as you type, a moment after the typing stops, across every
+  // category rather than only the one open.
+  useEffect(() => {
+    if (typed.trim() === query) return;
+    const timer = window.setTimeout(
+      () => go({ q: typed, category: typed.trim() ? "all" : category }),
+      350,
+    );
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typed]);
 
   async function copyCss() {
     try {
@@ -131,8 +144,8 @@ export function ElementLibrary({
   }
 
   return (
-    <div className="mt-6 grid gap-6 xl:grid-cols-[14rem_minmax(0,1fr)]">
-      <aside className="min-w-0 xl:sticky xl:top-[88px] xl:self-start">
+    <div className="mt-6 grid gap-6 xl:grid-cols-[15rem_minmax(0,1fr)]">
+      <aside className="min-w-0 xl:sticky xl:top-[88px] xl:max-h-[calc(100vh-104px)] xl:self-start xl:overflow-y-auto">
         <label className="relative block">
           <span className="sr-only">Search components</span>
           <Search
@@ -141,25 +154,18 @@ export function ElementLibrary({
             aria-hidden
           />
           <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder="Search, e.g. login, pricing, team"
             className="border-line bg-surface text-ink focus:border-brand w-full rounded-lg border py-2 pr-3 pl-9 text-[0.875rem] focus:outline-none"
           />
         </label>
         <ul className="tab-bar mt-3 xl:flex xl:flex-col xl:gap-0.5 xl:overflow-visible xl:rounded-none xl:border-0 xl:bg-transparent xl:p-0">
-          {[
-            { id: "all", label: "All", count: UI_COMPONENTS.length },
-            ...UI_CATEGORIES.map((c) => ({
-              id: c.id,
-              label: c.label,
-              count: counts.get(c.id) ?? 0,
-            })),
-          ].map((c) => (
+          {categories.map((c) => (
             <li key={c.id}>
               <button
                 type="button"
-                onClick={() => choose(c.id)}
+                onClick={() => go({ category: c.id })}
                 aria-pressed={category === c.id}
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded-full px-3 py-1.5 text-left text-[0.8125rem] font-semibold whitespace-nowrap transition-colors xl:gap-3 xl:rounded-lg",
@@ -178,7 +184,9 @@ export function ElementLibrary({
         </ul>
       </aside>
 
-      <div className="min-w-0">
+      <div
+        className={cn("min-w-0 transition-opacity", pending && "opacity-60")}
+      >
         <div className="card flex flex-wrap items-center justify-between gap-3 p-3">
           <div
             role="radiogroup"
@@ -232,13 +240,15 @@ export function ElementLibrary({
           </div>
         </div>
 
-        {current && !q && (
-          <p className="text-ink-soft mt-4 text-[0.875rem]">{current.blurb}</p>
-        )}
+        <p className="text-ink-soft mt-4 text-[0.875rem]">
+          {query
+            ? `${components.length} found for "${query}".`
+            : (blurb ?? `${total} components in all.`)}
+        </p>
 
-        {shown.length === 0 ? (
+        {components.length === 0 ? (
           <div className="card text-ink-soft mt-4 p-8 text-center text-[0.875rem]">
-            Nothing matches &ldquo;{query}&rdquo;.
+            Nothing matches. Try a shorter word, like form or card.
           </div>
         ) : (
           <ul
@@ -248,13 +258,17 @@ export function ElementLibrary({
               device === "phone" && "lg:grid-cols-2 2xl:grid-cols-3",
             )}
           >
-            {shown.map((c) => (
+            {components.map((c) => (
               <li key={c.id} className="min-w-0">
                 <ComponentCard
                   component={c}
                   vars={vars}
                   width={width}
-                  showCategory={category === "all" || Boolean(q)}
+                  categoryLabel={
+                    category === "all" || query
+                      ? categories.find((x) => x.id === c.category)?.label
+                      : undefined
+                  }
                 />
               </li>
             ))}
@@ -269,16 +283,15 @@ function ComponentCard({
   component,
   vars,
   width,
-  showCategory,
+  categoryLabel,
 }: {
   component: UiComponent;
   vars: Record<string, string>;
   width: number;
-  showCategory: boolean;
+  categoryLabel?: string;
 }) {
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState<"html" | "jsx" | null>(null);
-  const category = UI_CATEGORIES.find((c) => c.id === component.category);
 
   async function copy(kind: "html" | "jsx") {
     try {
@@ -288,7 +301,7 @@ function ComponentCard({
       setCopied(kind);
       window.setTimeout(() => setCopied(null), 1600);
     } catch {
-      // Clipboard refused; Show code is there to select by hand.
+      // Clipboard refused; Code is there to select by hand.
     }
   }
 
@@ -300,12 +313,14 @@ function ComponentCard({
             {component.name}
           </h3>
           <p className="text-ink-soft text-[0.8125rem]">
-            {showCategory && category && (
+            {categoryLabel && (
               <span className="text-brand-deep font-semibold">
-                {category.label}.{" "}
+                {categoryLabel}.{" "}
               </span>
             )}
-            {component.note}
+            {component.source
+              ? `From ${component.source} (MIT licence), recoloured to the palette.`
+              : component.note}
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">

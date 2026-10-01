@@ -30,6 +30,8 @@ export type UiComponent = {
   /** When to reach for it, in a sentence. */
   note: string;
   html: string;
+  /** Where it came from when it was not written here, e.g. "HyperUI". */
+  source?: string;
 };
 
 export const UI_CATEGORIES: UiCategory[] = [
@@ -102,6 +104,21 @@ export const UI_CATEGORIES: UiCategory[] = [
     id: "feedback",
     label: "Alerts and empty states",
     blurb: "Success, warning and error messages, and screens with no data yet.",
+  },
+  {
+    id: "product-cards",
+    label: "Product cards",
+    blurb: "Shop items, collections and carts.",
+  },
+  {
+    id: "navigation",
+    label: "Tabs and navigation",
+    blurb: "Tabs, breadcrumbs, pagination and step indicators.",
+  },
+  {
+    id: "tables",
+    label: "Tables and lists",
+    blurb: "Data tables, timelines and detail lists.",
   },
   {
     id: "sketch",
