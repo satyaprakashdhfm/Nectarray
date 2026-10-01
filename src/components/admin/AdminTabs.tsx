@@ -10,14 +10,19 @@ import {
   ChartLine,
   ChevronDown,
   Code,
+  Component,
   FolderKanban,
   GraduationCap,
   Inbox,
   IndianRupee,
   Layers,
+  Lightbulb,
+  Link2,
   LockOpen,
   Megaphone,
   NotebookPen,
+  Palette,
+  PencilRuler,
   Search,
   Users,
   type LucideIcon,
@@ -72,6 +77,18 @@ const GROUPS: Group[] = [
       { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
     ],
   },
+  {
+    href: "/admin/web",
+    label: "Website",
+    icon: PencilRuler,
+    owns: ["/admin/web"],
+    children: [
+      { href: "/admin/web", label: "Learnings", icon: Lightbulb },
+      { href: "/admin/web/colours", label: "Colours", icon: Palette },
+      { href: "/admin/web/elements", label: "Elements", icon: Component },
+      { href: "/admin/web/references", label: "References", icon: Link2 },
+    ],
+  },
 ];
 
 /**
@@ -94,8 +111,9 @@ export function AdminTabs() {
   const tabActive = (tab: Tab) =>
     tab.href === "/admin"
       ? pathname === "/admin"
-      : // Projects owns only its own page, not the service tabs beside it.
-        tab.href === "/admin/development"
+      : // Projects and Learnings own only their own page, not the tabs
+        // beside them.
+        tab.href === "/admin/development" || tab.href === "/admin/web"
         ? pathname === tab.href
         : pathname.startsWith(tab.href);
   const groupActive = (group: Group) =>

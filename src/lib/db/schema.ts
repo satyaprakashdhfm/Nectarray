@@ -508,6 +508,25 @@ export const hrQuestions = pgTable("hr_questions", {
 });
 
 // ---------------------------------------------------------------------------
+//  Website building notes (admin only)
+// ---------------------------------------------------------------------------
+
+/**
+ * What the admin has learned about building websites: lessons, the order to
+ * build a page in, and links to good examples. One table, told apart by kind.
+ */
+export const webNotes = pgTable("web_notes", {
+  id: uuid().primaryKey().defaultRandom(),
+  /** learning | step | reference */
+  kind: text().notNull(),
+  position: integer().notNull(),
+  title: text().notNull(),
+  body: text().notNull().default(""),
+  url: text(),
+  updatedAt: now(),
+});
+
+// ---------------------------------------------------------------------------
 //  Enquiries
 // ---------------------------------------------------------------------------
 

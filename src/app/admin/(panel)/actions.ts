@@ -12,8 +12,10 @@ import {
   lessonReleases,
   lessons,
   users,
+  webNotes,
 } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/access";
+import type { WebNoteKind } from "@/lib/content/web-building";
 
 /**
  * Admin mutations.
@@ -308,5 +310,50 @@ export async function saveHrQuestions(
 
   revalidatePath("/admin/placement/hr");
   revalidatePath("/dashboard/placement");
+  return {};
+}
+
+// ---------------------------------------------------------------------------
+//  Website building notes
+// ---------------------------------------------------------------------------
+
+export type WebNoteInput = { title: string; body: string; url: string };
+
+const WEB_NOTE_KIND_LIST: WebNoteKind[] = ["learning", "step", "reference"];
+
+/** Replaces one whole list (learnings, steps or references) in this order. */
+export async function saveWebNotes(
+  kind: WebNoteKind,
+  input: WebNoteInput[],
+): Promise<{ error?: string }> {
+  await assertAdmin();
+  if (!WEB_NOTE_KIND_LIST.includes(kind)) return { error: "Unknown list." };
+
+  const list = input.map((n) => ({
+    title: String(n.title ?? "").trim(),
+    body: String(n.body ?? "").trim(),
+    url: String(n.url ?? "").trim() || null,
+  }));
+
+  if (list.length === 0) return { error: "Keep at least one entry." };
+  const blank = list.findIndex((n) => !n.title);
+  if (blank !== -1) return { error: `Entry ${blank + 1} needs a title.` };
+  const badLink = list.findIndex(
+    (n) => n.url && !/^(https?:\/\/|\/)/.test(n.url),
+  );
+  if (badLink !== -1) {
+    return {
+      error: `The link on entry ${badLink + 1} should start with https:// or /.`,
+    };
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(webNotes).where(eq(webNotes.kind, kind));
+    await tx
+      .insert(webNotes)
+      .values(list.map((n, position) => ({ ...n, kind, position })));
+  });
+
+  revalidatePath("/admin/web", "layout");
   return {};
 }
