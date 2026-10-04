@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
     qualities: [75, 90],
   },
 
+  /*
+   * The Animations tab shows each hero's real source under its preview, read
+   * from src/ at request time. A deployed build has no src/ folder unless the
+   * files are traced in, so they are, for that one route.
+   */
+  outputFileTracingIncludes: {
+    "/admin/web/animations": ["./src/components/admin/animations/heroes/**/*"],
+  },
+
   experimental: {
     /*
      * How long a navigated-to page stays in the client router cache.

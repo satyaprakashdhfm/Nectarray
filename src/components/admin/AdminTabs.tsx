@@ -24,6 +24,7 @@ import {
   Palette,
   PencilRuler,
   Search,
+  Sparkles,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -86,6 +87,7 @@ const GROUPS: Group[] = [
       { href: "/admin/web", label: "Learnings", icon: Lightbulb },
       { href: "/admin/web/colours", label: "Colours", icon: Palette },
       { href: "/admin/web/elements", label: "Elements", icon: Component },
+      { href: "/admin/web/animations", label: "Animations", icon: Sparkles },
       { href: "/admin/web/references", label: "References", icon: Link2 },
     ],
   },

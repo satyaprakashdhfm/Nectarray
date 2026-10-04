@@ -17,7 +17,7 @@ export default async function AdminWebElementsPage({
   const category = current?.id ?? (query ? "all" : UI_CATEGORIES[0].id);
   const needle = query.toLowerCase();
 
-  const components = ALL_COMPONENTS.filter(
+  const matching = ALL_COMPONENTS.filter(
     (c) =>
       (category === "all" || c.category === category) &&
       (!needle ||
@@ -27,7 +27,9 @@ export default async function AdminWebElementsPage({
         UI_CATEGORIES.find((x) => x.id === c.category)!
           .label.toLowerCase()
           .includes(needle)),
-  ).slice(0, 40);
+  );
+  // A cap on frames, not on results: the count says how many were left out.
+  const components = matching.slice(0, 40);
 
   const categories = UI_CATEGORIES.map((c) => ({
     id: c.id,
@@ -47,6 +49,7 @@ export default async function AdminWebElementsPage({
         category={category}
         blurb={current?.blurb ?? null}
         query={query}
+        found={matching.length}
         components={components}
       />
     </>

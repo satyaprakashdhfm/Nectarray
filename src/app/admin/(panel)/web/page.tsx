@@ -18,7 +18,7 @@ export default async function AdminWebPage() {
     <>
       <PageHead
         title="Website building"
-        lede="Lessons from building our own site, and the order to build a new page in. Colours, Elements and References hold the tools."
+        lede="Lessons from building our own site, and the order to build a new page in. Colours, Elements, Animations and References hold the tools."
       />
       <div className="mt-8 grid gap-8 xl:grid-cols-2 xl:gap-10">
         <WebNotesEditor

@@ -84,6 +84,7 @@ export function ElementLibrary({
   category,
   blurb,
   query,
+  found,
   components,
 }: {
   categories: CategoryCount[];
@@ -91,6 +92,8 @@ export function ElementLibrary({
   category: string;
   blurb: string | null;
   query: string;
+  /** How many matched, before the page capped how many it sends. */
+  found: number;
   components: UiComponent[];
 }) {
   const router = useRouter();
@@ -242,8 +245,21 @@ export function ElementLibrary({
 
         <p className="text-ink-soft mt-4 text-[0.875rem]">
           {query
-            ? `${components.length} found for "${query}".`
+            ? found > components.length
+              ? `${found} found for "${query}". Showing the first ${components.length}; add a word to narrow it.`
+              : `${found} found for "${query}".`
             : (blurb ?? `${total} components in all.`)}
+          {category === "heroes" && !query && (
+            <>
+              {" "}
+              <Link
+                href="/admin/web/animations"
+                className="text-brand-deep hover:text-brand font-semibold"
+              >
+                Animated heroes are on the Animations tab →
+              </Link>
+            </>
+          )}
         </p>
 
         {components.length === 0 ? (
