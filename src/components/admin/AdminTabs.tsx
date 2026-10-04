@@ -22,7 +22,6 @@ import {
   Megaphone,
   NotebookPen,
   Palette,
-  PencilRuler,
   Search,
   Sparkles,
   Users,
@@ -37,24 +36,55 @@ const TOP: Tab[] = [
   { href: "/admin/seo", label: "SEO", icon: Search },
   { href: "/admin/analytics", label: "Analytics", icon: ChartLine },
   { href: "/admin/ads", label: "Ads", icon: Megaphone },
+  { href: "/admin/development", label: "All projects", icon: Layers },
 ];
 
-/** Client work, and the academy — each a group that opens and closes. */
+/**
+ * Each service is its own group, holding its projects and the tools and
+ * notes for doing that work: Marketing has the notes on Search Console, GA4,
+ * ads and WhatsApp; Software has the website-building tabs. Then the
+ * academy.
+ */
 const GROUPS: Group[] = [
   {
-    href: "/admin/development",
-    label: "Development",
-    icon: Layers,
-    owns: ["/admin/development", "/admin/services"],
+    href: "/admin/services/marketing",
+    label: "Marketing",
+    icon: Megaphone,
+    owns: ["/admin/services/marketing", "/admin/marketing"],
     children: [
-      { href: "/admin/development", label: "Projects", icon: FolderKanban },
       {
         href: "/admin/services/marketing",
-        label: "Marketing",
-        icon: Megaphone,
+        label: "Projects",
+        icon: FolderKanban,
       },
-      { href: "/admin/services/software", label: "Software", icon: Code },
-      { href: "/admin/services/ai", label: "Agentic AI", icon: Bot },
+      { href: "/admin/marketing/notes", label: "Notes", icon: NotebookPen },
+    ],
+  },
+  {
+    href: "/admin/services/software",
+    label: "Software",
+    icon: Code,
+    owns: ["/admin/services/software", "/admin/web"],
+    children: [
+      {
+        href: "/admin/services/software",
+        label: "Projects",
+        icon: FolderKanban,
+      },
+      { href: "/admin/web", label: "Learnings", icon: Lightbulb },
+      { href: "/admin/web/colours", label: "Colours", icon: Palette },
+      { href: "/admin/web/elements", label: "Elements", icon: Component },
+      { href: "/admin/web/animations", label: "Animations", icon: Sparkles },
+      { href: "/admin/web/references", label: "References", icon: Link2 },
+    ],
+  },
+  {
+    href: "/admin/services/ai",
+    label: "Agentic AI",
+    icon: Bot,
+    owns: ["/admin/services/ai"],
+    children: [
+      { href: "/admin/services/ai", label: "Projects", icon: FolderKanban },
     ],
   },
   {
@@ -78,24 +108,11 @@ const GROUPS: Group[] = [
       { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
     ],
   },
-  {
-    href: "/admin/web",
-    label: "Website",
-    icon: PencilRuler,
-    owns: ["/admin/web"],
-    children: [
-      { href: "/admin/web", label: "Learnings", icon: Lightbulb },
-      { href: "/admin/web/colours", label: "Colours", icon: Palette },
-      { href: "/admin/web/elements", label: "Elements", icon: Component },
-      { href: "/admin/web/animations", label: "Animations", icon: Sparkles },
-      { href: "/admin/web/references", label: "References", icon: Link2 },
-    ],
-  },
 ];
 
 /**
- * The panel's navigation: a sticky sidebar on desktop, where Development
- * and Academy open and close like dropdowns, and horizontal strips on a
+ * The panel's navigation: a sticky sidebar on desktop, where each service
+ * and the Academy open and close like dropdowns, and horizontal strips on a
  * phone, where a sidebar would take half the screen.
  *
  * A client component because the selected tab is worked out from the path
@@ -104,7 +121,7 @@ const GROUPS: Group[] = [
 export function AdminTabs() {
   const pathname = usePathname();
   /*
-   * One group open at a time, like an accordion: opening Development closes
+   * One group open at a time, like an accordion: opening Marketing closes
    * Academy. Until the admin clicks one, the group holding the current page
    * is the open one; null means they closed it.
    */
@@ -113,8 +130,8 @@ export function AdminTabs() {
   const tabActive = (tab: Tab) =>
     tab.href === "/admin"
       ? pathname === "/admin"
-      : // Projects and Learnings own only their own page, not the tabs
-        // beside them.
+      : // All projects and Learnings own only their own page, not the
+        // tabs beside them.
         tab.href === "/admin/development" || tab.href === "/admin/web"
         ? pathname === tab.href
         : pathname.startsWith(tab.href);

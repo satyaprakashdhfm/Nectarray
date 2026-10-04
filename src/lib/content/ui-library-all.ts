@@ -1,6 +1,7 @@
 import "server-only";
 import { UI_COMPONENTS, type UiComponent } from "@/lib/content/ui-library";
 import { HYPERUI_COMPONENTS } from "@/lib/content/ui-library-hyperui";
+import { SECTION_COMPONENTS } from "@/lib/content/ui-library-sections";
 
 /**
  * Every component on the Elements tab: ours first in each category, then
@@ -9,5 +10,6 @@ import { HYPERUI_COMPONENTS } from "@/lib/content/ui-library-hyperui";
  */
 export const ALL_COMPONENTS: UiComponent[] = [
   ...UI_COMPONENTS,
+  ...SECTION_COMPONENTS,
   ...HYPERUI_COMPONENTS,
 ];

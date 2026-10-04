@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Software } from "@/components/sections/Software";
 import { SoftwareHero } from "@/components/software/SoftwareHero";
+import { AppDevelopment } from "@/components/software/AppDevelopment";
 import { Integrations } from "@/components/software/Integrations";
 import { QuoteSection } from "@/components/software/QuoteCta";
 import { StackGrid } from "@/components/software/StackGrid";
@@ -11,9 +12,9 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title:
-    "Software & web development — websites, e-commerce, dashboards and apps",
+    "Software & app development — websites, iOS and Android apps, e-commerce and dashboards",
   description:
-    "Portfolio and business sites, e-commerce in any category, dashboards and internal tools, agentic AI and mobile apps. Integrated with Shiprocket, Petpooja, WhatsApp, Razorpay, Tally and anything else with an API — built by senior engineers for a fraction of agency cost.",
+    "Portfolio and business sites, e-commerce in any category, dashboards and internal tools, agentic AI, and iOS and Android apps. Integrated with Shiprocket, Petpooja, WhatsApp, Razorpay, Tally and anything else with an API — built by senior engineers for a fraction of agency cost.",
   path: "/software",
 });
 
@@ -21,6 +22,7 @@ export const metadata: Metadata = pageMetadata({
  * The practice page, read top to bottom as one argument:
  *
  *   the offer          → what this is, in one screen
+ *   apps               → the build most people ask about, given its own band
  *   what we build      → find your own trade in the list
  *   what it plugs into → the software you already run is on there
  *   what it is built on → and we know your platform down to the service
@@ -42,6 +44,7 @@ export default function SoftwarePage() {
       <Header />
       <main id="main">
         <SoftwareHero />
+        <AppDevelopment />
         <Software />
         <Integrations />
         <StackGrid />

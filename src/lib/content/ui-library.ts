@@ -56,6 +56,12 @@ export const UI_CATEGORIES: UiCategory[] = [
     blurb: "Team members, mentors, trainers and speakers.",
   },
   {
+    id: "sections",
+    label: "Sections",
+    blurb:
+      "Whole page sections: approach panels, timelines, zigzag rows, bento grids and practice areas. The tabs and slides work without any script.",
+  },
+  {
     id: "forms",
     label: "Forms",
     blurb: "Labels above fields, errors under them, one clear button.",

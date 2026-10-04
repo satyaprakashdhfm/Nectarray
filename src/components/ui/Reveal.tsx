@@ -25,8 +25,12 @@ export function Reveal({
   as?: RevealTag;
 }) {
   const { ref, inView } = useInView<HTMLElement>();
-  // widen the tag so the ref type is not the intersection of every variant
-  const Element = Tag as React.ElementType;
+  // widen the tag so the ref type is not the intersection of every variant.
+  // Typed by the props it is given rather than as React.ElementType, which
+  // also spans the three.js elements @react-three/fiber adds to JSX.
+  const Element = Tag as unknown as React.ComponentType<
+    React.HTMLAttributes<HTMLElement> & { ref?: React.Ref<HTMLElement> }
+  >;
 
   return (
     <Element

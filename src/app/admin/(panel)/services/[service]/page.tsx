@@ -16,7 +16,8 @@ import { loadMoney, totals } from "@/lib/business-data";
 export const dynamic = "force-dynamic";
 
 const LEDE: Record<string, string> = {
-  marketing: "Ads, SEO and content work for clients.",
+  marketing:
+    "Ads, SEO and content work for clients. How-to notes for every tool are under Marketing → Notes.",
   software:
     "Websites, web apps, stores and dashboards for clients — including Software + AI jobs.",
   ai: "Chatbots, RAG and agents built for clients — including Software + AI jobs.",

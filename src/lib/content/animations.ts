@@ -32,9 +32,26 @@ export type AnimationEntry = {
   note: string;
   /** The component's file name under animations/heroes/. */
   file: string;
+  /** What to install for it, when it needs more than Motion. */
+  install?: string;
 };
 
+const THREE_STACK =
+  "npm i motion three @react-three/fiber @react-three/postprocessing postprocessing";
+
 export const ANIMATION_CATEGORIES: AnimationCategory[] = [
+  {
+    id: "cinematic",
+    label: "Cinematic 3D",
+    blurb:
+      "Real-time 3D loops that play like a product film: lit scenes, bloom, a slow camera. Built with three.js, so they take your colours and weigh far less than a video.",
+  },
+  {
+    id: "scroll",
+    label: "Scroll stories",
+    blurb:
+      "The scroll is the playhead: text fills, cards fly into phones, a pinned phone changes as features pass. Scroll the page to play them.",
+  },
   {
     id: "saas",
     label: "SaaS and software",
@@ -78,6 +95,59 @@ export const ANIMATION_CATEGORIES: AnimationCategory[] = [
 ];
 
 export const ANIMATIONS: AnimationEntry[] = [
+  {
+    id: "cinematic-voxel-city",
+    category: "cinematic",
+    name: "Voxel city with molten light",
+    note: "A drone pass over a field of dark blocks swelling like a city, glowing blocks pushing up through it and light racing along the seams. Cyber security and infrastructure.",
+    file: "CinematicVoxelCity.tsx",
+    install: THREE_STACK,
+  },
+  {
+    id: "cinematic-shield-core",
+    category: "cinematic",
+    name: "Shield core in a geodesic cage",
+    note: "A metal shield with glowing edges turns inside a wireframe cage, orbited by rings while a scanner sweeps it, in a cloud of particles. Security and compliance.",
+    file: "CinematicShieldCore.tsx",
+    install: THREE_STACK,
+  },
+  {
+    id: "cinematic-data-globe",
+    category: "cinematic",
+    name: "Dotted globe with live routes",
+    note: "A turning dotted globe with routes drawing themselves out from one city and pins pulsing at each end. Payments, logistics and global reach.",
+    file: "CinematicDataGlobe.tsx",
+    install: THREE_STACK,
+  },
+  {
+    id: "cinematic-floating-card",
+    category: "cinematic",
+    name: "Glossy card in a bright sky",
+    note: "A glossy 3D card sways and leans towards the pointer while coins and toy shapes bob around it, over drifting clouds. Consumer fintech and apps.",
+    file: "CinematicFloatingCard.tsx",
+    install: THREE_STACK,
+  },
+  {
+    id: "scroll-word-fill",
+    category: "scroll",
+    name: "Paragraph that fills as you scroll",
+    note: "The text pins in the middle of the screen and fills in word by word with the scroll, key words picked out in colour, clouds drifting behind.",
+    file: "ScrollWordFill.tsx",
+  },
+  {
+    id: "scroll-card-to-phone",
+    category: "scroll",
+    name: "Card flies into a phone",
+    note: "Scrolling scrubs a scene: a huge tilted card straightens and shrinks while a phone rises to catch it, then the line about it fades in.",
+    file: "ScrollCardToPhone.tsx",
+  },
+  {
+    id: "scroll-sticky-features",
+    category: "scroll",
+    name: "Pinned phone, features scrolling past",
+    note: "The phone stays put while features scroll by; its screen changes to match each one and toy shapes spring in around it.",
+    file: "ScrollStickyFeatures.tsx",
+  },
   {
     id: "saas-aurora-dashboard",
     category: "saas",

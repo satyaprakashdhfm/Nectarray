@@ -228,6 +228,19 @@ export const software: {
     stats: { value: string; label: string }[];
   };
   services: SoftwareBuild[];
+  /**
+   * App development, given its own band on /software so it isn't just the
+   * fifth tab of the showcase. Same team and same backend as the website,
+   * which is the point the section makes.
+   */
+  app: {
+    eyebrow: string;
+    title: [string, string];
+    lede: string;
+    ways: { name: string; tools: string; body: string }[];
+    included: string[];
+    cta: Link;
+  };
   integrations: {
     eyebrow: string;
     title: string;
@@ -267,8 +280,8 @@ export const software: {
 
   hero: {
     eyebrow: "Software & Web",
-    headline: ["A website, or the software", "your whole team works in."],
-    lede: "Sites, online stores, dashboards, internal tools and mobile apps — built by senior engineers and wired into the systems you already run. The code and the accounts are in your name from the first day, not ours.",
+    headline: ["A website, an app, or the software", "your whole team works in."],
+    lede: "Sites, online stores, iPhone and Android apps, dashboards and internal tools — built by senior engineers and wired into the systems you already run. The code and the accounts are in your name from the first day, not ours.",
     panel: {
       badge: "What we build on",
       lines: ["Every layer.", "Yours to keep."] as [string, string],
@@ -375,7 +388,7 @@ export const software: {
     },
     {
       icon: "smartphone",
-      title: "Mobile-First & Mobile Apps",
+      title: "Mobile Apps, iOS & Android",
       body: "Designed at 360px and up, because that is where your customers actually are. Installable web apps where a store listing is overhead, and real iOS and Android builds where the camera, GPS or offline use make it the only honest option.",
       domains: [
         "Delivery & live tracking",
@@ -393,6 +406,39 @@ export const software: {
       ],
     },
   ],
+
+  app: {
+    eyebrow: "App development",
+    title: ["Your app on iPhone and Android,", "built by the team behind your site."],
+    lede: "Ordering, booking, delivery tracking, loyalty, field staff on the move. We design it, build it, put it on the App Store and Play Store under your name, and keep it running after launch. The app and the website share one backend, so a price changed in one place changes everywhere.",
+    ways: [
+      {
+        name: "One codebase, both stores",
+        tools: "React Native · Flutter",
+        body: "The usual choice. One app that runs on iPhone and Android, feels native, and costs close to building it once.",
+      },
+      {
+        name: "Fully native",
+        tools: "Swift · Kotlin",
+        body: "When the app lives on the camera, Bluetooth, background GPS or heavy offline work, and every frame matters.",
+      },
+      {
+        name: "Installable web app",
+        tools: "PWA",
+        body: "Adds to the home screen from your website, with no store listing or review. Good for staff tools and a first version.",
+      },
+    ],
+    included: [
+      "Screens designed first, so you see the app before it is coded",
+      "Login with phone OTP, Google or Apple",
+      "Razorpay and UPI payments, push notifications, maps and live tracking",
+      "An admin panel to run it, on the web",
+      "Store listings, screenshots and review handled for you",
+      "Published in your own developer accounts",
+      "Updates for new iOS and Android versions after launch",
+    ],
+    cta: { label: "Talk about your app", href: "/contact#enquiry" },
+  },
 
   integrations: {
     eyebrow: "Integrations",

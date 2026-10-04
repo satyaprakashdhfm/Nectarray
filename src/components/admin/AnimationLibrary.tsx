@@ -127,10 +127,8 @@ export function AnimationLibrary({
           <p className="eyebrow">To use one</p>
           <ol className="text-ink-soft mt-3 list-decimal space-y-2 pl-4 text-[0.8125rem] leading-relaxed">
             <li>
-              Install Motion:{" "}
-              <code className="bg-mist text-ink rounded px-1 font-mono text-[0.75rem]">
-                npm i motion
-              </code>
+              Install what the card lists: Motion for all of them, and three.js
+              as well for Cinematic 3D.
             </li>
             <li>Copy the colours as CSS into the site&rsquo;s stylesheet.</li>
             <li>Copy the component into the project and render it.</li>
@@ -220,6 +218,7 @@ function AnimationCard({
   width: number | null;
 }) {
   const Hero = HEROES[animation.id];
+  const palette = Object.values(vars).join();
   // Bumped to remount the hero, which plays its entrance again.
   const [run, setRun] = useState(0);
   const [showCode, setShowCode] = useState(false);
@@ -236,7 +235,10 @@ function AnimationCard({
   }
 
   return (
-    <article className="card overflow-hidden p-0">
+    // overflow-clip rather than hidden here and on the frame below: hidden
+    // makes a scroll container, which stops the scroll stories' sticky
+    // panels from pinning to the window.
+    <article className="card overflow-clip p-0">
       <div className="border-line flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3">
         <div className="min-w-0 flex-1">
           <h3 className="text-ink text-[0.9375rem] font-semibold">
@@ -245,6 +247,9 @@ function AnimationCard({
           <p className="text-ink-soft max-w-3xl text-[0.8125rem]">
             {animation.note}
           </p>
+          <code className="bg-mist text-ink-soft mt-1.5 inline-block rounded px-1.5 py-0.5 font-mono text-[0.6875rem]">
+            {animation.install ?? "npm i motion"}
+          </code>
         </div>
         <div className="flex flex-wrap gap-1.5">
           <button
@@ -283,11 +288,13 @@ function AnimationCard({
 
       <div className="bg-mist p-2 sm:p-3">
         <div
-          className="mx-auto max-w-full overflow-hidden rounded-md bg-white"
+          className="mx-auto max-w-full overflow-clip rounded-md bg-white"
           style={{ ...vars, width: width ?? "100%" } as React.CSSProperties}
         >
           {Hero ? (
-            <Hero key={run} />
+            // Keyed on the palette too: the 3D heroes read their colours
+            // once, on mount, so a new palette remounts them.
+            <Hero key={`${run}-${palette}`} />
           ) : (
             <p className="text-ink-soft p-6 text-[0.875rem]">
               No component is registered for {animation.id}.
