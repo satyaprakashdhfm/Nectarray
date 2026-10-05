@@ -18,6 +18,7 @@ const SERVICE_HREF: Record<string, string> = {
   software: "/admin/services/software",
   ai: "/admin/services/ai",
   software_ai: "/admin/development",
+  training: "/admin/services/training",
   academy: "/admin/students",
 };
 
@@ -26,6 +27,7 @@ const BAR: Record<string, string> = {
   software: "bg-brand",
   ai: "bg-leaf",
   software_ai: "bg-brand-solid",
+  training: "bg-amber-deep",
   academy: "bg-teal",
 };
 
@@ -98,7 +100,7 @@ export default async function AdminRevenuePage() {
                 >
                   <td className={td}>
                     <Link
-                      href={SERVICE_HREF[r.id]}
+                      href={SERVICE_HREF[r.id] ?? "/admin"}
                       className="text-ink hover:text-brand-deep inline-flex items-center gap-2 font-semibold"
                     >
                       <span className={`size-2 rounded-full ${BAR[r.id]}`} />
