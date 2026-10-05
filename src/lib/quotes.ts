@@ -191,7 +191,7 @@ export const CATALOGUE: CatalogueItem[] = [
     price: 20000,
     billing: "once",
     service: "software",
-    image: "/agentic/domains/reporting.webp",
+    image: "/samples/dash-b.webp",
     includes: [
       "Secure admin sign-in",
       "Edit text, photos, prices, offers and banners yourself",
@@ -353,7 +353,7 @@ export const CATALOGUE: CatalogueItem[] = [
     price: 80000,
     billing: "once",
     service: "software",
-    image: "/services/software.webp",
+    image: "/samples/mobile-b.webp",
     includes: [
       "One app for Android and iPhone",
       "Same sign-in, products and features as the website",
@@ -459,6 +459,24 @@ export function catalogueFor(line: Pick<QuoteLine, "ref" | "name">) {
   }
   const name = line.name.trim().toLowerCase();
   return CATALOGUE.find((c) => c.name.toLowerCase() === name);
+}
+
+/**
+ * The admin's standard row behind a quote row (from the Standard prices
+ * page): by its ref, or else by its name.
+ */
+export function standardFor(
+  line: Pick<QuoteLine, "ref" | "name">,
+  standards: QuoteLine[],
+) {
+  if (line.ref) {
+    const hit = standards.find((s) => s.ref === line.ref);
+    if (hit) return hit;
+  }
+  const name = line.name.trim().toLowerCase();
+  return name
+    ? standards.find((s) => s.name.trim().toLowerCase() === name)
+    : undefined;
 }
 
 export function defaultLines(): QuoteLine[] {

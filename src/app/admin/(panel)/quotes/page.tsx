@@ -11,6 +11,7 @@ import {
   primaryButton,
 } from "@/components/admin/Business";
 import { QuoteStatusPill } from "@/components/admin/QuoteBuilder";
+import { QuotesNav } from "@/components/admin/QuotesNav";
 import { createQuote } from "@/app/admin/(panel)/quote-actions";
 import { num, rupees } from "@/lib/business";
 import { getQuoteDefaults } from "@/lib/quotes-data";
@@ -63,6 +64,8 @@ export default async function AdminQuotesPage() {
         lede="Price a client's project row by row, tick what they want, and turn it into a document to print or save as PDF. An accepted quote becomes a project on the Marketing or Software tab."
       />
 
+      <QuotesNav current="/admin/quotes" />
+
       <div className="mt-6 grid gap-8 xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start">
         <form action={createQuote} className="card space-y-3 p-4 sm:p-5">
           <h2 className="text-ink text-[1.0625rem] font-semibold">
@@ -98,8 +101,8 @@ export default async function AdminQuotesPage() {
           </button>
           <p className="text-ink-faint text-[0.75rem]">
             {defaults.customised
-              ? "Starts with your saved rows and prices."
-              : "Starts with the standard rows. Save your own prices from any quote."}
+              ? "Starts with your standard prices."
+              : "Starts with the built-in standard prices. Change them under Standard prices."}
           </p>
         </form>
 

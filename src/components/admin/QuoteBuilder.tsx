@@ -19,7 +19,6 @@ import {
   addQuoteProjects,
   deleteQuote,
   saveQuote,
-  saveQuoteDefaults,
 } from "@/app/admin/(panel)/quote-actions";
 import {
   StatusPill,
@@ -40,6 +39,7 @@ import {
   QUOTE_STATUSES,
   STANDARD_TERMS,
   catalogueFor,
+  standardFor,
   discountOf,
   lineTotal,
   newId,
@@ -55,6 +55,7 @@ import {
   type QuoteService,
 } from "@/lib/quotes";
 import { quoteHtml, type QuoteDocData } from "@/lib/quote-html";
+import { QuoteIcon } from "@/components/admin/quote-icons";
 import { cn } from "@/lib/utils";
 
 type QuoteRecord = {
@@ -110,9 +111,12 @@ export function QuoteStatusPill({ status }: { status: string }) {
 export function QuoteBuilder({
   quote,
   projects,
+  standards,
 }: {
   quote: QuoteRecord;
   projects: LinkedProject[];
+  /** The Standard prices list: what a row costs when it is ticked. */
+  standards: QuoteLine[];
 }) {
   const [meta, setMeta] = useState<Meta>(() => ({
     title: quote.title,
@@ -159,6 +163,7 @@ export function QuoteBuilder({
     setBody((b) => ({ ...b, doc: { ...b.doc, ...patch } }));
 
   const ops: LineOps = {
+    standard: (line) => standardFor(line, standards),
     update: (id, patch) =>
       setLines((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l))),
     remove: (id) => setLines((ls) => ls.filter((l) => l.id !== id)),
@@ -204,19 +209,6 @@ export function QuoteBuilder({
         ls.map((l) => (l.groupId === groupId ? { ...l, groupName: name } : l)),
       ),
   };
-
-  const missingPrices = body.lines.filter(
-    (l) => l.price === 0 && catalogueFor(l),
-  ).length;
-  const fillPrices = () =>
-    setLines((ls) =>
-      ls.map((l) => {
-        const item = l.price === 0 ? catalogueFor(l) : undefined;
-        return item
-          ? { ...l, price: item.price, billing: item.billing, ref: item.ref }
-          : l;
-      }),
-    );
 
   const docData: QuoteDocData = useMemo(
     () => ({ number: quote.number, ...meta, body }),
@@ -310,21 +302,6 @@ export function QuoteBuilder({
       {tab === "prices" ? (
         <div className="mt-6 space-y-6">
           <ClientCard meta={meta} set={setMetaField} />
-          {missingPrices > 0 && (
-            <div className="border-line bg-amber-wash flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
-              <p className="text-ink-soft text-[0.8125rem]">
-                {missingPrices} {missingPrices === 1 ? "row has" : "rows have"}{" "}
-                no price yet.
-              </p>
-              <button
-                type="button"
-                onClick={fillPrices}
-                className={cn(quietButton, "py-2")}
-              >
-                Fill our standard prices
-              </button>
-            </div>
-          )}
           {QUOTE_SECTIONS.map((section) => (
             <SectionBlock
               key={section.id}
@@ -345,7 +322,6 @@ export function QuoteBuilder({
               dirty={dirty}
               projects={projects}
             />
-            <DefaultsCard body={body} />
           </div>
           <form
             action={deleteQuote}
@@ -442,6 +418,7 @@ function ClientCard({
 // Rows -----------------------------------------------------------------------
 
 type LineOps = {
+  standard: (line: QuoteLine) => QuoteLine | undefined;
   update: (id: string, patch: Partial<QuoteLine>) => void;
   remove: (id: string) => void;
   move: (id: string, dir: 1 | -1) => void;
@@ -617,6 +594,7 @@ function LineRow({
   const id = `line-${line.id}`;
   const set = (patch: Partial<QuoteLine>) => ops.update(line.id, patch);
   const item = catalogueFor(line);
+  const std = ops.standard(line);
   const total = lineTotal(line);
   const off = discountOf(line.price, line.discount);
   const monthly = line.billing === "monthly";
@@ -637,7 +615,13 @@ function LineRow({
           id={id}
           type="checkbox"
           checked={line.on}
-          onChange={(e) => set({ on: e.target.checked })}
+          onChange={(e) => {
+            const on = e.target.checked;
+            // Ticking an unpriced row brings in its standard price.
+            if (on && line.price === 0 && std) {
+              set({ on, price: std.price, billing: std.billing });
+            } else set({ on });
+          }}
           aria-label={`Include ${line.name || "this row"}`}
           className="accent-brand-solid size-[1.15rem] shrink-0 cursor-pointer"
         />
@@ -647,7 +631,16 @@ function LineRow({
           aria-expanded={open}
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
         >
-          <Thumb src={item?.image} name={line.name} />
+          <span
+            className={cn(
+              "grid size-9 shrink-0 place-items-center rounded-lg transition-colors",
+              line.on
+                ? "bg-brand-solid text-cta-fg"
+                : "bg-brand-wash text-brand-deep",
+            )}
+          >
+            <QuoteIcon refId={item?.ref ?? line.ref} className="size-4" />
+          </span>
           <span className="min-w-0">
             <span
               className={cn(
@@ -670,12 +663,20 @@ function LineRow({
           </span>
         </button>
         <div className="w-[6.75rem] shrink-0 sm:w-32">
-          <MoneyInput
-            value={line.price}
-            onChange={(price) => set({ price })}
-            ariaLabel={`Price of ${line.name || "this row"}`}
-            suffix={monthly ? "/mo" : undefined}
-          />
+          {line.on ? (
+            <MoneyInput
+              value={line.price}
+              onChange={(price) => set({ price })}
+              ariaLabel={`Price of ${line.name || "this row"}`}
+              suffix={monthly ? "/mo" : undefined}
+            />
+          ) : (
+            <span className="text-ink-faint block px-2.5 text-right text-[0.8125rem] tabular-nums">
+              {line.price || std?.price
+                ? `${rupees.format(line.price || std!.price)}${monthly ? "/mo" : ""}`
+                : ""}
+            </span>
+          )}
         </div>
         <div className="hidden w-28 shrink-0 text-right sm:block">
           {line.on ? (
@@ -713,7 +714,7 @@ function LineRow({
               width={680}
               height={383}
               sizes="(min-width: 1024px) 17rem, 100vw"
-              className="ring-line aspect-video w-full rounded-lg object-cover ring-1"
+              className="ring-line aspect-video w-full rounded-lg object-cover object-top ring-1"
             />
           )}
           <div className="grid min-w-0 gap-3">
@@ -796,15 +797,15 @@ function LineRow({
             )}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <p className="text-ink-faint text-[0.75rem]">
-                {item ? (
+                {std ? (
                   <>
-                    Standard price {rupees.format(item.price)}
-                    {item.billing === "monthly" && " a month"}
-                    {item.price !== line.price && (
+                    Standard price {rupees.format(std.price)}
+                    {std.billing === "monthly" && " a month"}
+                    {std.price !== line.price && (
                       <button
                         type="button"
                         onClick={() =>
-                          set({ price: item.price, billing: item.billing })
+                          set({ price: std.price, billing: std.billing })
                         }
                         className="text-brand-deep hover:text-ink ml-2 font-semibold"
                       >
@@ -813,7 +814,7 @@ function LineRow({
                     )}
                   </>
                 ) : (
-                  "Your own row"
+                  "Not on the standard price list"
                 )}
               </p>
               <div className="flex items-center">
@@ -844,27 +845,6 @@ function LineRow({
         </div>
       )}
     </div>
-  );
-}
-
-/** The row's picture, or its first letter when it has none. */
-function Thumb({ src, name }: { src?: string; name: string }) {
-  if (src) {
-    return (
-      <Image
-        src={src}
-        alt=""
-        width={80}
-        height={80}
-        sizes="2.5rem"
-        className="ring-line size-10 shrink-0 rounded-md object-cover ring-1"
-      />
-    );
-  }
-  return (
-    <span className="bg-mist text-ink-soft ring-line grid size-10 shrink-0 place-items-center rounded-md text-[0.875rem] font-bold ring-1">
-      {(name.trim()[0] ?? "+").toUpperCase()}
-    </span>
   );
 }
 
@@ -901,7 +881,7 @@ function IconButton({
 }
 
 /** Rupees, typed as plain digits, shown with commas once you leave it. */
-function MoneyInput({
+export function MoneyInput({
   value,
   onChange,
   ariaLabel,
@@ -1230,48 +1210,6 @@ function ProjectsCard({
           ))}
         </ul>
       )}
-    </section>
-  );
-}
-
-function DefaultsCard({ body }: { body: QuoteBody }) {
-  const [pending, start] = useTransition();
-  const [done, setDone] = useState(false);
-  return (
-    <section className="card p-4 sm:p-5">
-      <h2 className="text-ink text-[1.0625rem] font-semibold">Starting rows</h2>
-      <p className="text-ink-faint mt-0.5 text-[0.75rem]">
-        Make these rows, prices, ticks and notes what every new quote starts
-        with. Quotes already made do not change.
-      </p>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => {
-          if (
-            !window.confirm(
-              "New quotes will start with these rows and prices. Go ahead?",
-            )
-          )
-            return;
-          setDone(false);
-          start(async () => {
-            await saveQuoteDefaults(body);
-            setDone(true);
-          });
-        }}
-        className={cn(
-          quietButton,
-          "mt-3 inline-flex w-full items-center justify-center gap-1.5 py-2",
-        )}
-      >
-        {done && <Check className="size-3.5" aria-hidden />}
-        {pending
-          ? "Saving"
-          : done
-            ? "Saved for new quotes"
-            : "Use for new quotes"}
-      </button>
     </section>
   );
 }

@@ -123,11 +123,35 @@ export async function deleteQuote(form: FormData) {
   redirect("/admin/quotes");
 }
 
-/** This quote's rows, prices and wording become what new quotes start with. */
-export async function saveQuoteDefaults(input: unknown) {
+const slug = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/**
+ * The Standard prices page: the rows every new quote starts with, and the
+ * price a row takes when it is ticked. The quote wording is kept as it is.
+ */
+export async function saveStandardPrices(input: unknown) {
   await requireAdmin();
-  const body = cleanBody(input);
-  body.doc.understanding = "";
+  const { body: base } = await getQuoteDefaults();
+  const { lines } = cleanBody({ lines: input });
+  const used = new Set<string>();
+  for (const line of lines) {
+    if (!line.name.trim()) throw new Error("Every row needs a name.");
+    let ref = line.ref || `custom-${slug(line.name) || "row"}`;
+    while (used.has(ref)) ref += "-2";
+    used.add(ref);
+    line.ref = ref;
+    line.groupId = line.groupName ? `g-${slug(line.groupName)}` : null;
+    line.discount = { mode: "none", value: 0 };
+  }
+  const body = {
+    ...base,
+    lines,
+    doc: { ...base.doc, understanding: "" },
+  };
   await db
     .insert(quoteDefaults)
     .values({ id: "default", body })
@@ -135,7 +159,14 @@ export async function saveQuoteDefaults(input: unknown) {
       target: quoteDefaults.id,
       set: { body, updatedAt: new Date() },
     });
-  revalidatePath("/admin/quotes");
+  revalidatePath("/admin/quotes", "layout");
+}
+
+/** Back to the built-in list and prices. */
+export async function resetStandardPrices() {
+  await requireAdmin();
+  await db.delete(quoteDefaults).where(eq(quoteDefaults.id, "default"));
+  revalidatePath("/admin/quotes", "layout");
 }
 
 export type ProjectFromQuote = {
