@@ -7,10 +7,28 @@ import { PROJECT_SERVICES } from "@/lib/business";
  */
 
 export type QuoteService = (typeof PROJECT_SERVICES)[number]["id"];
-export type Billing = "once" | "monthly";
+export type Billing = "once" | "monthly" | "yearly";
+/** A standard price for each way an item can be billed. */
+export type Rates = Partial<Record<Billing, number>>;
+
+export const BILLINGS: {
+  id: Billing;
+  label: string;
+  /** After a price on a row: /mo, /yr. */
+  short: string;
+  /** After a total: a month, a year. */
+  per: string;
+}[] = [
+  { id: "once", label: "One-time", short: "", per: "" },
+  { id: "monthly", label: "Monthly", short: "/mo", per: "a month" },
+  { id: "yearly", label: "Yearly", short: "/yr", per: "a year" },
+];
+
+export const billingOf = (id: Billing) =>
+  BILLINGS.find((b) => b.id === id) ?? BILLINGS[0];
 export type DiscountMode = "none" | "percent" | "amount";
 export type Discount = { mode: DiscountMode; value: number };
-export type QuoteSection = "build" | "marketing" | "maintenance";
+export type QuoteSection = "build" | "marketing" | "maintenance" | "handover";
 
 export type QuoteLine = {
   id: string;
@@ -28,6 +46,8 @@ export type QuoteLine = {
   discount: Discount;
   /** The standard item this row came from, for its picture and details. */
   ref?: string | null;
+  /** On the Standard prices list only: the price for each billing. */
+  rates?: Rates;
 };
 
 export type QuoteDoc = {
@@ -66,12 +86,17 @@ export const QUOTE_SECTIONS: {
   {
     id: "marketing",
     label: "Marketing",
-    lede: "Search, blogs and ads, usually monthly.",
+    lede: "Search, blogs and ads: a one-time set-up, or run for you every month.",
   },
   {
     id: "maintenance",
     label: "Maintenance",
-    lede: "Keeping everything running after launch, monthly.",
+    lede: "Keeping everything running after launch, monthly or yearly.",
+  },
+  {
+    id: "handover",
+    label: "Knowledge transfer",
+    lede: "Handing over the code and teaching your team to run it.",
   },
 ];
 
@@ -103,12 +128,16 @@ export function quoteTotals(body: QuoteBody) {
   const overall = discountOf(onceSubtotal, body.discount);
   const onceTotal = onceSubtotal - overall;
   const monthlyTotal = monthly.reduce((n, l) => n + lineTotal(l), 0);
+  const yearlyTotal = on
+    .filter((l) => l.billing === "yearly")
+    .reduce((n, l) => n + lineTotal(l), 0);
   return {
     onceList,
     onceSubtotal,
     overall,
     onceTotal,
     monthlyTotal,
+    yearlyTotal,
     /** Everything taken off the one-time list price. */
     onceSaved: onceList - onceTotal,
     count: on.length,
@@ -118,23 +147,27 @@ export function quoteTotals(body: QuoteBody) {
 /**
  * What each service is worth in this quote, for adding it to that service's
  * tab: one-time rows after their own discount, less a fair share of the
- * overall discount, and the monthly rows on their own.
+ * overall discount, and the monthly and yearly rows on their own.
  */
 export function totalsByService(body: QuoteBody) {
   const t = quoteTotals(body);
   const share = t.onceSubtotal > 0 ? t.onceTotal / t.onceSubtotal : 1;
-  const out = new Map<QuoteService, { once: number; monthly: number }>();
+  const out = new Map<
+    QuoteService,
+    { once: number; monthly: number; yearly: number }
+  >();
   for (const line of body.lines) {
     if (!line.on) continue;
-    const row = out.get(line.service) ?? { once: 0, monthly: 0 };
+    const row = out.get(line.service) ?? { once: 0, monthly: 0, yearly: 0 };
     if (line.billing === "once") row.once += lineTotal(line) * share;
-    else row.monthly += lineTotal(line);
+    else row[line.billing] += lineTotal(line);
     out.set(line.service, row);
   }
   return [...out].map(([service, v]) => ({
     service,
     once: Math.round(v.once),
     monthly: Math.round(v.monthly),
+    yearly: Math.round(v.yearly),
   }));
 }
 
@@ -145,8 +178,9 @@ export type CatalogueItem = {
   section: QuoteSection;
   name: string;
   description: string;
-  /** Our standard price, in rupees: one-time, or a month for monthly rows. */
-  price: number;
+  /** Our standard prices, in rupees: one-time, a month, a year. */
+  rates: Rates;
+  /** How it is billed when first ticked. */
   billing: Billing;
   service: QuoteService;
   /** Rows offered as options under one heading. */
@@ -169,7 +203,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Basic website",
     description:
       "A static website of 5 to 7 pages: home, about, services, gallery and contact. Works on phones and laptops.",
-    price: 15000,
+    rates: { once: 15000 },
     billing: "once",
     service: "software",
     image: "/services/software.webp",
@@ -188,7 +222,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Admin portal",
     description:
       "An admin panel to change the website's text, images, prices and offers without a developer.",
-    price: 20000,
+    rates: { once: 20000 },
     billing: "once",
     service: "software",
     image: "/samples/dash-b.webp",
@@ -207,7 +241,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Articles uploaded by the admin",
     description:
       "The admin writes or uploads an article and it shows on the website straight away.",
-    price: 8000,
+    rates: { once: 8000 },
     billing: "once",
     service: "software",
     image: "/marketing/text-articles.webp",
@@ -225,7 +259,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "AI-written articles",
     description:
       "AI drafts articles on your topics. You edit them and publish them to the website.",
-    price: 15000,
+    rates: { once: 15000 },
     billing: "once",
     service: "ai",
     image: "/marketing/text-articles.webp",
@@ -244,7 +278,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Client login",
     description:
       "Customers sign in to see their orders, bookings or documents.",
-    price: 15000,
+    rates: { once: 15000 },
     billing: "once",
     service: "software",
     image: "/agentic/domains/support.webp",
@@ -262,7 +296,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Employee login",
     description:
       "Staff sign in to their own dashboard, with only the pages they need.",
-    price: 15000,
+    rates: { once: 15000 },
     billing: "once",
     service: "software",
     image: "/agentic/domains/people.webp",
@@ -279,7 +313,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Social media integration",
     description:
       "Instagram, Facebook, LinkedIn and YouTube linked to the site, with share buttons on pages.",
-    price: 5000,
+    rates: { once: 5000 },
     billing: "once",
     service: "marketing",
     image: "/marketing/instagram-search.webp",
@@ -296,7 +330,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Notifications",
     description:
       "Automatic email, WhatsApp and SMS messages for enquiries, orders and reminders. Message charges from the providers are extra.",
-    price: 12000,
+    rates: { once: 12000 },
     billing: "once",
     service: "software",
     image: "/agentic/agents.webp",
@@ -314,7 +348,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Analytics dashboard",
     description:
       "How many people visit the website, where they come from, which pages they read and how many enquire.",
-    price: 10000,
+    rates: { once: 10000 },
     billing: "once",
     service: "marketing",
     image: "/marketing/measure-dashboard.webp",
@@ -332,7 +366,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Delivery integration",
     description:
       "Book deliveries through partners such as Rapido and Porter from the admin panel, with live status.",
-    price: 25000,
+    rates: { once: 25000 },
     billing: "once",
     service: "software",
     image: "/agentic/domains/operations.webp",
@@ -350,7 +384,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Mobile app",
     description:
       "Android and iPhone app with the same features as the website, published on the Play Store and App Store.",
-    price: 80000,
+    rates: { once: 80000 },
     billing: "once",
     service: "software",
     image: "/samples/mobile-b.webp",
@@ -367,17 +401,17 @@ export const CATALOGUE: CatalogueItem[] = [
     section: "marketing",
     name: "SEO and blog writing",
     description:
-      "Keyword research, page fixes and new blog articles every month to move the website up in Google search.",
-    price: 10000,
+      "One-time: a full SEO set-up of the website. Monthly: keyword research, page fixes and new blog articles every month to move the website up in Google search.",
+    rates: { once: 12000, monthly: 10000, yearly: 100000 },
     billing: "monthly",
     service: "marketing",
     image: "/marketing/ads-google-seo.webp",
     includes: [
-      "Keyword research for your area and services",
-      "4 blog articles a month",
-      "Page speed and on-page fixes",
-      "Google Business Profile updates",
-      "Monthly report of rankings and visitors",
+      "One-time: titles, descriptions, sitemap, Search Console and Google Business Profile set up",
+      "Monthly: keyword research for your area and services",
+      "Monthly: 4 blog articles",
+      "Monthly: page speed and on-page fixes",
+      "Monthly: report of rankings and visitors",
     ],
   },
   {
@@ -385,16 +419,17 @@ export const CATALOGUE: CatalogueItem[] = [
     section: "marketing",
     name: "Meta ads",
     description:
-      "Facebook and Instagram ads: set-up, creatives and weekly tuning. Ad spend is paid separately.",
-    price: 8000,
+      "We set up your Meta Business account, Facebook page and ad account, and run the ads. Your team or a content creator gives us the photos and videos; we turn them into ads. Ad spend is paid separately.",
+    rates: { once: 6000, monthly: 8000, yearly: 80000 },
     billing: "monthly",
     service: "marketing",
     image: "/marketing/ads-meta.webp",
     includes: [
-      "Campaign set-up and audience targeting",
-      "4 ad creatives a month",
+      "One-time: Meta Business account, Facebook page, Instagram link, ad account and pixel set up, with the first campaign",
+      "Monthly: we run the ads, choose the audience and tune them every week",
+      "Content (photos, videos, offers) comes from your team or a content creator",
       "Leads sent to WhatsApp or the website",
-      "Weekly tuning and a monthly report",
+      "Monthly report of spend, leads and cost per lead",
       "Ad spend is paid to Meta directly",
     ],
   },
@@ -403,15 +438,15 @@ export const CATALOGUE: CatalogueItem[] = [
     section: "marketing",
     name: "Google ads",
     description:
-      "Search and display ads: set-up, keywords and weekly tuning. Ad spend is paid separately.",
-    price: 8000,
+      "We set up your Google Ads account with search and display campaigns, and run them. Someone on your side answers the calls and enquiries they bring. Ad spend is paid separately.",
+    rates: { once: 6000, monthly: 8000, yearly: 80000 },
     billing: "monthly",
     service: "marketing",
     image: "/marketing/ads-google.webp",
     includes: [
-      "Search campaign with your keywords",
-      "Call and enquiry tracking",
-      "Weekly tuning of keywords and bids",
+      "One-time: Google Ads account, conversion tracking, keywords and the first campaign",
+      "Monthly: we run the campaigns and tune keywords and bids every week",
+      "Someone on your side answers the calls and enquiries",
       "Monthly report of cost per enquiry",
       "Ad spend is paid to Google directly",
     ],
@@ -421,16 +456,17 @@ export const CATALOGUE: CatalogueItem[] = [
     section: "maintenance",
     name: "Maintenance",
     description:
-      "Hosting checks, security updates, backups, bug fixes and small changes across all the services above.",
-    price: 3000,
+      "Looking after every service in use: cloud hosting, APIs, email and the like. The cost depends on the services taken.",
+    rates: { monthly: 3000, yearly: 30000 },
     billing: "monthly",
     service: "software",
     image: "/hero/software-hero.jpg",
     includes: [
-      "Uptime checks and security updates",
-      "Weekly backups",
-      "Bug fixes",
-      "Up to 2 hours of small changes a month",
+      "Cloud hosting and database kept running and backed up",
+      "APIs and integrations checked and kept working",
+      "Business email and notifications kept working",
+      "Security updates and bug fixes",
+      "The price depends on the services taken; cloud and provider bills are separate",
     ],
   },
   {
@@ -439,7 +475,7 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Dedicated support person",
     description:
       "One named person for day-to-day updates, content uploads and questions.",
-    price: 15000,
+    rates: { monthly: 15000, yearly: 150000 },
     billing: "monthly",
     service: "software",
     image: "/agentic/domains/support.webp",
@@ -447,6 +483,57 @@ export const CATALOGUE: CatalogueItem[] = [
       "One named person on WhatsApp and phone",
       "Uploads content, photos and offers for you",
       "Replies within working hours, Monday to Saturday",
+    ],
+  },
+  {
+    ref: "code-handover",
+    section: "handover",
+    name: "Complete code handover",
+    description:
+      "The full source code, database and accounts handed over to you, with the documentation to run it.",
+    rates: { once: 10000 },
+    billing: "once",
+    service: "software",
+    image: "/hero/software-hero.jpg",
+    includes: [
+      "Full source code in your own GitHub account",
+      "Database, hosting, domain and email accounts moved into your name",
+      "Every password and API key handed over safely",
+      "Written guide to run, update and deploy the project",
+    ],
+  },
+  {
+    ref: "kt-sessions",
+    section: "handover",
+    name: "KT sessions",
+    description:
+      "Knowledge transfer sessions where we walk your team through the code, the admin portal and how to run everything.",
+    rates: { once: 9000 },
+    billing: "once",
+    service: "software",
+    image: "/agentic/domains/people.webp",
+    includes: [
+      "3 live sessions of about 2 hours each, recorded for later",
+      "How the code is organised and how to make changes",
+      "How to use the admin portal day to day",
+      "How to deploy, back up and fix common problems",
+    ],
+  },
+  {
+    ref: "academy-training",
+    section: "handover",
+    name: "Team training at NectArray Academy",
+    description:
+      "Our academy teaches your team the skills to run and grow the project themselves: the tools, data, marketing and AI behind it.",
+    rates: { once: 15000 },
+    billing: "once",
+    service: "software",
+    image: "/services/academy.webp",
+    includes: [
+      "Hands-on classes for your team at NectArray Academy",
+      "The tools behind your project: web, data, marketing or AI",
+      "Practice on your own project",
+      "Questions answered during the course",
     ],
   },
 ];
@@ -496,18 +583,52 @@ export function defaultLines(): QuoteLine[] {
       name: c.name,
       service: c.service,
       description: c.description,
-      price: c.price,
+      price: c.rates[c.billing] ?? 0,
       billing: c.billing,
       discount: { mode: "none", value: 0 },
       ref: c.ref,
+      rates: { ...c.rates },
     };
   });
+}
+
+/**
+ * The standard price for a billing: the item's own rate for it, or its
+ * single price when the list has only that one.
+ */
+export function rateFor(
+  std: Pick<QuoteLine, "rates" | "billing" | "price"> | undefined,
+  billing: Billing,
+) {
+  if (!std) return undefined;
+  const rate = std.rates?.[billing];
+  if (rate) return rate;
+  return !std.rates && std.billing === billing && std.price
+    ? std.price
+    : undefined;
+}
+
+/**
+ * A saved Standard prices list, brought up to date with the built-in one:
+ * prices for billings it has none for, and sections added since it was
+ * saved. Nothing the admin set is overwritten.
+ */
+export function withCatalogue(lines: QuoteLine[]): QuoteLine[] {
+  const out = lines.map((l) => {
+    const item = CATALOGUE.find((c) => c.ref === l.ref);
+    const own: Rates = l.rates ?? (l.price ? { [l.billing]: l.price } : {});
+    const rates = { ...(item?.rates ?? {}), ...own };
+    return { ...l, rates, price: rates[l.billing] ?? l.price };
+  });
+  const sections = new Set(out.map((l) => l.section));
+  const missing = defaultLines().filter((l) => !sections.has(l.section));
+  return [...out, ...missing];
 }
 
 export const STANDARD_TERMS = [
   "Prices are based on our first conversation and may change with the final requirements.",
   "Prices are in Indian rupees.",
-  "Monthly maintenance charges start from the day the project goes live.",
+  "Monthly and yearly maintenance charges start from the day the project goes live.",
   "Third-party costs such as ad spend, domain, hosting, SMS and WhatsApp message charges are paid separately.",
   "Payment terms will be agreed before work starts.",
 ].join("\n");
@@ -575,6 +696,16 @@ function cleanDiscount(v: unknown): Discount {
   return { mode, value: mode === "percent" ? Math.min(value, 100) : value };
 }
 
+function cleanRates(v: unknown): Rates {
+  const r = (v ?? {}) as Record<string, unknown>;
+  const out: Rates = {};
+  for (const b of BILLINGS) {
+    const n = money(r[b.id]);
+    if (n > 0) out[b.id] = n;
+  }
+  return out;
+}
+
 /** Anything the builder sends, made into a body that is safe to store. */
 export function cleanBody(input: unknown): QuoteBody {
   const b = (input ?? {}) as Partial<QuoteBody>;
@@ -599,9 +730,13 @@ export function cleanBody(input: unknown): QuoteBody {
           : "software",
         description: str(l.description, 2000),
         price: money(l.price),
-        billing: l.billing === "monthly" ? "monthly" : "once",
+        billing:
+          l.billing === "monthly" || l.billing === "yearly"
+            ? l.billing
+            : "once",
         discount: cleanDiscount(l.discount),
         ref: l.ref ? str(l.ref, 40) : null,
+        ...(l.rates ? { rates: cleanRates(l.rates) } : {}),
       };
     });
   const doc = (b.doc ?? {}) as Partial<QuoteDoc>;

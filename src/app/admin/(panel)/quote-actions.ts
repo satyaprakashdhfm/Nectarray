@@ -174,6 +174,7 @@ export type ProjectFromQuote = {
   title: string;
   once: number;
   monthly: number;
+  yearly?: number;
 };
 
 /**
@@ -202,9 +203,11 @@ export async function addQuoteProjects(
     }
     const once = Math.max(0, Math.round(Number(e.once) || 0));
     const monthly = Math.max(0, Math.round(Number(e.monthly) || 0));
+    const yearly = Math.max(0, Math.round(Number(e.yearly) || 0));
     const note = [
       `From quotation ${quote.number}.`,
       monthly ? `Monthly charges: ${rupees.format(monthly)} a month.` : "",
+      yearly ? `Yearly charges: ${rupees.format(yearly)} a year.` : "",
     ]
       .filter(Boolean)
       .join(" ");

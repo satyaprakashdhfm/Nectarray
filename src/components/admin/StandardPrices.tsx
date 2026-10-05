@@ -11,7 +11,9 @@ import { MoneyInput } from "@/components/admin/QuoteBuilder";
 import { QuoteIcon } from "@/components/admin/quote-icons";
 import { rupees } from "@/lib/business";
 import {
+  BILLINGS,
   QUOTE_SECTIONS,
+  type Billing,
   newId,
   type QuoteLine,
   type QuoteSection,
@@ -62,6 +64,7 @@ export function StandardPrices({
         billing: section === "build" ? "once" : "monthly",
         discount: { mode: "none", value: 0 },
         ref: null,
+        rates: {},
       },
     ]);
 
@@ -108,16 +111,28 @@ export function StandardPrices({
               <p className="text-ink-faint text-[0.75rem]">{section.lede}</p>
             </header>
 
-            <div className="text-ink-faint hidden gap-3 px-5 pt-3 text-[0.6875rem] font-semibold md:flex">
-              <span className="w-[17.25rem] shrink-0 pl-12">Item</span>
+            <div className="text-ink-faint hidden gap-3 px-5 pt-3 text-[0.6875rem] font-semibold lg:flex">
+              <span className="w-[15rem] shrink-0 pl-12">Item</span>
               <span className="flex-1">Short description</span>
-              <span className="w-32 shrink-0">Price</span>
-              <span className="w-32 shrink-0">Billed</span>
+              {BILLINGS.map((b) => (
+                <span key={b.id} className="w-[6.5rem] shrink-0">
+                  {b.label}
+                </span>
+              ))}
+              <span className="w-[6.5rem] shrink-0">Starts as</span>
               <span className="w-8 shrink-0" />
             </div>
 
-            <ul className="divide-line divide-y md:divide-y-0">
+            <ul className="divide-line divide-y lg:divide-y-0">
               {rows.map((line) => {
+                const setRate = (billing: Billing, n: number) => {
+                  const rates = { ...line.rates, [billing]: n || undefined };
+                  update(line.id, {
+                    rates,
+                    price:
+                      billing === line.billing ? n : (rates[line.billing] ?? 0),
+                  });
+                };
                 const remove = () =>
                   setLines((ls) => ls.filter((l) => l.id !== line.id));
                 const del = (className: string) => (
@@ -137,9 +152,9 @@ export function StandardPrices({
                 return (
                   <li
                     key={line.id}
-                    className="flex flex-col gap-2 px-4 py-3 sm:px-5 md:flex-row md:items-center md:gap-3 md:py-2"
+                    className="flex flex-col gap-2 px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:gap-3 lg:py-2"
                   >
-                    <div className="flex items-center gap-3 md:w-[17.25rem] md:shrink-0">
+                    <div className="flex items-center gap-3 lg:w-[15rem] lg:shrink-0">
                       <span className="bg-brand-wash text-brand-deep grid size-9 shrink-0 place-items-center rounded-lg">
                         <QuoteIcon refId={line.ref} className="size-4" />
                       </span>
@@ -152,7 +167,7 @@ export function StandardPrices({
                         aria-label="Item name"
                         className={cn(field, "py-2 font-semibold")}
                       />
-                      {del("grid md:hidden")}
+                      {del("grid lg:hidden")}
                     </div>
                     <input
                       value={line.description}
@@ -161,31 +176,45 @@ export function StandardPrices({
                       }
                       placeholder="One line on what it is"
                       aria-label={`Description of ${line.name || "this row"}`}
-                      className={cn(field, "py-2 md:flex-1")}
+                      className={cn(field, "py-2 lg:flex-1")}
                     />
-                    <div className="grid grid-cols-2 gap-2 md:flex md:gap-3">
-                      <div className="md:w-32">
-                        <MoneyInput
-                          value={line.price}
-                          onChange={(price) => update(line.id, { price })}
-                          ariaLabel={`Price of ${line.name || "this row"}`}
-                        />
-                      </div>
-                      <select
-                        value={line.billing}
-                        onChange={(e) =>
-                          update(line.id, {
-                            billing: e.target.value as QuoteLine["billing"],
-                          })
-                        }
-                        aria-label="Billed"
-                        className={cn(field, "py-2 md:w-32")}
-                      >
-                        <option value="once">One-time</option>
-                        <option value="monthly">Monthly</option>
-                      </select>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:gap-3">
+                      {BILLINGS.map((b) => (
+                        <label key={b.id} className="block lg:w-[6.5rem]">
+                          <span className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold lg:sr-only">
+                            {b.label}
+                          </span>
+                          <MoneyInput
+                            value={line.rates?.[b.id] ?? 0}
+                            onChange={(n) => setRate(b.id, n)}
+                            ariaLabel={`${b.label} price of ${line.name || "this row"}`}
+                          />
+                        </label>
+                      ))}
+                      <label className="block lg:w-[6.5rem]">
+                        <span className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold lg:sr-only">
+                          Starts as
+                        </span>
+                        <select
+                          value={line.billing}
+                          onChange={(e) => {
+                            const billing = e.target.value as Billing;
+                            update(line.id, {
+                              billing,
+                              price: line.rates?.[billing] ?? 0,
+                            });
+                          }}
+                          className={cn(field, "py-2")}
+                        >
+                          {BILLINGS.map((b) => (
+                            <option key={b.id} value={b.id}>
+                              {b.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
-                    {del("hidden md:grid")}
+                    {del("hidden lg:grid")}
                   </li>
                 );
               })}
@@ -208,11 +237,7 @@ export function StandardPrices({
       <div className="border-line bg-surface/95 sticky bottom-3 z-20 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur">
         <p className="text-ink-soft text-[0.8125rem]">
           {lines.length} items ·{" "}
-          {rupees.format(
-            lines
-              .filter((l) => l.billing === "once")
-              .reduce((n, l) => n + l.price, 0),
-          )}{" "}
+          {rupees.format(lines.reduce((n, l) => n + (l.rates?.once ?? 0), 0))}{" "}
           if every one-time item is bought
         </p>
         {error && (

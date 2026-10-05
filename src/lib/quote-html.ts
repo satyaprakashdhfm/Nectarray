@@ -4,6 +4,7 @@ import {
   discountOf,
   lineTotal,
   quoteTotals,
+  type Billing,
   type QuoteBody,
   type QuoteLine,
 } from "@/lib/quotes";
@@ -101,8 +102,8 @@ export function quoteHtml(q: QuoteDocData, opts: { logo?: string } = {}) {
 
   const cell = (s: string, extra = "") =>
     `<td style="padding:8px 10px;border-bottom:1px solid ${LINE};vertical-align:top;${extra}">${s}</td>`;
-  const money = (n: number, monthly: boolean) =>
-    `${inr.format(n)}${monthly ? `<span style="color:${FAINT};font-size:9pt"> /month</span>` : ""}`;
+  const money = (n: number, billing: Billing) =>
+    `${inr.format(n)}${billing === "once" ? "" : `<span style="color:${FAINT};font-size:9pt"> /${billing === "monthly" ? "month" : "year"}</span>`}`;
 
   const tableRows = QUOTE_SECTIONS.map((section) => {
     const rows = sectionRows(body.lines, section.id);
@@ -117,7 +118,6 @@ export function quoteHtml(q: QuoteDocData, opts: { logo?: string } = {}) {
             return `<tr><td colspan="${span}" style="padding:8px 10px 2px;font-weight:700;color:${INK}">${esc(r.name)}</td></tr>`;
           }
           const l = r.line;
-          const monthly = l.billing === "monthly";
           const off = discountOf(l.price, l.discount);
           const what = `<div style="font-weight:600;color:${INK}">${esc(l.name || "Untitled")}</div>${
             l.description
@@ -128,7 +128,7 @@ export function quoteHtml(q: QuoteDocData, opts: { logo?: string } = {}) {
           return `<tr>${cell(what, indent)}${
             anyDiscount
               ? cell(
-                  money(l.price, monthly),
+                  money(l.price, l.billing),
                   "text-align:right;white-space:nowrap",
                 ) +
                 cell(
@@ -138,7 +138,7 @@ export function quoteHtml(q: QuoteDocData, opts: { logo?: string } = {}) {
                   `text-align:right;white-space:nowrap;color:${SOFT}`,
                 )
               : ""
-          }${cell(money(lineTotal(l), monthly), `text-align:right;white-space:nowrap;font-weight:600;color:${INK}`)}</tr>`;
+          }${cell(money(lineTotal(l), l.billing), `text-align:right;white-space:nowrap;font-weight:600;color:${INK}`)}</tr>`;
         })
         .join("")
     );
@@ -161,6 +161,9 @@ export function quoteHtml(q: QuoteDocData, opts: { logo?: string } = {}) {
           `${inr.format(t.monthlyTotal)} a month`,
           true,
         )
+      : "",
+    t.yearlyTotal
+      ? totalRow("Yearly charges", `${inr.format(t.yearlyTotal)} a year`, true)
       : "",
   ].join("");
 

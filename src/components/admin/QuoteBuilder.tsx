@@ -37,6 +37,10 @@ import {
   DISCOUNT_PERCENTS,
   QUOTE_SECTIONS,
   QUOTE_STATUSES,
+  BILLINGS,
+  billingOf,
+  rateFor,
+  type Billing,
   STANDARD_TERMS,
   catalogueFor,
   standardFor,
@@ -441,9 +445,12 @@ function SectionBlock({
   const once = ticked
     .filter((l) => l.billing === "once")
     .reduce((n, l) => n + lineTotal(l), 0);
-  const monthly = ticked
-    .filter((l) => l.billing === "monthly")
-    .reduce((n, l) => n + lineTotal(l), 0);
+  const recurring = BILLINGS.filter((b) => b.id !== "once").map((b) => ({
+    ...b,
+    total: ticked
+      .filter((l) => l.billing === b.id)
+      .reduce((n, l) => n + lineTotal(l), 0),
+  }));
 
   const items: React.ReactNode[] = [];
   let group: string | null = null;
@@ -498,15 +505,17 @@ function SectionBlock({
               </span>
             </>
           )}
-          {monthly > 0 && (
-            <>
-              {" · "}
-              <span className="text-ink font-semibold">
-                {rupees.format(monthly)}
+          {recurring
+            .filter((r) => r.total > 0)
+            .map((r) => (
+              <span key={r.id}>
+                {" · "}
+                <span className="text-ink font-semibold">
+                  {rupees.format(r.total)}
+                </span>
+                {r.short}
               </span>
-              /month
-            </>
-          )}
+            ))}
         </p>
       </header>
       {items.length > 0 ? (
@@ -597,7 +606,11 @@ function LineRow({
   const std = ops.standard(line);
   const total = lineTotal(line);
   const off = discountOf(line.price, line.discount);
-  const monthly = line.billing === "monthly";
+  const bill = billingOf(line.billing);
+  const stdPrice = rateFor(std, line.billing);
+  /** Switching billing brings in the standard price for it, if there is one. */
+  const setBilling = (billing: Billing) =>
+    set({ billing, price: rateFor(std, billing) ?? line.price });
   const discountText =
     line.discount.mode === "percent"
       ? `${line.discount.value}% off`
@@ -618,8 +631,8 @@ function LineRow({
           onChange={(e) => {
             const on = e.target.checked;
             // Ticking an unpriced row brings in its standard price.
-            if (on && line.price === 0 && std) {
-              set({ on, price: std.price, billing: std.billing });
+            if (on && line.price === 0 && stdPrice) {
+              set({ on, price: stdPrice });
             } else set({ on });
           }}
           aria-label={`Include ${line.name || "this row"}`}
@@ -651,7 +664,7 @@ function LineRow({
               {line.name || "Untitled row"}
             </span>
             <span className="text-ink-faint block truncate text-[0.75rem]">
-              {monthly ? "Monthly" : "One-time"}
+              {bill.label}
               {off > 0 && ` · ${discountText}`}
               {off > 0 && (
                 <span className="sm:hidden">
@@ -668,12 +681,12 @@ function LineRow({
               value={line.price}
               onChange={(price) => set({ price })}
               ariaLabel={`Price of ${line.name || "this row"}`}
-              suffix={monthly ? "/mo" : undefined}
+              suffix={bill.short || undefined}
             />
           ) : (
             <span className="text-ink-faint block px-2.5 text-right text-[0.8125rem] tabular-nums">
-              {line.price || std?.price
-                ? `${rupees.format(line.price || std!.price)}${monthly ? "/mo" : ""}`
+              {line.price || stdPrice
+                ? `${rupees.format(line.price || stdPrice!)}${bill.short}`
                 : ""}
             </span>
           )}
@@ -758,13 +771,17 @@ function LineRow({
                 <span className={label}>Billed</span>
                 <select
                   value={line.billing}
-                  onChange={(e) =>
-                    set({ billing: e.target.value as QuoteLine["billing"] })
-                  }
+                  onChange={(e) => setBilling(e.target.value as Billing)}
                   className={cn(field, "py-2")}
                 >
-                  <option value="once">One-time</option>
-                  <option value="monthly">Monthly</option>
+                  {BILLINGS.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.label}
+                      {rateFor(std, b.id)
+                        ? ` (${rupees.format(rateFor(std, b.id)!)})`
+                        : ""}
+                    </option>
+                  ))}
                 </select>
               </label>
               <div className="col-span-2 min-w-0 sm:col-span-1">
@@ -797,22 +814,22 @@ function LineRow({
             )}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <p className="text-ink-faint text-[0.75rem]">
-                {std ? (
+                {stdPrice ? (
                   <>
-                    Standard price {rupees.format(std.price)}
-                    {std.billing === "monthly" && " a month"}
-                    {std.price !== line.price && (
+                    Standard price {rupees.format(stdPrice)}
+                    {bill.per && ` ${bill.per}`}
+                    {stdPrice !== line.price && (
                       <button
                         type="button"
-                        onClick={() =>
-                          set({ price: std.price, billing: std.billing })
-                        }
+                        onClick={() => set({ price: stdPrice })}
                         className="text-brand-deep hover:text-ink ml-2 font-semibold"
                       >
                         Use it
                       </button>
                     )}
                   </>
+                ) : std ? (
+                  `No standard ${bill.label.toLowerCase()} price`
                 ) : (
                   "Not on the standard price list"
                 )}
@@ -1045,6 +1062,19 @@ function TotalsBar({
               </span>
             </p>
           </div>
+          {t.yearlyTotal > 0 && (
+            <div className="text-right">
+              <p className="text-ink-faint text-[0.6875rem] font-semibold">
+                Yearly
+              </p>
+              <p className="display text-ink text-[1.25rem] leading-tight tabular-nums sm:text-[1.5rem]">
+                {rupees.format(t.yearlyTotal)}
+                <span className="text-ink-faint text-[0.75rem] font-normal">
+                  /yr
+                </span>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1085,6 +1115,7 @@ function ProjectsCard({
             title: titles[r.service] ?? fallback,
             once: r.once,
             monthly: r.monthly,
+            yearly: r.yearly,
           })),
         );
         setMessage(
@@ -1132,6 +1163,7 @@ function ProjectsCard({
                   <span className="text-ink-soft ml-auto text-right text-[0.75rem] tabular-nums">
                     {rupees.format(r.once)}
                     {r.monthly > 0 && ` + ${rupees.format(r.monthly)}/mo`}
+                    {r.yearly > 0 && ` + ${rupees.format(r.yearly)}/yr`}
                   </span>
                 </label>
                 <input
