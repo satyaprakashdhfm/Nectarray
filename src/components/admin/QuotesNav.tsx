@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { FileText, IndianRupee, LayoutTemplate, Receipt } from "lucide-react";
+import { FileText, IndianRupee, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/admin/quotes", label: "Quotes", icon: FileText },
   { href: "/admin/quotes/prices", label: "Standard prices", icon: IndianRupee },
   { href: "/admin/quotes/costs", label: "Third-party costs", icon: Receipt },
-  { href: "/admin/quotes/template", label: "Template", icon: LayoutTemplate },
 ];
 
 /** Quotes and the standard price list, side by side. */

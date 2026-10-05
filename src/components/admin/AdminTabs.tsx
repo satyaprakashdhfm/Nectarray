@@ -100,6 +100,7 @@ const GROUPS: Group[] = [
       "/admin/unlocking",
       "/admin/placement",
       "/admin/enquiries",
+      "/admin/services/training",
     ],
     children: [
       { href: "/admin/students", label: "Students", icon: Users },
@@ -108,6 +109,11 @@ const GROUPS: Group[] = [
       { href: "/admin/unlocking", label: "Unlocking", icon: LockOpen },
       { href: "/admin/placement", label: "Placement", icon: Briefcase },
       { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
+      {
+        href: "/admin/services/training",
+        label: "Client training",
+        icon: FolderKanban,
+      },
     ],
   },
 ];

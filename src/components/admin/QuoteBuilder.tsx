@@ -46,8 +46,6 @@ import {
   lineTotal,
   newId,
   quoteTotals,
-  serviceTab,
-  totalsByService,
   understandingFromLines,
   type Discount,
   type QuoteBody,
@@ -1088,6 +1086,18 @@ function TotalsBar({
   );
 }
 
+/** Where a quote can become a project: one of these, picked by the admin. */
+const PROJECT_TABS = [
+  { id: "marketing", label: "Marketing" },
+  { id: "software", label: "Software" },
+  { id: "ai", label: "Agentic AI" },
+  { id: "training", label: "Academy" },
+] as const;
+
+/**
+ * The quote as one project on the tab the admin picks, valued at the quote's
+ * one-time total, with the monthly and yearly charges in its note.
+ */
 function ProjectsCard({
   quoteId,
   body,
@@ -1101,35 +1111,31 @@ function ProjectsCard({
   dirty: boolean;
   projects: LinkedProject[];
 }) {
-  const rows = totalsByService(body);
-  const [skip, setSkip] = useState<Record<string, boolean>>({});
-  const [titles, setTitles] = useState<Record<string, string>>({});
+  const t = quoteTotals(body);
+  const [service, setService] = useState<string>("software");
+  const [title, setTitle] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("proposal");
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const picked = rows.filter((r) => !skip[r.service]);
-  const fallback = meta.title || meta.company;
+  const name = title ?? (meta.title || meta.company);
 
   function add() {
     setMessage(null);
     start(async () => {
       try {
-        await addQuoteProjects(
-          quoteId,
-          status,
-          picked.map((r) => ({
-            service: r.service,
-            title: titles[r.service] ?? fallback,
-            once: r.once,
-            monthly: r.monthly,
-            yearly: r.yearly,
-          })),
-        );
-        setMessage(
-          `Added ${picked.length} ${picked.length === 1 ? "project" : "projects"}.`,
-        );
+        await addQuoteProjects(quoteId, status, [
+          {
+            service,
+            title: name,
+            once: t.onceTotal,
+            monthly: t.monthlyTotal,
+            yearly: t.yearlyTotal,
+          },
+        ]);
+        const tab = PROJECT_TABS.find((p) => p.id === service)?.label;
+        setMessage(`Added to the ${tab} tab.`);
       } catch (e) {
-        setMessage(e instanceof Error ? e.message : "Could not add them.");
+        setMessage(e instanceof Error ? e.message : "Could not add it.");
       }
     });
   }
@@ -1137,88 +1143,92 @@ function ProjectsCard({
   return (
     <section className="card p-4 sm:p-5">
       <h2 className="text-ink text-[1.0625rem] font-semibold">
-        Add to the service tabs
+        Add as a project
       </h2>
       <p className="text-ink-faint mt-0.5 text-[0.75rem]">
-        One project per service on its tab: Marketing, Software or Agentic AI.
+        Pick the tab it belongs on. Its value is this quote&apos;s one-time
+        total; monthly and yearly charges go in its note.
       </p>
 
-      {rows.length === 0 ? (
-        <p className="text-ink-soft mt-3 text-[0.8125rem]">
+      <div
+        role="radiogroup"
+        aria-label="Tab"
+        className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"
+      >
+        {PROJECT_TABS.map((p) => (
+          <label
+            key={p.id}
+            className={cn(
+              "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-[0.8125rem] font-semibold transition-colors",
+              service === p.id
+                ? "border-brand bg-brand-wash text-brand-deep"
+                : "border-line text-ink-soft hover:border-ink-faint",
+            )}
+          >
+            <input
+              type="radio"
+              name={`tab-${quoteId}`}
+              value={p.id}
+              checked={service === p.id}
+              onChange={() => setService(p.id)}
+              className="accent-brand-solid"
+            />
+            {p.label}
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
+        <label className="block min-w-0">
+          <span className={label}>Project name</span>
+          <input
+            value={name}
+            onChange={(e) => setTitle(e.target.value)}
+            className={cn(field, "py-2")}
+          />
+        </label>
+        <label className="block">
+          <span className={label}>Status</span>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className={cn(field, "py-2")}
+          >
+            {PROJECT_STATUSES.filter((s) =>
+              ["lead", "proposal", "active"].includes(s.id),
+            ).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-ink-soft text-[0.8125rem] tabular-nums">
+          {rupees.format(t.onceTotal)} one-time
+          {t.monthlyTotal > 0 && ` + ${rupees.format(t.monthlyTotal)}/mo`}
+          {t.yearlyTotal > 0 && ` + ${rupees.format(t.yearlyTotal)}/yr`}
+        </p>
+        <button
+          type="button"
+          onClick={add}
+          disabled={dirty || pending || t.count === 0}
+          className={cn(primaryButton, "px-4 py-2 disabled:opacity-50")}
+        >
+          {pending ? "Adding" : "Add as project"}
+        </button>
+      </div>
+      {dirty && (
+        <p className="text-amber-deep mt-2 text-[0.75rem]">
+          Save the quote first.
+        </p>
+      )}
+      {!dirty && t.count === 0 && (
+        <p className="text-ink-faint mt-2 text-[0.75rem]">
           Tick some rows first.
         </p>
-      ) : (
-        <>
-          <ul className="mt-3 space-y-3">
-            {rows.map((r) => (
-              <li
-                key={r.service}
-                className="border-line rounded-lg border p-2.5"
-              >
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={!skip[r.service]}
-                    onChange={(e) =>
-                      setSkip((s) => ({ ...s, [r.service]: !e.target.checked }))
-                    }
-                    className="accent-brand-solid size-4"
-                  />
-                  <span className="text-ink text-[0.8125rem] font-semibold">
-                    {serviceLabel(r.service)}
-                  </span>
-                  <span className="text-ink-soft ml-auto text-right text-[0.75rem] tabular-nums">
-                    {rupees.format(r.once)}
-                    {r.monthly > 0 && ` + ${rupees.format(r.monthly)}/mo`}
-                    {r.yearly > 0 && ` + ${rupees.format(r.yearly)}/yr`}
-                  </span>
-                </label>
-                <input
-                  value={titles[r.service] ?? fallback}
-                  onChange={(e) =>
-                    setTitles((t) => ({ ...t, [r.service]: e.target.value }))
-                  }
-                  aria-label={`Project name on the ${serviceLabel(r.service)} tab`}
-                  className={cn(field, "mt-2")}
-                />
-              </li>
-            ))}
-          </ul>
-          <div className="mt-3 flex items-center gap-2">
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              aria-label="Project status"
-              className={cn(field, "w-auto py-2")}
-            >
-              {PROJECT_STATUSES.filter((s) =>
-                ["lead", "proposal", "active"].includes(s.id),
-              ).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={add}
-              disabled={dirty || pending || picked.length === 0}
-              className={cn(primaryButton, "flex-1 py-2 disabled:opacity-50")}
-            >
-              {pending ? "Adding" : "Add as projects"}
-            </button>
-          </div>
-          {dirty && (
-            <p className="text-amber-deep mt-2 text-[0.75rem]">
-              Save the quote first.
-            </p>
-          )}
-          {projects.length > 0 && !message && (
-            <p className="text-ink-faint mt-2 text-[0.75rem]">
-              Adding again makes new projects next to the ones below.
-            </p>
-          )}
-        </>
       )}
       {message && (
         <p className="text-ink-soft mt-2 text-[0.75rem]" role="status">
@@ -1231,7 +1241,7 @@ function ProjectsCard({
           {projects.map((p) => (
             <li key={p.id}>
               <Link
-                href={`/admin/services/${serviceTab(p.service)}`}
+                href={`/admin/projects/${p.id}`}
                 className="hover:bg-mist -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1 transition-colors"
               >
                 <span className="min-w-0 flex-1">
@@ -1239,7 +1249,7 @@ function ProjectsCard({
                     {p.title}
                   </span>
                   <span className="text-ink-faint block text-[0.6875rem]">
-                    {serviceLabel(p.service)} tab
+                    {serviceLabel(p.service)}
                     {p.value ? ` · ${rupees.format(num(p.value))}` : ""}
                   </span>
                 </span>
@@ -1404,7 +1414,7 @@ function DocumentPane({
               }
               className="text-brand-deep hover:text-ink mt-1.5 text-[0.75rem] font-semibold"
             >
-              Use the template wording
+              Use the standard wording
             </button>
           </div>
           <label className="block">

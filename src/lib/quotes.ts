@@ -528,7 +528,7 @@ export const CATALOGUE: CatalogueItem[] = [
       "Our academy teaches your team the skills to run and grow the project themselves: the tools, data, marketing and AI behind it.",
     rates: { once: 15000 },
     billing: "once",
-    service: "software",
+    service: "training",
     image: "/services/academy.webp",
     includes: [
       "Hands-on classes for your team at NectArray Academy",
@@ -565,6 +565,76 @@ export function standardFor(
   return name
     ? standards.find((s) => s.name.trim().toLowerCase() === name)
     : undefined;
+}
+
+/**
+ * A quote brought up to date with the Standard prices list, each time it
+ * is opened.
+ *
+ * Unticked rows take the list's name, description, section, service and
+ * price, so a change saved there shows on every quote. Ticked rows are what
+ * the client was quoted and keep their own words and price. Items added to
+ * the list since appear unticked; items deleted from it go, unless ticked.
+ * Rows typed into the quote by hand (not on the list) are left alone.
+ */
+export function syncWithStandards(
+  body: QuoteBody,
+  standards: QuoteLine[],
+): QuoteBody {
+  const used = new Set<QuoteLine>();
+  const lines: QuoteLine[] = [];
+  for (const l of body.lines) {
+    const std = standardFor(l, standards);
+    if (!std) {
+      // Gone from the list: drop it unless it is in the quote.
+      if (!l.on && l.ref && !l.ref.startsWith("custom-") && catalogueFor(l))
+        continue;
+      if (!l.on && l.ref?.startsWith("custom-")) continue;
+      lines.push(l);
+      continue;
+    }
+    used.add(std);
+    if (l.on) {
+      lines.push({ ...l, ref: std.ref });
+      continue;
+    }
+    lines.push({
+      ...l,
+      ref: std.ref,
+      name: std.name,
+      description: std.description,
+      section: std.section,
+      service: std.service,
+      groupName: std.groupName,
+      groupId: std.groupName ? l.groupId : null,
+      price: rateFor(std, l.billing) ?? rateFor(std, std.billing) ?? std.price,
+      billing: rateFor(std, l.billing) ? l.billing : std.billing,
+    });
+  }
+
+  // New on the list: put each after its group or at the end of its section.
+  for (const std of standards) {
+    if (used.has(std)) continue;
+    const group = std.groupName
+      ? lines.find(
+          (l) => l.section === std.section && l.groupName === std.groupName,
+        )
+      : undefined;
+    const row: QuoteLine = {
+      ...std,
+      id: newId(),
+      on: false,
+      groupId: std.groupName ? (group?.groupId ?? newId()) : null,
+      discount: { mode: "none", value: 0 },
+      rates: undefined,
+    };
+    const after = group
+      ? lines.findLastIndex((l) => l.groupId === group.groupId)
+      : lines.findLastIndex((l) => l.section === std.section);
+    if (after === -1) lines.push(row);
+    else lines.splice(after + 1, 0, row);
+  }
+  return { ...body, lines };
 }
 
 export function defaultLines(): QuoteLine[] {
@@ -756,4 +826,6 @@ export function cleanBody(input: unknown): QuoteBody {
 
 /** Which development tab a service's projects show on. */
 export const serviceTab = (service: string) =>
-  service === "marketing" ? "marketing" : service === "ai" ? "ai" : "software";
+  service === "marketing" || service === "ai" || service === "training"
+    ? service
+    : "software";

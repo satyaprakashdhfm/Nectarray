@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { db } from "@/lib/db";
 import { clientProjects, quotations } from "@/lib/db/schema";
 import { QuoteBuilder } from "@/components/admin/QuoteBuilder";
-import { cleanBody } from "@/lib/quotes";
+import { cleanBody, syncWithStandards } from "@/lib/quotes";
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export default async function AdminQuotePage({
           email: quote.email ?? "",
           status: quote.status,
           quoteDate: quote.quoteDate,
-          body: cleanBody(quote.body),
+          body: syncWithStandards(cleanBody(quote.body), standard.lines),
         }}
         projects={projects}
         standards={standard.lines}

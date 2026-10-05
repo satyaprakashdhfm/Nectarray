@@ -79,7 +79,7 @@ export function StandardPrices({
       try {
         await saveStandardPrices(lines);
         setSaved(snapshot);
-        setNote("Saved. New quotes and newly ticked rows use these prices.");
+        setNote("Saved. Every quotation shows these now.");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not save.");
       }
@@ -270,7 +270,7 @@ export function StandardPrices({
             disabled={!dirty || pending}
             className={cn(primaryButton, "px-4 py-2 disabled:opacity-50")}
           >
-            {pending ? "Saving" : dirty ? "Save prices" : "Saved"}
+            {pending ? "Saving" : dirty ? "Save changes" : "Saved"}
           </button>
         </div>
       </div>

@@ -25,6 +25,8 @@ export const PROJECT_SERVICES = [
   { id: "software", label: "Software" },
   { id: "ai", label: "Agentic AI" },
   { id: "software_ai", label: "Software + AI" },
+  /** Training a client's team at the academy. Not student fees. */
+  { id: "training", label: "Academy training" },
 ] as const;
 
 /** Which recorded services each development tab shows. */
@@ -32,6 +34,7 @@ export const TAB_SERVICES: Record<string, string[]> = {
   marketing: ["marketing"],
   software: ["software", "software_ai"],
   ai: ["ai", "software_ai"],
+  training: ["training"],
 };
 
 /** The lines revenue is split into: every project service, then the academy. */

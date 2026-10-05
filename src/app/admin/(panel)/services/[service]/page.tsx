@@ -16,6 +16,8 @@ import { loadMoney, totals } from "@/lib/business-data";
 export const dynamic = "force-dynamic";
 
 const LEDE: Record<string, string> = {
+  training:
+    "Teaching a client's team at the academy: courses, KT sessions and handover training.",
   marketing:
     "Ads, SEO and content work for clients. How-to notes for every tool are under Marketing → Notes.",
   software:
@@ -35,7 +37,11 @@ export default async function ServicePage({
 }) {
   const { service: id } = await params;
   const recorded = TAB_SERVICES[id];
-  const service = SERVICES.find((s) => s.id === id);
+  const service =
+    SERVICES.find((s) => s.id === id) ??
+    (id === "training"
+      ? { id: "training", label: "Academy training", path: "/academy" }
+      : undefined);
   if (!recorded || !service) notFound();
 
   const money = await loadMoney();
