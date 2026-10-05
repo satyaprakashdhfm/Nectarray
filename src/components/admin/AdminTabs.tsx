@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Code,
   Component,
+  FileText,
   FolderKanban,
   GraduationCap,
   Inbox,
@@ -37,6 +38,7 @@ const TOP: Tab[] = [
   { href: "/admin/analytics", label: "Analytics", icon: ChartLine },
   { href: "/admin/ads", label: "Ads", icon: Megaphone },
   { href: "/admin/development", label: "All projects", icon: Layers },
+  { href: "/admin/quotes", label: "Quotations", icon: FileText },
 ];
 
 /**

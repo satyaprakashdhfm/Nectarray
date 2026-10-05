@@ -527,6 +527,43 @@ export const webNotes = pgTable("web_notes", {
 });
 
 // ---------------------------------------------------------------------------
+//  Quotations (admin only)
+// ---------------------------------------------------------------------------
+
+/**
+ * A price quote for a prospective client. The rows, discounts and the
+ * document's wording live in `body` (see src/lib/quotes.ts); the totals are
+ * copied out so the list can show them without opening every body.
+ */
+export const quotations = pgTable("quotations", {
+  id: uuid().primaryKey().defaultRandom(),
+  /** NA-Q-2026-001 */
+  number: text().notNull(),
+  title: text().notNull().default(""),
+  company: text().notNull(),
+  contactName: text("contact_name"),
+  phone: text(),
+  email: text(),
+  /** draft | sent | accepted | declined */
+  status: text().notNull().default("draft"),
+  quoteDate: date("quote_date").notNull().defaultNow(),
+  body: jsonb().notNull(),
+  onceTotal: numeric("once_total").notNull().default("0"),
+  monthlyTotal: numeric("monthly_total").notNull().default("0"),
+  /** client_projects rows made from this quote. */
+  projectIds: jsonb("project_ids").$type<string[]>().notNull().default([]),
+  createdAt: now(),
+  updatedAt: now(),
+});
+
+/** The rows and wording a new quote starts with. One row, id "default". */
+export const quoteDefaults = pgTable("quote_defaults", {
+  id: text().primaryKey(),
+  body: jsonb().notNull(),
+  updatedAt: now(),
+});
+
+// ---------------------------------------------------------------------------
 //  Enquiries
 // ---------------------------------------------------------------------------
 
