@@ -19,7 +19,10 @@ export type QuoteLabels = {
   preparedFor: string;
   project: string;
   services: string;
+  summary: string;
+  scope: string;
   understanding: string;
+  nextSteps: string;
   notes: string;
   signOurs: string;
   signClient: string;
@@ -37,8 +40,11 @@ export const LABEL_FIELDS: { key: keyof QuoteLabels; what: string }[] = [
   { key: "title", what: "Big title at the top right" },
   { key: "preparedFor", what: "Above the client's name" },
   { key: "project", what: "Before the project name" },
+  { key: "summary", what: "Above the investment summary" },
   { key: "services", what: "Above the table of services" },
+  { key: "scope", what: "Above what each service includes" },
   { key: "understanding", what: "Above the meeting notes" },
+  { key: "nextSteps", what: "Above the next steps" },
   { key: "notes", what: "Above the notes and terms" },
   { key: "signOurs", what: "Our signature line" },
   { key: "signClient", what: "Client's signature line, before their name" },
@@ -48,8 +54,11 @@ export const DEFAULT_LABELS: QuoteLabels = {
   title: "Quotation",
   preparedFor: "Prepared for",
   project: "Project",
-  services: "Services requested",
+  services: "Services and pricing",
+  summary: "Investment at a glance",
+  scope: "Scope of work",
   understanding: "Our understanding of the requirements",
+  nextSteps: "Next steps",
   notes: "Terms and notes",
   signOurs: "For NectArray",
   signClient: "Accepted for",

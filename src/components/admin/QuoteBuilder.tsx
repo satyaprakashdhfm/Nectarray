@@ -43,6 +43,7 @@ import {
   type Billing,
   catalogueFor,
   standardFor,
+  scopeFor,
   discountOf,
   lineTotal,
   newId,
@@ -221,8 +222,18 @@ export function QuoteBuilder({
   };
 
   const docData: QuoteDocData = useMemo(
-    () => ({ number: quote.number, ...meta, body }),
-    [quote.number, meta, body],
+    () => ({
+      number: quote.number,
+      ...meta,
+      body,
+      // What each ticked item includes, from Standard prices.
+      scope: Object.fromEntries(
+        body.lines
+          .filter((l) => l.on)
+          .map((l) => [l.id, scopeFor(l, standards)]),
+      ),
+    }),
+    [quote.number, meta, body, standards],
   );
 
   return (
@@ -1293,13 +1304,14 @@ function ProjectsCard({
 
 // Document -------------------------------------------------------------------
 
-type TextKey = "intro" | "understanding" | "terms" | "closing";
+type TextKey = "intro" | "understanding" | "terms" | "nextSteps" | "closing";
 
 /** Which wording field each clickable part of the printed page opens. */
 const PICK: Record<string, string> = {
   intro: "intro",
   understanding: "understanding",
   terms: "terms",
+  nextSteps: "nextSteps",
   closing: "closing",
   signatures: "signer",
 };
@@ -1378,7 +1390,7 @@ function DocumentPane({
   function standard() {
     if (
       !window.confirm(
-        "Replace the opening, terms, closing and signature with the standard wording?",
+        "Replace the opening, terms, next steps, questions paragraph and signature with the template wording?",
       )
     )
       return;
@@ -1386,6 +1398,7 @@ function DocumentPane({
     setDoc({
       intro: t.intro,
       terms: t.terms,
+      nextSteps: t.nextSteps,
       closing: t.closing,
       signer: t.signer,
       signerRole: t.signerRole,
@@ -1456,7 +1469,7 @@ function DocumentPane({
               onClick={standard}
               className="text-brand-deep hover:text-ink text-[0.75rem] font-semibold"
             >
-              Use the standard wording
+              Use the template wording
             </button>
           </div>
           {box(
@@ -1497,11 +1510,20 @@ function DocumentPane({
             ),
           )}
           {box(
+            "nextSteps",
+            area(
+              "nextSteps",
+              "Next steps",
+              "What happens after the client reads it. One step a line.",
+              4,
+            ),
+          )}
+          {box(
             "closing",
             area(
               "closing",
-              "Closing paragraph",
-              "Who to contact with questions. Followed by “Warm regards”.",
+              "Questions paragraph",
+              "Shown in the contact box with our email and phone.",
               3,
             ),
           )}

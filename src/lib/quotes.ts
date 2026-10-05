@@ -51,6 +51,8 @@ export type QuoteLine = {
   rates?: Rates;
   /** Ticked on a new row: add it to Standard prices when the quote is saved. */
   toStandard?: boolean;
+  /** On the Standard prices list: what the client gets, for the scope of work. */
+  includes?: string[];
 };
 
 export type QuoteDoc = {
@@ -58,6 +60,8 @@ export type QuoteDoc = {
   /** What was agreed in the first meeting, one point a line. */
   understanding: string;
   terms: string;
+  /** What happens after the client reads it, one step a line. */
+  nextSteps: string;
   /** The last paragraph: who to contact with questions. */
   closing: string;
   /** Who signs for us, and their role. */
@@ -68,18 +72,37 @@ export type QuoteDoc = {
 };
 
 export type DocShow = {
+  summary: boolean;
   descriptions: boolean;
+  scope: boolean;
   understanding: boolean;
+  nextSteps: boolean;
   terms: boolean;
   signatures: boolean;
 };
 
 export const DOC_SHOW_FIELDS: { key: keyof DocShow; label: string }[] = [
+  { key: "summary", label: "Investment summary" },
   { key: "descriptions", label: "Item descriptions" },
+  { key: "scope", label: "Scope of work" },
   { key: "understanding", label: "Our understanding" },
+  { key: "nextSteps", label: "Next steps" },
   { key: "terms", label: "Terms and notes" },
-  { key: "signatures", label: "Signature lines" },
+  { key: "signatures", label: "Acceptance" },
 ];
+
+/**
+ * What the client gets for a row, for the Scope of work: the Standard
+ * prices item's list, else the built-in one, else nothing.
+ */
+export function scopeFor(
+  line: Pick<QuoteLine, "ref" | "name">,
+  standards: QuoteLine[],
+): string[] {
+  const std = standardFor(line, standards);
+  if (std?.includes?.length) return std.includes;
+  return catalogueFor(line)?.includes ?? [];
+}
 
 export type QuoteBody = {
   lines: QuoteLine[];
@@ -650,6 +673,7 @@ export function syncWithStandards(
       groupId: std.groupName ? (group?.groupId ?? newId()) : null,
       discount: { mode: "none", value: 0 },
       rates: undefined,
+      includes: undefined,
     };
     const after = group
       ? lines.findLastIndex((l) => l.groupId === group.groupId)
@@ -682,6 +706,7 @@ export function defaultLines(): QuoteLine[] {
       discount: { mode: "none", value: 0 },
       ref: c.ref,
       rates: { ...c.rates },
+      includes: [...c.includes],
     };
   });
 }
@@ -712,7 +737,12 @@ export function withCatalogue(lines: QuoteLine[]): QuoteLine[] {
     const item = CATALOGUE.find((c) => c.ref === l.ref);
     const own: Rates = l.rates ?? (l.price ? { [l.billing]: l.price } : {});
     const rates = { ...(item?.rates ?? {}), ...own };
-    return { ...l, rates, price: rates[l.billing] ?? l.price };
+    return {
+      ...l,
+      rates,
+      price: rates[l.billing] ?? l.price,
+      includes: l.includes?.length ? l.includes : item?.includes,
+    };
   });
   const sections = new Set(out.map((l) => l.section));
   const missing = defaultLines().filter((l) => !sections.has(l.section));
@@ -732,13 +762,22 @@ export const DEFAULT_DOC: QuoteDoc = {
     "Thank you for the opportunity to discuss your requirements. Based on our initial conversation, we are pleased to share this quotation for your review. It sets out the services requested, our understanding of the scope, and the investment for each.",
   understanding: "",
   terms: STANDARD_TERMS,
+  nextSteps: [
+    "Review this quotation and let us know of any changes you would like.",
+    "Confirm your acceptance by signing below or replying to our email.",
+    "We schedule a kick-off meeting and share a detailed project plan and timeline.",
+    "Work begins once the agreed advance is received.",
+  ].join("\n"),
   closing:
-    "Should you have any questions, or wish to discuss any part of this quotation, please feel free to reach out to us at info@nectarray.com or +91 93815 02998. We look forward to working with you.",
+    "Should you have any questions, or wish to discuss any part of this quotation, please feel free to reach out to us. We would be glad to walk you through it and look forward to working with you.",
   signer: "Surya",
   signerRole: "NectArray",
   show: {
+    summary: true,
     descriptions: true,
+    scope: true,
     understanding: true,
+    nextSteps: true,
     terms: true,
     signatures: true,
   },
@@ -759,12 +798,16 @@ export function cleanDoc(input: unknown): QuoteDoc {
     intro: text(d.intro, "", 4000),
     understanding: text(d.understanding, "", 8000),
     terms: text(d.terms, "", 6000),
+    nextSteps: text(d.nextSteps, DEFAULT_DOC.nextSteps, 3000),
     closing: text(d.closing, DEFAULT_DOC.closing, 2000),
     signer: text(d.signer, DEFAULT_DOC.signer, 80),
     signerRole: text(d.signerRole, DEFAULT_DOC.signerRole, 80),
     show: {
+      summary: flag("summary"),
       descriptions: flag("descriptions"),
+      scope: flag("scope"),
       understanding: flag("understanding"),
+      nextSteps: flag("nextSteps"),
       terms: flag("terms"),
       signatures: flag("signatures"),
     },
@@ -868,6 +911,15 @@ export function cleanBody(input: unknown): QuoteBody {
         discount: cleanDiscount(l.discount),
         ref: l.ref ? str(l.ref, 40) : null,
         ...(l.toStandard ? { toStandard: true } : {}),
+        ...(Array.isArray(l.includes)
+          ? {
+              includes: l.includes
+                .filter((x): x is string => typeof x === "string")
+                .map((x) => x.trim().slice(0, 300))
+                .filter(Boolean)
+                .slice(0, 20),
+            }
+          : {}),
         ...(l.rates ? { rates: cleanRates(l.rates) } : {}),
       };
     });

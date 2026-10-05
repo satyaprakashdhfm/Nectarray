@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ListChecks, Plus, Trash2 } from "lucide-react";
 import {
   resetStandardPrices,
   saveStandardPrices,
@@ -153,71 +153,74 @@ export function StandardPrices({
                   </button>
                 );
                 return (
-                  <li
-                    key={line.id}
-                    className="flex flex-col gap-2 px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:gap-3 lg:py-2"
-                  >
-                    <div className="flex items-center gap-3 lg:w-[15rem] lg:shrink-0">
-                      <span className="bg-brand-wash text-brand-deep grid size-9 shrink-0 place-items-center rounded-lg">
-                        <QuoteIcon refId={line.ref} className="size-4" />
-                      </span>
-                      <input
-                        value={line.name}
-                        onChange={(e) =>
-                          update(line.id, { name: e.target.value })
-                        }
-                        placeholder="Item name"
-                        aria-label="Item name"
-                        className={cn(field, "py-2 font-semibold")}
-                      />
-                      {del("grid lg:hidden")}
-                    </div>
-                    <input
-                      value={line.description}
-                      onChange={(e) =>
-                        update(line.id, { description: e.target.value })
-                      }
-                      placeholder="One line on what it is"
-                      aria-label={`Description of ${line.name || "this row"}`}
-                      className={cn(field, "py-2 lg:flex-1")}
-                    />
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:gap-3">
-                      {BILLINGS.map((b) => (
-                        <label key={b.id} className="block lg:w-[6.5rem]">
-                          <span className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold lg:sr-only">
-                            {b.label}
-                          </span>
-                          <MoneyInput
-                            value={line.rates?.[b.id] ?? 0}
-                            onChange={(n) => setRate(b.id, n)}
-                            ariaLabel={`${b.label} price of ${line.name || "this row"}`}
-                          />
-                        </label>
-                      ))}
-                      <label className="block lg:w-[6.5rem]">
-                        <span className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold lg:sr-only">
-                          Starts as
+                  <li key={line.id} className="px-4 py-3 sm:px-5 lg:py-2">
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+                      <div className="flex items-center gap-3 lg:w-[15rem] lg:shrink-0">
+                        <span className="bg-brand-wash text-brand-deep grid size-9 shrink-0 place-items-center rounded-lg">
+                          <QuoteIcon refId={line.ref} className="size-4" />
                         </span>
-                        <select
-                          value={line.billing}
-                          onChange={(e) => {
-                            const billing = e.target.value as Billing;
-                            update(line.id, {
-                              billing,
-                              price: line.rates?.[billing] ?? 0,
-                            });
-                          }}
-                          className={cn(field, "py-2")}
-                        >
-                          {BILLINGS.map((b) => (
-                            <option key={b.id} value={b.id}>
+                        <input
+                          value={line.name}
+                          onChange={(e) =>
+                            update(line.id, { name: e.target.value })
+                          }
+                          placeholder="Item name"
+                          aria-label="Item name"
+                          className={cn(field, "py-2 font-semibold")}
+                        />
+                        {del("grid lg:hidden")}
+                      </div>
+                      <input
+                        value={line.description}
+                        onChange={(e) =>
+                          update(line.id, { description: e.target.value })
+                        }
+                        placeholder="One line on what it is"
+                        aria-label={`Description of ${line.name || "this row"}`}
+                        className={cn(field, "py-2 lg:flex-1")}
+                      />
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:gap-3">
+                        {BILLINGS.map((b) => (
+                          <label key={b.id} className="block lg:w-[6.5rem]">
+                            <span className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold lg:sr-only">
                               {b.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                            </span>
+                            <MoneyInput
+                              value={line.rates?.[b.id] ?? 0}
+                              onChange={(n) => setRate(b.id, n)}
+                              ariaLabel={`${b.label} price of ${line.name || "this row"}`}
+                            />
+                          </label>
+                        ))}
+                        <label className="block lg:w-[6.5rem]">
+                          <span className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold lg:sr-only">
+                            Starts as
+                          </span>
+                          <select
+                            value={line.billing}
+                            onChange={(e) => {
+                              const billing = e.target.value as Billing;
+                              update(line.id, {
+                                billing,
+                                price: line.rates?.[billing] ?? 0,
+                              });
+                            }}
+                            className={cn(field, "py-2")}
+                          >
+                            {BILLINGS.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                      {del("hidden lg:grid")}
                     </div>
-                    {del("hidden lg:grid")}
+                    <Included
+                      value={line.includes ?? []}
+                      onChange={(includes) => update(line.id, { includes })}
+                    />
                   </li>
                 );
               })}
@@ -274,6 +277,58 @@ export function StandardPrices({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * What the client gets with an item, one point a line. Shown under the
+ * item in the quote's Scope of work.
+ */
+function Included({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const count = value.filter((v) => v.trim()).length;
+  return (
+    <div className="mt-1.5 lg:pl-12">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="text-brand-deep hover:text-ink inline-flex items-center gap-1.5 text-[0.75rem] font-semibold"
+      >
+        <ListChecks className="size-3.5" aria-hidden />
+        What&apos;s included{count ? ` (${count})` : ""}
+        <ChevronDown
+          className={cn("size-3.5 transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open && (
+        <label className="mt-2 block max-w-3xl">
+          <span className="sr-only">
+            What&apos;s included, one point a line
+          </span>
+          <textarea
+            value={value.join("\n")}
+            onChange={(e) => onChange(e.target.value.split("\n"))}
+            rows={Math.min(8, Math.max(3, value.length + 1))}
+            placeholder={
+              "Full source code in your GitHub account\nWritten guide to run and deploy it"
+            }
+            className={cn(field, "resize-y py-2 leading-relaxed")}
+          />
+          <span className="text-ink-faint mt-1 block text-[0.6875rem]">
+            One point a line. Printed under this item in the quote&apos;s Scope
+            of work.
+          </span>
+        </label>
+      )}
     </div>
   );
 }

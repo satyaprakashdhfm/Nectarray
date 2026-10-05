@@ -18,6 +18,7 @@ import {
 } from "@/lib/quotes";
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
 import { cleanCosts } from "@/lib/third-party-costs";
+import { cleanTemplate } from "@/lib/quote-template";
 
 /**
  * Quotations: start one, save it, delete it, keep the starting rows, and
@@ -306,6 +307,27 @@ export async function addQuoteProjects(
     .set({ projectIds: [...before, ...made.map((m) => m.id)] })
     .where(eq(quotations.id, id));
   revalidatePath("/admin", "layout");
+}
+
+/** The Template tab: sections, headings and the wording quotes start with. */
+export async function saveQuoteTemplate(input: unknown) {
+  await requireAdmin();
+  const body = cleanTemplate(input);
+  await db
+    .insert(quoteDefaults)
+    .values({ id: "template", body })
+    .onConflictDoUpdate({
+      target: quoteDefaults.id,
+      set: { body, updatedAt: new Date() },
+    });
+  revalidatePath("/admin/quotes", "layout");
+}
+
+/** Back to the built-in template. */
+export async function resetQuoteTemplate() {
+  await requireAdmin();
+  await db.delete(quoteDefaults).where(eq(quoteDefaults.id, "template"));
+  revalidatePath("/admin/quotes", "layout");
 }
 
 /** The Third-party costs tab. */
