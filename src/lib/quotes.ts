@@ -49,6 +49,8 @@ export type QuoteLine = {
   ref?: string | null;
   /** On the Standard prices list only: the price for each billing. */
   rates?: Rates;
+  /** Ticked on a new row: add it to Standard prices when the quote is saved. */
+  toStandard?: boolean;
 };
 
 export type QuoteDoc = {
@@ -807,6 +809,7 @@ export function cleanBody(input: unknown): QuoteBody {
             : "once",
         discount: cleanDiscount(l.discount),
         ref: l.ref ? str(l.ref, 40) : null,
+        ...(l.toStandard ? { toStandard: true } : {}),
         ...(l.rates ? { rates: cleanRates(l.rates) } : {}),
       };
     });

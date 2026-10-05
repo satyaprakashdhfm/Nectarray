@@ -10,6 +10,9 @@ import { PROJECT_SERVICES, PROJECT_STATUSES, rupees } from "@/lib/business";
 import {
   QUOTE_STATUSES,
   cleanBody,
+  newId,
+  type QuoteBody,
+  type QuoteLine,
   freshBody,
   quoteTotals,
 } from "@/lib/quotes";
@@ -101,6 +104,7 @@ export async function saveQuote(id: string, input: QuoteInput) {
     throw new Error("The quote date is not a date.");
   }
   const body = cleanBody(input.body);
+  await addToStandards(body);
   const t = quoteTotals(body);
 
   await db
@@ -120,6 +124,68 @@ export async function saveQuote(id: string, input: QuoteInput) {
     })
     .where(eq(quotations.id, id));
   done(id);
+  return body;
+}
+
+/**
+ * Rows ticked "Add to Standard prices" in a quote go onto the standard list
+ * with their name, description, section, group and price, or update the
+ * item of the same name there. The quote row is then linked to it.
+ */
+async function addToStandards(body: QuoteBody) {
+  const adding = body.lines.filter((l) => l.toStandard && l.name.trim());
+  for (const l of body.lines) delete l.toStandard;
+  if (adding.length === 0) return;
+
+  const { body: base } = await getQuoteDefaults();
+  const standards = [...base.lines];
+  for (const l of adding) {
+    const name = l.name.trim().toLowerCase();
+    const at = standards.findIndex(
+      (s) => (l.ref && s.ref === l.ref) || s.name.trim().toLowerCase() === name,
+    );
+    const taken = new Set(standards.map((s) => s.ref));
+    let ref = at >= 0 ? standards[at].ref : null;
+    if (!ref) {
+      ref = `custom-${slug(l.name) || "row"}`;
+      while (taken.has(ref)) ref += "-2";
+    }
+    const row: QuoteLine = {
+      ...(at >= 0 ? standards[at] : {}),
+      id: at >= 0 ? standards[at].id : newId(),
+      on: false,
+      section: l.section,
+      groupName: l.groupName,
+      groupId: l.groupName ? `g-${slug(l.groupName)}` : null,
+      name: l.name.trim(),
+      service: l.service,
+      description: l.description,
+      price: l.price,
+      billing: l.billing,
+      discount: { mode: "none", value: 0 },
+      ref,
+      rates: {
+        ...(at >= 0 ? standards[at].rates : {}),
+        [l.billing]: l.price,
+      },
+    };
+    if (at >= 0) standards[at] = row;
+    else standards.push(row);
+    l.ref = ref;
+  }
+  const saved = {
+    ...base,
+    lines: standards,
+    doc: { ...base.doc, understanding: "" },
+  };
+  await db
+    .insert(quoteDefaults)
+    .values({ id: "default", body: saved })
+    .onConflictDoUpdate({
+      target: quoteDefaults.id,
+      set: { body: saved, updatedAt: new Date() },
+    });
+  revalidatePath("/admin/quotes/prices");
 }
 
 export async function deleteQuote(form: FormData) {

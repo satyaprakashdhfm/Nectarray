@@ -151,12 +151,13 @@ export function QuoteBuilder({
   }, [dirty]);
 
   function save() {
-    const snapshot = current;
     setError(null);
     startSave(async () => {
       try {
-        await saveQuote(quote.id, { ...meta, body });
-        setSaved(snapshot);
+        const stored = await saveQuote(quote.id, { ...meta, body });
+        // Rows added to Standard prices come back linked to it.
+        setBody(stored);
+        setSaved(JSON.stringify({ meta, body: stored }));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not save.");
       }
@@ -564,6 +565,8 @@ function GroupHeader({
   ops: LineOps;
 }) {
   const ticked = members.filter((l) => l.on);
+  // Options typed into this quote that are not on Standard prices yet.
+  const fresh = members.filter((l) => !ops.standard(l));
   return (
     <div className="bg-mist/50 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:px-5">
       <label className="min-w-0 flex-1 basis-48">
@@ -578,6 +581,21 @@ function GroupHeader({
       <span className="text-ink-faint text-[0.75rem]">
         {ticked.length} of {members.length} options ticked
       </span>
+      {fresh.length > 0 && (
+        <label className="text-ink-soft inline-flex cursor-pointer items-center gap-1.5 text-[0.75rem] font-semibold">
+          <input
+            type="checkbox"
+            checked={fresh.every((l) => l.toStandard)}
+            onChange={(e) =>
+              fresh.forEach((l) =>
+                ops.update(l.id, { toStandard: e.target.checked }),
+              )
+            }
+            className="accent-brand-solid size-4"
+          />
+          Add to Standard prices
+        </label>
+      )}
       <button
         type="button"
         onClick={() => ops.addToGroup(groupId)}
@@ -671,6 +689,7 @@ function LineRow({
             <span className="text-ink-faint block truncate text-[0.75rem]">
               {bill.label}
               {off > 0 && ` · ${discountText}`}
+              {line.toStandard && " · adding to Standard prices on save"}
               {off > 0 && (
                 <span className="sm:hidden">
                   {" · "}
@@ -836,7 +855,15 @@ function LineRow({
                 ) : std ? (
                   `No standard ${bill.label.toLowerCase()} price`
                 ) : (
-                  "Not on the standard price list"
+                  <label className="text-ink-soft inline-flex cursor-pointer items-center gap-2 font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(line.toStandard)}
+                      onChange={(e) => set({ toStandard: e.target.checked })}
+                      className="accent-brand-solid size-4"
+                    />
+                    Add to Standard prices, so every new quote has it
+                  </label>
                 )}
               </p>
               <div className="flex items-center">
