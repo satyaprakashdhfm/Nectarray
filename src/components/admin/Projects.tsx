@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import {
   addPayment,
@@ -138,9 +139,12 @@ export function ProjectsTable({
                 className="border-line-soft border-b last:border-0"
               >
                 <td className={td}>
-                  <span className="text-ink block text-[0.9375rem] font-semibold">
+                  <Link
+                    href={`/admin/projects/${p.id}`}
+                    className="text-ink hover:text-brand-deep block text-[0.9375rem] font-semibold underline-offset-2 hover:underline"
+                  >
                     {p.title}
-                  </span>
+                  </Link>
                   <span className="block">{p.client}</span>
                   {p.note && (
                     <span className="text-ink-faint mt-1 block max-w-xs text-[0.75rem]">

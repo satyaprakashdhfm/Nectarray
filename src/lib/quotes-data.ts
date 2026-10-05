@@ -9,6 +9,11 @@ import {
   type QuoteBody,
 } from "@/lib/quotes";
 import {
+  DEFAULT_COSTS,
+  cleanCosts,
+  type CostGroup,
+} from "@/lib/third-party-costs";
+import {
   cleanTemplate,
   defaultTemplate,
   type QuoteTemplate,
@@ -65,4 +70,24 @@ export async function getQuoteTemplate(): Promise<{
     if (code !== "42P01") throw error;
   }
   return { template: defaultTemplate(), customised: false };
+}
+
+/** The Third-party costs list: the admin's saved one, or the built-in one. */
+export async function getThirdPartyCosts(): Promise<{
+  groups: CostGroup[];
+  customised: boolean;
+}> {
+  try {
+    const [row] = await db
+      .select()
+      .from(quoteDefaults)
+      .where(eq(quoteDefaults.id, "costs"));
+    if (row) return { groups: cleanCosts(row.body), customised: true };
+  } catch (error) {
+    const code =
+      (error as { code?: string }).code ??
+      (error as { cause?: { code?: string } }).cause?.code;
+    if (code !== "42P01") throw error;
+  }
+  return { groups: DEFAULT_COSTS, customised: false };
 }

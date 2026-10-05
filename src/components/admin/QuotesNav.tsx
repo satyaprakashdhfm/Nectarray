@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { FileText, IndianRupee, LayoutTemplate } from "lucide-react";
+import { FileText, IndianRupee, LayoutTemplate, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/admin/quotes", label: "Quotes", icon: FileText },
   { href: "/admin/quotes/prices", label: "Standard prices", icon: IndianRupee },
+  { href: "/admin/quotes/costs", label: "Third-party costs", icon: Receipt },
   { href: "/admin/quotes/template", label: "Template", icon: LayoutTemplate },
 ];
 
@@ -21,7 +22,7 @@ export function QuotesNav({ current }: { current: string }) {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-[0.8125rem] font-semibold transition-colors",
+                  "inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors",
                   active ? "bg-mist text-ink" : "text-ink-faint hover:text-ink",
                 )}
               >

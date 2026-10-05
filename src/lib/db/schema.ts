@@ -616,6 +616,25 @@ export const clientProjects = pgTable(
   (table) => [index("client_projects_service_idx").on(table.service)],
 );
 
+/**
+ * The working file for one client project: where it stands, where it is
+ * deployed, and three sheets that go to the client at handover (what was
+ * paid to outside services, the recurring charges, and the logins). Rows
+ * are JSON (see src/lib/project-details.ts); passwords are encrypted when
+ * PROJECT_VAULT_KEY is set.
+ */
+export const projectDetails = pgTable("project_details", {
+  projectId: uuid("project_id")
+    .primaryKey()
+    .references(() => clientProjects.id, { onDelete: "cascade" }),
+  statusNote: text("status_note").notNull().default(""),
+  links: jsonb().notNull().default([]),
+  paid: jsonb().notNull().default([]),
+  recurring: jsonb().notNull().default([]),
+  access: jsonb().notNull().default([]),
+  updatedAt: now(),
+});
+
 /** Money actually received against a project. Revenue is the sum of these. */
 export const clientPayments = pgTable(
   "client_payments",
