@@ -35,13 +35,11 @@ import {
 } from "@/lib/business";
 import {
   DISCOUNT_PERCENTS,
-  QUOTE_SECTIONS,
   QUOTE_STATUSES,
   BILLINGS,
   billingOf,
   rateFor,
   type Billing,
-  STANDARD_TERMS,
   catalogueFor,
   standardFor,
   discountOf,
@@ -59,6 +57,11 @@ import {
   type QuoteService,
 } from "@/lib/quotes";
 import { quoteHtml, type QuoteDocData } from "@/lib/quote-html";
+import {
+  sectionsFor,
+  type QuoteSectionDef,
+  type QuoteTemplate,
+} from "@/lib/quote-template";
 import { QuoteIcon } from "@/components/admin/quote-icons";
 import { cn } from "@/lib/utils";
 
@@ -116,11 +119,14 @@ export function QuoteBuilder({
   quote,
   projects,
   standards,
+  template,
 }: {
   quote: QuoteRecord;
   projects: LinkedProject[];
   /** The Standard prices list: what a row costs when it is ticked. */
   standards: QuoteLine[];
+  /** Sections, headings and starting wording, from the Template tab. */
+  template: QuoteTemplate;
 }) {
   const [meta, setMeta] = useState<Meta>(() => ({
     title: quote.title,
@@ -306,7 +312,7 @@ export function QuoteBuilder({
       {tab === "prices" ? (
         <div className="mt-6 space-y-6">
           <ClientCard meta={meta} set={setMetaField} />
-          {QUOTE_SECTIONS.map((section) => (
+          {sectionsFor(body.lines, template.sections).map((section) => (
             <SectionBlock
               key={section.id}
               section={section}
@@ -348,6 +354,7 @@ export function QuoteBuilder({
       ) : (
         <DocumentPane
           data={docData}
+          template={template}
           setDoc={setDoc}
           setValidDays={(validDays) => setBody((b) => ({ ...b, validDays }))}
         />
@@ -437,7 +444,7 @@ function SectionBlock({
   lines,
   ops,
 }: {
-  section: (typeof QUOTE_SECTIONS)[number];
+  section: QuoteSectionDef;
   lines: QuoteLine[];
   ops: LineOps;
 }) {
@@ -1250,18 +1257,25 @@ function ProjectsCard({
 
 function DocumentPane({
   data,
+  template,
   setDoc,
   setValidDays,
 }: {
   data: QuoteDocData;
+  template: QuoteTemplate;
   setDoc: (patch: Partial<QuoteDoc>) => void;
   setValidDays: (n: number) => void;
 }) {
   const { doc, validDays, lines } = data.body;
   const frame = useRef<HTMLIFrameElement>(null);
   const html = useMemo(
-    () => quoteHtml(data, { logo: "/logo-mark.png" }),
-    [data],
+    () =>
+      quoteHtml(data, {
+        logo: "/logo-mark.png",
+        sections: template.sections,
+        labels: template.labels,
+      }),
+    [data, template],
   );
 
   function print() {
@@ -1382,10 +1396,15 @@ function DocumentPane({
             )}
             <button
               type="button"
-              onClick={() => setDoc({ terms: STANDARD_TERMS })}
+              onClick={() =>
+                setDoc({
+                  intro: template.doc.intro,
+                  terms: template.doc.terms,
+                })
+              }
               className="text-brand-deep hover:text-ink mt-1.5 text-[0.75rem] font-semibold"
             >
-              Use our standard notes
+              Use the template wording
             </button>
           </div>
           <label className="block">
@@ -1424,7 +1443,7 @@ const A4_WIDTH = 794;
  * The quote in a frame at A4 width, scaled down to fit, as tall as the
  * page so it scrolls with the panel. Rewritten a moment after typing stops.
  */
-function DocPreview({
+export function DocPreview({
   html,
   frame,
 }: {

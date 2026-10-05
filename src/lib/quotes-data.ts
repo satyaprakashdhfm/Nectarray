@@ -8,6 +8,11 @@ import {
   withCatalogue,
   type QuoteBody,
 } from "@/lib/quotes";
+import {
+  cleanTemplate,
+  defaultTemplate,
+  type QuoteTemplate,
+} from "@/lib/quote-template";
 
 /**
  * The rows and wording a new quote starts with: the admin's saved set once
@@ -37,4 +42,27 @@ export async function getQuoteDefaults(): Promise<{
     if (code !== "42P01") throw error;
   }
   return { body: defaultBody(), customised: false };
+}
+
+/**
+ * The quotation template (sections, headings, starting wording): the
+ * admin's saved one, or the built-in one until then.
+ */
+export async function getQuoteTemplate(): Promise<{
+  template: QuoteTemplate;
+  customised: boolean;
+}> {
+  try {
+    const [row] = await db
+      .select()
+      .from(quoteDefaults)
+      .where(eq(quoteDefaults.id, "template"));
+    if (row) return { template: cleanTemplate(row.body), customised: true };
+  } catch (error) {
+    const code =
+      (error as { code?: string }).code ??
+      (error as { cause?: { code?: string } }).cause?.code;
+    if (code !== "42P01") throw error;
+  }
+  return { template: defaultTemplate(), customised: false };
 }

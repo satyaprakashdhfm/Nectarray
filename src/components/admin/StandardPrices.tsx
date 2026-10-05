@@ -12,12 +12,12 @@ import { QuoteIcon } from "@/components/admin/quote-icons";
 import { rupees } from "@/lib/business";
 import {
   BILLINGS,
-  QUOTE_SECTIONS,
   type Billing,
   newId,
   type QuoteLine,
   type QuoteSection,
 } from "@/lib/quotes";
+import { sectionsFor, type QuoteSectionDef } from "@/lib/quote-template";
 import { cn } from "@/lib/utils";
 
 /**
@@ -27,9 +27,12 @@ import { cn } from "@/lib/utils";
 export function StandardPrices({
   initial,
   customised,
+  sections,
 }: {
   initial: QuoteLine[];
   customised: boolean;
+  /** From the Template tab. */
+  sections: QuoteSectionDef[];
 }) {
   const [lines, setLines] = useState(initial);
   const [saved, setSaved] = useState(() => JSON.stringify(initial));
@@ -100,7 +103,7 @@ export function StandardPrices({
 
   return (
     <div className="mt-6 space-y-6">
-      {QUOTE_SECTIONS.map((section) => {
+      {sectionsFor(lines, sections).map((section) => {
         const rows = lines.filter((l) => l.section === section.id);
         return (
           <section key={section.id} className="card overflow-hidden p-0">

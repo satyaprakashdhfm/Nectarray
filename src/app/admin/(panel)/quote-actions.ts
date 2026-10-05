@@ -13,7 +13,8 @@ import {
   freshBody,
   quoteTotals,
 } from "@/lib/quotes";
-import { getQuoteDefaults } from "@/lib/quotes-data";
+import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
+import { cleanTemplate } from "@/lib/quote-template";
 
 /**
  * Quotations: start one, save it, delete it, keep the starting rows, and
@@ -49,8 +50,16 @@ export async function createQuote(form: FormData) {
   const company = text(form, "company");
   if (!company) throw new Error("A quote needs the company's name.");
 
-  const { body: base } = await getQuoteDefaults();
-  const body = freshBody(base);
+  const [{ body: base }, { template }] = await Promise.all([
+    getQuoteDefaults(),
+    getQuoteTemplate(),
+  ]);
+  // Rows and prices from Standard prices, wording from the template.
+  const body = freshBody({
+    ...base,
+    doc: { ...template.doc, understanding: "" },
+    validDays: template.validDays,
+  });
   const t = quoteTotals(body);
   const [row] = await db
     .insert(quotations)
@@ -231,4 +240,25 @@ export async function addQuoteProjects(
     .set({ projectIds: [...before, ...made.map((m) => m.id)] })
     .where(eq(quotations.id, id));
   revalidatePath("/admin", "layout");
+}
+
+/** The Template tab: sections, headings and the wording quotes start with. */
+export async function saveQuoteTemplate(input: unknown) {
+  await requireAdmin();
+  const body = cleanTemplate(input);
+  await db
+    .insert(quoteDefaults)
+    .values({ id: "template", body })
+    .onConflictDoUpdate({
+      target: quoteDefaults.id,
+      set: { body, updatedAt: new Date() },
+    });
+  revalidatePath("/admin/quotes", "layout");
+}
+
+/** Back to the built-in template. */
+export async function resetQuoteTemplate() {
+  await requireAdmin();
+  await db.delete(quoteDefaults).where(eq(quoteDefaults.id, "template"));
+  revalidatePath("/admin/quotes", "layout");
 }

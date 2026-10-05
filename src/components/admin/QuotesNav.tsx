@@ -1,17 +1,18 @@
 import Link from "next/link";
-import { FileText, IndianRupee } from "lucide-react";
+import { FileText, IndianRupee, LayoutTemplate } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/admin/quotes", label: "Quotes", icon: FileText },
   { href: "/admin/quotes/prices", label: "Standard prices", icon: IndianRupee },
+  { href: "/admin/quotes/template", label: "Template", icon: LayoutTemplate },
 ];
 
 /** Quotes and the standard price list, side by side. */
 export function QuotesNav({ current }: { current: string }) {
   return (
     <nav aria-label="Quotations" className="mt-5">
-      <ul className="bg-surface border-line inline-flex rounded-lg border p-0.5">
+      <ul className="bg-surface border-line inline-flex max-w-full overflow-x-auto rounded-lg border p-0.5">
         {TABS.map((tab) => {
           const active = tab.href === current;
           return (

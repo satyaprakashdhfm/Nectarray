@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { clientProjects, quotations } from "@/lib/db/schema";
 import { QuoteBuilder } from "@/components/admin/QuoteBuilder";
 import { cleanBody } from "@/lib/quotes";
-import { getQuoteDefaults } from "@/lib/quotes-data";
+import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,10 @@ export default async function AdminQuotePage({
     .where(eq(quotations.id, id));
   if (!quote) notFound();
 
-  const { body: standard } = await getQuoteDefaults();
+  const [{ body: standard }, { template }] = await Promise.all([
+    getQuoteDefaults(),
+    getQuoteTemplate(),
+  ]);
   const ids = Array.isArray(quote.projectIds) ? quote.projectIds : [];
   const projects = ids.length
     ? await db
@@ -65,6 +68,7 @@ export default async function AdminQuotePage({
         }}
         projects={projects}
         standards={standard.lines}
+        template={template}
       />
     </>
   );

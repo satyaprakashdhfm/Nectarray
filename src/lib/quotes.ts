@@ -28,7 +28,8 @@ export const billingOf = (id: Billing) =>
   BILLINGS.find((b) => b.id === id) ?? BILLINGS[0];
 export type DiscountMode = "none" | "percent" | "amount";
 export type Discount = { mode: DiscountMode; value: number };
-export type QuoteSection = "build" | "marketing" | "maintenance" | "handover";
+/** A section id from the template: build, marketing, knowledge-transfer. */
+export type QuoteSection = string;
 
 export type QuoteLine = {
   id: string;
@@ -710,7 +711,6 @@ function cleanRates(v: unknown): Rates {
 export function cleanBody(input: unknown): QuoteBody {
   const b = (input ?? {}) as Partial<QuoteBody>;
   const services = PROJECT_SERVICES.map((s) => s.id as string);
-  const sections = QUOTE_SECTIONS.map((s) => s.id as string);
   const lines = (Array.isArray(b.lines) ? b.lines : [])
     .slice(0, 150)
     .map((raw): QuoteLine => {
@@ -719,9 +719,10 @@ export function cleanBody(input: unknown): QuoteBody {
       return {
         id: str(l.id, 64) || newId(),
         on: Boolean(l.on),
-        section: sections.includes(l.section as string)
-          ? (l.section as QuoteSection)
-          : "build",
+        section:
+          typeof l.section === "string" && /^[a-z0-9-]{1,40}$/.test(l.section)
+            ? l.section
+            : "build",
         groupId,
         groupName: groupId ? str(l.groupName, 120) : null,
         name: str(l.name, 160),
