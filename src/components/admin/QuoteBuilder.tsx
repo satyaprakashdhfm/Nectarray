@@ -35,6 +35,7 @@ import {
 } from "@/lib/business";
 import {
   DISCOUNT_PERCENTS,
+  DOC_SHOW_FIELDS,
   QUOTE_STATUSES,
   BILLINGS,
   billingOf,
@@ -1292,6 +1293,17 @@ function ProjectsCard({
 
 // Document -------------------------------------------------------------------
 
+type TextKey = "intro" | "understanding" | "terms" | "closing";
+
+/** Which wording field each clickable part of the printed page opens. */
+const PICK: Record<string, string> = {
+  intro: "intro",
+  understanding: "understanding",
+  terms: "terms",
+  closing: "closing",
+  signatures: "signer",
+};
+
 function DocumentPane({
   data,
   template,
@@ -1305,6 +1317,7 @@ function DocumentPane({
 }) {
   const { doc, validDays, lines } = data.body;
   const frame = useRef<HTMLIFrameElement>(null);
+  const [active, setActive] = useState<string | null>(null);
   const html = useMemo(
     () =>
       quoteHtml(data, {
@@ -1315,6 +1328,17 @@ function DocumentPane({
     [data, template],
   );
 
+  /** A click on the page opens the field that writes that part. */
+  function pick(part: string) {
+    const key = PICK[part];
+    if (!key) return;
+    setActive(key);
+    const el = document.getElementById(`doc-${key}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.focus({ preventScroll: true });
+    window.setTimeout(() => setActive((k) => (k === key ? null : k)), 1600);
+  }
+
   function print() {
     const win = frame.current?.contentWindow;
     if (!win) return;
@@ -1323,9 +1347,9 @@ function DocumentPane({
   }
 
   function download() {
-    const doc = frame.current?.contentDocument;
-    if (!doc) return;
-    const copy = doc.documentElement.cloneNode(true) as HTMLElement;
+    const page = frame.current?.contentDocument;
+    if (!page) return;
+    const copy = page.documentElement.cloneNode(true) as HTMLElement;
     // Word cannot fetch the logo from this site, so the name stands alone.
     copy.querySelectorAll("img").forEach((img) => img.closest("td")?.remove());
     const file = new Blob(["﻿<!doctype html>\n", copy.outerHTML], {
@@ -1351,15 +1375,39 @@ function DocumentPane({
     setDoc({ understanding: understandingFromLines(lines) });
   }
 
-  const area = (
-    key: keyof QuoteDoc,
-    text: string,
-    hint: string,
-    rows: number,
-  ) => (
+  function standard() {
+    if (
+      !window.confirm(
+        "Replace the opening, terms, closing and signature with the standard wording?",
+      )
+    )
+      return;
+    const t = template.doc;
+    setDoc({
+      intro: t.intro,
+      terms: t.terms,
+      closing: t.closing,
+      signer: t.signer,
+      signerRole: t.signerRole,
+    });
+  }
+
+  const box = (key: string, children: React.ReactNode) => (
+    <div
+      className={cn(
+        "-mx-2 rounded-lg px-2 py-1.5 transition-colors",
+        active === key && "bg-brand-wash ring-brand ring-1",
+      )}
+    >
+      {children}
+    </div>
+  );
+
+  const area = (key: TextKey, text: string, hint: string, rows: number) => (
     <label className="block">
       <span className={label}>{text}</span>
       <textarea
+        id={`doc-${key}`}
         value={doc[key]}
         onChange={(e) => setDoc({ [key]: e.target.value })}
         rows={rows}
@@ -1371,7 +1419,7 @@ function DocumentPane({
 
   return (
     <div className="mt-6 grid gap-6 xl:grid-cols-[24rem_minmax(0,1fr)] xl:items-start">
-      <aside className="min-w-0 space-y-4 xl:sticky xl:top-[148px] xl:max-h-[calc(100vh-164px)] xl:overflow-y-auto">
+      <aside className="min-w-0 space-y-4 xl:sticky xl:top-[148px] xl:max-h-[calc(100vh-164px)] xl:overflow-y-auto xl:pb-2">
         <div className="card grid grid-cols-2 gap-2 p-3">
           <button
             type="button"
@@ -1400,51 +1448,116 @@ function DocumentPane({
           </p>
         </div>
 
-        <div className="card space-y-4 p-4 sm:p-5">
-          <h2 className="text-ink text-[1.0625rem] font-semibold">Wording</h2>
-          {area(
-            "intro",
-            "Opening paragraph",
-            "Shown under the client's name.",
-            4,
-          )}
-          <div>
-            {area(
-              "understanding",
-              "Our understanding so far",
-              "Notes from the first meeting, one point a line.",
-              7,
-            )}
+        <div className="card space-y-2 p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-3 pb-1">
+            <h2 className="text-ink text-[1.0625rem] font-semibold">Wording</h2>
             <button
               type="button"
-              onClick={fill}
-              className="text-brand-deep hover:text-ink mt-1.5 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold"
-            >
-              <Sparkles className="size-3.5" aria-hidden />
-              Fill from the ticked rows
-            </button>
-          </div>
-          <div>
-            {area(
-              "terms",
-              "Notes",
-              "Price changes, payment, third-party costs. One a line.",
-              6,
-            )}
-            <button
-              type="button"
-              onClick={() =>
-                setDoc({
-                  intro: template.doc.intro,
-                  terms: template.doc.terms,
-                })
-              }
-              className="text-brand-deep hover:text-ink mt-1.5 text-[0.75rem] font-semibold"
+              onClick={standard}
+              className="text-brand-deep hover:text-ink text-[0.75rem] font-semibold"
             >
               Use the standard wording
             </button>
           </div>
-          <label className="block">
+          {box(
+            "intro",
+            area(
+              "intro",
+              "Opening paragraph",
+              "After “Dear” and the contact person's name.",
+              4,
+            ),
+          )}
+          {box(
+            "understanding",
+            <>
+              {area(
+                "understanding",
+                "Our understanding of the requirements",
+                "Notes from the first meeting, one point a line.",
+                6,
+              )}
+              <button
+                type="button"
+                onClick={fill}
+                className="text-brand-deep hover:text-ink mt-1.5 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold"
+              >
+                <Sparkles className="size-3.5" aria-hidden />
+                Fill from the ticked rows
+              </button>
+            </>,
+          )}
+          {box(
+            "terms",
+            area(
+              "terms",
+              "Terms and notes",
+              "Pricing, payment, third-party charges. One a line.",
+              6,
+            ),
+          )}
+          {box(
+            "closing",
+            area(
+              "closing",
+              "Closing paragraph",
+              "Who to contact with questions. Followed by “Warm regards”.",
+              3,
+            ),
+          )}
+          {box(
+            "signer",
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block min-w-0">
+                <span className={label}>Signed by</span>
+                <input
+                  id="doc-signer"
+                  value={doc.signer}
+                  onChange={(e) => setDoc({ signer: e.target.value })}
+                  className={cn(field, "py-2")}
+                />
+              </label>
+              <label className="block min-w-0">
+                <span className={label}>Role or company</span>
+                <input
+                  value={doc.signerRole}
+                  onChange={(e) => setDoc({ signerRole: e.target.value })}
+                  className={cn(field, "py-2")}
+                />
+              </label>
+            </div>,
+          )}
+
+          <fieldset className="border-line mt-2 border-t pt-3">
+            <legend className={cn(label, "mb-2")}>Show on the quote</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {DOC_SHOW_FIELDS.map((f) => (
+                <label
+                  key={f.key}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[0.75rem] font-semibold transition-colors",
+                    doc.show[f.key]
+                      ? "border-brand bg-brand-wash text-brand-deep"
+                      : "border-line text-ink-faint",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={doc.show[f.key]}
+                    onChange={(e) =>
+                      setDoc({
+                        show: { ...doc.show, [f.key]: e.target.checked },
+                      })
+                    }
+                    className="accent-brand-solid size-3.5"
+                  />
+                  {f.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <label className="block pt-2">
             <span className={label}>Valid for (days)</span>
             <input
               type="number"
@@ -1464,11 +1577,9 @@ function DocumentPane({
 
       <div className="min-w-0">
         <p className="text-ink-faint mb-2 text-[0.75rem]">
-          This is the page as it prints. You can also click on it and type a
-          last change before printing; that change is not saved, and is lost
-          when the wording or prices change.
+          The page exactly as it prints. Click any paragraph to edit it.
         </p>
-        <DocPreview html={html} frame={frame} />
+        <DocPreview html={html} frame={frame} onPick={pick} />
       </div>
     </div>
   );
@@ -1479,17 +1590,25 @@ const A4_WIDTH = 794;
 /**
  * The quote in a frame at A4 width, scaled down to fit, as tall as the
  * page so it scrolls with the panel. Rewritten a moment after typing stops.
+ * Parts marked data-edit report a click through onPick.
  */
 export function DocPreview({
   html,
   frame,
+  onPick,
 }: {
   html: string;
   frame: React.RefObject<HTMLIFrameElement | null>;
+  onPick?: (part: string) => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const picker = useRef(onPick);
   const [scale, setScale] = useState(1);
   const [height, setHeight] = useState(1123);
+
+  useEffect(() => {
+    picker.current = onPick;
+  }, [onPick]);
 
   useEffect(() => {
     const el = box.current;
@@ -1510,12 +1629,16 @@ export function DocPreview({
       doc.open();
       doc.write(html);
       doc.close();
-      doc.designMode = "on";
       const measure = () =>
         setHeight(Math.max(1123, doc.documentElement.scrollHeight));
       measure();
-      doc.addEventListener("input", measure);
       win.addEventListener("load", measure);
+      doc.addEventListener("click", (e) => {
+        const part = (e.target as Element | null)
+          ?.closest?.("[data-edit]")
+          ?.getAttribute("data-edit");
+        if (part) picker.current?.(part);
+      });
     }, 300);
     return () => window.clearTimeout(timer);
   }, [html, frame]);

@@ -4,12 +4,13 @@ import { db } from "@/lib/db";
 import { projectDetails } from "@/lib/db/schema";
 import {
   EMPTY_SHEETS,
+  STARTER_SHEETS,
   cleanSheets,
   type ProjectSheets,
 } from "@/lib/project-details";
 import { open } from "@/lib/vault";
 
-/** A project's working file, passwords readable. Empty until first saved. */
+/** A project's working file, passwords readable. */
 export async function loadProjectSheets(
   projectId: string,
 ): Promise<ProjectSheets> {
@@ -27,7 +28,8 @@ export async function loadProjectSheets(
     if (code === "42P01") return EMPTY_SHEETS;
     throw error;
   }
-  if (!row) return EMPTY_SHEETS;
+  // Never saved: start from the usual services, ready to edit.
+  if (!row) return STARTER_SHEETS;
   const sheets = cleanSheets(row);
   return {
     ...sheets,

@@ -22,9 +22,9 @@ export type CostGroup = { id: string; label: string; items: CostItem[] };
 
 const CHECKED = "Oct 2026";
 
-let n = 0;
+/** Ids from the name, so they stay put when items are added. */
 const item = (i: Omit<CostItem, "id" | "checked">): CostItem => ({
-  id: `c${++n}`,
+  id: i.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
   checked: CHECKED,
   ...i,
 });
@@ -91,6 +91,22 @@ export const DEFAULT_COSTS: CostGroup[] = [
         notes: "Renewal prices are shown before buying.",
         url: "https://www.hostinger.com/in/domains",
       }),
+      item({
+        name: ".com domain (Namecheap)",
+        free: "Free privacy protection",
+        price: "About $11 for the first year",
+        extra: "Renews at about $18.50 a year",
+        notes: "Billed in US dollars.",
+        url: "https://www.namecheap.com/domains/registration/gtld/com/",
+      }),
+      item({
+        name: ".in domain (BigRock)",
+        free: "",
+        price: "About ₹579 for the first year (₹1 offers on 3-year terms)",
+        extra: "Renews at about ₹899 a year",
+        notes: "Indian registrar, billed in rupees.",
+        url: "https://www.bigrock.in/tld/in-domain",
+      }),
     ],
   },
   {
@@ -129,6 +145,30 @@ export const DEFAULT_COSTS: CostGroup[] = [
         extra: "Renews at about ₹449 a month (Single ₹69, renews ₹289)",
         notes: "For simple static or WordPress sites, not apps.",
         url: "https://www.hostinger.com/in/pricing",
+      }),
+      item({
+        name: "DigitalOcean Droplet",
+        free: "",
+        price: "From $4 a month (512 MB); $6 for 1 GB, $12 for 2 GB",
+        extra: "Bandwidth included (500 GB and up); backups extra",
+        notes: "A plain server you set up yourself. Has a Bengaluru region.",
+        url: "https://www.digitalocean.com/pricing/droplets",
+      }),
+      item({
+        name: "AWS Lightsail",
+        free: "",
+        price: "From $5 a month with a public IP (512 MB, 1 TB transfer)",
+        extra: "$3.50 a month without a public IPv4 address",
+        notes: "Fixed monthly bundles on Amazon, Mumbai region available.",
+        url: "https://aws.amazon.com/lightsail/pricing/",
+      }),
+      item({
+        name: "Render",
+        free: "Free web service that sleeps when idle",
+        price: "Starter $7 a month (0.5 CPU, 512 MB)",
+        extra: "Postgres database from about $6 a month more",
+        notes: "Simple app hosting like Railway.",
+        url: "https://render.com/pricing",
       }),
     ],
   },
@@ -224,12 +264,64 @@ export const DEFAULT_COSTS: CostGroup[] = [
         url: "https://msg91.com/in/pricing",
       }),
       item({
+        name: "SMS OTP (Message Central)",
+        free: "",
+        price: "About ₹0.20 an OTP",
+        extra: "About ₹0.10 above 1 lakh a month; wallet top-up",
+        notes: "Prepaid wallet; DLT templates handled by them.",
+        url: "https://www.messagecentral.com/product/verify-now/pricing/india",
+      }),
+      item({
+        name: "Firebase phone sign-in",
+        free: "10,000 verifications a month",
+        price: "About $0.01 an SMS to India after that",
+        extra: "",
+        notes: "Google's ready-made OTP sign-in.",
+        url: "https://firebase.google.com/pricing",
+      }),
+      item({
         name: "Website emails (Resend)",
         free: "3,000 emails a month, 100 a day",
         price: "$20 a month for 50,000 emails",
         extra: "$35 a month for 100,000",
         notes: "For enquiry, order and password emails sent by the site.",
         url: "https://resend.com/pricing",
+      }),
+    ],
+  },
+  {
+    id: "maps",
+    label: "Maps",
+    items: [
+      item({
+        name: "Ola Maps",
+        free: "A free number of calls each month per API (50,000 to 1 lakh, check the current plan)",
+        price: "About ₹0.25 a request after that",
+        extra: "Prepaid credits",
+        notes: "Indian maps for addresses, distance and live tracking.",
+        url: "https://maps.olakrutrim.com/pricing",
+      }),
+      item({
+        name: "Google Maps Platform",
+        free: "Each API free up to 10,000 calls a month (Essentials)",
+        price: "Billed per 1,000 calls after that, by API",
+        extra: "Pro APIs free to 5,000, Enterprise to 1,000",
+        notes: "The $200 monthly credit was replaced by free calls per API.",
+        url: "https://mapsplatform.google.com/pricing/",
+      }),
+    ],
+  },
+  {
+    id: "signin",
+    label: "Sign-in",
+    items: [
+      item({
+        name: "Google sign-in (Identity Platform)",
+        free: "Up to 50,000 monthly active users",
+        price: "About $0.0055 per active user a month after that",
+        extra: "Phone OTP sign-in is billed separately",
+        notes: "Sign in with Google, email and password.",
+        url: "https://cloud.google.com/identity-platform/pricing",
       }),
     ],
   },
@@ -262,6 +354,30 @@ export const DEFAULT_COSTS: CostGroup[] = [
         notes: "For shipping across India.",
         url: "https://www.shiprocket.in/pricing-plan-professionals/",
       }),
+      item({
+        name: "Delhivery courier",
+        free: "",
+        price: "From about ₹32 per 500 g within the city (surface)",
+        extra: "Up to ₹110 per 500 g to J&K and the Northeast; air costs more",
+        notes: "Across India. Small extra network charge per shipment.",
+        url: "https://www.delhivery.com/",
+      }),
+      item({
+        name: "Borzo (same city)",
+        free: "",
+        price: "About ₹35 plus ₹8 a km",
+        extra: "About ₹75 for 5 km, ₹115 for 10 km, up to 5 kg",
+        notes: "Same-day delivery in Bengaluru and other cities.",
+        url: "https://borzodelivery.com/in/bangalore",
+      }),
+      item({
+        name: "Shadowfax (same city)",
+        free: "",
+        price: "About ₹50 for up to 4 km",
+        extra: "About ₹10 a km after that, up to 7 km",
+        notes: "Hyperlocal delivery; courier from about ₹32.",
+        url: "https://www.shadowfax.in/hyperlocal",
+      }),
     ],
   },
   {
@@ -276,12 +392,65 @@ export const DEFAULT_COSTS: CostGroup[] = [
         notes: "₹1,000 paid costs about ₹23.60 in fees with GST.",
         url: "https://razorpay.com/pricing/",
       }),
+      item({
+        name: "Cashfree",
+        free: "0% on domestic payments up to ₹20 lakh a month for new merchants (offer)",
+        price: "1.95% of each payment",
+        extra: "Instant settlement 0.25% more; 18% GST on fees",
+        notes: "No set-up or yearly fee.",
+        url: "https://www.cashfree.com/payment-gateway-charges/",
+      }),
+      item({
+        name: "PayU",
+        free: "No set-up or yearly fee",
+        price: "2% (cards, UPI, netbanking, wallets)",
+        extra: "3% for Amex, Diners, EMI and international cards",
+        notes: "",
+        url: "https://payu.in/pricing",
+      }),
+      item({
+        name: "PhonePe Payment Gateway",
+        free: "No set-up or yearly fee",
+        price: "1.99% of each payment",
+        extra: "18% GST on the fee",
+        notes: "",
+        url: "https://www.phonepe.com/business-solutions/payment-gateway/",
+      }),
+      item({
+        name: "CCAvenue",
+        free: "Free for the first financial year",
+        price: "2% of each payment",
+        extra: "₹1,200 a year after that; international cards about 4.99%",
+        notes: "",
+        url: "https://www.ccavenue.com/",
+      }),
     ],
   },
 ];
 
 const str = (v: unknown, max: number) =>
   typeof v === "string" ? v.slice(0, max) : "";
+
+/**
+ * A saved list with the built-in providers it has not got yet added at the
+ * end of their group, and new groups after it. Nothing saved is changed.
+ */
+export function withDefaultCosts(saved: CostGroup[]): CostGroup[] {
+  const out = saved.map((g) => {
+    const base = DEFAULT_COSTS.find((d) => d.id === g.id);
+    if (!base) return g;
+    const have = new Set(g.items.map((i) => i.name.trim().toLowerCase()));
+    return {
+      ...g,
+      items: [
+        ...g.items,
+        ...base.items.filter((i) => !have.has(i.name.trim().toLowerCase())),
+      ],
+    };
+  });
+  const ids = new Set(saved.map((g) => g.id));
+  return [...out, ...DEFAULT_COSTS.filter((d) => !ids.has(d.id))];
+}
 
 /** Anything the tab sends, made safe to store. */
 export function cleanCosts(input: unknown): CostGroup[] {

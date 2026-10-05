@@ -58,7 +58,28 @@ export type QuoteDoc = {
   /** What was agreed in the first meeting, one point a line. */
   understanding: string;
   terms: string;
+  /** The last paragraph: who to contact with questions. */
+  closing: string;
+  /** Who signs for us, and their role. */
+  signer: string;
+  signerRole: string;
+  /** Which parts the printed quote shows. */
+  show: DocShow;
 };
+
+export type DocShow = {
+  descriptions: boolean;
+  understanding: boolean;
+  terms: boolean;
+  signatures: boolean;
+};
+
+export const DOC_SHOW_FIELDS: { key: keyof DocShow; label: string }[] = [
+  { key: "descriptions", label: "Item descriptions" },
+  { key: "understanding", label: "Our understanding" },
+  { key: "terms", label: "Terms and notes" },
+  { key: "signatures", label: "Signature lines" },
+];
 
 export type QuoteBody = {
   lines: QuoteLine[];
@@ -699,19 +720,56 @@ export function withCatalogue(lines: QuoteLine[]): QuoteLine[] {
 }
 
 export const STANDARD_TERMS = [
-  "Prices are based on our first conversation and may change with the final requirements.",
-  "Prices are in Indian rupees.",
-  "Monthly and yearly maintenance charges start from the day the project goes live.",
-  "Third-party costs such as ad spend, domain, hosting, SMS and WhatsApp message charges are paid separately.",
-  "Payment terms will be agreed before work starts.",
+  "This quotation is based on our initial discussion. Final pricing will be confirmed once the detailed requirements are agreed.",
+  "All prices are in Indian Rupees (INR).",
+  "Monthly and yearly maintenance charges begin from the date the project goes live.",
+  "Third-party charges such as advertising spend, domain, hosting, SMS and WhatsApp messaging are billed separately, at actuals.",
+  "Payment terms will be mutually agreed before work begins.",
 ].join("\n");
 
 export const DEFAULT_DOC: QuoteDoc = {
   intro:
-    "Thank you for taking the time to talk to us. This quotation lists the services you asked about, what we understood from our first conversation, and the price for each.",
+    "Thank you for the opportunity to discuss your requirements. Based on our initial conversation, we are pleased to share this quotation for your review. It sets out the services requested, our understanding of the scope, and the investment for each.",
   understanding: "",
   terms: STANDARD_TERMS,
+  closing:
+    "Should you have any questions, or wish to discuss any part of this quotation, please feel free to reach out to us at info@nectarray.com or +91 93815 02998. We look forward to working with you.",
+  signer: "Surya",
+  signerRole: "NectArray",
+  show: {
+    descriptions: true,
+    understanding: true,
+    terms: true,
+    signatures: true,
+  },
 };
+
+/**
+ * A quote's wording, safe to store. Parts an older quote never had take the
+ * standard wording; a part left empty on purpose stays empty.
+ */
+export function cleanDoc(input: unknown): QuoteDoc {
+  const d = (input ?? {}) as Partial<Record<keyof QuoteDoc, unknown>>;
+  const text = (v: unknown, fallback: string, max: number) =>
+    typeof v === "string" ? v.slice(0, max) : fallback;
+  const show = (d.show ?? {}) as Partial<Record<keyof DocShow, unknown>>;
+  const flag = (k: keyof DocShow) =>
+    typeof show[k] === "boolean" ? (show[k] as boolean) : true;
+  return {
+    intro: text(d.intro, "", 4000),
+    understanding: text(d.understanding, "", 8000),
+    terms: text(d.terms, "", 6000),
+    closing: text(d.closing, DEFAULT_DOC.closing, 2000),
+    signer: text(d.signer, DEFAULT_DOC.signer, 80),
+    signerRole: text(d.signerRole, DEFAULT_DOC.signerRole, 80),
+    show: {
+      descriptions: flag("descriptions"),
+      understanding: flag("understanding"),
+      terms: flag("terms"),
+      signatures: flag("signatures"),
+    },
+  };
+}
 
 export function defaultBody(): QuoteBody {
   return {
@@ -813,16 +871,11 @@ export function cleanBody(input: unknown): QuoteBody {
         ...(l.rates ? { rates: cleanRates(l.rates) } : {}),
       };
     });
-  const doc = (b.doc ?? {}) as Partial<QuoteDoc>;
   const valid = Math.round(Number(b.validDays));
   return {
     lines,
     discount: cleanDiscount(b.discount),
-    doc: {
-      intro: str(doc.intro, 4000),
-      understanding: str(doc.understanding, 8000),
-      terms: str(doc.terms, 6000),
-    },
+    doc: cleanDoc(b.doc),
     validDays: Number.isFinite(valid) && valid > 0 ? Math.min(valid, 365) : 30,
   };
 }

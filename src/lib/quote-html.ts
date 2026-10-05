@@ -136,7 +136,7 @@ export function quoteHtml(
             const l = r.line;
             const off = discountOf(l.price, l.discount);
             const what = `<div style="font-weight:600;color:${INK}">${esc(l.name || "Untitled")}</div>${
-              l.description
+              l.description && body.doc.show.descriptions
                 ? `<div style="color:${SOFT};font-size:9.5pt;margin-top:2px">${esc(l.description)}</div>`
                 : ""
             }`;
@@ -203,8 +203,14 @@ export function quoteHtml(
     .filter(Boolean)
     .join("<br>");
 
-  const understanding = list(body.doc.understanding);
-  const terms = list(body.doc.terms);
+  const show = body.doc.show;
+  const understanding = show.understanding ? list(body.doc.understanding) : "";
+  const terms = show.terms ? list(body.doc.terms) : "";
+  const para = (text: string) => esc(text.trim()).replace(/\n/g, "<br>");
+  const greeting = q.contactName.trim()
+    ? `Dear ${esc(q.contactName.trim())},`
+    : "Dear Sir or Madam,";
+  const signer = body.doc.signer.trim();
 
   return `<!doctype html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -217,7 +223,11 @@ export function quoteHtml(
   table { border-collapse: collapse; width: 100%; }
   tr { page-break-inside: avoid; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  @media screen { body { padding: 44px 50px; } }
+  @media screen {
+    body { padding: 44px 50px; }
+    [data-edit] { cursor: pointer; border-radius: 4px; transition: background-color .15s; }
+    [data-edit]:hover { background: #eef6fa; outline: 1px dashed #10688f99; outline-offset: 3px; }
+  }
 </style>
 </head>
 <body>
@@ -254,7 +264,10 @@ export function quoteHtml(
 
 ${q.title ? `<div style="margin-top:18px;padding:10px 12px;background:${WASH};border-left:3px solid ${BRAND}"><span style="color:${FAINT}">${esc(L.project)}:</span> <strong>${esc(q.title)}</strong></div>` : ""}
 
-${body.doc.intro.trim() ? `<p style="margin:16px 0 0;color:${SOFT}">${esc(body.doc.intro.trim()).replace(/\n/g, "<br>")}</p>` : ""}
+<div data-edit="intro" style="margin-top:16px">
+  <p style="margin:0;color:${INK}">${greeting}</p>
+  ${body.doc.intro.trim() ? `<p style="margin:8px 0 0;color:${SOFT}">${para(body.doc.intro)}</p>` : ""}
+</div>
 
 ${heading(esc(L.services))}
 ${
@@ -271,17 +284,30 @@ ${
     : `<p style="color:${FAINT}">No services selected yet.</p>`
 }
 
-${understanding ? heading(esc(L.understanding)) + understanding : ""}
-${terms ? heading(esc(L.notes)) + terms : ""}
+${understanding ? `<div data-edit="understanding">${heading(esc(L.understanding))}${understanding}</div>` : ""}
+${terms ? `<div data-edit="terms">${heading(esc(L.notes))}${terms}</div>` : ""}
 
-<table style="margin-top:44px"><tr>
+<div data-edit="closing" style="margin-top:22px">
+  ${body.doc.closing.trim() ? `<p style="margin:0;color:${SOFT}">${para(body.doc.closing)}</p>` : ""}
+  <p style="margin:14px 0 0;color:${INK}">Warm regards,</p>
+  ${signer ? `<p style="margin:2px 0 0;font-weight:700;color:${INK}">${esc(signer)}</p>` : ""}
+  ${body.doc.signerRole.trim() ? `<p style="margin:0;color:${SOFT}">${esc(body.doc.signerRole.trim())}</p>` : ""}
+</div>
+
+${
+  show.signatures
+    ? `<table data-edit="signatures" style="margin-top:44px"><tr>
   <td style="width:50%;vertical-align:bottom;padding-right:24px">
     <div style="border-top:1px solid ${INK};padding-top:6px;width:80%">${esc(L.signOurs)}</div>
+    <div style="color:${FAINT};font-size:9pt">Authorised signatory${signer ? `: ${esc(signer)}` : ""}</div>
   </td>
   <td style="width:50%;vertical-align:bottom">
     <div style="border-top:1px solid ${INK};padding-top:6px;width:80%">${esc(L.signClient)} ${esc(q.company)}</div>
+    <div style="color:${FAINT};font-size:9pt">Name, signature and date</div>
   </td>
-</tr></table>
+</tr></table>`
+    : ""
+}
 </body>
 </html>`;
 }

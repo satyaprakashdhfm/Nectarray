@@ -5,6 +5,7 @@ import { clientProjects } from "@/lib/db/schema";
 import { AccessError, requireAdmin } from "@/lib/auth/access";
 import { serviceLabel } from "@/lib/business";
 import { loadProjectSheets } from "@/lib/project-data";
+import { frequencyLabel } from "@/lib/project-details";
 
 /**
  * The project's handover workbook: a summary, what was paid to outside
@@ -86,21 +87,23 @@ export async function GET(
     total.font = { bold: true };
   }
 
-  sheet(
-    "Recurring charges",
+  const services = sheet(
+    "Services and charges",
     [
-      { header: "Item", key: "item", width: 30 },
-      { header: "Paid to", key: "vendor", width: 20 },
+      { header: "Platform", key: "item", width: 24 },
+      { header: "Billing frequency", key: "billing", width: 18 },
       { header: "Amount (₹)", key: "amount", width: 14 },
-      { header: "Every", key: "billing", width: 12 },
       { header: "Next renewal", key: "renews", width: 14 },
-      { header: "Note", key: "note", width: 40 },
+      { header: "Details", key: "note", width: 70 },
     ],
     s.recurring.map((r) => ({
       ...r,
-      billing: r.billing === "yearly" ? "Year" : "Month",
+      billing: frequencyLabel(r.billing),
+      amount: r.amount || null,
     })),
-  ).getColumn("amount").numFmt = "#,##0";
+  );
+  services.getColumn("amount").numFmt = "#,##0";
+  services.getColumn("note").alignment = { wrapText: true, vertical: "top" };
 
   sheet(
     "Passwords",

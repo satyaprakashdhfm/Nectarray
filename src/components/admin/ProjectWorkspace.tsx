@@ -15,12 +15,13 @@ import { saveProjectSheets } from "@/app/admin/(panel)/project-actions";
 import { field, primaryButton, quietButton } from "@/components/admin/Business";
 import { MoneyInput } from "@/components/admin/QuoteBuilder";
 import { PROJECT_STATUSES, rupees } from "@/lib/business";
-import type {
-  AccessRow,
-  LinkRow,
-  PaidRow,
-  ProjectSheets,
-  RecurringRow,
+import {
+  FREQUENCIES,
+  type AccessRow,
+  type LinkRow,
+  type PaidRow,
+  type ProjectSheets,
+  type RecurringRow,
 } from "@/lib/project-details";
 import { newId } from "@/lib/quotes";
 import { cn } from "@/lib/utils";
@@ -58,22 +59,15 @@ const PAID_COLS: Col<PaidRow>[] = [
 const RECURRING_COLS: Col<RecurringRow>[] = [
   {
     key: "item",
-    text: "Item",
+    text: "Platform",
     kind: "text",
-    w: "minmax(10rem,1.4fr)",
-    placeholder: "Server hosting",
-  },
-  {
-    key: "vendor",
-    text: "Paid to",
-    kind: "text",
-    w: "minmax(7rem,1fr)",
+    w: "minmax(8rem,1fr)",
     placeholder: "Railway",
   },
+  { key: "billing", text: "Billing", kind: "billing", w: "8.5rem" },
   { key: "amount", text: "Amount", kind: "money", w: "8rem" },
-  { key: "billing", text: "Every", kind: "billing", w: "7rem" },
   { key: "renews", text: "Next renewal", kind: "date", w: "9.5rem" },
-  { key: "note", text: "Note", kind: "text", w: "minmax(8rem,1.2fr)" },
+  { key: "note", text: "Details", kind: "text", w: "minmax(12rem,2.2fr)" },
 ];
 const ACCESS_COLS: Col<AccessRow>[] = [
   {
@@ -102,7 +96,7 @@ const ACCESS_COLS: Col<AccessRow>[] = [
 
 const TABS = [
   { id: "paid", label: "Amounts paid" },
-  { id: "recurring", label: "Recurring charges" },
+  { id: "recurring", label: "Services and charges" },
   { id: "access", label: "Passwords" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
@@ -487,8 +481,11 @@ function SheetTable<T extends { id: string }>({
           aria-label={c.text}
           className={cn(field, "py-2")}
         >
-          <option value="monthly">Month</option>
-          <option value="yearly">Year</option>
+          {FREQUENCIES.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.label}
+            </option>
+          ))}
         </select>
       );
     return (

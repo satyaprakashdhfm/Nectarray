@@ -11,6 +11,7 @@ import {
 import {
   DEFAULT_COSTS,
   cleanCosts,
+  withDefaultCosts,
   type CostGroup,
 } from "@/lib/third-party-costs";
 import {
@@ -82,7 +83,11 @@ export async function getThirdPartyCosts(): Promise<{
       .select()
       .from(quoteDefaults)
       .where(eq(quoteDefaults.id, "costs"));
-    if (row) return { groups: cleanCosts(row.body), customised: true };
+    if (row)
+      return {
+        groups: withDefaultCosts(cleanCosts(row.body)),
+        customised: true,
+      };
   } catch (error) {
     const code =
       (error as { code?: string }).code ??

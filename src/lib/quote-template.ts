@@ -1,5 +1,6 @@
 import {
   DEFAULT_DOC,
+  cleanDoc,
   QUOTE_SECTIONS,
   type QuoteDoc,
   type QuoteLine,
@@ -48,8 +49,8 @@ export const DEFAULT_LABELS: QuoteLabels = {
   preparedFor: "Prepared for",
   project: "Project",
   services: "Services requested",
-  understanding: "Our understanding so far",
-  notes: "Notes",
+  understanding: "Our understanding of the requirements",
+  notes: "Terms and notes",
   signOurs: "For NectArray",
   signClient: "Accepted for",
 };
@@ -114,16 +115,11 @@ export function cleanTemplate(input: unknown): QuoteTemplate {
     const v = str(raw[key], 80).trim();
     if (v) labels[key] = v;
   }
-  const doc = (t.doc ?? {}) as Partial<QuoteDoc>;
   const valid = Math.round(Number(t.validDays));
   return {
     sections: sections.length ? sections : base.sections,
     labels,
-    doc: {
-      intro: str(doc.intro, 4000),
-      understanding: str(doc.understanding, 8000),
-      terms: str(doc.terms, 6000),
-    },
+    doc: cleanDoc(t.doc),
     validDays: Number.isFinite(valid) && valid > 0 ? Math.min(valid, 365) : 30,
   };
 }

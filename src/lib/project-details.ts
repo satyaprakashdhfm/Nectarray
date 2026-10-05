@@ -18,10 +18,23 @@ export type RecurringRow = {
   item: string;
   vendor: string;
   amount: number;
-  billing: "monthly" | "yearly";
+  billing: Frequency;
   renews: string;
   note: string;
 };
+/** How often a service is paid for. */
+export type Frequency = "monthly" | "yearly" | "on_demand" | "once";
+
+export const FREQUENCIES: { id: Frequency; label: string }[] = [
+  { id: "monthly", label: "Monthly" },
+  { id: "yearly", label: "Yearly" },
+  { id: "on_demand", label: "On demand" },
+  { id: "once", label: "One-time" },
+];
+
+export const frequencyLabel = (id: string) =>
+  FREQUENCIES.find((f) => f.id === id)?.label ?? id;
+
 export type AccessRow = {
   id: string;
   service: string;
@@ -45,6 +58,100 @@ export const EMPTY_SHEETS: ProjectSheets = {
   paid: [],
   recurring: [],
   access: [],
+};
+
+const svc = (
+  i: number,
+  item: string,
+  billing: Frequency,
+  amount: number,
+  note: string,
+): RecurringRow => ({
+  id: `s${i}`,
+  item,
+  vendor: "",
+  amount,
+  billing,
+  renews: "",
+  note,
+});
+
+/**
+ * What a project's handover sheet starts with before anything is saved:
+ * the services a typical build runs on and what they charge, and a login
+ * row for each. Change or delete whatever does not apply.
+ */
+export const STARTER_SHEETS: ProjectSheets = {
+  ...EMPTY_SHEETS,
+  recurring: [
+    svc(1, "Railway", "monthly", 1911, "Cloud charges for hosting the website"),
+    svc(
+      2,
+      "Cloudflare",
+      "on_demand",
+      0,
+      "Free up to 10 GB, then charged on storage (₹1.43 per GB a month)",
+    ),
+    svc(
+      3,
+      "Ola Maps",
+      "on_demand",
+      0,
+      "Free up to 50,000 requests, then charged per request (₹0.254 a request)",
+    ),
+    svc(4, "Domain (GoDaddy)", "yearly", 1600, "Domain renewal"),
+    svc(
+      5,
+      "Message Central",
+      "on_demand",
+      0,
+      "Charged per login OTP from a prepaid wallet; top up when low",
+    ),
+    svc(
+      6,
+      "Google sign-in",
+      "on_demand",
+      0,
+      "Free up to 50,000 monthly active users, then ₹0.5 per active user",
+    ),
+    svc(
+      7,
+      "Shiprocket",
+      "on_demand",
+      0,
+      "Handed over to the client, who maintains it",
+    ),
+    svc(
+      8,
+      "Delhivery",
+      "on_demand",
+      0,
+      "Handed over to the client, who maintains it",
+    ),
+    svc(
+      9,
+      "Razorpay",
+      "on_demand",
+      0,
+      "2% per transaction + 18% GST (2.36% in all). Settlement in 2 working days (T+2)",
+    ),
+  ],
+  access: [
+    "Admin portal",
+    "Railway",
+    "Cloudflare",
+    "GoDaddy",
+    "Razorpay",
+    "Message Central",
+    "Google Cloud",
+  ].map((service, i) => ({
+    id: `a${i + 1}`,
+    service,
+    url: "",
+    username: "",
+    password: "",
+    note: "",
+  })),
 };
 
 const str = (v: unknown, max: number) =>
@@ -93,7 +200,9 @@ export function cleanSheets(input: unknown): ProjectSheets {
         item: str(o.item, 160),
         vendor: str(o.vendor, 120),
         amount: money(o.amount),
-        billing: o.billing === "yearly" ? "yearly" : "monthly",
+        billing: FREQUENCIES.some((f) => f.id === o.billing)
+          ? (o.billing as Frequency)
+          : "monthly",
         renews: day(o.renews),
         note: str(o.note, 500),
       };
