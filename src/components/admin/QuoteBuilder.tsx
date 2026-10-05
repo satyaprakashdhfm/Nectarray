@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowDown,
   ArrowUp,
   Check,
+  ChevronDown,
   FileDown,
   ListPlus,
   Plus,
@@ -36,6 +38,8 @@ import {
   DISCOUNT_PERCENTS,
   QUOTE_SECTIONS,
   QUOTE_STATUSES,
+  STANDARD_TERMS,
+  catalogueFor,
   discountOf,
   lineTotal,
   newId,
@@ -201,6 +205,19 @@ export function QuoteBuilder({
       ),
   };
 
+  const missingPrices = body.lines.filter(
+    (l) => l.price === 0 && catalogueFor(l),
+  ).length;
+  const fillPrices = () =>
+    setLines((ls) =>
+      ls.map((l) => {
+        const item = l.price === 0 ? catalogueFor(l) : undefined;
+        return item
+          ? { ...l, price: item.price, billing: item.billing, ref: item.ref }
+          : l;
+      }),
+    );
+
   const docData: QuoteDocData = useMemo(
     () => ({ number: quote.number, ...meta, body }),
     [quote.number, meta, body],
@@ -291,23 +308,36 @@ export function QuoteBuilder({
       </div>
 
       {tab === "prices" ? (
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
-          <div className="min-w-0 space-y-6">
-            <ClientCard meta={meta} set={setMetaField} />
-            {QUOTE_SECTIONS.map((section) => (
-              <SectionBlock
-                key={section.id}
-                section={section}
-                lines={body.lines.filter((l) => l.section === section.id)}
-                ops={ops}
-              />
-            ))}
-          </div>
-          <aside className="min-w-0 space-y-4 xl:sticky xl:top-[148px]">
-            <TotalsCard
-              body={body}
-              setDiscount={(discount) => setBody((b) => ({ ...b, discount }))}
+        <div className="mt-6 space-y-6">
+          <ClientCard meta={meta} set={setMetaField} />
+          {missingPrices > 0 && (
+            <div className="border-line bg-amber-wash flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
+              <p className="text-ink-soft text-[0.8125rem]">
+                {missingPrices} {missingPrices === 1 ? "row has" : "rows have"}{" "}
+                no price yet.
+              </p>
+              <button
+                type="button"
+                onClick={fillPrices}
+                className={cn(quietButton, "py-2")}
+              >
+                Fill our standard prices
+              </button>
+            </div>
+          )}
+          {QUOTE_SECTIONS.map((section) => (
+            <SectionBlock
+              key={section.id}
+              section={section}
+              lines={body.lines.filter((l) => l.section === section.id)}
+              ops={ops}
             />
+          ))}
+          <TotalsBar
+            body={body}
+            setDiscount={(discount) => setBody((b) => ({ ...b, discount }))}
+          />
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
             <ProjectsCard
               quoteId={quote.id}
               body={body}
@@ -316,26 +346,24 @@ export function QuoteBuilder({
               projects={projects}
             />
             <DefaultsCard body={body} />
-            <form
-              action={deleteQuote}
-              onSubmit={(e) => {
-                if (
-                  !window.confirm("Delete this quote? This cannot be undone.")
-                )
-                  e.preventDefault();
-              }}
-              className="px-1"
+          </div>
+          <form
+            action={deleteQuote}
+            onSubmit={(e) => {
+              if (!window.confirm("Delete this quote? This cannot be undone."))
+                e.preventDefault();
+            }}
+            className="px-1"
+          >
+            <input type="hidden" name="id" value={quote.id} />
+            <button
+              type="submit"
+              className="text-ink-faint hover:text-danger inline-flex items-center gap-1.5 text-[0.75rem] font-semibold transition-colors"
             >
-              <input type="hidden" name="id" value={quote.id} />
-              <button
-                type="submit"
-                className="text-ink-faint hover:text-danger inline-flex items-center gap-1.5 text-[0.75rem] font-semibold transition-colors"
-              >
-                <Trash2 className="size-3.5" aria-hidden />
-                Delete this quote
-              </button>
-            </form>
-          </aside>
+              <Trash2 className="size-3.5" aria-hidden />
+              Delete this quote
+            </button>
+          </form>
         </div>
       ) : (
         <DocumentPane
@@ -584,131 +612,131 @@ function LineRow({
   canDown: boolean;
   ops: LineOps;
 }) {
+  // A new, empty row opens so its name can be typed straight away.
+  const [open, setOpen] = useState(!line.name);
   const id = `line-${line.id}`;
   const set = (patch: Partial<QuoteLine>) => ops.update(line.id, patch);
+  const item = catalogueFor(line);
   const total = lineTotal(line);
   const off = discountOf(line.price, line.discount);
   const monthly = line.billing === "monthly";
-
-  const actions = (
-    <div className="flex shrink-0 items-center">
-      <IconButton
-        label="Move up"
-        onClick={() => ops.move(line.id, -1)}
-        disabled={!canUp}
-      >
-        <ArrowUp className="size-3.5" />
-      </IconButton>
-      <IconButton
-        label="Move down"
-        onClick={() => ops.move(line.id, 1)}
-        disabled={!canDown}
-      >
-        <ArrowDown className="size-3.5" />
-      </IconButton>
-      <IconButton
-        label={`Delete ${line.name || "row"}`}
-        onClick={() => ops.remove(line.id)}
-        danger
-      >
-        <Trash2 className="size-3.5" />
-      </IconButton>
-    </div>
-  );
-
-  const tick = (
-    <input
-      id={id}
-      type="checkbox"
-      checked={line.on}
-      onChange={(e) => set({ on: e.target.checked })}
-      aria-label={`Include ${line.name || "this row"}`}
-      className="accent-brand-solid mt-1 size-[1.15rem] shrink-0 cursor-pointer"
-    />
-  );
-
-  if (!line.on) {
-    return (
-      <div
-        className={cn(
-          "flex items-start gap-3 px-4 py-3 sm:px-5",
-          sub && "pl-8 sm:pl-10",
-        )}
-      >
-        {tick}
-        <label htmlFor={id} className="min-w-0 flex-1 cursor-pointer">
-          <span className="text-ink-soft block text-[0.875rem] font-semibold">
-            {line.name || "Untitled row"}
-          </span>
-          {line.description && (
-            <span className="text-ink-faint block truncate text-[0.75rem]">
-              {line.description}
-            </span>
-          )}
-        </label>
-        {line.price > 0 && (
-          <span className="text-ink-faint mt-0.5 text-[0.8125rem] whitespace-nowrap tabular-nums">
-            {rupees.format(line.price)}
-            {monthly && "/mo"}
-          </span>
-        )}
-        {actions}
-      </div>
-    );
-  }
+  const discountText =
+    line.discount.mode === "percent"
+      ? `${line.discount.value}% off`
+      : `${rupees.format(off)} off`;
 
   return (
-    <div
-      className={cn(
-        "bg-brand-wash/25 px-4 py-4 sm:px-5",
-        sub && "pl-8 sm:pl-10",
-      )}
-    >
-      <div className="flex items-start gap-3">
-        {tick}
-        <div className="grid min-w-0 flex-1 gap-3">
-          <div className="flex items-start gap-3">
-            <label className="min-w-0 flex-1">
-              <span className="sr-only">Item</span>
+    <div className={cn(sub && "pl-5 sm:pl-8")}>
+      <div
+        className={cn(
+          "flex items-center gap-2.5 py-2.5 pr-3 pl-4 sm:gap-3 sm:pr-4 sm:pl-5",
+          line.on && "bg-brand-wash/30",
+        )}
+      >
+        <input
+          id={id}
+          type="checkbox"
+          checked={line.on}
+          onChange={(e) => set({ on: e.target.checked })}
+          aria-label={`Include ${line.name || "this row"}`}
+          className="accent-brand-solid size-[1.15rem] shrink-0 cursor-pointer"
+        />
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
+          <Thumb src={item?.image} name={line.name} />
+          <span className="min-w-0">
+            <span
+              className={cn(
+                "block truncate text-[0.9375rem] font-semibold",
+                line.on ? "text-ink" : "text-ink-soft",
+              )}
+            >
+              {line.name || "Untitled row"}
+            </span>
+            <span className="text-ink-faint block truncate text-[0.75rem]">
+              {monthly ? "Monthly" : "One-time"}
+              {off > 0 && ` · ${discountText}`}
+              {off > 0 && (
+                <span className="sm:hidden">
+                  {" · "}
+                  {rupees.format(total)}
+                </span>
+              )}
+            </span>
+          </span>
+        </button>
+        <div className="w-[6.75rem] shrink-0 sm:w-32">
+          <MoneyInput
+            value={line.price}
+            onChange={(price) => set({ price })}
+            ariaLabel={`Price of ${line.name || "this row"}`}
+            suffix={monthly ? "/mo" : undefined}
+          />
+        </div>
+        <div className="hidden w-28 shrink-0 text-right sm:block">
+          {line.on ? (
+            <span className="text-ink text-[0.9375rem] font-semibold tabular-nums">
+              {rupees.format(total)}
+            </span>
+          ) : (
+            <span className="text-ink-faint text-[0.75rem]">Not added</span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-label={open ? "Hide details" : "Show details"}
+          className="text-ink-faint hover:text-ink hover:bg-mist grid size-8 shrink-0 place-items-center rounded-md transition-colors"
+        >
+          <ChevronDown
+            className={cn("size-4 transition-transform", open && "rotate-180")}
+          />
+        </button>
+      </div>
+
+      {open && (
+        <div
+          className={cn(
+            "border-line bg-mist/40 grid gap-4 border-t px-4 py-4 sm:px-5",
+            item?.image && "lg:grid-cols-[17rem_minmax(0,1fr)]",
+          )}
+        >
+          {item?.image && (
+            <Image
+              src={item.image}
+              alt=""
+              width={680}
+              height={383}
+              sizes="(min-width: 1024px) 17rem, 100vw"
+              className="ring-line aspect-video w-full rounded-lg object-cover ring-1"
+            />
+          )}
+          <div className="grid min-w-0 gap-3">
+            <label className="block">
+              <span className={label}>Name</span>
               <input
                 value={line.name}
                 onChange={(e) => set({ name: e.target.value })}
                 placeholder="What it is, e.g. Basic website"
-                className={cn(field, "py-2 text-[0.9375rem] font-semibold")}
+                className={cn(field, "py-2 font-semibold")}
               />
             </label>
-            <div className="hidden shrink-0 pt-1 text-right @md:block">
-              {off > 0 && (
-                <span className="text-ink-faint block text-[0.6875rem] tabular-nums line-through">
-                  {rupees.format(line.price)}
-                </span>
-              )}
-              <span className="text-ink block text-[0.9375rem] font-semibold tabular-nums">
-                {rupees.format(total)}
-                {monthly && (
-                  <span className="text-ink-faint text-[0.6875rem] font-normal">
-                    /month
-                  </span>
-                )}
-              </span>
-            </div>
-            {actions}
-          </div>
-          <div className="grid gap-3 @4xl:grid-cols-[minmax(0,1fr)_auto]">
-            <label className="block min-w-0">
-              <span className={label}>Description</span>
+            <label className="block">
+              <span className={label}>Description (shown on the quote)</span>
               <textarea
                 value={line.description}
                 onChange={(e) => set({ description: e.target.value })}
                 rows={2}
                 placeholder="What the client gets"
-                className={cn(
-                  field,
-                  "min-h-[4.25rem] resize-y py-2 leading-snug",
-                )}
+                className={cn(field, "resize-y py-2 leading-snug")}
               />
             </label>
-            <div className="grid grid-cols-2 gap-3 @xl:grid-cols-4 @4xl:grid-cols-[8.5rem_7rem_7.5rem_9.5rem]">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <label className="block min-w-0">
                 <span className={label}>Service</span>
                 <select
@@ -738,15 +766,7 @@ function LineRow({
                   <option value="monthly">Monthly</option>
                 </select>
               </label>
-              <label className="block min-w-0">
-                <span className={label}>Price</span>
-                <MoneyInput
-                  value={line.price}
-                  onChange={(price) => set({ price })}
-                  ariaLabel={`Price of ${line.name || "this row"}`}
-                />
-              </label>
-              <div className="min-w-0">
+              <div className="col-span-2 min-w-0 sm:col-span-1">
                 <span className={label}>Discount</span>
                 <DiscountControl
                   value={line.discount}
@@ -755,19 +775,96 @@ function LineRow({
                 />
               </div>
             </div>
-          </div>
-          <p className="text-ink text-[0.875rem] font-semibold tabular-nums @md:hidden">
-            Total {rupees.format(total)}
-            {monthly && " a month"}
-            {off > 0 && (
-              <span className="text-ink-faint ml-1.5 text-[0.75rem] font-normal line-through">
-                {rupees.format(line.price)}
-              </span>
+            {item && item.includes.length > 0 && (
+              <div>
+                <span className={label}>What&apos;s included</span>
+                <ul className="grid gap-x-5 gap-y-1.5 sm:grid-cols-2">
+                  {item.includes.map((point) => (
+                    <li
+                      key={point}
+                      className="text-ink-soft flex gap-2 text-[0.8125rem] leading-snug"
+                    >
+                      <Check
+                        className="text-leaf-deep mt-0.5 size-3.5 shrink-0"
+                        aria-hidden
+                      />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
-          </p>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <p className="text-ink-faint text-[0.75rem]">
+                {item ? (
+                  <>
+                    Standard price {rupees.format(item.price)}
+                    {item.billing === "monthly" && " a month"}
+                    {item.price !== line.price && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          set({ price: item.price, billing: item.billing })
+                        }
+                        className="text-brand-deep hover:text-ink ml-2 font-semibold"
+                      >
+                        Use it
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  "Your own row"
+                )}
+              </p>
+              <div className="flex items-center">
+                <IconButton
+                  label="Move up"
+                  onClick={() => ops.move(line.id, -1)}
+                  disabled={!canUp}
+                >
+                  <ArrowUp className="size-3.5" />
+                </IconButton>
+                <IconButton
+                  label="Move down"
+                  onClick={() => ops.move(line.id, 1)}
+                  disabled={!canDown}
+                >
+                  <ArrowDown className="size-3.5" />
+                </IconButton>
+                <IconButton
+                  label={`Delete ${line.name || "row"}`}
+                  onClick={() => ops.remove(line.id)}
+                  danger
+                >
+                  <Trash2 className="size-3.5" />
+                </IconButton>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
+  );
+}
+
+/** The row's picture, or its first letter when it has none. */
+function Thumb({ src, name }: { src?: string; name: string }) {
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt=""
+        width={80}
+        height={80}
+        sizes="2.5rem"
+        className="ring-line size-10 shrink-0 rounded-md object-cover ring-1"
+      />
+    );
+  }
+  return (
+    <span className="bg-mist text-ink-soft ring-line grid size-10 shrink-0 place-items-center rounded-md text-[0.875rem] font-bold ring-1">
+      {(name.trim()[0] ?? "+").toUpperCase()}
+    </span>
   );
 }
 
@@ -808,10 +905,12 @@ function MoneyInput({
   value,
   onChange,
   ariaLabel,
+  suffix,
 }: {
   value: number;
   onChange: (n: number) => void;
   ariaLabel?: string;
+  suffix?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const shown = value
@@ -836,8 +935,13 @@ function MoneyInput({
           const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
           onChange(digits ? Number(digits) : 0);
         }}
-        className={cn(field, "py-2 pl-6 tabular-nums")}
+        className={cn(field, "py-2 pl-6 tabular-nums", suffix && "pr-9")}
       />
+      {suffix && (
+        <span className="text-ink-faint pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-[0.6875rem]">
+          {suffix}
+        </span>
+      )}
     </span>
   );
 }
@@ -847,10 +951,12 @@ function DiscountControl({
   value,
   onChange,
   name,
+  inline = false,
 }: {
   value: Discount;
   onChange: (d: Discount) => void;
   name: string;
+  inline?: boolean;
 }) {
   const selected =
     value.mode === "percent"
@@ -863,7 +969,7 @@ function DiscountControl({
       ? DISCOUNT_PERCENTS
       : [...DISCOUNT_PERCENTS, value.value].sort((a, b) => a - b);
   return (
-    <div className="space-y-1.5">
+    <div className={inline ? "flex gap-1.5" : "space-y-1.5"}>
       <select
         value={selected}
         aria-label={`Discount on ${name}`}
@@ -900,7 +1006,11 @@ function DiscountControl({
 
 // Side cards -----------------------------------------------------------------
 
-function TotalsCard({
+/**
+ * The totals, pinned to the bottom of the screen while the rows scroll:
+ * how many rows are in, the overall discount, and the two totals.
+ */
+function TotalsBar({
   body,
   setDiscount,
 }: {
@@ -908,56 +1018,56 @@ function TotalsCard({
   setDiscount: (d: Discount) => void;
 }) {
   const t = quoteTotals(body);
-  const rowDiscounts = t.onceList - t.onceSubtotal;
-  const line = (text: string, value: string, tone = "text-ink-soft") => (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-ink-faint">{text}</dt>
-      <dd className={cn("tabular-nums", tone)}>{value}</dd>
-    </div>
-  );
   return (
-    <section className="card p-4 sm:p-5">
-      <h2 className="text-ink text-[1.0625rem] font-semibold">Totals</h2>
-      <dl className="mt-3 space-y-1.5 text-[0.8125rem]">
-        {rowDiscounts > 0 && line("One-time price", rupees.format(t.onceList))}
-        {rowDiscounts > 0 &&
-          line("Row discounts", `-${rupees.format(rowDiscounts)}`)}
-        {line("One-time subtotal", rupees.format(t.onceSubtotal), "text-ink")}
-        {t.overall > 0 &&
-          line("Overall discount", `-${rupees.format(t.overall)}`)}
-      </dl>
-      <div className="mt-3">
-        <span className={label}>Overall discount on the one-time total</span>
-        <DiscountControl
-          value={body.discount}
-          onChange={setDiscount}
-          name="the whole quote"
-        />
-      </div>
-      <div className="bg-mist mt-4 grid grid-cols-2 gap-3 rounded-xl p-3 xl:grid-cols-1">
-        <div>
-          <p className="text-ink-faint text-[0.75rem]">One-time total</p>
-          <p className="display text-ink text-[1.5rem] tabular-nums">
-            {rupees.format(t.onceTotal)}
+    <div className="border-line bg-surface/95 sticky bottom-3 z-20 rounded-xl border px-4 py-3 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur sm:px-5">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="text-ink-soft text-[0.8125rem]">
+            <span className="text-ink font-semibold">{t.count}</span>{" "}
+            {t.count === 1 ? "row" : "rows"} added
           </p>
-        </div>
-        <div>
-          <p className="text-ink-faint text-[0.75rem]">Monthly</p>
-          <p className="display text-ink text-[1.5rem] tabular-nums">
-            {rupees.format(t.monthlyTotal)}
-            <span className="text-ink-faint text-[0.75rem] font-normal">
-              {" "}
-              a month
+          <div className="flex items-center gap-2">
+            <span className="text-ink-faint text-[0.75rem] font-semibold whitespace-nowrap">
+              Overall discount
             </span>
-          </p>
+            <div className="w-36 sm:w-44">
+              <DiscountControl
+                value={body.discount}
+                onChange={setDiscount}
+                name="the whole quote"
+                inline
+              />
+            </div>
+          </div>
+        </div>
+        <div className="ml-auto flex items-end gap-5 sm:gap-8">
+          <div className="text-right">
+            <p className="text-ink-faint text-[0.6875rem] font-semibold">
+              One-time
+              {t.onceSaved > 0 && (
+                <span className="ml-1.5 font-normal line-through">
+                  {rupees.format(t.onceList)}
+                </span>
+              )}
+            </p>
+            <p className="display text-ink text-[1.25rem] leading-tight tabular-nums sm:text-[1.5rem]">
+              {rupees.format(t.onceTotal)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-ink-faint text-[0.6875rem] font-semibold">
+              Monthly
+            </p>
+            <p className="display text-ink text-[1.25rem] leading-tight tabular-nums sm:text-[1.5rem]">
+              {rupees.format(t.monthlyTotal)}
+              <span className="text-ink-faint text-[0.75rem] font-normal">
+                /mo
+              </span>
+            </p>
+          </div>
         </div>
       </div>
-      <p className="text-ink-faint mt-2 text-[0.75rem]">
-        {t.count} {t.count === 1 ? "row" : "rows"} ticked
-        {t.onceSaved > 0 &&
-          ` · the client saves ${rupees.format(t.onceSaved)} one-time`}
-      </p>
-    </section>
+    </div>
   );
 }
 
@@ -1293,12 +1403,21 @@ function DocumentPane({
               Fill from the ticked rows
             </button>
           </div>
-          {area(
-            "terms",
-            "Notes",
-            "Price changes, GST, validity. One a line.",
-            6,
-          )}
+          <div>
+            {area(
+              "terms",
+              "Notes",
+              "Price changes, payment, third-party costs. One a line.",
+              6,
+            )}
+            <button
+              type="button"
+              onClick={() => setDoc({ terms: STANDARD_TERMS })}
+              className="text-brand-deep hover:text-ink mt-1.5 text-[0.75rem] font-semibold"
+            >
+              Use our standard notes
+            </button>
+          </div>
           <label className="block">
             <span className={label}>Valid for (days)</span>
             <input

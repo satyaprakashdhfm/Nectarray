@@ -26,6 +26,8 @@ export type QuoteLine = {
   price: number;
   billing: Billing;
   discount: Discount;
+  /** The standard item this row came from, for its picture and details. */
+  ref?: string | null;
 };
 
 export type QuoteDoc = {
@@ -136,131 +138,367 @@ export function totalsByService(body: QuoteBody) {
   }));
 }
 
-// What a new quote starts with ----------------------------------------------
+// The standard items, and what a new quote starts with ----------------------
 
-const row = (
-  section: QuoteSection,
-  name: string,
-  description: string,
-  extra: Partial<QuoteLine> = {},
-): QuoteLine => ({
-  id: newId(),
-  on: false,
-  section,
-  groupId: null,
-  groupName: null,
-  name,
-  service: section === "marketing" ? "marketing" : "software",
-  description,
-  price: 0,
-  billing: section === "build" ? "once" : "monthly",
-  discount: { mode: "none", value: 0 },
-  ...extra,
-});
+export type CatalogueItem = {
+  ref: string;
+  section: QuoteSection;
+  name: string;
+  description: string;
+  /** Our standard price, in rupees: one-time, or a month for monthly rows. */
+  price: number;
+  billing: Billing;
+  service: QuoteService;
+  /** Rows offered as options under one heading. */
+  group?: string;
+  image?: string;
+  includes: string[];
+};
+
+/**
+ * Every standard row, with our price for it.
+ *
+ * The prices are a starting point for a small business in India and are
+ * meant to be changed per client. Monthly rows are per month; ad spend and
+ * provider charges are always on top.
+ */
+export const CATALOGUE: CatalogueItem[] = [
+  {
+    ref: "website",
+    section: "build",
+    name: "Basic website",
+    description:
+      "A static website of 5 to 7 pages: home, about, services, gallery and contact. Works on phones and laptops.",
+    price: 15000,
+    billing: "once",
+    service: "software",
+    image: "/services/software.webp",
+    includes: [
+      "Design in your brand colours, with your logo and photos",
+      "Up to 7 pages: home, about, services, gallery, contact and two more",
+      "Contact form and WhatsApp button that send enquiries to you",
+      "Works on phones, tablets and laptops",
+      "Basic SEO set-up: page titles, Google Search Console, sitemap",
+      "Domain and hosting set-up (domain and hosting fees are separate)",
+    ],
+  },
+  {
+    ref: "admin",
+    section: "build",
+    name: "Admin portal",
+    description:
+      "An admin panel to change the website's text, images, prices and offers without a developer.",
+    price: 20000,
+    billing: "once",
+    service: "software",
+    image: "/agentic/domains/reporting.webp",
+    includes: [
+      "Secure admin sign-in",
+      "Edit text, photos, prices, offers and banners yourself",
+      "Add and remove products, services or gallery items",
+      "See and export every enquiry from the website",
+      "Changes show on the website straight away",
+    ],
+  },
+  {
+    ref: "articles-admin",
+    section: "build",
+    group: "Articles",
+    name: "Articles uploaded by the admin",
+    description:
+      "The admin writes or uploads an article and it shows on the website straight away.",
+    price: 8000,
+    billing: "once",
+    service: "software",
+    image: "/marketing/text-articles.webp",
+    includes: [
+      "Blog or news section on the website",
+      "Write or paste an article with photos from the admin portal",
+      "Categories, cover image and share buttons",
+      "Each article gets its own page that Google can find",
+    ],
+  },
+  {
+    ref: "articles-ai",
+    section: "build",
+    group: "Articles",
+    name: "AI-written articles",
+    description:
+      "AI drafts articles on your topics. You edit them and publish them to the website.",
+    price: 15000,
+    billing: "once",
+    service: "ai",
+    image: "/marketing/text-articles.webp",
+    includes: [
+      "Give a topic or keyword and get a full draft article",
+      "Edit the draft in the admin portal before it goes live",
+      "Publish now or schedule for later",
+      "Written to rank in Google search",
+      "AI usage charges are separate",
+    ],
+  },
+  {
+    ref: "client-login",
+    section: "build",
+    group: "Logins and dashboards",
+    name: "Client login",
+    description:
+      "Customers sign in to see their orders, bookings or documents.",
+    price: 15000,
+    billing: "once",
+    service: "software",
+    image: "/agentic/domains/support.webp",
+    includes: [
+      "Sign-in with mobile OTP or email",
+      "Each customer sees only their own orders, bookings or files",
+      "Download invoices and documents",
+      "Profile and password reset",
+    ],
+  },
+  {
+    ref: "employee-login",
+    section: "build",
+    group: "Logins and dashboards",
+    name: "Employee login",
+    description:
+      "Staff sign in to their own dashboard, with only the pages they need.",
+    price: 15000,
+    billing: "once",
+    service: "software",
+    image: "/agentic/domains/people.webp",
+    includes: [
+      "Separate sign-in for staff",
+      "Roles, so each person sees only the pages they need",
+      "Assign enquiries, orders or tasks to a person",
+      "Activity log of who changed what",
+    ],
+  },
+  {
+    ref: "social",
+    section: "build",
+    name: "Social media integration",
+    description:
+      "Instagram, Facebook, LinkedIn and YouTube linked to the site, with share buttons on pages.",
+    price: 5000,
+    billing: "once",
+    service: "marketing",
+    image: "/marketing/instagram-search.webp",
+    includes: [
+      "Links to all your social pages",
+      "Latest Instagram posts or YouTube videos shown on the site",
+      "Share buttons on pages and articles",
+      "Preview image and text when a link is shared on WhatsApp",
+    ],
+  },
+  {
+    ref: "notifications",
+    section: "build",
+    name: "Notifications",
+    description:
+      "Automatic email, WhatsApp and SMS messages for enquiries, orders and reminders. Message charges from the providers are extra.",
+    price: 12000,
+    billing: "once",
+    service: "software",
+    image: "/agentic/agents.webp",
+    includes: [
+      "Email to you and the customer on every enquiry or order",
+      "WhatsApp messages through the WhatsApp Business API",
+      "SMS for OTPs and reminders",
+      "Message templates you can change",
+      "Provider message charges are paid separately",
+    ],
+  },
+  {
+    ref: "analytics",
+    section: "build",
+    name: "Analytics dashboard",
+    description:
+      "How many people visit the website, where they come from, which pages they read and how many enquire.",
+    price: 10000,
+    billing: "once",
+    service: "marketing",
+    image: "/marketing/measure-dashboard.webp",
+    includes: [
+      "Google Analytics and Search Console set up",
+      "Visitors by day, city and source (Google, Instagram, ads)",
+      "Most-read pages and how long people stay",
+      "Enquiries and which page they came from",
+      "One dashboard inside the admin portal",
+    ],
+  },
+  {
+    ref: "delivery",
+    section: "build",
+    name: "Delivery integration",
+    description:
+      "Book deliveries through partners such as Rapido and Porter from the admin panel, with live status.",
+    price: 25000,
+    billing: "once",
+    service: "software",
+    image: "/agentic/domains/operations.webp",
+    includes: [
+      "Book a pickup from the admin portal in one click",
+      "Delivery partners such as Rapido, Porter or Shiprocket",
+      "Live delivery status for you and the customer",
+      "Delivery charge worked out at checkout",
+      "Partner delivery fees are paid separately",
+    ],
+  },
+  {
+    ref: "app",
+    section: "build",
+    name: "Mobile app",
+    description:
+      "Android and iPhone app with the same features as the website, published on the Play Store and App Store.",
+    price: 80000,
+    billing: "once",
+    service: "software",
+    image: "/services/software.webp",
+    includes: [
+      "One app for Android and iPhone",
+      "Same sign-in, products and features as the website",
+      "Push notifications",
+      "Published on the Play Store and App Store",
+      "Store developer accounts are paid separately",
+    ],
+  },
+  {
+    ref: "seo",
+    section: "marketing",
+    name: "SEO and blog writing",
+    description:
+      "Keyword research, page fixes and new blog articles every month to move the website up in Google search.",
+    price: 10000,
+    billing: "monthly",
+    service: "marketing",
+    image: "/marketing/ads-google-seo.webp",
+    includes: [
+      "Keyword research for your area and services",
+      "4 blog articles a month",
+      "Page speed and on-page fixes",
+      "Google Business Profile updates",
+      "Monthly report of rankings and visitors",
+    ],
+  },
+  {
+    ref: "meta-ads",
+    section: "marketing",
+    name: "Meta ads",
+    description:
+      "Facebook and Instagram ads: set-up, creatives and weekly tuning. Ad spend is paid separately.",
+    price: 8000,
+    billing: "monthly",
+    service: "marketing",
+    image: "/marketing/ads-meta.webp",
+    includes: [
+      "Campaign set-up and audience targeting",
+      "4 ad creatives a month",
+      "Leads sent to WhatsApp or the website",
+      "Weekly tuning and a monthly report",
+      "Ad spend is paid to Meta directly",
+    ],
+  },
+  {
+    ref: "google-ads",
+    section: "marketing",
+    name: "Google ads",
+    description:
+      "Search and display ads: set-up, keywords and weekly tuning. Ad spend is paid separately.",
+    price: 8000,
+    billing: "monthly",
+    service: "marketing",
+    image: "/marketing/ads-google.webp",
+    includes: [
+      "Search campaign with your keywords",
+      "Call and enquiry tracking",
+      "Weekly tuning of keywords and bids",
+      "Monthly report of cost per enquiry",
+      "Ad spend is paid to Google directly",
+    ],
+  },
+  {
+    ref: "maintenance",
+    section: "maintenance",
+    name: "Maintenance",
+    description:
+      "Hosting checks, security updates, backups, bug fixes and small changes across all the services above.",
+    price: 3000,
+    billing: "monthly",
+    service: "software",
+    image: "/hero/software-hero.jpg",
+    includes: [
+      "Uptime checks and security updates",
+      "Weekly backups",
+      "Bug fixes",
+      "Up to 2 hours of small changes a month",
+    ],
+  },
+  {
+    ref: "support-person",
+    section: "maintenance",
+    name: "Dedicated support person",
+    description:
+      "One named person for day-to-day updates, content uploads and questions.",
+    price: 15000,
+    billing: "monthly",
+    service: "software",
+    image: "/agentic/domains/support.webp",
+    includes: [
+      "One named person on WhatsApp and phone",
+      "Uploads content, photos and offers for you",
+      "Replies within working hours, Monday to Saturday",
+    ],
+  },
+];
+
+/** The standard item behind a row: by its ref, or else by its name. */
+export function catalogueFor(line: Pick<QuoteLine, "ref" | "name">) {
+  if (line.ref) {
+    const hit = CATALOGUE.find((c) => c.ref === line.ref);
+    if (hit) return hit;
+  }
+  const name = line.name.trim().toLowerCase();
+  return CATALOGUE.find((c) => c.name.toLowerCase() === name);
+}
 
 export function defaultLines(): QuoteLine[] {
-  const articles = { groupId: newId(), groupName: "Articles" };
-  const logins = { groupId: newId(), groupName: "Logins and dashboards" };
-  return [
-    row(
-      "build",
-      "Basic website",
-      "A static website of 5 to 7 pages: home, about, services, gallery and contact. Works on phones and laptops.",
-      { on: true },
-    ),
-    row(
-      "build",
-      "Admin portal",
-      "An admin panel to change the website's text, images, prices and offers without a developer.",
-    ),
-    row(
-      "build",
-      "Articles uploaded by the admin",
-      "The admin writes or uploads an article and it shows on the website straight away.",
-      articles,
-    ),
-    row(
-      "build",
-      "AI-written articles",
-      "AI drafts articles on your topics. You edit them and publish them to the website.",
-      { ...articles, service: "ai" },
-    ),
-    row(
-      "build",
-      "Client login",
-      "Customers sign in to see their orders, bookings or documents.",
-      logins,
-    ),
-    row(
-      "build",
-      "Employee login",
-      "Staff sign in to their own dashboard, with only the pages they need.",
-      logins,
-    ),
-    row(
-      "build",
-      "Social media integration",
-      "Instagram, Facebook, LinkedIn and YouTube linked to the site, with share buttons on pages.",
-    ),
-    row(
-      "build",
-      "Notifications",
-      "Automatic email, WhatsApp and SMS messages for enquiries, orders and reminders. Message charges from the providers are extra.",
-    ),
-    row(
-      "build",
-      "Analytics dashboard",
-      "How many people visit the website, where they come from, which pages they read and how many enquire.",
-    ),
-    row(
-      "build",
-      "Delivery integration",
-      "Book deliveries through partners such as Rapido and Porter from the admin panel, with live status.",
-    ),
-    row(
-      "build",
-      "Mobile app",
-      "Android and iPhone app with the same features as the website, published on the Play Store and App Store.",
-    ),
-    row(
-      "marketing",
-      "SEO and blog writing",
-      "Keyword research, page fixes and new blog articles every month to move the website up in Google search.",
-    ),
-    row(
-      "marketing",
-      "Meta ads",
-      "Facebook and Instagram ads: set-up, creatives and weekly tuning. Ad spend is paid separately.",
-    ),
-    row(
-      "marketing",
-      "Google ads",
-      "Search and display ads: set-up, keywords and weekly tuning. Ad spend is paid separately.",
-    ),
-    row(
-      "maintenance",
-      "Maintenance",
-      "Hosting checks, security updates, backups, bug fixes and small changes across all the services above.",
-    ),
-    row(
-      "maintenance",
-      "Dedicated support person",
-      "One named person for day-to-day updates, content uploads and questions.",
-    ),
-  ];
+  const groups = new Map<string, string>();
+  return CATALOGUE.map((c) => {
+    let groupId: string | null = null;
+    if (c.group) {
+      if (!groups.has(c.group)) groups.set(c.group, newId());
+      groupId = groups.get(c.group)!;
+    }
+    return {
+      id: newId(),
+      on: c.ref === "website",
+      section: c.section,
+      groupId,
+      groupName: c.group ?? null,
+      name: c.name,
+      service: c.service,
+      description: c.description,
+      price: c.price,
+      billing: c.billing,
+      discount: { mode: "none", value: 0 },
+      ref: c.ref,
+    };
+  });
 }
+
+export const STANDARD_TERMS = [
+  "Prices are based on our first conversation and may change with the final requirements.",
+  "Prices are in Indian rupees.",
+  "Monthly maintenance charges start from the day the project goes live.",
+  "Third-party costs such as ad spend, domain, hosting, SMS and WhatsApp message charges are paid separately.",
+  "Payment terms will be agreed before work starts.",
+].join("\n");
 
 export const DEFAULT_DOC: QuoteDoc = {
   intro:
     "Thank you for taking the time to talk to us. This quotation lists the services you asked about, what we understood from our first conversation, and the price for each.",
   understanding: "",
-  terms: [
-    "Prices are based on our first conversation and may change once the full requirements are agreed.",
-    "Prices are in Indian rupees and do not include GST.",
-    "Monthly charges start from the month the work goes live.",
-    "Third-party costs such as ad spend, domain, hosting, SMS and WhatsApp message charges are paid separately.",
-    "Payment terms will be agreed before work starts.",
-  ].join("\n"),
+  terms: STANDARD_TERMS,
 };
 
 export function defaultBody(): QuoteBody {
@@ -345,6 +583,7 @@ export function cleanBody(input: unknown): QuoteBody {
         price: money(l.price),
         billing: l.billing === "monthly" ? "monthly" : "once",
         discount: cleanDiscount(l.discount),
+        ref: l.ref ? str(l.ref, 40) : null,
       };
     });
   const doc = (b.doc ?? {}) as Partial<QuoteDoc>;
