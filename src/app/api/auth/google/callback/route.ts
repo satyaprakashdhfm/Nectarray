@@ -7,6 +7,11 @@ import { upsertUser } from "@/lib/auth/users";
 import { exchange, siteOrigin } from "@/lib/auth/google";
 import { isAdmin } from "@/lib/auth/access";
 import {
+  mintAppCode,
+  validAppReturn,
+  validChallenge,
+} from "@/lib/auth/app-codes";
+import {
   attachCookies,
   sameSecret,
   startSession,
@@ -34,19 +39,35 @@ export const runtime = "nodejs";
  * /admin/login rather than on the marketing home page with a student modal
  * open over it.
  */
-const fail = (origin: string, realm: Realm, why: string) =>
+const failOnSite = (origin: string, realm: Realm, why: string) =>
   NextResponse.redirect(
     realm === "admin"
       ? `${origin}/admin/login?error=${why}`
       : `${origin}/academy?signin=1&error=${why}`,
   );
 
-/** Clears the three short-lived OAuth cookies, whichever way this goes. */
+/**
+ * Back to the Android app, with a code or the reason there is none.
+ *
+ * The app reads `error` with the same words the website uses, plus
+ * `not_admin`, so it can say which Google account was refused.
+ */
+const toApp = (appReturn: string, params: Record<string, string>) => {
+  const url = new URL(appReturn);
+  for (const [name, value] of Object.entries(params)) {
+    url.searchParams.set(name, value);
+  }
+  return NextResponse.redirect(url.toString());
+};
+
+/** Clears the short-lived OAuth cookies, whichever way this goes. */
 function spent<T extends NextResponse>(response: T): T {
   for (const name of [
     "na_oauth_state",
     "na_oauth_verifier",
     "na_oauth_realm",
+    "na_oauth_app_return",
+    "na_oauth_app_challenge",
   ]) {
     response.cookies.set(name, "", { path: "/", maxAge: 0 });
   }
@@ -62,6 +83,17 @@ export async function GET(request: Request) {
   const verifier = jar.get("na_oauth_verifier")?.value ?? "";
   const realm: Realm =
     jar.get("na_oauth_realm")?.value === "admin" ? "admin" : "student";
+
+  // Set only when the Android app started this sign-in, and checked again
+  // here: a cookie is not proof of anything until it passes the same test.
+  const appReturnCookie = jar.get("na_oauth_app_return")?.value ?? null;
+  const appChallenge = jar.get("na_oauth_app_challenge")?.value ?? null;
+  const app =
+    validAppReturn(appReturnCookie) && validChallenge(appChallenge)
+      ? { returnTo: appReturnCookie, challenge: appChallenge }
+      : null;
+  const fail = (o: string, r: Realm, why: string) =>
+    app ? toApp(app.returnTo, { error: why, realm: r }) : failOnSite(o, r, why);
 
   // Google says so itself when the student closes the consent screen.
   const denied = url.searchParams.get("error");
@@ -98,6 +130,35 @@ export async function GET(request: Request) {
   if (user && user.role !== "admin" && isAdmin(user)) patch.role = "admin";
   if (Object.keys(patch).length > 0) {
     await db.update(users).set(patch).where(eq(users.id, userId));
+  }
+
+  /*
+   * The app gets a code, not a session. An admin sign-in from the app is
+   * refused here when the account is not an admin, with no code at all: the
+   * website can let a stranger sit on /admin/login, but the app has nothing
+   * to show them, so they are told which account was refused and stopped.
+   */
+  if (app) {
+    const [fresh] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (realm === "admin" && !isAdmin(fresh ?? null)) {
+      return spent(
+        toApp(app.returnTo, {
+          error: "not_admin",
+          realm,
+          email: identity.email,
+        }),
+      );
+    }
+    return spent(
+      toApp(app.returnTo, {
+        code: mintAppCode({ userId, realm, challenge: app.challenge }),
+        realm,
+      }),
+    );
   }
 
   const session = await startSession(

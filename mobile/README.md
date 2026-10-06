@@ -23,6 +23,16 @@ EXPO_PUBLIC_SITE_URL=http://<your computer's Wi-Fi IP>:3000
 
 A phone cannot reach `localhost`. Use the IP that `ipconfig` shows.
 
+## Sign-in
+
+The person icon on Home (and "Student sign in" on Academy) opens the Account screen, with separate **Student** and **Admin** sign-ins, the same as the website's two.
+
+- Both use Google through the website's own sign-in route, opened in a Chrome tab. When it finishes, the tab sends the phone back into the app (`nectarray://auth`) with a one-time code. The app swaps that code for a session using a secret it made before the tab opened, so the code is useless to anybody else.
+- **Admin** checks the address against the same rules as the website's `/admin`: `ADMIN_EMAILS` on Railway or the user's admin role. It checks at sign-in, again when the code is swapped, and again every time the app starts. An account that isn't allowed gets no session, and the app says which Google account was refused.
+- Tokens are kept in the phone's encrypted storage. Sign out deletes the session on the server too.
+
+Sign-in does **not** work inside Expo Go. Expo Go cannot receive `nectarray://` links, and the live site refuses to send codes anywhere else. To test sign-in, install the test APK (`npm run build:apk`).
+
 ## Checks
 
 ```

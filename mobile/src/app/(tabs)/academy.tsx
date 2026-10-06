@@ -1,5 +1,4 @@
 import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -21,7 +20,7 @@ import {
   usePalette,
 } from '@/components/ui';
 import { Radius, Space } from '@/constants/theme';
-import { SITE_URL, useContent, type Content } from '@/lib/api';
+import { useContent, type Content } from '@/lib/api';
 import { contactHref } from '@/lib/links';
 
 type Module = Content['academy']['course']['curriculum'][number];
@@ -77,7 +76,7 @@ export default function AcademyScreen() {
               label="Student sign in"
               kind="secondary"
               icon="person"
-              onPress={() => WebBrowser.openBrowserAsync(`${SITE_URL}/dashboard`)}
+              onPress={() => router.push('/account')}
             />
           </View>
         </Card>

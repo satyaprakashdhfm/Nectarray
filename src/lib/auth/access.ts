@@ -43,7 +43,13 @@ export type Viewer = {
 export const getViewer = cache(async (): Promise<Viewer> => {
   const user = await currentUser();
   if (!user) return { user: null, enrolment: null };
+  return { user, enrolment: await enrolmentFor(user.id) };
+});
 
+/** A student's latest enrolment and its cohort, or null. */
+export async function enrolmentFor(
+  userId: string,
+): Promise<Viewer["enrolment"]> {
   const [row] = await db
     .select({
       id: enrolments.id,
@@ -55,12 +61,12 @@ export const getViewer = cache(async (): Promise<Viewer> => {
     })
     .from(enrolments)
     .innerJoin(cohorts, eq(cohorts.id, enrolments.cohortId))
-    .where(eq(enrolments.userId, user.id))
+    .where(eq(enrolments.userId, userId))
     .orderBy(desc(enrolments.createdAt))
     .limit(1);
 
-  return { user, enrolment: row ?? null };
-});
+  return row ?? null;
+}
 
 /**
  * Whether the viewer can open course material.

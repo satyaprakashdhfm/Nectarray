@@ -152,7 +152,20 @@ export async function currentUser(
 ): Promise<User | null> {
   const token = (await cookies()).get(NAMES[realm].session)?.value;
   if (!token) return null;
+  return userForToken(token, () => void extend(token, realm));
+}
 
+/**
+ * The owner of a live session token, wherever the token came from.
+ *
+ * The website reads it from a cookie; the Android app sends it as a bearer
+ * token, since a phone app has no cookie jar of its own. Same table, same
+ * hash, same expiry, so signing out on either is the one DELETE.
+ */
+async function userForToken(
+  token: string,
+  onHalfUsed: () => void,
+): Promise<User | null> {
   const { batchId: _batch, ...userColumns } = getTableColumns(users);
   const rows = await db
     .select({ user: userColumns, expiresAt: sessions.expiresAt })
@@ -169,14 +182,54 @@ export async function currentUser(
   const row = rows[0];
   if (!row) return null;
 
-  // Past halfway, push it out again — a weekly visitor should never be asked
+  // Past halfway, push it out again. A weekly visitor should never be asked
   // to sign in twice, and rewriting on every request would be a write per
   // page view for no benefit.
-  if (row.expiresAt.getTime() - Date.now() < LIFETIME_MS / 2) {
-    void extend(token, realm);
-  }
+  if (row.expiresAt.getTime() - Date.now() < LIFETIME_MS / 2) onHalfUsed();
 
-  return row.user;
+  return row.user as User;
+}
+
+/** The token from an `Authorization: Bearer ...` header, if there is one. */
+export function bearerToken(request: Request): string | null {
+  const header = request.headers.get("authorization") ?? "";
+  const match = header.match(/^Bearer\s+([A-Za-z0-9_-]{20,})$/);
+  return match ? match[1] : null;
+}
+
+/** The app's signed-in user, from its bearer token. */
+export async function bearerUser(request: Request): Promise<User | null> {
+  const token = bearerToken(request);
+  if (!token) return null;
+  return userForToken(token, () => {
+    void db
+      .update(sessions)
+      .set({ expiresAt: new Date(Date.now() + LIFETIME_MS) })
+      .where(eq(sessions.tokenHash, hash(token)));
+  });
+}
+
+/** Signs the app out: the session row goes, and the token with it. */
+export async function endBearerSession(request: Request): Promise<void> {
+  const token = bearerToken(request);
+  if (token) {
+    await db.delete(sessions).where(eq(sessions.tokenHash, hash(token)));
+  }
+}
+
+/**
+ * Starts a session for the app and hands back the bare token, which the app
+ * keeps in the phone's encrypted store and sends as a bearer token.
+ */
+export async function startAppSession(userId: string): Promise<string> {
+  const token = randomBytes(32).toString("base64url");
+  await db.insert(sessions).values({
+    tokenHash: hash(token),
+    userId,
+    expiresAt: new Date(Date.now() + LIFETIME_MS),
+    userAgent: "NectArray Android app",
+  });
+  return token;
 }
 
 async function extend(token: string, realm: Realm): Promise<void> {

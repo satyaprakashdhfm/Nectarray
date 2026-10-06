@@ -19,11 +19,14 @@ import {
 } from '@/components/ui';
 import { Radius, Space } from '@/constants/theme';
 import { siteUrl, useContent } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { practiceHref } from '@/lib/links';
 
 export default function HomeScreen() {
   const content = useContent();
   const c = usePalette();
+  const auth = useAuth();
+  const signedIn = Boolean(auth.student || auth.admin);
 
   if (content.status === 'loading') return <LoadingPage />;
   if (content.status === 'error') return <ErrorPage {...content} />;
@@ -33,7 +36,24 @@ export default function HomeScreen() {
     <Screen>
       <View style={styles.brand}>
         <Image source={require('@/assets/images/logo-mark.png')} style={styles.mark} />
-        <Txt variant="heading">{company.name}</Txt>
+        <Txt variant="heading" style={{ flex: 1 }}>
+          {company.name}
+        </Txt>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={signedIn ? 'Account, signed in' : 'Sign in'}
+          onPress={() => router.push('/account')}
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.account,
+            {
+              backgroundColor: signedIn ? c.brandWash : c.surface,
+              borderColor: signedIn ? c.brandDeep : c.line,
+              transform: [{ scale: pressed ? 0.94 : 1 }],
+            },
+          ]}>
+          <Icon name="person" color={signedIn ? c.brandDeep : c.inkSoft} size={20} />
+        </Pressable>
       </View>
 
       <Rise style={{ marginTop: Space.xl }}>
@@ -173,6 +193,14 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: Space.sm },
   mark: { width: 34, height: 30 },
+  account: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   ctas: { marginTop: Space.lg, gap: Space.sm },
   stats: {
     flexDirection: 'row',

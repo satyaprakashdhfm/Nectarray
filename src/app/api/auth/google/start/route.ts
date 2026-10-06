@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
+import { validAppReturn, validChallenge } from "@/lib/auth/app-codes";
 import {
   authorizeUrl,
   googleConfigured,
@@ -61,10 +62,31 @@ export async function GET(request: Request) {
       ? "admin"
       : "student";
 
-  if (asked !== new URL(origin).host) {
-    return NextResponse.redirect(
-      `${origin}/api/auth/google/start?realm=${realm}`,
+  /*
+   * A sign-in started by the Android app. It names where to send the result
+   * (nectarray://auth) and the PKCE challenge its code will be bound to; see
+   * lib/auth/app-codes.ts. Both are checked here, before Google is involved,
+   * so a doctored link fails at the first step rather than after consent.
+   */
+  const params = new URL(request.url).searchParams;
+  const appReturn = params.get("app_return");
+  const appChallenge = params.get("app_challenge");
+  const fromApp = appReturn !== null || appChallenge !== null;
+  if (fromApp && !(validAppReturn(appReturn) && validChallenge(appChallenge))) {
+    return NextResponse.json(
+      { error: "This sign-in link is not valid. Start again from the app." },
+      { status: 400 },
     );
+  }
+
+  if (asked !== new URL(origin).host) {
+    const again = new URL(`${origin}/api/auth/google/start`);
+    again.searchParams.set("realm", realm);
+    if (fromApp) {
+      again.searchParams.set("app_return", appReturn!);
+      again.searchParams.set("app_challenge", appChallenge!);
+    }
+    return NextResponse.redirect(again.toString());
   }
 
   const state = randomBytes(16).toString("base64url");
@@ -84,6 +106,17 @@ export async function GET(request: Request) {
   response.cookies.set("na_oauth_state", state, options);
   response.cookies.set("na_oauth_verifier", verifier, options);
   response.cookies.set("na_oauth_realm", realm, options);
+  if (fromApp) {
+    response.cookies.set("na_oauth_app_return", appReturn!, options);
+    response.cookies.set("na_oauth_app_challenge", appChallenge!, options);
+  } else {
+    // A website sign-in after an abandoned app one must not go to the app.
+    response.cookies.set("na_oauth_app_return", "", { path: "/", maxAge: 0 });
+    response.cookies.set("na_oauth_app_challenge", "", {
+      path: "/",
+      maxAge: 0,
+    });
+  }
 
   return response;
 }
