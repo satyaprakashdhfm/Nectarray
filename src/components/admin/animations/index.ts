@@ -14,6 +14,7 @@ import { FintechCardFan } from "./heroes/FintechCardFan";
 import { FintechLiveChart } from "./heroes/FintechLiveChart";
 import { HealthBreathing } from "./heroes/HealthBreathing";
 import { HealthHeartbeat } from "./heroes/HealthHeartbeat";
+import { LawPropertyVerification } from "./heroes/LawPropertyVerification";
 import { SaasAuroraDashboard } from "./heroes/SaasAuroraDashboard";
 import { ScrollCardToPhone } from "./heroes/ScrollCardToPhone";
 import { ScrollStickyFeatures } from "./heroes/ScrollStickyFeatures";
@@ -77,4 +78,5 @@ export const HEROES: Record<string, ComponentType> = {
   "health-heartbeat": HealthHeartbeat,
   "travel-parallax-zoom": TravelParallaxZoom,
   "travel-gallery-landing": TravelGalleryLanding,
+  "law-property-verification": LawPropertyVerification,
 };

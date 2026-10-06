@@ -92,6 +92,12 @@ export const ANIMATION_CATEGORIES: AnimationCategory[] = [
     label: "Real estate and travel",
     blurb: "Let the photo do it: slow zooms, parallax and a gallery that lands.",
   },
+  {
+    id: "legal",
+    label: "Law and legal",
+    blurb:
+      "Show the work behind the advice: files changing hands, papers checked, an opinion signed. Calm, clear and on white.",
+  },
 ];
 
 export const ANIMATIONS: AnimationEntry[] = [
@@ -259,5 +265,12 @@ export const ANIMATIONS: AnimationEntry[] = [
     name: "Gallery that lands around a search",
     note: "Photos fly in from different sides and settle in a mosaic, and the search bar opens out beneath the headline.",
     file: "TravelGalleryLanding.tsx",
+  },
+  {
+    id: "law-property-verification",
+    category: "legal",
+    name: "Law office from above, verifying a home",
+    note: "A top view of the office: a home buyer walks in with the property file, a lawyer takes it to research, the title, EC and plan are checked and ticked, the senior lawyer stamps the opinion, and the verified file goes back to the buyer. Property and real estate law firms.",
+    file: "LawPropertyVerification.tsx",
   },
 ];
