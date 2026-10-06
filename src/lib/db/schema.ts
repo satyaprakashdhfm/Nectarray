@@ -610,10 +610,47 @@ export const clientProjects = pgTable(
     value: numeric(),
     startsOn: date("starts_on"),
     dueOn: date("due_on"),
+    /**
+     * The day it was marked delivered. Set when the status becomes
+     * delivered and cleared if it moves back; the Timeline counts on it.
+     */
+    deliveredOn: date("delivered_on"),
     note: text(),
     createdAt: now(),
   },
   (table) => [index("client_projects_service_idx").on(table.service)],
+);
+
+/**
+ * One piece of work on the Tasks tab: what, for which project, by when,
+ * and who (nobody named means anyone can pick it up). Admin-only.
+ * The sprint and quarter are worked out from the due date, not stored.
+ */
+export const workItems = pgTable(
+  "work_items",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid("project_id").references(() => clientProjects.id, {
+      onDelete: "set null",
+    }),
+    title: text().notNull(),
+    notes: text(),
+    /** A person's name, or null for anyone. */
+    assignee: text(),
+    /** todo · doing · done */
+    status: text().notNull().default("todo"),
+    /** low · normal · high */
+    priority: text().notNull().default("normal"),
+    dueOn: date("due_on"),
+    doneAt: timestamp("done_at", { withTimezone: true }),
+    createdAt: now(),
+    updatedAt: now(),
+  },
+  (table) => [
+    index("work_items_status_idx").on(table.status),
+    index("work_items_due_idx").on(table.dueOn),
+    index("work_items_project_idx").on(table.projectId),
+  ],
 );
 
 /**

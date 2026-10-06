@@ -19,6 +19,7 @@ import {
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
 import { cleanCosts } from "@/lib/third-party-costs";
 import { cleanTemplate } from "@/lib/quote-template";
+import { todayIST } from "@/lib/work";
 
 /**
  * Quotations: start one, save it, delete it, keep the starting rows, and
@@ -292,6 +293,7 @@ export async function addQuoteProjects(
       client: quote.company,
       title: (e.title.trim() || quote.title || quote.company).slice(0, 200),
       status,
+      deliveredOn: status === "delivered" ? todayIST() : null,
       value: once ? String(once) : null,
       note,
     };

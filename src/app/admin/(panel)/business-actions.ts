@@ -19,6 +19,7 @@ import {
   PROJECT_STATUSES,
   isService,
 } from "@/lib/business";
+import { todayIST } from "@/lib/work";
 
 /**
  * Mutations for the business dashboard: projects, payments, keywords, the
@@ -65,6 +66,16 @@ const projectStatus = (value: string) =>
     PROJECT_STATUSES.map((s) => s.id),
   );
 
+/**
+ * Delivered keeps the day it first became delivered; any other status
+ * clears it, so a project reopened and delivered again moves on the
+ * Timeline to the later day.
+ */
+const deliveredOn = (status: string) =>
+  status === "delivered"
+    ? sql`coalesce(${clientProjects.deliveredOn}, (now() at time zone 'Asia/Kolkata')::date)`
+    : null;
+
 function done() {
   revalidatePath("/admin", "layout");
 }
@@ -84,6 +95,7 @@ export async function createProject(form: FormData) {
     client,
     title,
     status: projectStatus(text(form, "status") || "lead"),
+    deliveredOn: text(form, "status") === "delivered" ? todayIST() : null,
     value: value === null ? null : String(value),
     startsOn: optional(form, "starts_on"),
     dueOn: optional(form, "due_on"),
@@ -110,6 +122,7 @@ export async function updateProject(form: FormData) {
       client,
       title,
       status: projectStatus(text(form, "status")),
+      deliveredOn: deliveredOn(text(form, "status")),
       value: value === null ? null : String(value),
       startsOn: optional(form, "starts_on"),
       dueOn: optional(form, "due_on"),
@@ -143,7 +156,10 @@ export async function setProjectStatus(form: FormData) {
   if (!id) throw new Error("Missing project.");
   await db
     .update(clientProjects)
-    .set({ status: projectStatus(text(form, "status")) })
+    .set({
+      status: projectStatus(text(form, "status")),
+      deliveredOn: deliveredOn(text(form, "status")),
+    })
     .where(eq(clientProjects.id, id));
   done();
 }

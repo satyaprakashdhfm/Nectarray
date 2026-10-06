@@ -101,6 +101,15 @@ async function applySchema() {
    */
   const FIXUPS = [
     /*
+     * Projects already delivered before delivered_on existed get a date the
+     * Timeline can place them on: the due date if there was one, else the
+     * day they were added. Only fills blanks, so re-running changes nothing.
+     */
+    `UPDATE client_projects
+        SET delivered_on = coalesce(due_on, created_at::date)
+      WHERE status = 'delivered' AND delivered_on IS NULL`,
+
+    /*
      * The course does not number its lessons by day any more.
      *
      * A day label was a second ordering next to `position`, and the two fell

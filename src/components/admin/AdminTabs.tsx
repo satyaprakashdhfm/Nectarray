@@ -7,6 +7,7 @@ import {
   Bot,
   Briefcase,
   CalendarDays,
+  ChartGantt,
   ChartLine,
   ChevronDown,
   Code,
@@ -19,6 +20,7 @@ import {
   Layers,
   Lightbulb,
   Link2,
+  ListChecks,
   LockOpen,
   Megaphone,
   NotebookPen,
@@ -39,6 +41,8 @@ const TOP: Tab[] = [
   { href: "/admin/ads", label: "Ads", icon: Megaphone },
   { href: "/admin/development", label: "All projects", icon: Layers },
   { href: "/admin/quotes", label: "Quotations", icon: FileText },
+  { href: "/admin/tasks", label: "Tasks", icon: ListChecks },
+  { href: "/admin/timeline", label: "Timeline", icon: ChartGantt },
 ];
 
 /**
