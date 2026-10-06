@@ -11,6 +11,7 @@ import { useColorScheme } from 'react-native';
 
 import { Colors, Fonts } from '@/constants/theme';
 import { AuthProvider } from '@/lib/auth';
+import { useUpdateCheck } from '@/lib/updates';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,6 +29,7 @@ export default function RootLayout() {
     SchibstedGrotesk_700Bold,
   });
   const ready = fontsLoaded || fontError != null;
+  useUpdateCheck();
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();

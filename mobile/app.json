@@ -2,11 +2,18 @@
   "expo": {
     "name": "NectArray",
     "slug": "nectarray",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nectarray",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/25b7a0a4-9cc4-40dc-864d-9734c22744c8",
+      "checkAutomatically": "NEVER"
+    },
     "ios": {
       "bundleIdentifier": "com.nectarray.app"
     },

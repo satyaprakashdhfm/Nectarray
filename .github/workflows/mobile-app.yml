@@ -1,0 +1,108 @@
+# Ships the Android app from mobile/ whenever it changes on main.
+#
+# - The version in mobile/app.json has no GitHub release yet: build an APK on
+#   EAS and publish it as release app-v<version>, with NectArray.apk attached.
+#   Always downloadable from
+#   https://github.com/satyaprakashdhfm/Nectarray/releases/latest/download/NectArray.apk
+# - That version is already released: publish an over-the-air update instead,
+#   which installed apps pick up the next time they open.
+#
+# Needs the repository secret EXPO_TOKEN (expo.dev > Account settings > Access
+# tokens). Without it the workflow skips with a note instead of failing.
+name: Mobile app
+
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/mobile-app.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-app
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      released: ${{ steps.plan.outputs.released }}
+      ready: ${{ steps.plan.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          version=$(jq -r '.expo.version' mobile/app.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "app-v$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -n "$EXPO_TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Add the EXPO_TOKEN repository secret to build and update the app."
+          fi
+
+  release:
+    needs: plan
+    if: needs.plan.outputs.ready == 'true' && needs.plan.outputs.released == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - name: Build the APK on EAS
+        run: npx eas-cli@latest build --platform android --profile preview --non-interactive --wait --json > build.json
+      - name: Download it
+        run: curl -fsSL -o NectArray.apk "$(jq -r '.[0].artifacts.buildUrl' build.json)"
+      - name: Publish the GitHub release
+        run: |
+          gh release create "app-v$VERSION" NectArray.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "NectArray $VERSION for Android" \
+            --latest \
+            --notes "Download **NectArray.apk** below on an Android phone and open it to install. If NectArray is already installed, this installs over it and keeps your sign-in."
+
+  update:
+    needs: plan
+    if: needs.plan.outputs.ready == 'true' && needs.plan.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      MESSAGE: ${{ github.event.head_commit.message || 'Manual update' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - name: Publish an over-the-air update
+        run: npx eas-cli@latest update --channel preview --environment preview --platform android --non-interactive --message "$(echo "$MESSAGE" | head -n 1)"

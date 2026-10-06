@@ -4,7 +4,26 @@ A native app (Expo, React Native) for the whole website: Home, Services, Academy
 
 It has no copy of its own. All text comes from the website's content modules through `GET /api/app/content` and `GET /api/app/blog/<slug>`, both built when the site deploys. Changing a line in `src/lib/content` changes it in the app after the next website deploy, with no new Play Store release. The contact form posts to the same `/api/contact` the website uses.
 
-## Run it on your phone
+## Install it from GitHub (no Expo Go, no build tools)
+
+On an Android phone, open
+https://github.com/satyaprakashdhfm/Nectarray/releases/latest/download/NectArray.apk
+in Chrome. The APK downloads. Open it and allow Chrome to "install unknown apps" when Android asks. That link always gives the newest version. Every release is listed at https://github.com/satyaprakashdhfm/Nectarray/releases.
+
+### How the installed app stays up to date
+
+The `Mobile app` GitHub workflow (`.github/workflows/mobile-app.yml`) runs whenever `mobile/` changes on `main`:
+
+- **Code-only changes** (screens, text, styles; the `version` in `app.json` unchanged) go out as an over-the-air update. When the app opens it downloads the update and offers **Restart now**. If you choose Later, the update applies the next time the app starts.
+- **Native changes** (a new native package, an icon or `app.json` setting) need a new installer. Raise `version` in `app.json` (for example 1.1.0 to 1.2.0) and push. The workflow builds the APK on EAS (about 10 to 20 minutes) and publishes GitHub release `app-v1.2.0`. The installed app then shows **NectArray 1.2.0 is out > Download**. The new APK installs over the old one, and you stay signed in.
+
+Website content (services, blog, academy text) never needs either: the app reads it live from the site.
+
+One-time setup: create an access token at https://expo.dev/settings/access-tokens and add it to the GitHub repository as the secret `EXPO_TOKEN` (Settings > Secrets and variables > Actions > New repository secret). Then run the workflow once from the Actions tab (**Mobile app > Run workflow**) to publish the first release.
+
+To publish an update by hand instead: `npm run update -- "what changed"`.
+
+## Run it on your phone (development)
 
 1. Install **Expo Go** from the Play Store.
 2. Run:
@@ -52,4 +71,4 @@ Builds run in Expo's cloud (EAS). Android Studio is not needed.
 
 New personal developer accounts must run a closed test with at least 12 testers for 14 days before production access opens. Organisation accounts do not need to.
 
-Before each release, raise `version` in `app.json`. EAS raises the Android `versionCode` itself.
+Before each store release, raise `version` in `app.json`. EAS raises the Android `versionCode` itself.
