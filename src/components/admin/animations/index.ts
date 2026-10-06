@@ -6,7 +6,8 @@ import { AgencyMarqueeMagnetic } from "./heroes/AgencyMarqueeMagnetic";
 import { AgencyRollingWords } from "./heroes/AgencyRollingWords";
 import { AiOrbitNetwork } from "./heroes/AiOrbitNetwork";
 import { AiTypingPrompt } from "./heroes/AiTypingPrompt";
-import { ClinicScrollSite } from "./heroes/ClinicScrollSite";
+import { ClinicCareSite } from "./heroes/ClinicCareSite";
+import { CommerceCitySite } from "./heroes/CommerceCitySite";
 import { EcommerceColourPicker } from "./heroes/EcommerceColourPicker";
 import { EcommerceMaskReveal } from "./heroes/EcommerceMaskReveal";
 import { EducationCountUp } from "./heroes/EducationCountUp";
@@ -15,7 +16,7 @@ import { FintechCardFan } from "./heroes/FintechCardFan";
 import { FintechLiveChart } from "./heroes/FintechLiveChart";
 import { HealthBreathing } from "./heroes/HealthBreathing";
 import { HealthHeartbeat } from "./heroes/HealthHeartbeat";
-import { KitchenScrollSite } from "./heroes/KitchenScrollSite";
+import { KitchenTasteSite } from "./heroes/KitchenTasteSite";
 import { LawOfficeScrollSite } from "./heroes/LawOfficeScrollSite";
 import { LawPropertyVerification } from "./heroes/LawPropertyVerification";
 import { SaasAuroraDashboard } from "./heroes/SaasAuroraDashboard";
@@ -25,7 +26,6 @@ import { ScrollWordFill } from "./heroes/ScrollWordFill";
 import { SaasSpotlightGrid } from "./heroes/SaasSpotlightGrid";
 import { TravelGalleryLanding } from "./heroes/TravelGalleryLanding";
 import { TravelParallaxZoom } from "./heroes/TravelParallaxZoom";
-import { WarehouseScrollSite } from "./heroes/WarehouseScrollSite";
 
 /*
  * The 3D heroes load on demand and only in the browser: three.js is most of
@@ -86,9 +86,9 @@ export const HEROES: Record<string, ComponentType> = {
   "health-heartbeat": HealthHeartbeat,
   "travel-parallax-zoom": TravelParallaxZoom,
   "travel-gallery-landing": TravelGalleryLanding,
-  "clinic-scroll-site": ClinicScrollSite,
-  "warehouse-scroll-site": WarehouseScrollSite,
-  "kitchen-scroll-site": KitchenScrollSite,
+  "clinic-care-site": ClinicCareSite,
+  "commerce-city-site": CommerceCitySite,
+  "kitchen-taste-site": KitchenTasteSite,
   "law-office-scroll-site": LawOfficeScrollSite,
   "law-firm-scroll-site": LawFirmScrollSite,
   "law-property-verification": LawPropertyVerification,
