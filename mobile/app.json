@@ -12,7 +12,6 @@
     },
     "android": {
       "package": "com.nectarray.app",
-      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -44,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "25b7a0a4-9cc4-40dc-864d-9734c22744c8"
+      }
+    },
+    "owner": "nectarray"
   }
 }
