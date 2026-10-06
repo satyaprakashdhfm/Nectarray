@@ -602,17 +602,6 @@ function Desk({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
   );
 }
 
-function Plant({ x, y, r = 15 }: { x: number; y: number; r?: number }) {
-  return (
-    <g>
-      <circle cx={x} cy={y} r={r} fill="#e4e4e7" />
-      <circle cx={x - r * 0.33} cy={y - r * 0.27} r={r * 0.55} fill="#4ade80" />
-      <circle cx={x + r * 0.33} cy={y - r * 0.2} r={r * 0.48} fill="#22c55e" />
-      <circle cx={x} cy={y + r * 0.33} r={r * 0.5} fill="#16a34a" />
-    </g>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* The office.                                                         */
 /* ------------------------------------------------------------------ */
@@ -668,14 +657,6 @@ function Office({ t, frame }: { t: MotionValue<number>; frame: Frame }) {
         >
           <path d="M40 0 H0 V40" fill="none" stroke="#ececef" strokeWidth="1" />
         </pattern>
-        <pattern
-          id="office-paving"
-          width="22"
-          height="22"
-          patternUnits="userSpaceOnUse"
-        >
-          <circle cx="11" cy="11" r="1.1" fill="#e4e4e7" />
-        </pattern>
       </defs>
       <motion.g
         style={{
@@ -686,88 +667,21 @@ function Office({ t, frame }: { t: MotionValue<number>; frame: Frame }) {
           transformOrigin: "0px 0px",
         }}
       >
-        {/* Outside: paving all the way out, a path to the door, trees. */}
-        <rect x="-3000" y="-3000" width="6800" height="6600" fill="#ffffff" />
+        {/* One office floor, running on past the edge of the screen. */}
+        <rect x="-3000" y="-3000" width="6800" height="6600" fill="#fafafa" />
         <rect
           x="-3000"
           y="-3000"
           width="6800"
           height="6600"
-          fill="url(#office-paving)"
-        />
-        <rect x="-3000" y="474" width="3024" height="62" fill="#f4f4f5" />
-        <path
-          d="M-3000 474 H20 M-3000 536 H20"
-          stroke="#e4e4e7"
-          strokeWidth="2"
-        />
-        {[
-          [-90, 70, 26],
-          [-150, 260, 30],
-          [-70, 380, 20],
-          [-120, 650, 28],
-          [880, 90, 30],
-          [930, 300, 24],
-          [870, 470, 28],
-          [940, 640, 22],
-          [180, -70, 26],
-          [430, -90, 30],
-          [690, -60, 22],
-          [150, 690, 28],
-          [480, 680, 24],
-          [760, 700, 30],
-          [-260, 120, 34],
-          [1060, 200, 34],
-          [-280, 760, 30],
-          [1080, 640, 32],
-        ].map(([x, y, r]) => (
-          <g key={`${x}-${y}`}>
-            <circle cx={x + 4} cy={y + 6} r={r} fill="#18181b" opacity="0.05" />
-            <circle cx={x} cy={y} r={r} fill="#bbf7d0" />
-            <circle
-              cx={x - r * 0.3}
-              cy={y - r * 0.25}
-              r={r * 0.55}
-              fill="#86efac"
-            />
-            <circle
-              cx={x + r * 0.28}
-              cy={y + r * 0.2}
-              r={r * 0.45}
-              fill="#4ade80"
-              opacity="0.7"
-            />
-          </g>
-        ))}
-
-        {/* Floor, walls and the door on the left. */}
-        <rect x="20" y="20" width="760" height="560" fill="#fafafa" />
-        <rect
-          x="20"
-          y="20"
-          width="760"
-          height="560"
           fill="url(#office-tiles)"
         />
+
+        {/* The glass entrance on the left, slid open, with its mat. */}
         <path
-          d="M20 470 V20 H780 V580 H20 V540"
-          fill="none"
-          stroke="#a1a1aa"
-          strokeWidth="8"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        <path
-          d="M20 470 A70 70 0 0 1 90 540"
-          fill="none"
-          stroke="#d4d4d8"
-          strokeWidth="1.5"
-          strokeDasharray="4 4"
-        />
-        <path
-          d="M20 540 H90"
-          stroke="#a1a1aa"
-          strokeWidth="3"
+          d="M20 456 V474 M20 536 V554"
+          stroke="#cbd5e1"
+          strokeWidth="4"
           strokeLinecap="round"
         />
         <rect
@@ -779,24 +693,46 @@ function Office({ t, frame }: { t: MotionValue<number>; frame: Frame }) {
           fill="var(--s-light)"
         />
 
-        {/* The senior advocate's glass cabin. */}
+        {/* Soft rugs mark out reception and the meeting area. */}
+        <rect
+          x="120"
+          y="372"
+          width="300"
+          height="210"
+          rx="24"
+          fill="var(--p-light)"
+          opacity="0.28"
+        />
+        <rect
+          x="300"
+          y="218"
+          width="204"
+          height="148"
+          rx="28"
+          fill="var(--p-light)"
+          opacity="0.28"
+        />
+
+        {/* The senior advocate's glass room, its door at the top. */}
+        <rect
+          x="560"
+          y="300"
+          width="220"
+          height="280"
+          rx="6"
+          fill="var(--p-light)"
+          opacity="0.3"
+        />
         <path
-          d="M560 300 H570 M620 300 H780 M560 300 V580"
+          d="M572 300 H566 Q560 300 560 306 V574 Q560 580 566 580 H774 Q780 580 780 574 V306 Q780 300 774 300 H622"
           stroke="#cbd5e1"
-          strokeWidth="5"
+          strokeWidth="3"
           strokeLinecap="round"
           fill="none"
         />
-        <rect
-          x="562"
-          y="302"
-          width="216"
-          height="276"
-          fill="var(--p-light)"
-          opacity="0.35"
-        />
 
-        {/* Bookshelves along the top wall, and a printer. */}
+        {/* Bookshelves, filing cabinets and a printer, against nothing in
+            particular: the floor is open plan. */}
         <rect x="270" y="28" width="230" height="24" rx="3" fill="#e4e4e7" />
         {Array.from({ length: 18 }).map((_, i) => (
           <rect
@@ -806,18 +742,33 @@ function Office({ t, frame }: { t: MotionValue<number>; frame: Frame }) {
             width={i % 3 === 0 ? 9 : 7}
             height="18"
             rx="1"
-            fill={["var(--p)", "var(--t)", "var(--s)", "#a1a1aa"][i % 4]}
-            opacity={i % 2 ? 0.55 : 0.85}
+            fill={
+              ["var(--p)", "var(--p-dark)", "#a1a1aa", "var(--p-light)"][i % 4]
+            }
+            opacity={i % 2 ? 0.6 : 0.9}
           />
         ))}
         <rect x="520" y="30" width="36" height="26" rx="4" fill="#d4d4d8" />
         <rect x="526" y="36" width="24" height="6" rx="1" fill="#a1a1aa" />
-
-        <Plant x={46} y={46} />
-        <Plant x={752} y={46} />
-        <Plant x={46} y={410} r={13} />
-        <Plant x={752} y={552} r={13} />
-        <Plant x={540} y={552} r={12} />
+        {[0, 1].map((i) => (
+          <g key={i}>
+            <rect
+              x={34 + i * 34}
+              y="28"
+              width="30"
+              height="40"
+              rx="3"
+              fill="#e4e4e7"
+              stroke="#d4d4d8"
+            />
+            <path
+              d={`M${40 + i * 34} 41 H${58 + i * 34} M${40 + i * 34} 55 H${58 + i * 34}`}
+              stroke="#a1a1aa"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </g>
+        ))}
 
         {/* Reception. */}
         <Chair x={205} y={392} />
@@ -1047,7 +998,7 @@ function Story() {
       {/* The office, the whole background, held while the words pass. */}
       <div
         ref={stageRef}
-        className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden bg-white"
+        className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden bg-[#fafafa]"
       >
         <Office
           key={`${Math.round(frame.vw)}-${frame.wide}`}
@@ -1055,8 +1006,8 @@ function Story() {
           frame={frame}
         />
         {/* A soft white behind the words, so they read like on a page. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-white via-white/90 to-transparent @4xl:hidden" />
-        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-gradient-to-r from-white via-white/85 to-transparent @4xl:block" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-[#fafafa] via-[#fafafa]/90 to-transparent @4xl:hidden" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-gradient-to-r from-[#fafafa] via-[#fafafa]/85 to-transparent @4xl:block" />
         <motion.div
           className="absolute inset-x-0 top-0 h-1 origin-left bg-(--p)"
           style={{ scaleX: bar }}
