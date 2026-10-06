@@ -270,7 +270,7 @@ export const ANIMATIONS: AnimationEntry[] = [
     id: "law-office-scroll-site",
     category: "legal",
     name: "Full law firm website, the office from above",
-    note: "A whole one-page site. The words scroll on the left while the office, seen from above, plays on the right: the client walks in and hands the file over at reception, an associate carries it to the records desk where it is searched on the computer, then to the plan desk, then into the senior advocate's cabin to be stamped, and back to the client at the meeting table. The view zooms into each desk and pulls out to the whole office with the Verified seal. Then services, numbers, reviews, questions and footer. Scroll the page to play it.",
+    note: "A whole one-page site. The office, seen from above, is the full background, out to the paving and trees around it, and the words scroll over it on the left (below it on a phone) while the scroll plays the story: the client walks in and hands the file over at reception, an associate carries it to the records desk where it is searched on the computer, then to the plan desk, then into the senior advocate's cabin to be stamped, and back to the client at the meeting table. The view zooms into each desk and pulls out to the whole office with the Verified seal. Then services, numbers, reviews, questions and footer. Scroll the page to play it.",
     file: "LawOfficeScrollSite.tsx",
   },
   {

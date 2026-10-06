@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
@@ -40,9 +40,9 @@ const END = 30;
 type Key = [number, number, number, number];
 
 const CLIENT: Key[] = [
-  [0, 62, 505, 90],
-  [2.4, 205, 505, 90],
-  [2.7, 205, 505, 0],
+  [0, -70, 505, 90],
+  [2.6, 205, 505, 90],
+  [2.85, 205, 505, 0],
   [3.9, 205, 505, 0],
   [4.1, 205, 505, 112],
   [5.0, 320, 552, 112],
@@ -130,23 +130,49 @@ const HOLDS: [number, number, Key[] | Spot][] = [
 
 const STAMP_AT = 23.6;
 
-/* The camera: [time, centre x, centre y, zoom]. */
+/*
+ * The camera: [time, centre x, centre y, width of the world to show].
+ * It is fitted into the stage, the part of the screen the words leave
+ * free: the right of a wide screen, the top of a phone.
+ */
 const CAMERA: [number, number, number, number][] = [
-  [0, 400, 300, 1],
-  [5.4, 400, 300, 1],
-  [7.0, 205, 190, 1.75],
-  [14.7, 205, 190, 1.75],
-  [15.7, 420, 190, 1.3],
-  [16.9, 620, 190, 1.75],
-  [19.9, 620, 190, 1.75],
-  [21.3, 640, 420, 1.8],
-  [24.9, 640, 420, 1.8],
-  [26.4, 400, 330, 1.15],
-  [28.0, 400, 300, 1.45],
-  [28.9, 400, 300, 1.45],
-  [29.7, 400, 300, 1],
-  [END, 400, 300, 1],
+  [0, 380, 300, 980],
+  [5.4, 400, 300, 900],
+  [7.0, 190, 185, 430],
+  [14.7, 190, 185, 430],
+  [15.7, 420, 185, 660],
+  [16.9, 630, 185, 430],
+  [19.9, 630, 185, 430],
+  [21.3, 650, 430, 410],
+  [24.9, 650, 430, 410],
+  [26.4, 400, 330, 720],
+  [28.0, 400, 320, 540],
+  [28.9, 400, 320, 540],
+  [29.7, 400, 300, 1000],
+  [END, 400, 300, 1000],
 ];
+
+/** The screen in world units, and the part of it the office plays in. */
+type Frame = {
+  vw: number;
+  vh: number;
+  stage: { x: number; y: number; w: number; h: number };
+  wide: boolean;
+};
+
+function frameFor(width: number, height: number): Frame {
+  const vh = 600;
+  const vw = height > 0 ? (600 * width) / height : 800;
+  const wide = width >= 896;
+  return {
+    vw,
+    vh,
+    wide,
+    stage: wide
+      ? { x: vw * 0.42, y: 20, w: vw * 0.58 - 20, h: vh - 40 }
+      : { x: 0, y: 30, w: vw, h: vh * 0.5 },
+  };
+}
 
 /* The checks that appear in the office as they pass. */
 const CHIPS = [
@@ -591,34 +617,45 @@ function Plant({ x, y, r = 15 }: { x: number; y: number; r?: number }) {
 /* The office.                                                         */
 /* ------------------------------------------------------------------ */
 
-function Office({ t }: { t: MotionValue<number> }) {
+function Office({ t, frame }: { t: MotionValue<number>; frame: Frame }) {
   const reduce = useReducedMotion();
   const time = useTime();
   const clock = useTransform(time, (ms) => (reduce ? 0 : ms));
   const times = CAMERA.map((c) => c[0]);
-  const zoom = useTransform(
-    t,
-    times,
-    CAMERA.map((c) => c[3]),
-  );
-  const cx = useTransform(
+  const fx = useTransform(
     t,
     times,
     CAMERA.map((c) => c[1]),
   );
-  const cy = useTransform(
+  const fy = useTransform(
     t,
     times,
     CAMERA.map((c) => c[2]),
   );
-  const camX = useTransform([cx, zoom], ([x, z]: number[]) => 400 - x * z);
-  const camY = useTransform([cy, zoom], ([y, z]: number[]) => 300 - y * z);
+  const fw = useTransform(
+    t,
+    times,
+    CAMERA.map((c) => c[3]),
+  );
+  const { stage } = frame;
+  // Fit the world box (fw wide, three quarters as tall) into the stage.
+  const zoom = useTransform(fw, (w) =>
+    Math.min(stage.w / w, stage.h / (w * 0.75)),
+  );
+  const camX = useTransform(
+    [fx, zoom],
+    ([x, z]: number[]) => stage.x + stage.w / 2 - x * z,
+  );
+  const camY = useTransform(
+    [fy, zoom],
+    ([y, z]: number[]) => stage.y + stage.h / 2 - y * z,
+  );
 
   return (
     <svg
-      viewBox="0 0 800 600"
+      viewBox={`0 0 ${frame.vw} ${frame.vh}`}
       className="block size-full"
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio="xMidYMid slice"
       role="img"
       aria-label="A law office from above. A client hands over a property file, the team researches and checks it at their computers, a senior advocate stamps it, and the verified file is handed back."
     >
@@ -631,6 +668,14 @@ function Office({ t }: { t: MotionValue<number> }) {
         >
           <path d="M40 0 H0 V40" fill="none" stroke="#ececef" strokeWidth="1" />
         </pattern>
+        <pattern
+          id="office-paving"
+          width="22"
+          height="22"
+          patternUnits="userSpaceOnUse"
+        >
+          <circle cx="11" cy="11" r="1.1" fill="#e4e4e7" />
+        </pattern>
       </defs>
       <motion.g
         style={{
@@ -641,6 +686,60 @@ function Office({ t }: { t: MotionValue<number> }) {
           transformOrigin: "0px 0px",
         }}
       >
+        {/* Outside: paving all the way out, a path to the door, trees. */}
+        <rect x="-3000" y="-3000" width="6800" height="6600" fill="#ffffff" />
+        <rect
+          x="-3000"
+          y="-3000"
+          width="6800"
+          height="6600"
+          fill="url(#office-paving)"
+        />
+        <rect x="-3000" y="474" width="3024" height="62" fill="#f4f4f5" />
+        <path
+          d="M-3000 474 H20 M-3000 536 H20"
+          stroke="#e4e4e7"
+          strokeWidth="2"
+        />
+        {[
+          [-90, 70, 26],
+          [-150, 260, 30],
+          [-70, 380, 20],
+          [-120, 650, 28],
+          [880, 90, 30],
+          [930, 300, 24],
+          [870, 470, 28],
+          [940, 640, 22],
+          [180, -70, 26],
+          [430, -90, 30],
+          [690, -60, 22],
+          [150, 690, 28],
+          [480, 680, 24],
+          [760, 700, 30],
+          [-260, 120, 34],
+          [1060, 200, 34],
+          [-280, 760, 30],
+          [1080, 640, 32],
+        ].map(([x, y, r]) => (
+          <g key={`${x}-${y}`}>
+            <circle cx={x + 4} cy={y + 6} r={r} fill="#18181b" opacity="0.05" />
+            <circle cx={x} cy={y} r={r} fill="#bbf7d0" />
+            <circle
+              cx={x - r * 0.3}
+              cy={y - r * 0.25}
+              r={r * 0.55}
+              fill="#86efac"
+            />
+            <circle
+              cx={x + r * 0.28}
+              cy={y + r * 0.2}
+              r={r * 0.45}
+              fill="#4ade80"
+              opacity="0.7"
+            />
+          </g>
+        ))}
+
         {/* Floor, walls and the door on the left. */}
         <rect x="20" y="20" width="760" height="560" fill="#fafafa" />
         <rect
@@ -914,6 +1013,8 @@ const STEPS = [
 
 function Story() {
   const ref = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [frame, setFrame] = useState<Frame>(() => frameFor(1280, 720));
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
@@ -929,66 +1030,82 @@ function Story() {
   const finaleScale = useTransform(t, [29.2, 29.6, 29.9], [0.6, 1.08, 1]);
   const bar = useTransform(t, [0, END], [0, 1]);
 
+  // The office is drawn to the shape of the screen it fills.
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) setFrame(frameFor(width, height));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div
-      ref={ref}
-      className="relative grid @4xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] @4xl:gap-10"
-    >
-      {/* The office, held still while the words scroll past. */}
-      <div className="pointer-events-none col-start-1 row-start-1 @4xl:col-start-2">
-        <div className="pointer-events-auto sticky top-16 z-10 h-[46dvh] bg-white pt-3 @4xl:top-20 @4xl:h-[calc(100dvh-6rem)] @4xl:pt-0">
-          <div className="relative h-full overflow-hidden rounded-3xl bg-white shadow-[0_30px_60px_-30px_rgba(24,24,27,0.3)] ring-1 ring-zinc-200">
-            <Office t={t} />
-            <motion.div
-              className="absolute inset-x-0 top-0 h-1 origin-left bg-(--p)"
-              style={{ scaleX: bar }}
-            />
-            <div className="absolute top-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-700 shadow-sm ring-1 ring-zinc-200">
-              Step {step + 1} of {STEPS.length}
-            </div>
-            {/* The whole office again, with the seal on it. */}
-            <motion.div
-              className="pointer-events-none absolute inset-0 grid place-items-center"
-              style={{ opacity: finale }}
-            >
-              <motion.div
-                className="flex flex-col items-center rounded-3xl bg-white/90 px-8 py-6 text-center shadow-xl ring-1 ring-green-200 backdrop-blur"
-                style={{ scale: finaleScale }}
-              >
-                <span className="grid size-16 place-items-center rounded-full bg-green-600 ring-8 ring-green-100">
-                  <svg viewBox="0 0 24 24" className="size-8" aria-hidden>
-                    <path
-                      d="M5 12.5 L10 17 L19 7.5"
-                      fill="none"
-                      stroke="#ffffff"
-                      strokeWidth="2.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <p className="mt-3 text-xl font-semibold tracking-tight text-zinc-900">
-                  Verified. Safe to buy.
-                </p>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Title clear, no loans, plan approved, opinion signed.
-                </p>
-              </motion.div>
-            </motion.div>
-          </div>
+    <div ref={ref} className="relative">
+      {/* The office, the whole background, held while the words pass. */}
+      <div
+        ref={stageRef}
+        className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden bg-white"
+      >
+        <Office
+          key={`${Math.round(frame.vw)}-${frame.wide}`}
+          t={t}
+          frame={frame}
+        />
+        {/* A soft white behind the words, so they read like on a page. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-white via-white/90 to-transparent @4xl:hidden" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-gradient-to-r from-white via-white/85 to-transparent @4xl:block" />
+        <motion.div
+          className="absolute inset-x-0 top-0 h-1 origin-left bg-(--p)"
+          style={{ scaleX: bar }}
+        />
+        <div className="absolute top-3 right-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-700 shadow-sm ring-1 ring-zinc-200">
+          Step {step + 1} of {STEPS.length}
         </div>
+        {/* The whole office again, with the seal on it. */}
+        <motion.div
+          className="pointer-events-none absolute inset-x-0 top-0 grid h-[50%] place-items-center @4xl:inset-y-0 @4xl:right-0 @4xl:left-[42%] @4xl:h-auto"
+          style={{ opacity: finale }}
+        >
+          <motion.div
+            className="flex flex-col items-center rounded-3xl bg-white/90 px-8 py-6 text-center shadow-xl ring-1 ring-green-200 backdrop-blur"
+            style={{ scale: finaleScale }}
+          >
+            <span className="grid size-16 place-items-center rounded-full bg-green-600 ring-8 ring-green-100">
+              <svg viewBox="0 0 24 24" className="size-8" aria-hidden>
+                <path
+                  d="M5 12.5 L10 17 L19 7.5"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <p className="mt-3 text-xl font-semibold tracking-tight text-zinc-900">
+              Verified. Safe to buy.
+            </p>
+            <p className="mt-1 text-sm text-zinc-600">
+              Title clear, no loans, plan approved, opinion signed.
+            </p>
+          </motion.div>
+        </motion.div>
       </div>
 
-      {/* The words, one screen each. */}
-      <ol className="col-start-1 row-start-1 pt-[48dvh] @4xl:pt-0">
+      {/* The words, one screen each, over the office. */}
+      <ol className="relative z-10 mx-auto -mt-[calc(100dvh-4rem)] max-w-6xl px-5">
         {STEPS.map((s, i) => (
           <motion.li
             key={s.title}
-            className="flex min-h-[100dvh] flex-col justify-center py-10"
+            className="flex min-h-[100dvh] flex-col justify-end pb-[7dvh] @4xl:justify-center @4xl:pb-0"
             onViewportEnter={() => setStep(i)}
             viewport={{ amount: 0.55 }}
           >
             <motion.div
+              className="max-w-md"
               initial={{ opacity: 0.25, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ amount: 0.55 }}
@@ -1012,7 +1129,7 @@ function Story() {
                     </a>
                     <a
                       href="#services"
-                      className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-semibold whitespace-nowrap text-zinc-900 transition-colors hover:border-zinc-900"
+                      className="rounded-full border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold whitespace-nowrap text-zinc-900 transition-colors hover:border-zinc-900"
                     >
                       Our services
                     </a>
@@ -1385,7 +1502,7 @@ export function LawOfficeScrollSite() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5">
+      <section>
         <Story />
       </section>
 
