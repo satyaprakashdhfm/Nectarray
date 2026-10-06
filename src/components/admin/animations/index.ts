@@ -41,6 +41,10 @@ const CinematicDataGlobe = dynamic(
   () => import("./heroes/CinematicDataGlobe").then((m) => m.CinematicDataGlobe),
   { ssr: false },
 );
+const LawFirmScrollSite = dynamic(
+  () => import("./heroes/LawFirmScrollSite").then((m) => m.LawFirmScrollSite),
+  { ssr: false },
+);
 const CinematicFloatingCard = dynamic(
   () =>
     import("./heroes/CinematicFloatingCard").then(
@@ -78,5 +82,6 @@ export const HEROES: Record<string, ComponentType> = {
   "health-heartbeat": HealthHeartbeat,
   "travel-parallax-zoom": TravelParallaxZoom,
   "travel-gallery-landing": TravelGalleryLanding,
+  "law-firm-scroll-site": LawFirmScrollSite,
   "law-property-verification": LawPropertyVerification,
 };

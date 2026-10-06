@@ -267,6 +267,14 @@ export const ANIMATIONS: AnimationEntry[] = [
     file: "TravelGalleryLanding.tsx",
   },
   {
+    id: "law-firm-scroll-site",
+    category: "legal",
+    name: "Full law firm website, the file that flows on scroll",
+    note: "A whole one-page site built around a 3D property file, like the card on credit card sites. It floats by the headline; scrolling pins the stage and plays it: the file opens, the sale deed, EC, plan and tax receipts fan out and are scanned and ticked one by one, a stamp seals it Verified, and it flies into a phone as the legal opinion. Then services, process, numbers, reviews, questions and footer. Scroll the page to play it.",
+    file: "LawFirmScrollSite.tsx",
+    install: "npm i motion three @react-three/fiber",
+  },
+  {
     id: "law-property-verification",
     category: "legal",
     name: "Law office from above, verifying a home",
