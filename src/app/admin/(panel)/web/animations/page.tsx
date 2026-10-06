@@ -30,9 +30,18 @@ export default async function AdminWebAnimationsPage({
   const animations = await Promise.all(
     ANIMATIONS.filter((a) => a.category === current.id).map(async (a) => ({
       ...a,
-      source: await readFile(path.join(HEROES_DIR, a.file), "utf8").catch(
-        () => `// ${a.file} could not be read on the server.`,
-      ),
+      source: (
+        await Promise.all(
+          [a.file, ...(a.with ?? [])].map(async (file, i) => {
+            const text = await readFile(
+              path.join(HEROES_DIR, file),
+              "utf8",
+            ).catch(() => `// ${file} could not be read on the server.`);
+            // Files after the first are what it imports: mark where each starts.
+            return i === 0 ? text : `\n\n// ===== ${file} =====\n\n${text}`;
+          }),
+        )
+      ).join(""),
     })),
   );
 

@@ -34,6 +34,8 @@ export type AnimationEntry = {
   file: string;
   /** What to install for it, when it needs more than Motion. */
   install?: string;
+  /** Other files it imports from heroes/, shown and copied after it. */
+  with?: string[];
 };
 
 const THREE_STACK =
@@ -93,6 +95,12 @@ export const ANIMATION_CATEGORIES: AnimationCategory[] = [
     blurb: "Let the photo do it: slow zooms, parallax and a gallery that lands.",
   },
   {
+    id: "food",
+    label: "Food and restaurants",
+    blurb:
+      "Kitchens and restaurants seen from above: the order, the stove, the pass and the rider, played as the page scrolls.",
+  },
+  {
     id: "legal",
     label: "Law and legal",
     blurb:
@@ -101,6 +109,30 @@ export const ANIMATION_CATEGORIES: AnimationCategory[] = [
 ];
 
 export const ANIMATIONS: AnimationEntry[] = [
+  {
+    id: "clinic-scroll-site",
+    category: "health",
+    name: "Full clinic website, a visit from above",
+    note: "A whole one-page site with the clinic seen from above as its background. Scrolling plays one visit: the patient registers at reception, has vitals taken, sees the doctor in the glass room, gives a sample that runs on the lab analyser, collects medicines from the pharmacist and walks out. Then services, numbers, reviews and questions. Scroll the page to play it.",
+    file: "ClinicScrollSite.tsx",
+    with: ["TopViewKit.tsx"],
+  },
+  {
+    id: "warehouse-scroll-site",
+    category: "ecommerce",
+    name: "Full fulfilment website, an order from above",
+    note: "A whole one-page site with the warehouse seen from above as its background. Scrolling plays one order: it lands on the screen, a picker pushes a trolley down the aisles and picks three items, the packer boxes, tapes and labels them, carries the box to the dock and the courier van drives off. Then services, numbers, reviews and questions. Scroll the page to play it.",
+    file: "WarehouseScrollSite.tsx",
+    with: ["TopViewKit.tsx"],
+  },
+  {
+    id: "kitchen-scroll-site",
+    category: "food",
+    name: "Full cloud kitchen website, an order from above",
+    note: "A whole one-page site with the kitchen seen from above as its background. Scrolling plays one order: the ticket prints at the pass, the chef chops at the prep counter and cooks on the flame while the pan steams, it is packed and sealed, and the rider takes the bag and scooters away. Then the menu, numbers, reviews and questions. Scroll the page to play it.",
+    file: "KitchenScrollSite.tsx",
+    with: ["TopViewKit.tsx"],
+  },
   {
     id: "cinematic-voxel-city",
     category: "cinematic",
