@@ -744,10 +744,14 @@ function startSession({
   let cwd = proj.path;
   let tree = null;
   if (shell) {
-    // A plain terminal in the repo, for running git and the like yourself.
+    /*
+     * A plain terminal in the repo, for running git and the like yourself.
+     * Not a login shell: that rereads /etc/profile, which resets PATH and
+     * loses /data/tools/bin, where Claude Code is installed.
+     */
     program = WIN && !CLOUD ? "powershell.exe" : "bash";
     args.length = 0;
-    args.push(...(WIN && !CLOUD ? ["-NoLogo"] : ["-l"]));
+    if (WIN && !CLOUD) args.push("-NoLogo");
     if (resume?.cwd && existsSync(resume.cwd)) cwd = resume.cwd;
   } else if (kind === "login") {
     args.length = 0;
