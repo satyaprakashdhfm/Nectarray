@@ -1,46 +1,56 @@
 # Workspace runner
 
-Runs Claude Code sessions on this PC for the **Workspace** tab in the admin
-panel (`/admin/workspace`). The tab is the screen; this is what actually runs
-the terminals.
+Runs Claude Code sessions for the **Workspace** tab in the admin panel. The
+tab is the screen; this is what runs the terminals.
 
-## Start it
+## In the cloud (normal use)
 
-From the Nectarray folder:
+The **Workspace** service on Railway, built from the `Dockerfile` here (root
+directory `workspace/`), with a volume at `/data`.
+
+- **Start / Stop**: the tab's Start wakes the service; Stop closes every
+  session, and Railway puts the service to sleep when it goes quiet, which
+  costs nothing. Sessions nobody is watching are closed after 30 minutes
+  (`WORKSPACE_IDLE_MINUTES`), so a forgotten Stop does not run up a bill.
+- **Repos**: every repo the `GITHUB_TOKEN` can see. A repo is cloned onto the
+  volume the first time a session opens it. **Own copy** starts a session
+  with `--worktree`, so parallel sessions in one repo use separate branches.
+- **Claude sign-in**: one for every session and repo, kept on the volume.
+  Press **Sign in** in the tab once, open the sign-in page it shows, choose
+  Continue with Google, and paste the code back into the box under the
+  terminal.
+- **Updates**: Claude Code is installed on the volume and `claude update`
+  runs at every start and every six hours while idle.
+- **Cards**: Claude Code's hooks (`hook.mjs`) report each step back, which is
+  how a card shows Working, Needs you or Done. They send only the tool name,
+  file name or command, and the prompt; never file contents.
+
+### Variables
+
+On the **Workspace** service:
+
+| Name | What |
+| --- | --- |
+| `WORKSPACE_SECRET` | Shared with the Web service; verifies the passes it signs. The runner refuses to start without it. |
+| `GITHUB_TOKEN` | A fine-grained GitHub token: Contents read and write (and Pull requests, for PRs). Private repos and pushes need it. |
+| `WORKSPACE_IDLE_MINUTES` | Optional, default 30. |
+
+On the **Web** service: `WORKSPACE_URL` (the Workspace service's domain) and
+the same `WORKSPACE_SECRET`.
+
+### Who can reach it
+
+It is on the internet, so every socket needs a pass: signed by the website
+with `WORKSPACE_SECRET`, good for one minute, and only issued to an admin who
+is fully signed in (Google, an address on `ADMIN_EMAILS`, and the code emailed
+for that session). It also only accepts the site's own origin. Hook reports
+are accepted only from inside the container, with a per-run secret.
+
+## On this PC (development)
 
 ```
 npm run workspace
 ```
 
-The first run installs its own dependencies. Leave the window open while you
-work: closing it (or Ctrl+C) closes every session.
-
-Then open the Workspace tab, on https://nectarray.com/admin/workspace or on
-http://localhost:3000/admin/workspace while `npm run dev` is running. If
-Chrome asks whether the site may reach apps on this device, choose **Allow**.
-
-## What it does
-
-- **Repos**: every git repo in the folder above this one (`E:\Users\satya3479\Projects`).
-  **Connect a repo** clones a GitHub link into that folder.
-- **Sessions**: each one is a real `claude` in its own terminal. **Own copy**
-  starts it with `--worktree`, so parallel sessions in one repo work on separate
-  branches and never edit the same files.
-- **Cards**: Claude Code's hooks (`hook.mjs`) report each step back here, which
-  is how a card shows Working, Needs you or Done. The hooks send only the tool
-  name, the file name or command, and the prompt, never file contents.
-- **Sign-in**: shared with Claude Code everywhere on this PC. **Sign in** runs
-  `claude auth login`, which opens claude.ai in the browser (Continue with
-  Google works there).
-- **Updates**: `claude update` runs when the runner starts and every six hours
-  while no session is open. **Update now** runs it right away.
-- **Voice**: hold **Hold to talk** in the tab, speak, let go. The words are typed
-  into that session's prompt; **Send** submits them (or tick **Send right away**).
-  It uses the browser's speech recognition, so it needs Chrome or Edge.
-
-## Safety
-
-It listens only on `127.0.0.1:4100`, never on the network, and accepts
-connections only from nectarray.com and localhost:3000. Add another origin with
-`WORKSPACE_ORIGINS=https://example.com`. Other settings: `WORKSPACE_ROOT` (the
-repos folder) and `WORKSPACE_PORT` (default 4100; the tab expects 4100).
+Listens on `127.0.0.1:4100` only, with the repos in the folder above this one.
+With `npm run dev` and no `WORKSPACE_URL`, the tab connects to it.

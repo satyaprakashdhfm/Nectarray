@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import {
   ConnectionStrip,
   PageHead,
@@ -51,7 +52,7 @@ export default async function AdminAnalyticsPage({
         <LiveVisitors initial={live} />
       </Section>
 
-      <ServiceFilter basePath="/admin/analytics" current={service} />
+      <ServiceFilter basePath={`${ADMIN}/analytics`} current={service} />
       <AnalyticsReport result={report} own={own} filtered={Boolean(service)} />
     </>
   );

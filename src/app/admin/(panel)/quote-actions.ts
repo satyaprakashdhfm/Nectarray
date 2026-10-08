@@ -1,4 +1,5 @@
 "use server";
+import { ADMIN } from "@/lib/admin-path";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -81,7 +82,7 @@ export async function createQuote(form: FormData) {
     })
     .returning({ id: quotations.id });
   done();
-  redirect(`/admin/quotes/${row.id}`);
+  redirect(`${ADMIN}/quotes/${row.id}`);
 }
 
 export type QuoteInput = {
@@ -197,7 +198,7 @@ export async function deleteQuote(form: FormData) {
   // The projects made from it stay: they are real work by then.
   await db.delete(quotations).where(eq(quotations.id, id));
   done();
-  redirect("/admin/quotes");
+  redirect(`${ADMIN}/quotes`);
 }
 
 const slug = (s: string) =>

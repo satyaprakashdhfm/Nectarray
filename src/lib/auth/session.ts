@@ -54,6 +54,16 @@ const NAMES: Record<Realm, { session: string; hint: string }> = {
 
 const LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 
+/**
+ * The panel's sessions last five hours and are never extended. After that
+ * it is Google again and a fresh emailed code (admin-otp.ts), whoever the
+ * admin is: a stolen admin cookie is worth one afternoon at most.
+ */
+export const ADMIN_LIFETIME_MS = 5 * 60 * 60 * 1000;
+
+const lifetime = (realm: Realm) =>
+  realm === "admin" ? ADMIN_LIFETIME_MS : LIFETIME_MS;
+
 const hash = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 
@@ -106,7 +116,7 @@ export async function startSession(
   realm: Realm = "student",
 ): Promise<CookieWrite[]> {
   const token = randomBytes(32).toString("base64url");
-  const expiresAt = new Date(Date.now() + LIFETIME_MS);
+  const expiresAt = new Date(Date.now() + lifetime(realm));
 
   await db.insert(sessions).values({
     tokenHash: hash(token),
@@ -152,7 +162,55 @@ export async function currentUser(
 ): Promise<User | null> {
   const token = (await cookies()).get(NAMES[realm].session)?.value;
   if (!token) return null;
-  return userForToken(token, () => void extend(token, realm));
+  return userForToken(
+    token,
+    realm === "admin" ? null : () => void extend(token, realm),
+  );
+}
+
+/**
+ * The panel's session: who, and whether the emailed code has been entered
+ * for it yet. Null when there is no live admin session.
+ */
+export async function adminSession(): Promise<{
+  user: User;
+  tokenHash: string;
+  verified: boolean;
+  expiresAt: Date;
+} | null> {
+  const token = (await cookies()).get(NAMES.admin.session)?.value;
+  if (!token) return null;
+  const { batchId: _batch, ...userColumns } = getTableColumns(users);
+  const [row] = await db
+    .select({
+      user: userColumns,
+      verifiedAt: sessions.verifiedAt,
+      expiresAt: sessions.expiresAt,
+    })
+    .from(sessions)
+    .innerJoin(users, eq(users.id, sessions.userId))
+    .where(
+      and(
+        eq(sessions.tokenHash, hash(token)),
+        gt(sessions.expiresAt, new Date()),
+      ),
+    )
+    .limit(1);
+  if (!row) return null;
+  return {
+    user: row.user as User,
+    tokenHash: hash(token),
+    verified: row.verifiedAt !== null,
+    expiresAt: row.expiresAt,
+  };
+}
+
+/** Records that this admin session's emailed code was entered. */
+export async function markVerified(tokenHash: string): Promise<void> {
+  await db
+    .update(sessions)
+    .set({ verifiedAt: new Date() })
+    .where(eq(sessions.tokenHash, tokenHash));
 }
 
 /**
@@ -164,7 +222,7 @@ export async function currentUser(
  */
 async function userForToken(
   token: string,
-  onHalfUsed: () => void,
+  onHalfUsed: (() => void) | null,
 ): Promise<User | null> {
   const { batchId: _batch, ...userColumns } = getTableColumns(users);
   const rows = await db
@@ -185,7 +243,8 @@ async function userForToken(
   // Past halfway, push it out again. A weekly visitor should never be asked
   // to sign in twice, and rewriting on every request would be a write per
   // page view for no benefit.
-  if (row.expiresAt.getTime() - Date.now() < LIFETIME_MS / 2) onHalfUsed();
+  if (onHalfUsed && row.expiresAt.getTime() - Date.now() < LIFETIME_MS / 2)
+    onHalfUsed();
 
   return row.user as User;
 }

@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN } from "@/lib/admin-path";
 
 import { useEffect, useState, useTransition } from "react";
 import {
@@ -285,7 +286,7 @@ export function ProjectWorkspace({
             </p>
           </div>
           <a
-            href={dirty ? undefined : `/admin/projects/${projectId}/sheet`}
+            href={dirty ? undefined : `${ADMIN}/projects/${projectId}/sheet`}
             aria-disabled={dirty}
             title={dirty ? "Save first" : "Download as Excel"}
             className={cn(

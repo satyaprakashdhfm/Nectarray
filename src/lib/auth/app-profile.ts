@@ -1,4 +1,5 @@
 import "server-only";
+import { ADMIN } from "@/lib/admin-path";
 import type { User } from "@/lib/db/schema";
 import { enrolmentFor, isAdmin } from "@/lib/auth/access";
 import type { Realm } from "@/lib/auth/session";
@@ -18,6 +19,9 @@ export async function appProfile(user: User, realm: Realm) {
     firstName: user.firstName,
     lastName: user.lastName,
     admin: isAdmin(user),
+    // The panel's address, for its "Open the admin panel" button: only to
+    // an admin who has signed in to the app's admin side.
+    panel: realm === "admin" && isAdmin(user) ? ADMIN : null,
     enrolment: enrolment
       ? { status: enrolment.status, cohort: enrolment.cohortName }
       : null,

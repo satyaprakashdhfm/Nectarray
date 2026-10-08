@@ -2,39 +2,32 @@
 
 import { useEffect, useRef } from "react";
 import "@xterm/xterm/css/xterm.css";
-import { RUNNER } from "./runner";
+import { openRunner } from "./runner";
 
 /**
  * One session's terminal: the real Claude Code screen, streamed from the
- * runner on this PC. Keystrokes go straight back to it, so it behaves the way
- * Claude Code does in any terminal.
+ * runner. Keystrokes go straight back to it, so it behaves the way Claude
+ * Code does in any terminal; links in it open in a new tab.
  *
  * xterm touches `window` when it loads, so it is imported inside the effect.
  * Remounted per session (keyed by id), which replays that session's recent
  * output from the runner.
  */
-export function TerminalView({
-  id,
-  onExit,
-}: {
-  id: string;
-  onExit?: () => void;
-}) {
+export function TerminalView({ id }: { id: string }) {
   const host = useRef<HTMLDivElement>(null);
-  const exitRef = useRef(onExit);
-  useEffect(() => {
-    exitRef.current = onExit;
-  }, [onExit]);
 
   useEffect(() => {
     let disposed = false;
     let cleanup = () => {};
 
     (async () => {
-      const [{ Terminal }, { FitAddon }] = await Promise.all([
-        import("@xterm/xterm"),
-        import("@xterm/addon-fit"),
-      ]);
+      const [{ Terminal }, { FitAddon }, { WebLinksAddon }] = await Promise.all(
+        [
+          import("@xterm/xterm"),
+          import("@xterm/addon-fit"),
+          import("@xterm/addon-web-links"),
+        ],
+      );
       if (disposed || !host.current) return;
 
       const css = getComputedStyle(document.documentElement);
@@ -56,9 +49,29 @@ export function TerminalView({
       });
       const fit = new FitAddon();
       term.loadAddon(fit);
+      term.loadAddon(
+        new WebLinksAddon((_event, uri) =>
+          window.open(uri, "_blank", "noopener,noreferrer"),
+        ),
+      );
       term.open(host.current);
 
-      const ws = new WebSocket(`${RUNNER}/term/${id}`);
+      const opened = await openRunner(`/term/${id}`);
+      if (disposed) {
+        if (typeof opened !== "string") opened.close();
+        term.dispose();
+        return;
+      }
+      if (typeof opened === "string") {
+        term.write(
+          opened === "expired"
+            ? "\x1b[33mYour admin session has ended. Reload the page to sign in again.\x1b[0m\r\n"
+            : "\x1b[33mThe Workspace is not set up.\x1b[0m\r\n",
+        );
+        cleanup = () => term.dispose();
+        return;
+      }
+      const ws = opened;
       const send = (message: object) =>
         ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(message));
       const resize = () => {
@@ -75,10 +88,8 @@ export function TerminalView({
       ws.onmessage = (event) => {
         const m = JSON.parse(String(event.data));
         if (m.t === "out") term.write(m.data);
-        if (m.t === "exit") {
+        if (m.t === "exit")
           term.write("\r\n\x1b[2m[session closed]\x1b[0m\r\n");
-          exitRef.current?.();
-        }
       };
       const input = term.onData((data) => send({ t: "in", data }));
       const observer = new ResizeObserver(() => resize());

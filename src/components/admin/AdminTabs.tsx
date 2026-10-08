@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN } from "@/lib/admin-path";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -36,15 +37,15 @@ type Tab = { href: string; label: string; icon: LucideIcon };
 type Group = Tab & { children: Tab[]; owns: string[] };
 
 const TOP: Tab[] = [
-  { href: "/admin", label: "Revenue", icon: IndianRupee },
-  { href: "/admin/seo", label: "SEO", icon: Search },
-  { href: "/admin/analytics", label: "Analytics", icon: ChartLine },
-  { href: "/admin/ads", label: "Ads", icon: Megaphone },
-  { href: "/admin/development", label: "All projects", icon: Layers },
-  { href: "/admin/quotes", label: "Quotations", icon: FileText },
-  { href: "/admin/tasks", label: "Tasks", icon: ListChecks },
-  { href: "/admin/timeline", label: "Timeline", icon: ChartGantt },
-  { href: "/admin/workspace", label: "Workspace", icon: SquareTerminal },
+  { href: `${ADMIN}`, label: "Revenue", icon: IndianRupee },
+  { href: `${ADMIN}/seo`, label: "SEO", icon: Search },
+  { href: `${ADMIN}/analytics`, label: "Analytics", icon: ChartLine },
+  { href: `${ADMIN}/ads`, label: "Ads", icon: Megaphone },
+  { href: `${ADMIN}/development`, label: "All projects", icon: Layers },
+  { href: `${ADMIN}/quotes`, label: "Quotations", icon: FileText },
+  { href: `${ADMIN}/tasks`, label: "Tasks", icon: ListChecks },
+  { href: `${ADMIN}/timeline`, label: "Timeline", icon: ChartGantt },
+  { href: `${ADMIN}/workspace`, label: "Workspace", icon: SquareTerminal },
 ];
 
 /**
@@ -55,68 +56,68 @@ const TOP: Tab[] = [
  */
 const GROUPS: Group[] = [
   {
-    href: "/admin/services/marketing",
+    href: `${ADMIN}/services/marketing`,
     label: "Marketing",
     icon: Megaphone,
-    owns: ["/admin/services/marketing", "/admin/marketing"],
+    owns: [`${ADMIN}/services/marketing`, `${ADMIN}/marketing`],
     children: [
       {
-        href: "/admin/services/marketing",
+        href: `${ADMIN}/services/marketing`,
         label: "Projects",
         icon: FolderKanban,
       },
-      { href: "/admin/marketing/notes", label: "Notes", icon: NotebookPen },
+      { href: `${ADMIN}/marketing/notes`, label: "Notes", icon: NotebookPen },
     ],
   },
   {
-    href: "/admin/services/software",
+    href: `${ADMIN}/services/software`,
     label: "Software",
     icon: Code,
-    owns: ["/admin/services/software", "/admin/web"],
+    owns: [`${ADMIN}/services/software`, `${ADMIN}/web`],
     children: [
       {
-        href: "/admin/services/software",
+        href: `${ADMIN}/services/software`,
         label: "Projects",
         icon: FolderKanban,
       },
-      { href: "/admin/web", label: "Learnings", icon: Lightbulb },
-      { href: "/admin/web/colours", label: "Colours", icon: Palette },
-      { href: "/admin/web/elements", label: "Elements", icon: Component },
-      { href: "/admin/web/animations", label: "Animations", icon: Sparkles },
-      { href: "/admin/web/references", label: "References", icon: Link2 },
+      { href: `${ADMIN}/web`, label: "Learnings", icon: Lightbulb },
+      { href: `${ADMIN}/web/colours`, label: "Colours", icon: Palette },
+      { href: `${ADMIN}/web/elements`, label: "Elements", icon: Component },
+      { href: `${ADMIN}/web/animations`, label: "Animations", icon: Sparkles },
+      { href: `${ADMIN}/web/references`, label: "References", icon: Link2 },
     ],
   },
   {
-    href: "/admin/services/ai",
+    href: `${ADMIN}/services/ai`,
     label: "Agentic AI",
     icon: Bot,
-    owns: ["/admin/services/ai"],
+    owns: [`${ADMIN}/services/ai`],
     children: [
-      { href: "/admin/services/ai", label: "Projects", icon: FolderKanban },
+      { href: `${ADMIN}/services/ai`, label: "Projects", icon: FolderKanban },
     ],
   },
   {
-    href: "/admin/students",
+    href: `${ADMIN}/students`,
     label: "Academy",
     icon: GraduationCap,
     owns: [
-      "/admin/students",
-      "/admin/cohort",
-      "/admin/lessons",
-      "/admin/unlocking",
-      "/admin/placement",
-      "/admin/enquiries",
-      "/admin/services/training",
+      `${ADMIN}/students`,
+      `${ADMIN}/cohort`,
+      `${ADMIN}/lessons`,
+      `${ADMIN}/unlocking`,
+      `${ADMIN}/placement`,
+      `${ADMIN}/enquiries`,
+      `${ADMIN}/services/training`,
     ],
     children: [
-      { href: "/admin/students", label: "Students", icon: Users },
-      { href: "/admin/cohort", label: "Class", icon: CalendarDays },
-      { href: "/admin/lessons", label: "Notes", icon: NotebookPen },
-      { href: "/admin/unlocking", label: "Unlocking", icon: LockOpen },
-      { href: "/admin/placement", label: "Placement", icon: Briefcase },
-      { href: "/admin/enquiries", label: "Enquiries", icon: Inbox },
+      { href: `${ADMIN}/students`, label: "Students", icon: Users },
+      { href: `${ADMIN}/cohort`, label: "Class", icon: CalendarDays },
+      { href: `${ADMIN}/lessons`, label: "Notes", icon: NotebookPen },
+      { href: `${ADMIN}/unlocking`, label: "Unlocking", icon: LockOpen },
+      { href: `${ADMIN}/placement`, label: "Placement", icon: Briefcase },
+      { href: `${ADMIN}/enquiries`, label: "Enquiries", icon: Inbox },
       {
-        href: "/admin/services/training",
+        href: `${ADMIN}/services/training`,
         label: "Client training",
         icon: FolderKanban,
       },
@@ -142,11 +143,11 @@ export function AdminTabs() {
   const [chosen, setChosen] = useState<string | null | undefined>(undefined);
 
   const tabActive = (tab: Tab) =>
-    tab.href === "/admin"
-      ? pathname === "/admin"
+    tab.href === `${ADMIN}`
+      ? pathname === `${ADMIN}`
       : // All projects and Learnings own only their own page, not the
         // tabs beside them.
-        tab.href === "/admin/development" || tab.href === "/admin/web"
+        tab.href === `${ADMIN}/development` || tab.href === `${ADMIN}/web`
         ? pathname === tab.href
         : pathname.startsWith(tab.href);
   const groupActive = (group: Group) =>

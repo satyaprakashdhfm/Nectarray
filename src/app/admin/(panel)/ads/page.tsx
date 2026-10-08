@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { adCampaigns } from "@/lib/db/schema";
@@ -62,7 +63,7 @@ export default async function AdminAdsPage({
         lede="What each campaign cost, and the clicks and leads it brought in."
       />
       <ConnectionStrip ids={["googleAds", "metaAds"]} />
-      <ServiceFilter basePath="/admin/ads" current={service} />
+      <ServiceFilter basePath={`${ADMIN}/ads`} current={service} />
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat label="Ad spend" value={rupees.format(spend)} />

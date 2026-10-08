@@ -1,11 +1,19 @@
 /**
- * The Workspace runner: real Claude Code terminals on this PC, for the
- * Workspace tab in the admin panel.
+ * The Workspace runner: real Claude Code terminals for the Workspace tab in
+ * the admin panel. It runs in one of two places.
  *
- * The admin page (on nectarray.com or on localhost:3000) connects to this
- * over WebSockets on 127.0.0.1. It never listens on the network: it is a
- * shell on this machine, so only this machine's browser may reach it, and
- * only from the origins in ORIGINS.
+ * - The cloud (WORKSPACE_CLOUD=1): the Workspace service on Railway, built
+ *   from the Dockerfile here. It is reachable from the internet, so every
+ *   socket must carry a pass the website signs with WORKSPACE_SECRET, and
+ *   the website only signs one for an admin who is all the way in (Google,
+ *   the allowlist and the emailed code). Repos come from GitHub and live on
+ *   the service's volume, with Claude Code's own sign-in, shared by every
+ *   session. Stop closes every session; with no traffic left Railway puts
+ *   the service to sleep, and the next Start wakes it.
+ * - This PC (`npm run workspace`): listens on 127.0.0.1 only, for the browser
+ *   on the same machine, with the repos that sit next to this one.
+ *
+ * Either way, only the site's own origins (ORIGINS) may open a socket.
  *
  * - /control   one socket per open admin tab: projects, sessions, Claude
  *              Code's version and sign-in, and the commands that change them.
@@ -14,9 +22,15 @@
  *              a session's card knows it is working, needs you, or is done.
  */
 import { execFile } from "node:child_process";
-import { randomBytes, randomUUID } from "node:crypto";
+import {
+  createHmac,
+  randomBytes,
+  randomUUID,
+  timingSafeEqual,
+} from "node:crypto";
 import {
   existsSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
   statSync,
@@ -29,7 +43,15 @@ import pty from "node-pty";
 import { WebSocketServer } from "ws";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.WORKSPACE_PORT ?? 4100);
+const CLOUD = process.env.WORKSPACE_CLOUD === "1";
+const PORT = Number(
+  (CLOUD ? process.env.PORT : undefined) ?? process.env.WORKSPACE_PORT ?? 4100,
+);
+/** Verifies the passes the website signs for admins. Required in the cloud. */
+const PASS_SECRET = process.env.WORKSPACE_SECRET || null;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || null;
+/** In the cloud, sessions nobody is watching are closed after this long. */
+const IDLE_LIMIT = Number(process.env.WORKSPACE_IDLE_MINUTES ?? 30) * 60_000;
 /** The folder whose git repos are the projects: the one this repo sits in. */
 const ROOT = path.resolve(
   process.env.WORKSPACE_ROOT ?? path.join(HERE, "..", ".."),
@@ -47,6 +69,31 @@ const ORIGINS = new Set([
 const HOSTS = new Set([`localhost:${PORT}`, `127.0.0.1:${PORT}`]);
 /** Lets only hook.mjs, started by our own sessions, post hook events. */
 const SECRET = randomBytes(24).toString("hex");
+
+/**
+ * A pass is `<payload>.<signature>`: base64url JSON { sub, exp } and its
+ * HMAC-SHA256 under WORKSPACE_SECRET, made by the website's workspaceAccess
+ * action after it has checked the caller. Good for one minute, which is long
+ * enough to open a socket; the socket then stays open on its own.
+ */
+function validPass(pass) {
+  if (!PASS_SECRET || typeof pass !== "string") return false;
+  const [payload, signature] = pass.split(".");
+  if (!payload || !signature) return false;
+  const expected = createHmac("sha256", PASS_SECRET).update(payload).digest();
+  const given = Buffer.from(signature, "base64url");
+  if (given.length !== expected.length || !timingSafeEqual(given, expected))
+    return false;
+  try {
+    const { exp } = JSON.parse(Buffer.from(payload, "base64url").toString());
+    return typeof exp === "number" && exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+const loopback = (address = "") =>
+  ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(address);
 const WIN = process.platform === "win32";
 const CLAUDE = process.env.CLAUDE_BIN ?? (WIN ? "claude.cmd" : "claude");
 const BUFFER_LIMIT = 400_000;
@@ -131,6 +178,71 @@ async function updateClaude(force = false) {
 /* -------------------------------------------------------------------------- */
 
 let projects = [];
+/** The account's GitHub repos, listed with GITHUB_TOKEN: any can be opened. */
+let githubRepos = [];
+
+const github = (route) =>
+  fetch(`https://api.github.com${route}`, {
+    headers: {
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Accept: "application/vnd.github+json",
+      "User-Agent": "nectarray-workspace",
+    },
+    signal: AbortSignal.timeout(15_000),
+  });
+
+async function readGitHub() {
+  if (!GITHUB_TOKEN) return;
+  try {
+    const res = await github(
+      "/user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator,organization_member",
+    );
+    if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
+    githubRepos = (await res.json()).map((r) => ({
+      owner: r.owner.login,
+      repo: r.name,
+      url: r.html_url,
+      branch: r.default_branch,
+    }));
+  } catch (err) {
+    broadcast({
+      t: "error",
+      message: `Could not list your GitHub repos: ${err.message}`,
+    });
+  }
+}
+
+/**
+ * Commits made in the cloud carry the GitHub account's own name and its
+ * private noreply address, so they show up on GitHub as yours.
+ */
+async function gitIdentity() {
+  if (!CLOUD || !GITHUB_TOKEN) return;
+  try {
+    const me = await (await github("/user")).json();
+    const name = process.env.GIT_USER_NAME || me.name || me.login;
+    const email =
+      process.env.GIT_USER_EMAIL ||
+      `${me.id}+${me.login}@users.noreply.github.com`;
+    execFile("git", ["config", "--global", "user.name", name]);
+    execFile("git", ["config", "--global", "user.email", email]);
+  } catch {}
+}
+
+/** git clone into ROOT/<name>; resolves to an error message, or null. */
+function gitClone(source, name) {
+  return new Promise((resolve) =>
+    execFile(
+      "git",
+      ["clone", source, name],
+      { cwd: ROOT, timeout: 10 * 60_000, windowsHide: true },
+      (err, _out, stderr) =>
+        resolve(
+          err ? String(stderr).trim().split("\n").pop() || err.message : null,
+        ),
+    ),
+  );
+}
 
 function readProjects() {
   const found = [];
@@ -159,6 +271,7 @@ function readProjects() {
     found.push({
       name: entry.name,
       path: dir,
+      cloned: true,
       branch,
       github: gh
         ? {
@@ -167,6 +280,28 @@ function readProjects() {
             url: `https://github.com/${gh[1]}/${gh[2]}`,
           }
         : null,
+    });
+  }
+  // GitHub repos not cloned yet, cloned the first time a session opens one.
+  const key = (owner, repo) => `${owner}/${repo}`.toLowerCase();
+  const have = new Set(
+    found
+      .filter((p) => p.github)
+      .map((p) => key(p.github.owner, p.github.repo)),
+  );
+  const names = new Set(found.map((p) => p.name.toLowerCase()));
+  for (const r of githubRepos) {
+    if (have.has(key(r.owner, r.repo))) continue;
+    const name = names.has(r.repo.toLowerCase())
+      ? `${r.owner}-${r.repo}`
+      : r.repo;
+    names.add(name.toLowerCase());
+    found.push({
+      name,
+      path: path.join(ROOT, name),
+      cloned: false,
+      branch: r.branch,
+      github: { owner: r.owner, repo: r.repo, url: r.url },
     });
   }
   projects = found.sort((a, b) => a.name.localeCompare(b.name));
@@ -196,20 +331,14 @@ function cloneRepo(url, reply) {
     ? url.trim()
     : `https://github.com/${match[1]}/${name}.git`;
   broadcast({ t: "notice", message: `Cloning ${match[1]}/${name}…` });
-  execFile(
-    "git",
-    ["clone", source, name],
-    { cwd: ROOT, timeout: 10 * 60_000, windowsHide: true },
-    (err, _out, stderr) => {
-      readProjects();
-      if (err)
-        broadcast({
-          t: "error",
-          message: `Could not clone ${name}: ${String(stderr).trim().split("\n").pop()}`,
-        });
-      else broadcast({ t: "notice", message: `${name} is connected.` });
-    },
-  );
+  gitClone(source, name).then((error) => {
+    readProjects();
+    broadcast(
+      error
+        ? { t: "error", message: `Could not clone ${name}: ${error}` }
+        : { t: "notice", message: `${name} is connected.` },
+    );
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -317,8 +446,8 @@ function startSession({
     tree = `${slug(title || "session") || "session"}-${id.slice(0, 4)}`;
     args.push("--worktree", tree);
   }
-  if (kind !== "login" && mode === "acceptEdits")
-    args.push("--permission-mode", "acceptEdits");
+  if (kind !== "login" && MODES.includes(mode))
+    args.push("--permission-mode", mode);
 
   const s = resume ?? {
     id,
@@ -326,7 +455,7 @@ function startSession({
     project: proj.name,
     title: kind === "login" ? "Sign in to Claude" : title?.trim() || "",
     worktree: tree,
-    mode: mode === "acceptEdits" ? "acceptEdits" : "default",
+    mode: MODES.includes(mode) ? mode : "default",
     startedAt: new Date().toISOString(),
     files: [],
     prompts: 0,
@@ -335,7 +464,9 @@ function startSession({
     status: "starting",
     activity:
       kind === "login"
-        ? "Opening the sign-in page in your browser"
+        ? CLOUD
+          ? "Open the sign-in page, then paste the code it shows into the box below"
+          : "Opening the sign-in page in your browser"
         : "Starting Claude Code",
     cwd,
     exitCode: null,
@@ -371,17 +502,25 @@ function startSession({
       s.size -= s.buffer.shift().length;
     const frame = JSON.stringify({ t: "out", data });
     for (const ws of s.viewers) if (ws.readyState === 1) ws.send(frame);
+    if (s.kind === "login" && !s.link) {
+      const link = findLink(s.buffer.join(""));
+      if (link) {
+        s.link = link;
+        changed(s);
+      }
+    }
   });
   s.pty.onExit(({ exitCode }) => {
     s.pty = null;
     s.exitCode = exitCode;
     s.status = "ended";
     s.activity = s.stopping
-      ? "Stopped by you"
+      ? (s.stopReason ?? "Stopped by you")
       : exitCode === 0
         ? "Closed"
         : `Closed with exit code ${exitCode}`;
     s.stopping = false;
+    s.stopReason = null;
     for (const ws of s.viewers)
       if (ws.readyState === 1)
         ws.send(JSON.stringify({ t: "exit", code: exitCode }));
@@ -405,6 +544,36 @@ function startSession({
     }
   }, 6000);
   return { id };
+}
+
+/** Permission modes a session may start in, besides your usual settings. */
+const MODES = ["auto", "acceptEdits"];
+
+/**
+ * The sign-in address in `claude auth login`'s output, for a button on the
+ * page: in the cloud there is no browser for it to open by itself. The
+ * terminal may have wrapped it, so a line break inside it is skipped.
+ */
+function findLink(output) {
+  const text = output
+    .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, "")
+    .replace(/\x1b\[[0-9;?<>=]*[ -/]*[@-~]/g, "")
+    .replace(/\r/g, "");
+  const start = text.search(
+    /https:\/\/[^\s]*(?:claude\.ai|claude\.com|anthropic\.com)\/[^\s]*oauth/,
+  );
+  if (start < 0) return null;
+  let link = "";
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (c === "\n") {
+      if (/\S/.test(text[i + 1] ?? "")) continue;
+      break;
+    }
+    if (/\s/.test(c)) break;
+    link += c;
+  }
+  return link.length > 30 ? link : null;
 }
 
 const base = (p) => (p ? path.basename(String(p)) : "");
@@ -505,12 +674,16 @@ function broadcast(message) {
 }
 
 const server = http.createServer((req, res) => {
-  if (!HOSTS.has(req.headers.host ?? "")) {
+  if (!CLOUD && !HOSTS.has(req.headers.host ?? "")) {
     res.writeHead(403).end();
     return;
   }
   if (req.method === "POST" && req.url === "/hook") {
-    if (req.headers["x-workspace-secret"] !== SECRET) {
+    // Only from inside this machine, and only with this run's secret.
+    if (
+      req.headers["x-workspace-secret"] !== SECRET ||
+      !loopback(req.socket.remoteAddress)
+    ) {
       res.writeHead(403).end();
       return;
     }
@@ -538,13 +711,24 @@ const wss = new WebSocketServer({ noServer: true, maxPayload: 1_000_000 });
 
 server.on("upgrade", (req, socket, head) => {
   const origin = req.headers.origin ?? "";
-  if (!HOSTS.has(req.headers.host ?? "") || !ORIGINS.has(origin)) {
+  const url = new URL(req.url ?? "/", "http://localhost");
+  /*
+   * The site's origin, always. Then: with WORKSPACE_SECRET set (always, in
+   * the cloud), a valid pass from the website; without it (this PC only), a
+   * request addressed to localhost.
+   */
+  const allowed =
+    ORIGINS.has(origin) &&
+    (PASS_SECRET
+      ? validPass(url.searchParams.get("pass"))
+      : HOSTS.has(req.headers.host ?? ""));
+  if (!allowed) {
     socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
     socket.destroy();
     return;
   }
   wss.handleUpgrade(req, socket, head, (ws) => {
-    const url = new URL(req.url ?? "/", "http://localhost");
+    lastSeen = Date.now();
     if (url.pathname === "/control") openControl(ws);
     else if (url.pathname.startsWith("/term/"))
       openTerminal(ws, url.pathname.slice(6));
@@ -558,6 +742,8 @@ function openControl(ws) {
     ws.readyState === 1 && ws.send(JSON.stringify(message));
   reply({
     t: "hello",
+    cloud: CLOUD,
+    github: !!GITHUB_TOKEN,
     root: ROOT,
     claude: info,
     projects,
@@ -574,12 +760,33 @@ function openControl(ws) {
     const s = m.id ? sessions.get(m.id) : null;
     switch (m.t) {
       case "start": {
-        const result = startSession(m);
-        reply(
-          result.error
-            ? { t: "error", message: result.error }
-            : { t: "started", id: result.id },
-        );
+        const proj = projects.find((p) => p.name === m.project);
+        const go = () => {
+          const result = startSession(m);
+          reply(
+            result.error
+              ? { t: "error", message: result.error }
+              : { t: "started", id: result.id },
+          );
+        };
+        if (!proj || proj.cloned) {
+          go();
+          break;
+        }
+        // A GitHub repo opened for the first time: clone it, then start.
+        reply({ t: "notice", message: `Getting ${proj.name} from GitHub…` });
+        gitClone(
+          `https://github.com/${proj.github.owner}/${proj.github.repo}.git`,
+          proj.name,
+        ).then((error) => {
+          readProjects();
+          if (error)
+            reply({
+              t: "error",
+              message: `Could not clone ${proj.name}: ${error}`,
+            });
+          else go();
+        });
         break;
       }
       case "login": {
@@ -630,7 +837,13 @@ function openControl(ws) {
         }
         break;
       case "projects":
-        readProjects();
+        readGitHub().then(readProjects);
+        break;
+      case "shutdown":
+        // Stop: every session closes. In the cloud, the quiet that follows
+        // lets Railway put the service to sleep until the next Start.
+        closeAll("Stopped with the workspace");
+        broadcast({ t: "stopped" });
         break;
       case "clone":
         cloneRepo(m.url, reply);
@@ -643,6 +856,31 @@ function openControl(ws) {
         break;
     }
   });
+}
+
+function closeAll(reason) {
+  for (const s of sessions.values())
+    if (s.pty) {
+      s.stopping = true;
+      s.stopReason = reason;
+      s.pty.kill();
+    }
+}
+
+/*
+ * The cloud's safety net for a forgotten Stop: with no tab open and nothing
+ * working for IDLE_LIMIT, the sessions close so the service can sleep.
+ */
+let lastSeen = Date.now();
+function checkIdle() {
+  if (controls.size > 0) lastSeen = Date.now();
+  for (const s of sessions.values())
+    if (s.pty && (s.status === "working" || s.status === "starting"))
+      lastSeen = Date.now();
+  if (Date.now() - lastSeen > IDLE_LIMIT) {
+    closeAll("Closed after being left idle");
+    lastSeen = Date.now();
+  }
 }
 
 function openTerminal(ws, id) {
@@ -671,6 +909,13 @@ function openTerminal(ws, id) {
 
 /* -------------------------------------------------------------------------- */
 
+if (CLOUD && !PASS_SECRET) {
+  console.error(
+    "WORKSPACE_SECRET is not set. In the cloud the runner will not start without it.",
+  );
+  process.exit(1);
+}
+mkdirSync(ROOT, { recursive: true });
 writeHooks();
 readProjects();
 server.on("error", (err) => {
@@ -682,13 +927,24 @@ server.on("error", (err) => {
   }
   throw err;
 });
-server.listen(PORT, "127.0.0.1", async () => {
-  console.log(`NectArray Workspace runner on http://127.0.0.1:${PORT}`);
-  console.log(`Projects from ${ROOT} (${projects.length} git repos)`);
-  console.log("Open the Workspace tab: https://nectarray.com/admin/workspace");
+server.listen(PORT, CLOUD ? "::" : "127.0.0.1", async () => {
   console.log(
-    "Leave this window open while you work. Ctrl+C stops it and every session.",
+    CLOUD
+      ? `NectArray Workspace runner (cloud) on port ${PORT}`
+      : `NectArray Workspace runner on http://127.0.0.1:${PORT}`,
   );
+  await readGitHub();
+  readProjects();
+  gitIdentity();
+  console.log(
+    `Repos in ${ROOT}: ${projects.filter((p) => p.cloned).length} cloned, ${projects.length} listed`,
+  );
+  if (CLOUD && !GITHUB_TOKEN)
+    console.log("GITHUB_TOKEN is not set: only public repos can be cloned.");
+  if (!CLOUD)
+    console.log(
+      "Open the Workspace tab in the admin panel. Leave this window open; Ctrl+C stops every session.",
+    );
   await readClaude();
   if (!info.installed)
     console.error(
@@ -696,10 +952,11 @@ server.listen(PORT, "127.0.0.1", async () => {
     );
   else
     console.log(
-      `Claude Code ${info.version}, ${info.loggedIn ? `signed in as ${info.email}` : "not signed in yet"}`,
+      `Claude Code ${info.version}, ${info.loggedIn ? "signed in" : "not signed in yet"}`,
     );
   if (!process.env.WORKSPACE_SKIP_UPDATE) updateClaude();
   setInterval(() => updateClaude(), UPDATE_EVERY);
+  if (CLOUD) setInterval(checkIdle, 60_000);
 });
 
 const shutdown = () => {

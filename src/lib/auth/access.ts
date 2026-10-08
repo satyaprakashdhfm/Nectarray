@@ -3,7 +3,7 @@ import { cache } from "react";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cohorts, enrolments, users, type User } from "@/lib/db/schema";
-import { currentUser } from "@/lib/auth/session";
+import { adminSession, currentUser } from "@/lib/auth/session";
 
 /**
  * Who is asking, and what they are allowed to see.
@@ -119,11 +119,9 @@ export const adminViewer = cache(async (): Promise<User | null> => {
 });
 
 /**
- * Admin, by the role column — with the environment as a bootstrap.
- *
- * `ADMIN_EMAILS` is how the first admin exists at all, since there is nobody
- * to promote them. It is checked against a verified address, so it grants
- * nothing to somebody who merely types an admin's email into the form.
+ * An admin, all the way in: signed into the panel with Google as an address
+ * on ADMIN_EMAILS, and holding the code emailed for this session. Every admin
+ * action and route, and the panel's layout, go through this.
  *
  * Note which session this reads. Being signed in as a student, even as a
  * student whose address is on the allowlist, is not being signed into the
@@ -131,20 +129,44 @@ export const adminViewer = cache(async (): Promise<User | null> => {
  * /admin/login, and that separation is the whole point of the two realms.
  */
 export async function requireAdmin(): Promise<User> {
-  const user = await adminViewer();
-  if (!user) throw new AccessError(401);
-  if (isAdmin(user)) return user;
-  throw new AccessError(403);
+  const gate = await adminGate();
+  if (!gate.user) throw new AccessError(401);
+  if (!gate.admin) throw new AccessError(403);
+  // Signed in with Google, but the emailed code is still owed.
+  if (!gate.verified) throw new AccessError(401);
+  return gate.user;
 }
 
+/**
+ * Where the panel's visitor stands: nobody, somebody who is not an admin, an
+ * admin still owing the emailed code (lib/auth/admin-otp.ts), or an admin all
+ * the way in. Cached for the request, like adminViewer.
+ */
+export const adminGate = cache(async () => {
+  const session = await adminSession();
+  if (!session) return { user: null, admin: false, verified: false } as const;
+  return {
+    user: session.user,
+    admin: isAdmin(session.user),
+    verified: session.verified,
+    tokenHash: session.tokenHash,
+    expiresAt: session.expiresAt,
+  };
+});
+
+/**
+ * Both gates, always: an address Google has verified, and that address on
+ * ADMIN_EMAILS. The allowlist lives in the deploy's configuration rather than
+ * a table, so a row edited in the database (a role flipped to admin) grants
+ * nothing on its own; the role column only mirrors this.
+ */
 export function isAdmin(user: User | null): boolean {
-  if (!user) return false;
-  if (user.role === "admin") return true;
+  if (!user || !user.emailVerifiedAt) return false;
   const allowed = (process.env.ADMIN_EMAILS ?? "")
     .split(",")
     .map((entry) => entry.trim().toLowerCase())
     .filter(Boolean);
-  return Boolean(user.emailVerifiedAt) && allowed.includes(user.email);
+  return allowed.includes(user.email.toLowerCase());
 }
 
 /** The display name for a greeting, falling back to the address. */

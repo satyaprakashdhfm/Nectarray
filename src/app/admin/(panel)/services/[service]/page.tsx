@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { desc, eq, inArray } from "drizzle-orm";
@@ -105,7 +106,7 @@ export default async function ServicePage({
       <Section title="Search and ads">
         <div className="grid gap-4 sm:grid-cols-2">
           <Link
-            href={`/admin/seo?service=${service.id}`}
+            href={`${ADMIN}/seo?service=${service.id}`}
             className="card hover:border-brand block p-5 transition-colors"
           >
             <p className="eyebrow">SEO</p>
@@ -116,7 +117,7 @@ export default async function ServicePage({
             </p>
           </Link>
           <Link
-            href={`/admin/ads?service=${service.id}`}
+            href={`${ADMIN}/ads?service=${service.id}`}
             className="card hover:border-brand block p-5 transition-colors"
           >
             <p className="eyebrow">Ads</p>

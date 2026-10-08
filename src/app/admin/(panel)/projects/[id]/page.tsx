@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
@@ -54,7 +55,7 @@ export default async function AdminProjectPage({
   return (
     <>
       <Link
-        href={`/admin/services/${tab}`}
+        href={`${ADMIN}/services/${tab}`}
         className="text-ink-soft hover:text-ink inline-flex items-center gap-1 text-[0.8125rem] font-semibold"
       >
         <ChevronLeft className="size-4" aria-hidden />
@@ -85,7 +86,7 @@ export default async function AdminProjectPage({
           </div>
           {quote && (
             <Link
-              href={`/admin/quotes/${quote.id}`}
+              href={`${ADMIN}/quotes/${quote.id}`}
               className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[0.8125rem] font-semibold transition-colors"
             >
               <FileText className="size-3.5" aria-hidden />

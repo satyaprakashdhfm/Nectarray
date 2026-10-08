@@ -90,8 +90,40 @@ export const sessions = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     /** For the "signed in on" list, and for spotting a stolen cookie. */
     userAgent: text("user_agent"),
+    /**
+     * When the emailed admin code was entered for this session. Admin
+     * sessions are no use until it is set (lib/auth/admin-otp.ts); student
+     * and app sessions never have one.
+     */
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
   },
   (table) => [index("sessions_user_idx").on(table.userId)],
+);
+
+/**
+ * One emailed sign-in code for the admin panel, good for one session.
+ *
+ * Only a hash is kept, salted with the session it belongs to, so a code read
+ * out of a backup is useless and a code cannot be carried to another
+ * session. Wrong guesses are counted against it.
+ */
+export const adminCodes = pgTable(
+  "admin_codes",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    sessionHash: text("session_hash")
+      .notNull()
+      .references(() => sessions.tokenHash, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeHash: text("code_hash").notNull(),
+    attempts: integer().notNull().default(0),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: now(),
+  },
+  (table) => [index("admin_codes_user_idx").on(table.userId, table.createdAt)],
 );
 
 // ---------------------------------------------------------------------------

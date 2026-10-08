@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { PageHead } from "@/components/admin/Business";
 import { QuotesNav } from "@/components/admin/QuotesNav";
 import { StandardPrices } from "@/components/admin/StandardPrices";
@@ -17,7 +18,7 @@ export default async function AdminQuotePricesPage() {
         title="Quotations"
         lede="Our price for each item. A row in a quote takes this price when you tick it, and every new quote starts from this list."
       />
-      <QuotesNav current="/admin/quotes/prices" />
+      <QuotesNav current={`${ADMIN}/quotes/prices`} />
       <StandardPrices
         initial={body.lines}
         customised={customised}

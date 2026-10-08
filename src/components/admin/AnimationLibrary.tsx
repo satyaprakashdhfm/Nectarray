@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN } from "@/lib/admin-path";
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
@@ -166,7 +167,7 @@ export function AnimationLibrary({
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/admin/web/colours"
+              href={`${ADMIN}/web/colours`}
               className="text-ink-soft hover:text-ink inline-flex items-center gap-2 text-[0.75rem] font-semibold"
               title="Change the colours"
             >

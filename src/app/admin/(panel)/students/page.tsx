@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import {
   createBatch,
@@ -210,7 +211,7 @@ export default async function AdminStudentsPage() {
       >
         <td className="px-4 py-4">
           <Link
-            href={`/admin/placement/${row.id}`}
+            href={`${ADMIN}/placement/${row.id}`}
             className="text-ink hover:text-brand-deep block text-[0.9375rem] font-semibold transition-colors"
           >
             {name}

@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN } from "@/lib/admin-path";
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
@@ -314,7 +315,7 @@ export function WebNotesEditor({
                     placeholder={
                       isReference
                         ? "https://"
-                        : "/admin/web/colours or https://"
+                        : `${ADMIN}/web/colours or https://`
                     }
                     className={cn(field, "mt-1 font-mono text-[0.8125rem]")}
                   />

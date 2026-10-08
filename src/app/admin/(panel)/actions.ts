@@ -1,4 +1,5 @@
 "use server";
+import { ADMIN } from "@/lib/admin-path";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -229,7 +230,7 @@ export async function updateLesson(formData: FormData) {
   // one marks drafts. Back to the lesson itself, so the save is seen rendered.
   revalidatePath("/admin/lessons", "layout");
   revalidatePath("/dashboard/notes", "layout");
-  redirect(`/admin/lessons/${id}`);
+  redirect(`${ADMIN}/lessons/${id}`);
 }
 
 /** Adds an empty lesson to a module, ready to be written into. */
@@ -260,7 +261,7 @@ export async function createLesson(formData: FormData) {
     .returning({ id: lessons.id });
 
   revalidatePath("/admin/lessons", "layout");
-  redirect(`/admin/lessons/${data.id}?edit=1`);
+  redirect(`${ADMIN}/lessons/${data.id}?edit=1`);
 }
 
 export type HrQuestionInput = {

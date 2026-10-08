@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { Lock, LockOpen } from "lucide-react";
 import { and, asc, eq } from "drizzle-orm";
@@ -117,7 +118,7 @@ export default async function AdminUnlockingPage({
             {batches.map((row) => (
               <li key={row.id}>
                 <Link
-                  href={`/admin/unlocking?batch=${row.id}`}
+                  href={`${ADMIN}/unlocking?batch=${row.id}`}
                   aria-current={row.id === current.id ? "page" : undefined}
                   className="tab"
                 >

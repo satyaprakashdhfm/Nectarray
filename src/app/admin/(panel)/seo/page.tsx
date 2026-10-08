@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { blogPosts, seoKeywords } from "@/lib/db/schema";
@@ -88,7 +89,7 @@ export default async function AdminSeoPage({
         lede="Every page on the site, the search it is written to win, and what Google says about it."
       />
       <ConnectionStrip ids={["searchConsole"]} />
-      <ServiceFilter basePath="/admin/seo" current={service} />
+      <ServiceFilter basePath={`${ADMIN}/seo`} current={service} />
 
       <div className="mt-6">
         <SearchStats result={search} />

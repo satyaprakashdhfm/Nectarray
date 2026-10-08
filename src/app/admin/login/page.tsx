@@ -1,8 +1,9 @@
+import { ADMIN } from "@/lib/admin-path";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminLogin } from "@/components/admin/AdminLogin";
 import { Logo } from "@/components/layout/Logo";
-import { adminViewer, isAdmin } from "@/lib/auth/access";
+import { adminGate } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -34,6 +35,14 @@ const REASONS: Record<string, string> = {
   denied: "Sign-in with Google was cancelled.",
 };
 
+/**
+ * Where Continue with Google goes. An admin sign-in only starts when it
+ * carries the panel's address (the start route checks it), so a sign-in
+ * begun anywhere else cannot be steered back into the panel.
+ */
+const startUrl = () =>
+  `/api/auth/google/start?realm=admin&gate=${encodeURIComponent(ADMIN.slice(1))}`;
+
 export default async function AdminLoginPage({
   searchParams,
 }: {
@@ -44,9 +53,10 @@ export default async function AdminLoginPage({
 
   const { error } = await searchParams;
 
-  const user = await adminViewer();
+  const gate = await adminGate();
+  const user = gate.user;
   if (user) {
-    if (isAdmin(user)) redirect("/admin");
+    if (gate.admin) redirect(gate.verified ? ADMIN : `${ADMIN}/verify`);
     // Signed into the panel, but with an account that is not an admin.
     // Since the admin cookie is separate from the student one, this can no
     // longer be a browser that merely holds a student session — it is the
@@ -66,6 +76,7 @@ export default async function AdminLoginPage({
           <AdminLogin
             state={state}
             email={email}
+            startUrl={startUrl()}
             initialError={error ? (REASONS[error] ?? REASONS.exchange) : ""}
           />
         </div>

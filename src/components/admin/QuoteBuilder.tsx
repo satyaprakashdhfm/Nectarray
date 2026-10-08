@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN } from "@/lib/admin-path";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
@@ -1280,7 +1281,7 @@ function ProjectsCard({
           {projects.map((p) => (
             <li key={p.id}>
               <Link
-                href={`/admin/projects/${p.id}`}
+                href={`${ADMIN}/projects/${p.id}`}
                 className="hover:bg-mist -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1 transition-colors"
               >
                 <span className="min-w-0 flex-1">

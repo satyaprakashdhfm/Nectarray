@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import Link from "next/link";
@@ -69,7 +70,7 @@ export default async function AdminPlacementPage() {
 
       {/* The HR round, the one part of these tools an admin writes. ------ */}
       <Link
-        href="/admin/placement/hr"
+        href={`${ADMIN}/placement/hr`}
         className="card hover:border-brand mt-7 flex items-center gap-4 p-5 transition-colors"
       >
         <span className="bg-brand-wash text-brand-deep grid size-10 shrink-0 place-items-center rounded-xl">
@@ -177,7 +178,7 @@ export default async function AdminPlacementPage() {
                   </td>
                   <td className="px-4 py-4 text-right">
                     <Link
-                      href={`/admin/placement/${row.id}`}
+                      href={`${ADMIN}/placement/${row.id}`}
                       className="text-brand-deep hover:text-brand inline-flex items-center gap-1 text-[0.8125rem] font-semibold transition-colors"
                     >
                       View

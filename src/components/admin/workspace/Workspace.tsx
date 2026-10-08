@@ -13,11 +13,14 @@ import {
   BellOff,
   ExternalLink,
   GitBranch,
+  Loader2,
   LogIn,
   Mic,
   Play,
+  Power,
   RefreshCw,
   RotateCcw,
+  Search,
   Send,
   Square,
   SquareTerminal,
@@ -26,8 +29,9 @@ import {
 import { field, primaryButton, quietButton } from "@/components/admin/Business";
 import { cn } from "@/lib/utils";
 import {
-  RUNNER,
+  openRunner,
   type ClaudeInfo,
+  type Mode,
   type Project,
   type RunnerMessage,
   type Session,
@@ -40,21 +44,30 @@ import { useVoice } from "./useVoice";
 /* State from the runner                                                      */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * stopped: not started (the cloud service may be asleep, which is free).
+ * starting: Start was pressed, or the connection dropped; trying every few
+ * seconds while the service wakes. connected: in. unset: the website has no
+ * WORKSPACE_URL. expired: the five-hour admin session ended.
+ */
+type Phase = "stopped" | "starting" | "connected" | "unset" | "expired";
+
 type State = {
-  connected: boolean;
-  /** Whether a first connection has been tried yet: skeleton until it has. */
-  tried: boolean;
+  phase: Phase;
+  cloud: boolean;
+  github: boolean;
   root: string;
   claude: ClaudeInfo | null;
   projects: Project[];
   sessions: Record<string, Session>;
 };
 
-type Action = RunnerMessage | { t: "offline" };
+type Action = RunnerMessage | { t: "phase"; phase: Phase };
 
 const INITIAL: State = {
-  connected: false,
-  tried: false,
+  phase: "stopped",
+  cloud: false,
+  github: false,
   root: "",
   claude: null,
   projects: [],
@@ -65,15 +78,16 @@ function reduce(state: State, action: Action): State {
   switch (action.t) {
     case "hello":
       return {
-        connected: true,
-        tried: true,
+        phase: "connected",
+        cloud: action.cloud,
+        github: action.github,
         root: action.root,
         claude: action.claude,
         projects: action.projects,
         sessions: Object.fromEntries(action.sessions.map((s) => [s.id, s])),
       };
-    case "offline":
-      return { ...state, connected: false, tried: true };
+    case "phase":
+      return { ...state, phase: action.phase };
     case "claude":
       return { ...state, claude: action.claude };
     case "projects":
@@ -105,6 +119,12 @@ const STATUS: Record<SessionStatus, { label: string; tone: string }> = {
   ended: { label: "Closed", tone: "bg-mist text-ink-faint" },
 };
 
+const MODES: { id: Mode; label: string }[] = [
+  { id: "auto", label: "Auto: routine steps approved for you" },
+  { id: "acceptEdits", label: "Accept file edits, ask for the rest" },
+  { id: "default", label: "Ask before every step" },
+];
+
 const LANGS = [
   { id: "en-IN", label: "English (India)" },
   { id: "en-US", label: "English (US)" },
@@ -112,10 +132,15 @@ const LANGS = [
 ];
 
 const PREFS = "nectarray-workspace";
-type Prefs = { lang: string; autoSend: boolean; alerts: boolean };
+type Prefs = { lang: string; autoSend: boolean; alerts: boolean; on: boolean };
 
 function readPrefs(): Prefs {
-  const fallback: Prefs = { lang: "en-IN", autoSend: false, alerts: false };
+  const fallback: Prefs = {
+    lang: "en-IN",
+    autoSend: false,
+    alerts: false,
+    on: false,
+  };
   try {
     return { ...fallback, ...JSON.parse(localStorage.getItem(PREFS) ?? "{}") };
   } catch {
@@ -146,10 +171,13 @@ const noop = () => () => {};
 /* -------------------------------------------------------------------------- */
 
 /**
- * The Workspace tab: Claude Code sessions running on this PC, one card each,
- * and the terminal of whichever is open. Everything comes from the runner
- * (workspace/server.mjs) over a local WebSocket; nothing here touches the
- * site's server or database.
+ * The Workspace tab: Claude Code sessions in the cloud (the Workspace service
+ * on Railway), one card each, and the terminal of whichever is open.
+ *
+ * Nothing runs until Start. Start wakes the service and connects; Stop closes
+ * every session and lets the service go back to sleep, so it costs nothing
+ * while nobody is working. Every connection carries a one-minute pass the
+ * website only gives an admin who is fully signed in.
  *
  * Rendered only in the browser: it reads saved preferences and opens
  * sockets, neither of which means anything on the server.
@@ -188,8 +216,16 @@ function WorkspaceApp() {
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
   }, []);
 
-  /* The control socket, reconnecting every few seconds while the runner is off. */
+  /*
+   * The control socket, while the workspace is on: retried every few seconds
+   * while the service wakes or redeploys. Off, nothing connects, so an open
+   * tab never keeps the service awake.
+   */
   useEffect(() => {
+    if (!prefs.on) {
+      dispatch({ t: "phase", phase: "stopped" });
+      return;
+    }
     let closed = false;
     let retry: ReturnType<typeof setTimeout> | undefined;
 
@@ -214,8 +250,18 @@ function WorkspaceApp() {
       );
     };
 
-    const connect = () => {
-      const ws = new WebSocket(`${RUNNER}/control`);
+    const connect = async () => {
+      dispatch({ t: "phase", phase: "starting" });
+      const opened = await openRunner("/control");
+      if (closed) {
+        if (typeof opened !== "string") opened.close();
+        return;
+      }
+      if (typeof opened === "string") {
+        dispatch({ t: "phase", phase: opened });
+        return;
+      }
+      const ws = opened;
       socket.current = ws;
       ws.onmessage = (event) => {
         const message = JSON.parse(String(event.data)) as RunnerMessage;
@@ -229,18 +275,20 @@ function WorkspaceApp() {
       };
       ws.onclose = () => {
         if (socket.current === ws) socket.current = null;
-        dispatch({ t: "offline" });
-        if (!closed) retry = setTimeout(connect, 3000);
+        if (closed) return;
+        dispatch({ t: "phase", phase: "starting" });
+        retry = setTimeout(connect, 3000);
       };
     };
-    connect();
+    void connect();
 
     return () => {
       closed = true;
       clearTimeout(retry);
       socket.current?.close();
+      socket.current = null;
     };
-  }, []);
+  }, [prefs.on]);
 
   useEffect(() => {
     if (!toast) return;
@@ -260,8 +308,25 @@ function WorkspaceApp() {
     document.title = waiting ? `(${waiting}) ${base}` : base;
   }, [waiting]);
 
-  if (!state.tried) return <Loading />;
-  if (!state.connected) return <RunnerOff />;
+  const start = () => setPrefs((p) => ({ ...p, on: true }));
+  const stop = () => {
+    const live = sessions.filter((s) => s.live).length;
+    if (
+      live > 0 &&
+      !confirm(
+        `Stop the workspace? ${live} running session${live === 1 ? "" : "s"} will close. Conversations are kept and can be resumed.`,
+      )
+    )
+      return;
+    send({ t: "shutdown" });
+    setTimeout(() => setPrefs((p) => ({ ...p, on: false })), 300);
+  };
+
+  if (state.phase === "unset") return <NotSetUp />;
+  if (state.phase === "expired") return <Expired />;
+  if (state.phase === "stopped") return <Stopped onStart={start} />;
+  if (state.phase === "starting" && !state.claude)
+    return <Waking onCancel={() => setPrefs((p) => ({ ...p, on: false }))} />;
 
   const project =
     state.projects.find((p) => p.name === projectName) ??
@@ -275,6 +340,7 @@ function WorkspaceApp() {
     <div className="mt-6 space-y-6">
       <StatusStrip
         claude={state.claude}
+        reconnecting={state.phase === "starting"}
         alerts={prefs.alerts}
         onAlerts={async () => {
           if (!prefs.alerts && typeof Notification !== "undefined") {
@@ -289,6 +355,7 @@ function WorkspaceApp() {
           }
           setPrefs((p) => ({ ...p, alerts: !p.alerts }));
         }}
+        onStop={stop}
         send={send}
       />
 
@@ -303,6 +370,13 @@ function WorkspaceApp() {
           )}
         >
           {toast.text}
+        </p>
+      )}
+
+      {state.cloud && !state.github && (
+        <p className="border-amber/30 bg-amber-wash text-amber-deep rounded-lg border px-4 py-2.5 text-[0.8125rem]">
+          No GitHub token yet, so only public repos can be opened and nothing
+          can be pushed. Add GITHUB_TOKEN to the Workspace service on Railway.
         </p>
       )}
 
@@ -350,7 +424,7 @@ function WorkspaceApp() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* States before there is anything to show                                     */
+/* Before there is anything to show                                           */
 /* -------------------------------------------------------------------------- */
 
 function Loading() {
@@ -371,74 +445,142 @@ function Loading() {
   );
 }
 
-function RunnerOff() {
-  const [copied, setCopied] = useState(false);
-  const command = "npm run workspace";
+function Panel({
+  children,
+  icon = true,
+}: {
+  children: React.ReactNode;
+  icon?: boolean;
+}) {
   return (
     <div className="card mt-6 max-w-2xl p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <SquareTerminal
-          className="text-brand-deep mt-0.5 size-5 shrink-0"
-          strokeWidth={1.9}
-          aria-hidden
-        />
-        <div className="min-w-0">
-          <h2 className="text-ink text-[1.0625rem] font-semibold">
-            Start the Workspace on your PC
-          </h2>
-          <p className="text-ink-soft mt-1.5 text-[0.875rem]">
-            Sessions run on your own computer, with your files and your Claude
-            sign-in. This page connects to it by itself once it is running.
-          </p>
-          <ol className="text-ink-soft mt-4 list-decimal space-y-2 pl-5 text-[0.875rem]">
-            <li>Open a terminal in the Nectarray folder.</li>
-            <li>
-              Run{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard?.writeText(command).then(
-                    () => setCopied(true),
-                    () => {},
-                  );
-                }}
-                className="bg-mist text-ink hover:text-brand-deep rounded-md px-1.5 py-0.5 font-mono text-[0.8125rem] transition-colors"
-                title="Copy"
-              >
-                {command}
-              </button>
-              {copied && (
-                <span className="text-leaf-deep ml-2 text-[0.75rem] font-semibold">
-                  Copied
-                </span>
-              )}
-            </li>
-            <li>Leave that window open while you work.</li>
-          </ol>
-          <p className="text-ink-faint mt-4 text-[0.8125rem]">
-            If Chrome asks to let this site reach apps on this device, choose
-            Allow. On a phone this tab cannot connect: it only works on the PC
-            running the Workspace.
-          </p>
-        </div>
+        {icon && (
+          <SquareTerminal
+            className="text-brand-deep mt-0.5 size-5 shrink-0"
+            strokeWidth={1.9}
+            aria-hidden
+          />
+        )}
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
   );
 }
 
+function Stopped({ onStart }: { onStart: () => void }) {
+  return (
+    <Panel>
+      <h2 className="text-ink text-[1.0625rem] font-semibold">
+        The workspace is stopped
+      </h2>
+      <p className="text-ink-soft mt-1.5 text-[0.875rem]">
+        It runs Claude Code in the cloud, on any of your repos, and costs
+        nothing while it is stopped. Start it to work; Stop it when you are
+        done.
+      </p>
+      <button
+        type="button"
+        onClick={onStart}
+        className={cn(
+          primaryButton,
+          "mt-5 inline-flex items-center gap-2 px-5 py-2.5 text-[0.875rem]",
+        )}
+      >
+        <Power className="size-4" aria-hidden />
+        Start the workspace
+      </button>
+    </Panel>
+  );
+}
+
+function Waking({ onCancel }: { onCancel: () => void }) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <Panel>
+      <h2 className="text-ink flex items-center gap-2 text-[1.0625rem] font-semibold">
+        <Loader2
+          className="text-brand-deep size-4 motion-safe:animate-spin"
+          aria-hidden
+        />
+        Starting the workspace
+      </h2>
+      <p className="text-ink-soft mt-1.5 text-[0.875rem]">
+        {seconds < 45
+          ? "Waking the cloud service. This usually takes under a minute."
+          : seconds < 180
+            ? "Still waking. The very first start also installs Claude Code, which takes a couple of minutes."
+            : "This is taking longer than it should. Check the Workspace service on Railway; this page keeps trying."}
+      </p>
+      <p className="text-ink-faint mt-3 text-[0.75rem]">{seconds}s</p>
+      <button
+        type="button"
+        onClick={onCancel}
+        className={cn(quietButton, "mt-4")}
+      >
+        Cancel
+      </button>
+    </Panel>
+  );
+}
+
+function NotSetUp() {
+  return (
+    <Panel>
+      <h2 className="text-ink text-[1.0625rem] font-semibold">
+        The cloud workspace is not set up yet
+      </h2>
+      <p className="text-ink-soft mt-1.5 text-[0.875rem]">
+        The website needs WORKSPACE_URL and WORKSPACE_SECRET, pointing at the
+        Workspace service on Railway.
+      </p>
+    </Panel>
+  );
+}
+
+function Expired() {
+  return (
+    <Panel>
+      <h2 className="text-ink text-[1.0625rem] font-semibold">
+        Your admin session has ended
+      </h2>
+      <p className="text-ink-soft mt-1.5 text-[0.875rem]">
+        Admin sign-ins last five hours. Sign in again with Google and the
+        emailed code; running sessions keep going in the meantime.
+      </p>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className={cn(primaryButton, "mt-5 inline-flex items-center gap-2")}
+      >
+        <LogIn className="size-3.5" aria-hidden />
+        Sign in again
+      </button>
+    </Panel>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
-/* Claude Code: version, sign-in, alerts                                      */
+/* Claude Code: version, sign-in, alerts, Stop                                 */
 /* -------------------------------------------------------------------------- */
 
 function StatusStrip({
   claude,
+  reconnecting,
   alerts,
   onAlerts,
+  onStop,
   send,
 }: {
   claude: ClaudeInfo | null;
+  reconnecting: boolean;
   alerts: boolean;
   onAlerts: () => void;
+  onStop: () => void;
   send: (m: object) => void;
 }) {
   if (!claude) return null;
@@ -452,24 +594,28 @@ function StatusStrip({
           <p className="text-ink text-[0.875rem] font-semibold">
             {claude.version ?? "Installed"}
             <span className="text-ink-faint ml-2 font-normal">
-              {claude.updating
-                ? "Updating…"
-                : (claude.updateNote ?? "Updates itself every 6 hours")}
+              {reconnecting
+                ? "Reconnecting…"
+                : claude.updating
+                  ? "Updating…"
+                  : (claude.updateNote ?? "Updates itself")}
             </span>
           </p>
         ) : (
           <p className="text-danger text-[0.875rem] font-semibold">
-            Not installed. Run npm install -g @anthropic-ai/claude-code
+            Not installed yet
           </p>
         )}
       </div>
 
       <div className="min-w-0">
         <p className="text-ink-faint text-[0.6875rem] font-semibold">
-          Signed in
+          Claude account
         </p>
         <p className="text-ink truncate text-[0.875rem] font-semibold">
-          {claude.loggedIn ? (claude.email ?? "Yes") : "Not yet"}
+          {claude.loggedIn
+            ? (claude.email ?? "Signed in")
+            : "Not signed in, press Sign in"}
         </p>
       </div>
 
@@ -521,6 +667,14 @@ function StatusStrip({
           )}
           {alerts ? "Alerts on" : "Alerts off"}
         </button>
+        <button
+          type="button"
+          onClick={onStop}
+          className="border-danger/40 text-danger hover:bg-danger/10 inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+        >
+          <Power className="size-3.5" aria-hidden />
+          Stop workspace
+        </button>
       </div>
     </div>
   );
@@ -545,6 +699,10 @@ function Projects({
   onSelect: (name: string) => void;
   send: (m: object) => void;
 }) {
+  const [query, setQuery] = useState("");
+  const shown = projects.filter((p) =>
+    p.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
   return (
     <section>
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -559,19 +717,34 @@ function Projects({
           <RefreshCw className="size-3.5" aria-hidden />
         </button>
       </div>
+      {projects.length > 6 && (
+        <div className="relative mb-2">
+          <Search
+            className="text-ink-faint pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+            aria-hidden
+          />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className={cn(field, "pl-8")}
+            placeholder="Find a repo"
+            aria-label="Find a repo"
+          />
+        </div>
+      )}
       {projects.length === 0 ? (
         <p className="text-ink-soft text-[0.8125rem]">
-          No git repos in {root}. Connect one below.
+          No repos yet in {root}. Connect one below.
         </p>
       ) : (
-        <ul className="space-y-1">
-          {projects.map((p) => {
+        <ul className="max-h-[26rem] space-y-1 overflow-y-auto pr-1">
+          {shown.map((p) => {
             const live = sessions.filter(
               (s) => s.project === p.name && s.live,
             ).length;
             const active = p.name === selected;
             return (
-              <li key={p.name} className="group relative">
+              <li key={p.name} className="relative">
                 <button
                   type="button"
                   onClick={() => onSelect(p.name)}
@@ -595,7 +768,8 @@ function Projects({
                     >
                       <GitBranch className="size-3 shrink-0" aria-hidden />
                       {p.branch ?? "no branch"}
-                      {!p.github && " · not on GitHub"}
+                      {!p.cloned && ", not opened yet"}
+                      {!p.github && ", not on GitHub"}
                     </span>
                   </span>
                   {live > 0 && (
@@ -632,6 +806,11 @@ function Projects({
               </li>
             );
           })}
+          {shown.length === 0 && (
+            <li className="text-ink-faint px-3 py-2 text-[0.8125rem]">
+              No repo matches.
+            </li>
+          )}
         </ul>
       )}
     </section>
@@ -650,7 +829,7 @@ function NewSession({
   const [title, setTitle] = useState("");
   // A second session in the same repo gets its own copy by default.
   const [ownCopy, setOwnCopy] = useState(busy);
-  const [mode, setMode] = useState<"default" | "acceptEdits">("default");
+  const [mode, setMode] = useState<Mode>("auto");
 
   return (
     <form
@@ -670,6 +849,11 @@ function NewSession({
       <h2 className="text-ink text-[0.9375rem] font-semibold">
         New session in {project.name}
       </h2>
+      {!project.cloned && (
+        <p className="text-ink-faint text-[0.75rem]">
+          The first session gets this repo from GitHub, which can take a minute.
+        </p>
+      )}
       <div>
         <label
           htmlFor="ws-title"
@@ -711,11 +895,14 @@ function NewSession({
         <select
           id="ws-mode"
           value={mode}
-          onChange={(e) => setMode(e.target.value as typeof mode)}
+          onChange={(e) => setMode(e.target.value as Mode)}
           className={field}
         >
-          <option value="default">Your usual Claude Code settings</option>
-          <option value="acceptEdits">Accept file edits without asking</option>
+          {MODES.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label}
+            </option>
+          ))}
         </select>
       </div>
       <button
@@ -748,10 +935,10 @@ function ConnectRepo({ send }: { send: (m: object) => void }) {
         htmlFor="ws-clone"
         className="text-ink text-[0.875rem] font-semibold"
       >
-        Connect a repo
+        Connect another repo
       </label>
       <p className="text-ink-faint text-[0.75rem]">
-        A GitHub link. It is cloned next to Nectarray and shows up above.
+        Any GitHub link, including public repos that are not yours.
       </p>
       <div className="flex gap-2">
         <input
@@ -813,7 +1000,7 @@ function Board({
         </p>
         <p className="text-ink-soft mt-1 text-[0.875rem]">
           Pick a repo and start one. Each session is its own Claude Code, and
-          you can run as many side by side as you like.
+          you can run as many side by side as you like, on one repo or many.
         </p>
       </div>
     );
@@ -949,7 +1136,25 @@ function SessionPanel({
         </div>
       </div>
 
-      <div className="h-[min(68dvh,46rem)] min-h-[22rem]">
+      {session.kind === "login" && session.link && session.live && (
+        <div className="border-line bg-brand-wash flex flex-wrap items-center gap-3 border-b px-4 py-3">
+          <p className="text-ink min-w-0 flex-1 text-[0.8125rem]">
+            Open the sign-in page, choose Continue with Google, then paste the
+            code it shows into the box under the terminal and press Send.
+          </p>
+          <a
+            href={session.link}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(primaryButton, "inline-flex items-center gap-1.5")}
+          >
+            <ExternalLink className="size-3.5" aria-hidden />
+            Open the sign-in page
+          </a>
+        </div>
+      )}
+
+      <div className="h-[min(64dvh,44rem)] min-h-[20rem]">
         <TerminalView
           key={`${session.id}-${session.startedAt}-${session.live}`}
           id={session.id}
@@ -957,7 +1162,7 @@ function SessionPanel({
       </div>
 
       {session.live && (
-        <VoiceBar
+        <PromptBar
           key={session.id}
           sessionId={session.id}
           prefs={prefs}
@@ -970,15 +1175,17 @@ function SessionPanel({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Voice                                                                      */
+/* Typing, pasting and voice                                                  */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Hold the button and talk. On release the words are typed into Claude
- * Code's prompt, where they can still be edited; Send (or Enter in the
- * terminal) submits them, unless auto-send is on.
+ * A message box under the terminal: type or paste (the sign-in code, a long
+ * prompt, anything awkward on a phone), or hold the mic and talk. Spoken
+ * words land in the box to check first, unless "Send right away" is on.
+ * Send types the box into Claude Code and presses Enter; an empty Send just
+ * presses Enter.
  */
-function VoiceBar({
+function PromptBar({
   sessionId,
   prefs,
   setPrefs,
@@ -989,29 +1196,20 @@ function VoiceBar({
   setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
 }) {
-  /** Words already typed and not yet sent, so the next ones get a space. */
-  const pending = useRef(false);
-  const [typed, setTyped] = useState(false);
+  const [text, setText] = useState("");
+
+  const submit = (value: string) => {
+    send({ t: "type", id: sessionId, text: value, enter: true });
+    setText("");
+  };
 
   const voice = useVoice({
     lang: prefs.lang,
-    onText: (text) => {
-      send({
-        t: "type",
-        id: sessionId,
-        text: (pending.current ? " " : "") + text,
-        enter: prefs.autoSend,
-      });
-      pending.current = !prefs.autoSend;
-      setTyped(!prefs.autoSend);
+    onText: (heard) => {
+      if (prefs.autoSend) submit(text ? `${text} ${heard}` : heard);
+      else setText((t) => (t ? `${t} ${heard}` : heard));
     },
   });
-
-  const submit = () => {
-    send({ t: "type", id: sessionId, text: "", enter: true });
-    pending.current = false;
-    setTyped(false);
-  };
 
   const hold = {
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -1033,81 +1231,97 @@ function VoiceBar({
   };
 
   return (
-    <div className="border-line flex flex-wrap items-center gap-3 border-t px-4 py-3">
-      {voice.supported ? (
-        <button
-          type="button"
-          {...hold}
-          aria-pressed={voice.listening}
-          className={cn(
-            "inline-flex shrink-0 touch-none items-center gap-2 rounded-lg px-4 py-2 text-[0.8125rem] font-semibold transition-[background-color,transform] select-none active:scale-[0.98]",
-            voice.listening
-              ? "bg-amber text-night"
-              : "bg-ink text-cta-fg hover:bg-brand-deep",
-          )}
-        >
-          <Mic
-            className={cn(
-              "size-4",
-              voice.listening && "motion-safe:animate-pulse",
-            )}
-            aria-hidden
-          />
-          {voice.listening ? "Listening, release to type" : "Hold to talk"}
-        </button>
-      ) : (
-        <p className="text-ink-faint text-[0.8125rem]">
-          Voice needs Chrome or Edge.
-        </p>
-      )}
-
-      <p
-        className={cn(
-          "min-w-0 flex-1 truncate text-[0.8125rem]",
-          voice.error ? "text-danger" : "text-ink-soft",
-        )}
-        aria-live="polite"
+    <div className="border-line space-y-2 border-t px-4 py-3">
+      <form
+        className="flex items-center gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit(text);
+        }}
       >
-        {voice.error ??
-          (voice.listening
-            ? voice.heard || "Speak now"
-            : typed
-              ? "Typed into the prompt. Check it, then Send."
-              : "")}
-      </p>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={prefs.lang}
-          onChange={(e) => setPrefs((p) => ({ ...p, lang: e.target.value }))}
-          className={cn(field, "w-auto py-1")}
-          aria-label="Voice language"
-        >
-          {LANGS.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.label}
-            </option>
-          ))}
-        </select>
-        <label className="text-ink-soft flex items-center gap-1.5 text-[0.8125rem]">
-          <input
-            type="checkbox"
-            checked={prefs.autoSend}
-            onChange={(e) =>
-              setPrefs((p) => ({ ...p, autoSend: e.target.checked }))
-            }
-            className="accent-brand"
-          />
-          Send right away
-        </label>
+        {voice.supported && (
+          <button
+            type="button"
+            {...hold}
+            aria-pressed={voice.listening}
+            aria-label="Hold to talk"
+            title="Hold to talk"
+            className={cn(
+              "inline-flex shrink-0 touch-none items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold transition-[background-color,transform] select-none active:scale-[0.98]",
+              voice.listening
+                ? "bg-amber text-night"
+                : "bg-ink text-cta-fg hover:bg-brand-deep",
+            )}
+          >
+            <Mic
+              className={cn(
+                "size-4",
+                voice.listening && "motion-safe:animate-pulse",
+              )}
+              aria-hidden
+            />
+            <span className="hidden sm:inline">
+              {voice.listening ? "Listening" : "Hold to talk"}
+            </span>
+          </button>
+        )}
+        <input
+          value={voice.listening ? voice.heard || text : text}
+          onChange={(e) => setText(e.target.value)}
+          readOnly={voice.listening}
+          className={cn(field, "min-w-0 flex-1 py-2")}
+          placeholder={
+            voice.listening
+              ? "Speak now"
+              : "Type, paste or talk. Enter sends it to Claude"
+          }
+          aria-label="Message for Claude"
+        />
         <button
-          type="button"
-          onClick={submit}
-          className={cn(quietButton, "inline-flex items-center gap-1.5")}
+          type="submit"
+          className={cn(primaryButton, "inline-flex items-center gap-1.5 py-2")}
         >
           <Send className="size-3.5" aria-hidden />
-          Send
+          <span className="hidden sm:inline">Send</span>
         </button>
+      </form>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        {voice.error ? (
+          <p className="text-danger text-[0.75rem]">{voice.error}</p>
+        ) : !voice.supported ? (
+          <p className="text-ink-faint text-[0.75rem]">
+            Voice needs Chrome or Edge.
+          </p>
+        ) : null}
+        {voice.supported && (
+          <>
+            <select
+              value={prefs.lang}
+              onChange={(e) =>
+                setPrefs((p) => ({ ...p, lang: e.target.value }))
+              }
+              className={cn(field, "w-auto py-0.5 text-[0.75rem]")}
+              aria-label="Voice language"
+            >
+              {LANGS.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+            <label className="text-ink-soft flex items-center gap-1.5 text-[0.75rem]">
+              <input
+                type="checkbox"
+                checked={prefs.autoSend}
+                onChange={(e) =>
+                  setPrefs((p) => ({ ...p, autoSend: e.target.checked }))
+                }
+                className="accent-brand"
+              />
+              Send speech right away
+            </label>
+          </>
+        )}
       </div>
     </div>
   );

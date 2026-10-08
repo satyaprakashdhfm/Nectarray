@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { count } from "drizzle-orm";
@@ -18,7 +19,7 @@ export default async function AdminHrQuestionsPage() {
   return (
     <div className="max-w-4xl">
       <Link
-        href="/admin/placement"
+        href={`${ADMIN}/placement`}
         className="text-ink-soft hover:text-ink inline-flex items-center gap-2 text-[0.875rem] font-medium transition-colors"
       >
         <ArrowLeft className="size-4" strokeWidth={2} aria-hidden />

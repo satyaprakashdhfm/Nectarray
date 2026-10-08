@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createLesson } from "../actions";
@@ -55,7 +56,7 @@ export default async function AdminNotesIndex({
     (row) => row.lessonId,
   )?.lessonId;
 
-  if (adding !== "1" && first) redirect(`/admin/lessons/${first}`);
+  if (adding !== "1" && first) redirect(`${ADMIN}/lessons/${first}`);
 
   const modules = [...new Map(rows.map((row) => [row.id, row])).values()];
 

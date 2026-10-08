@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { Suspense } from "react";
 import { NotesRail, type RailModule } from "@/components/dashboard/NotesRail";
 import { asc, eq } from "drizzle-orm";
@@ -73,7 +74,7 @@ export default async function AdminNotesLayout({
       <Suspense fallback={<div />}>
         <NotesRail
           modules={modules}
-          basePath="/admin/lessons"
+          basePath={`${ADMIN}/lessons`}
           stickyTop="88px"
           progress={false}
         />

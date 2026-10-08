@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
+import { ADMIN, ADMIN_HIDDEN } from "@/lib/admin-path";
 import { validAppReturn, validChallenge } from "@/lib/auth/app-codes";
+import { sameSecret } from "@/lib/auth/session";
 import {
   authorizeUrl,
   googleConfigured,
@@ -79,9 +81,27 @@ export async function GET(request: Request) {
     );
   }
 
+  /*
+   * An admin sign-in from the website must carry the panel's address, which
+   * only its own sign-in page hands out. Without this, anyone could start
+   * one here and be sent back into the panel's address afterwards, which
+   * would give away where it is. The app's admin sign-in never lands in the
+   * panel (it gets a code back), so it does not need one.
+   */
+  const gate = params.get("gate") ?? "";
+  if (
+    realm === "admin" &&
+    !fromApp &&
+    ADMIN_HIDDEN &&
+    !sameSecret(gate, ADMIN.slice(1))
+  ) {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
+
   if (asked !== new URL(origin).host) {
     const again = new URL(`${origin}/api/auth/google/start`);
     again.searchParams.set("realm", realm);
+    if (gate) again.searchParams.set("gate", gate);
     if (fromApp) {
       again.searchParams.set("app_return", appReturn!);
       again.searchParams.set("app_challenge", appChallenge!);

@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import {
@@ -140,7 +141,7 @@ export function ProjectsTable({
               >
                 <td className={td}>
                   <Link
-                    href={`/admin/projects/${p.id}`}
+                    href={`${ADMIN}/projects/${p.id}`}
                     className="text-ink hover:text-brand-deep block text-[0.9375rem] font-semibold underline-offset-2 hover:underline"
                   >
                     {p.title}

@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN } from "@/lib/admin-path";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
@@ -217,7 +218,7 @@ export function ElementLibrary({
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/admin/web/colours"
+              href={`${ADMIN}/web/colours`}
               className="text-ink-soft hover:text-ink inline-flex items-center gap-2 text-[0.75rem] font-semibold"
               title="Change the colours"
             >
@@ -253,7 +254,7 @@ export function ElementLibrary({
             <>
               {" "}
               <Link
-                href="/admin/web/animations"
+                href={`${ADMIN}/web/animations`}
                 className="text-brand-deep hover:text-brand font-semibold"
               >
                 Animated heroes are on the Animations tab →

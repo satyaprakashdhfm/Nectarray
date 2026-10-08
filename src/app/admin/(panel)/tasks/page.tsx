@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import {
@@ -156,7 +157,7 @@ export default async function AdminTasksPage({
       ...patch,
     };
     for (const [k, v] of Object.entries(merged)) if (v) q.set(k, v);
-    return `/admin/tasks?${q.toString()}`;
+    return `${ADMIN}/tasks?${q.toString()}`;
   };
 
   /* Progress per project, over all of its tasks. */
@@ -311,7 +312,7 @@ export default async function AdminTasksPage({
           ))}
           <form
             className="ml-auto flex flex-wrap items-center gap-2"
-            action="/admin/tasks"
+            action={`${ADMIN}/tasks`}
           >
             <input type="hidden" name="view" value={view} />
             <select
@@ -409,7 +410,7 @@ export default async function AdminTasksPage({
                 <li key={p.id} className="p-4">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <Link
-                      href={`/admin/projects/${p.id}`}
+                      href={`${ADMIN}/projects/${p.id}`}
                       className="text-ink hover:text-brand-deep text-[0.875rem] font-semibold"
                     >
                       {p.title}

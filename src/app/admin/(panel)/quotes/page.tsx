@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { ChevronRight } from "lucide-react";
@@ -64,7 +65,7 @@ export default async function AdminQuotesPage() {
         lede="Price a client's project row by row, tick what they want, and turn it into a document to print or save as PDF. An accepted quote becomes a project on the Marketing or Software tab."
       />
 
-      <QuotesNav current="/admin/quotes" />
+      <QuotesNav current={`${ADMIN}/quotes`} />
 
       <div className="mt-6 grid gap-8 xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start">
         <form action={createQuote} className="card space-y-3 p-4 sm:p-5">
@@ -119,7 +120,7 @@ export default async function AdminQuotesPage() {
               {quotes.map((q) => (
                 <li key={q.id}>
                   <Link
-                    href={`/admin/quotes/${q.id}`}
+                    href={`${ADMIN}/quotes/${q.id}`}
                     className="hover:bg-mist/60 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3.5 transition-colors sm:grid-cols-[minmax(0,1fr)_8rem_8rem_6rem_auto] sm:px-5"
                   >
                     <span className="min-w-0">

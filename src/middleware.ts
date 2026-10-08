@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { ADMIN, ADMIN_HIDDEN, adminRoute } from "@/lib/admin-path";
 
 /**
  * Two jobs, in order: get everyone onto one hostname, then keep signed-out
@@ -50,20 +51,26 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   /*
-   * Each area checks its own cookie. Holding a student session is not being
-   * signed into the panel and vice versa — that is what lets both be true at
-   * the same time in one browser.
-   *
-   * /admin/login is the admin door, so it has to stay reachable while out.
+   * The panel, at its real address (see lib/admin-path.ts): rewritten onto
+   * the /admin routes, which nobody can reach directly.
    */
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    if (request.cookies.get("na_admin_session")?.value) {
-      return NextResponse.next();
+  const route = adminRoute(pathname);
+  if (route) return panel(request, route);
+
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    if (!ADMIN_HIDDEN) return panel(request, pathname);
+    /*
+     * A link inside the panel that still says /admin, such as one saved in
+     * a note: the Referer shows the click came from inside the panel, so
+     * whoever made it already knows the address. Anyone else gets the same
+     * 404 as any other page that does not exist.
+     */
+    if (fromPanel(request)) {
+      const url = request.nextUrl.clone();
+      url.pathname = ADMIN + pathname.slice("/admin".length);
+      return NextResponse.redirect(url);
     }
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
-    url.search = "";
-    return NextResponse.redirect(url);
+    return NextResponse.rewrite(new URL("/not-a-page", request.url));
   }
 
   if (pathname.startsWith("/dashboard")) {
@@ -75,6 +82,50 @@ export function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+/**
+ * A request for the panel. Each area checks its own cookie: holding a
+ * student session is not being signed into the panel and vice versa, which
+ * is what lets both be true in one browser. Sign-in and the emailed code have
+ * to stay reachable while signed out; the rest needs the admin cookie here,
+ * and a real, verified admin session in the panel's layout.
+ *
+ * Every panel response is uncached, unindexed, never framed by another site,
+ * and sends no Referer outside nectarray.com, so its address does not leak
+ * through a clicked link.
+ */
+function panel(request: NextRequest, route: string) {
+  const open = route === "/admin/login" || route === "/admin/verify";
+  if (!open && !request.cookies.get("na_admin_session")?.value) {
+    const url = request.nextUrl.clone();
+    url.pathname = `${ADMIN}/login`;
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  const response = ADMIN_HIDDEN
+    ? NextResponse.rewrite(new URL(route + request.nextUrl.search, request.url))
+    : NextResponse.next();
+  response.headers.set("Cache-Control", "no-store, max-age=0");
+  response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  response.headers.set("Referrer-Policy", "same-origin");
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  return response;
+}
+
+/** Whether a request was made from a page inside the panel. */
+function fromPanel(request: NextRequest): boolean {
+  const referer = request.headers.get("referer");
+  if (!referer) return false;
+  try {
+    const from = new URL(referer);
+    return (
+      from.host === request.nextUrl.host && adminRoute(from.pathname) !== null
+    );
+  } catch {
+    return false;
+  }
 }
 
 function canonicalHost(): string | null {

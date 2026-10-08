@@ -1,20 +1,28 @@
-import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import * as WebBrowser from "expo-web-browser";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
-import { Icon } from '@/components/icon';
-import { Button, Card, Chip, Screen, Skeleton, Txt, usePalette } from '@/components/ui';
-import { Radius, Space } from '@/constants/theme';
-import { SITE_URL } from '@/lib/api';
-import { useAuth, type Account, type Realm } from '@/lib/auth';
+import { Icon } from "@/components/icon";
+import {
+  Button,
+  Card,
+  Chip,
+  Screen,
+  Skeleton,
+  Txt,
+  usePalette,
+} from "@/components/ui";
+import { Radius, Space } from "@/constants/theme";
+import { SITE_URL } from "@/lib/api";
+import { useAuth, type Account, type Realm } from "@/lib/auth";
 
 const ENROLMENT: Record<string, string> = {
-  enrolled: 'Enrolled',
-  completed: 'Completed',
-  applied: 'Application received',
-  accepted: 'Accepted, starting soon',
-  withdrawn: 'Withdrawn',
+  enrolled: "Enrolled",
+  completed: "Completed",
+  applied: "Application received",
+  accepted: "Accepted, starting soon",
+  withdrawn: "Withdrawn",
 };
 
 /**
@@ -27,8 +35,8 @@ export default function AccountScreen() {
   return (
     <Screen edges={[]}>
       <Txt tone="soft">
-        Sign in with Google. Students see their programme; the admin side only lets in addresses on
-        the studio&apos;s admin list.
+        Sign in with Google. Students see their programme; the admin side only
+        lets in addresses on the studio&apos;s admin list.
       </Txt>
       {auth.ready ? (
         <View style={{ gap: Space.lg, marginTop: Space.xl }}>
@@ -36,13 +44,16 @@ export default function AccountScreen() {
             realm="student"
             title="Student"
             account={auth.student}
-            open={{ label: 'Open my dashboard', path: '/dashboard' }}
+            open={{ label: "Open my dashboard", path: "/dashboard" }}
           />
           <RealmCard
             realm="admin"
             title="Admin"
             account={auth.admin}
-            open={{ label: 'Open the admin panel', path: '/admin' }}
+            open={{
+              label: "Open the admin panel",
+              path: auth.admin?.profile?.panel ?? null,
+            }}
           />
         </View>
       ) : (
@@ -64,7 +75,7 @@ function RealmCard({
   realm: Realm;
   title: string;
   account: Account | null;
-  open: { label: string; path: string };
+  open: { label: string; path: string | null };
 }) {
   const c = usePalette();
   const { signIn, signOut } = useAuth();
@@ -81,14 +92,24 @@ function RealmCard({
 
   const profile = account?.profile;
   const name = profile
-    ? [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email
+    ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
+      profile.email
     : null;
 
   return (
-    <Card tint={account ? 'brand' : undefined} style={{ gap: Space.md }}>
+    <Card tint={account ? "brand" : undefined} style={{ gap: Space.md }}>
       <View style={styles.head}>
-        <View style={[styles.badge, { backgroundColor: account ? c.surface : c.brandWash }]}>
-          <Icon name={realm === 'admin' ? 'shield' : 'graduation'} color={c.brandDeep} size={22} />
+        <View
+          style={[
+            styles.badge,
+            { backgroundColor: account ? c.surface : c.brandWash },
+          ]}
+        >
+          <Icon
+            name={realm === "admin" ? "shield" : "graduation"}
+            color={c.brandDeep}
+            size={22}
+          />
         </View>
         <Txt variant="title" style={{ flex: 1 }}>
           {title}
@@ -97,20 +118,29 @@ function RealmCard({
       </View>
 
       {account ? (
-        <Animated.View entering={FadeIn.duration(200)} style={{ gap: Space.md }}>
+        <Animated.View
+          entering={FadeIn.duration(200)}
+          style={{ gap: Space.md }}
+        >
           {profile ? (
             <View>
               <Txt variant="heading">{name}</Txt>
               <Txt variant="small" tone="soft">
                 {profile.email}
               </Txt>
-              {realm === 'student' ? (
-                <Txt variant="small" tone="faint" style={{ marginTop: Space.sm }}>
+              {realm === "student" ? (
+                <Txt
+                  variant="small"
+                  tone="faint"
+                  style={{ marginTop: Space.sm }}
+                >
                   {profile.enrolment
                     ? `${ENROLMENT[profile.enrolment.status] ?? profile.enrolment.status}${
-                        profile.enrolment.cohort ? `, ${profile.enrolment.cohort}` : ''
+                        profile.enrolment.cohort
+                          ? `, ${profile.enrolment.cohort}`
+                          : ""
                       }`
-                    : 'Not enrolled in a programme yet.'}
+                    : "Not enrolled in a programme yet."}
                 </Txt>
               ) : null}
             </View>
@@ -119,19 +149,27 @@ function RealmCard({
               Signed in. Your details will show once the phone is back online.
             </Txt>
           )}
+          {open.path ? (
+            <Button
+              label={open.label}
+              icon="external"
+              onPress={() =>
+                WebBrowser.openBrowserAsync(`${SITE_URL}${open.path}`)
+              }
+            />
+          ) : null}
           <Button
-            label={open.label}
-            icon="external"
-            onPress={() => WebBrowser.openBrowserAsync(`${SITE_URL}${open.path}`)}
+            label="Sign out"
+            kind="secondary"
+            onPress={() => signOut(realm)}
           />
-          <Button label="Sign out" kind="secondary" onPress={() => signOut(realm)} />
         </Animated.View>
       ) : (
         <>
           <Txt variant="small" tone="soft">
-            {realm === 'admin'
-              ? 'For the studio team. Only Google accounts on the admin list can sign in here.'
-              : 'For academy students. Sign in with the Google account you enrolled with.'}
+            {realm === "admin"
+              ? "For the studio team. Only Google accounts on the admin list can sign in here."
+              : "For academy students. Sign in with the Google account you enrolled with."}
           </Txt>
           {message ? (
             <View style={[styles.message, { borderColor: c.danger }]}>
@@ -154,20 +192,20 @@ function RealmCard({
 }
 
 const styles = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', gap: Space.md },
+  head: { flexDirection: "row", alignItems: "center", gap: Space.md },
   badge: {
     width: 44,
     height: 44,
     borderRadius: Radius.card - 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   message: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Space.sm,
     borderWidth: 1,
     borderRadius: Radius.card - 4,
     padding: Space.sm + 2,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
 });

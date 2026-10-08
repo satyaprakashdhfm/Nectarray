@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { PageHead } from "@/components/admin/Business";
 import { MARKETING_NOTES, NOTE_GROUPS } from "@/lib/content/marketing-notes";
@@ -20,7 +21,7 @@ export default function MarketingNotesPage() {
             {MARKETING_NOTES.filter((t) => t.group === group).map((topic) => (
               <li key={topic.id}>
                 <Link
-                  href={`/admin/marketing/notes/${topic.id}`}
+                  href={`${ADMIN}/marketing/notes/${topic.id}`}
                   className="card hover:border-brand block h-full p-5 transition-colors"
                 >
                   <p className="text-ink text-[0.9375rem] font-semibold">

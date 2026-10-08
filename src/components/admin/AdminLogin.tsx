@@ -19,10 +19,13 @@ import { Loader2, LogOut, ShieldAlert } from "lucide-react";
 export function AdminLogin({
   state,
   email,
+  startUrl,
   initialError = "",
 }: {
   state: "out" | "wrong-account";
   email?: string | null;
+  /** The Google start route, carrying the panel's address as its pass. */
+  startUrl: string;
   /** A message from a redirect — a Google sign-in that came back a failure. */
   initialError?: string;
 }) {
@@ -40,8 +43,7 @@ export function AdminLogin({
        * cross-origin redirect out of a fetch — the browser has to make the
        * request itself.
        */
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = "/api/auth/google/start?realm=admin";
+      window.location.href = startUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed.");
       setBusy(false);

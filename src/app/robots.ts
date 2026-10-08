@@ -4,9 +4,14 @@ import { siteUrl } from "@/lib/seo";
 /**
  * Served at /robots.txt.
  *
- * The signed-in areas are disallowed. They already redirect anonymous
- * visitors, so a crawler would only ever see the sign-in bounce — but a
- * bounce is still a crawled URL, and neither belongs in the index.
+ * The student dashboard is disallowed: it redirects anonymous visitors, so a
+ * crawler would only ever see the sign-in bounce, and a bounce is still a
+ * crawled URL.
+ *
+ * The admin panel is deliberately not listed. robots.txt is public, so
+ * naming it here would point every scanner at it; it lives at an
+ * unguessable address instead (lib/admin-path.ts), answers /admin with a
+ * 404, and sends noindex headers on every page of its own.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -14,7 +19,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/admin", "/auth/"],
+        disallow: ["/dashboard", "/auth/"],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

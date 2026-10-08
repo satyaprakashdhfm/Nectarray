@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { PageHead } from "@/components/admin/Business";
 import { QuotesNav } from "@/components/admin/QuotesNav";
 import { TemplateEditor } from "@/components/admin/TemplateEditor";
@@ -28,7 +29,7 @@ export default async function AdminQuoteTemplatePage() {
         title="Quotations"
         lede="The template every quotation uses: its sections, the headings it prints and the wording a new quote starts with."
       />
-      <QuotesNav current="/admin/quotes/template" />
+      <QuotesNav current={`${ADMIN}/quotes/template`} />
       <TemplateEditor
         initial={template}
         customised={customised}

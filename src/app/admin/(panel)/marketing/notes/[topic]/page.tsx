@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -26,7 +27,7 @@ export default async function MarketingNoteTopicPage({
   return (
     <>
       <Link
-        href="/admin/marketing/notes"
+        href={`${ADMIN}/marketing/notes`}
         className="text-ink-soft hover:text-ink mb-4 inline-flex items-center gap-1.5 text-[0.8125rem] font-medium"
       >
         <ArrowLeft className="size-3.5" aria-hidden />
@@ -37,7 +38,7 @@ export default async function MarketingNoteTopicPage({
         {MARKETING_NOTES.map((t) => (
           <li key={t.id}>
             <Link
-              href={`/admin/marketing/notes/${t.id}`}
+              href={`${ADMIN}/marketing/notes/${t.id}`}
               aria-current={t.id === topic.id ? "page" : undefined}
               className="tab"
             >

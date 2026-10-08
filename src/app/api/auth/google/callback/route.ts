@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -42,7 +43,7 @@ export const runtime = "nodejs";
 const failOnSite = (origin: string, realm: Realm, why: string) =>
   NextResponse.redirect(
     realm === "admin"
-      ? `${origin}/admin/login?error=${why}`
+      ? `${origin}${ADMIN}/login?error=${why}`
       : `${origin}/academy?signin=1&error=${why}`,
   );
 
@@ -173,7 +174,9 @@ export async function GET(request: Request) {
    * says so, and dropping them on the dashboard instead would look like the
    * panel had quietly refused them.
    */
-  const next = realm === "admin" ? "/admin" : "/dashboard";
+  // An admin owes the emailed code next; that page sends anyone else back
+  // to sign-in, which says which account was refused.
+  const next = realm === "admin" ? `${ADMIN}/verify` : "/dashboard";
   return spent(
     attachCookies(NextResponse.redirect(`${origin}${next}`), session),
   );

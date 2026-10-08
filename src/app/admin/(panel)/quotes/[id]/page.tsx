@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq, inArray } from "drizzle-orm";
@@ -47,7 +48,7 @@ export default async function AdminQuotePage({
   return (
     <>
       <Link
-        href="/admin/quotes"
+        href={`${ADMIN}/quotes`}
         className="text-ink-soft hover:text-ink inline-flex items-center gap-1 text-[0.8125rem] font-semibold"
       >
         <ChevronLeft className="size-4" aria-hidden />

@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 /**
  * What the Website tab in the admin shows before anything has been saved:
  * the lessons learned building this site, the order to build a page in, and
@@ -18,12 +19,12 @@ export const WEB_NOTE_KINDS: Record<
   WebNoteKind,
   { label: string; singular: string; path: string }
 > = {
-  learning: { label: "Learnings", singular: "learning", path: "/admin/web" },
-  step: { label: "Build steps", singular: "step", path: "/admin/web" },
+  learning: { label: "Learnings", singular: "learning", path: `${ADMIN}/web` },
+  step: { label: "Build steps", singular: "step", path: `${ADMIN}/web` },
   reference: {
     label: "References",
     singular: "reference",
-    path: "/admin/web/references",
+    path: `${ADMIN}/web/references`,
   },
 };
 
@@ -60,37 +61,37 @@ export const STEPS: WebNote[] = [
     id: "colours",
     title: "Pick the three colours",
     body: "Choose primary, secondary and tertiary in the Colours tab and check them on the sample site. Everything after this uses them.",
-    url: "/admin/web/colours",
+    url: `${ADMIN}/web/colours`,
   },
   {
     id: "header",
     title: "Header",
     body: "Logo on the left, four to six links, one button on the right. One line on a laptop, a menu button on a phone.",
-    url: "/admin/web/elements?category=headers",
+    url: `${ADMIN}/web/elements?category=headers`,
   },
   {
     id: "hero",
     title: "Hero",
     body: "A headline of two lines at most, one sentence under it, one main button, and a real image or a sketch diagram beside it. It must fit on the first screen.",
-    url: "/admin/web/elements?category=heroes",
+    url: `${ADMIN}/web/elements?category=heroes`,
   },
   {
     id: "footer",
     title: "Footer",
     body: "Build it straight after the hero so the page has both ends. Links grouped in columns, contact details, and the small print.",
-    url: "/admin/web/elements?category=footers",
+    url: `${ADMIN}/web/elements?category=footers`,
   },
   {
     id: "middle",
     title: "The sections in between",
     body: "What you do, proof that it works, prices, questions. Give each section a different layout so the page does not repeat itself.",
-    url: "/admin/web/elements?category=features",
+    url: `${ADMIN}/web/elements?category=features`,
   },
   {
     id: "forms-cards",
     title: "Forms and cards",
     body: "Take them from Elements: labels above the fields, a clear error under the field that is wrong, and cards in a row the same height.",
-    url: "/admin/web/elements?category=forms",
+    url: `${ADMIN}/web/elements?category=forms`,
   },
   {
     id: "check",

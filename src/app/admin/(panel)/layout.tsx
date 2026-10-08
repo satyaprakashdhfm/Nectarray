@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -9,7 +10,7 @@ import {
   ThemeScript,
   ThemeToggle,
 } from "@/components/dashboard/Theme";
-import { adminViewer, isAdmin } from "@/lib/auth/access";
+import { adminGate } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -29,25 +30,26 @@ export const metadata: Metadata = {
 };
 
 /**
- * Two gates, and both must pass.
+ * Three steps, all required: a Google sign-in on the panel's own page, an
+ * address Google has verified that is on ADMIN_EMAILS (a deploy variable, not
+ * a table row anyone could edit), and the code emailed for this session. The
+ * session lasts five hours, then all three again.
  *
- * `is_admin()` is the real authorisation — it is what every RLS policy in the
- * database checks, so it is what actually protects the data. The email
- * allowlist is a second, independent check that lives in configuration rather
- * than in a table: a row can be edited, a deploy variable is a different
- * thing to get at. Neither alone opens the panel.
- *
- * Anyone who fails either is sent to /admin/login rather than shown a 404, so
- * the usual cause — a browser still holding a student session — is something
- * they can actually fix.
+ * Someone short of the first two is sent to the sign-in page, where the usual
+ * cause (the wrong Google account) can be fixed; an admin owing the code is
+ * sent to enter it. The panel's address itself is unguessable and /admin is
+ * a 404 (lib/admin-path.ts), so nobody lands here by accident.
  */
 export default async function AdminPanelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await adminViewer();
-  if (!user || !isAdmin(user)) redirect("/admin/login");
+  const gate = await adminGate();
+  if (!gate.user || !gate.admin) redirect(`${ADMIN}/login`);
+  // Google said yes; the emailed code for this session is still owed.
+  if (!gate.verified) redirect(`${ADMIN}/verify`);
+  const user = gate.user;
 
   return (
     <div className="bg-mist min-h-screen">
@@ -72,7 +74,7 @@ export default async function AdminPanelLayout({
               Main site
             </Link>
             <ThemeToggle />
-            <SignOutButton realm="admin" redirectTo="/admin/login" />
+            <SignOutButton realm="admin" redirectTo={`${ADMIN}/login`} />
           </div>
         </div>
       </header>

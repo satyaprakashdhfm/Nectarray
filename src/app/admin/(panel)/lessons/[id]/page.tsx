@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Pencil, Plus } from "lucide-react";
@@ -52,7 +53,7 @@ export default async function AdminLessonPage({
   if (!lesson || lesson.audience !== "student") notFound();
 
   const editing = edit === "1";
-  const href = `/admin/lessons/${lesson.id}`;
+  const href = `${ADMIN}/lessons/${lesson.id}`;
 
   const body = lesson.bodyMd
     ? stripLeadingHeading(lesson.bodyMd, lesson.title)
@@ -201,7 +202,7 @@ export default async function AdminLessonPage({
         {status}
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            href={`/admin/lessons?new=1&module=${lesson.moduleSlug}`}
+            href={`${ADMIN}/lessons?new=1&module=${lesson.moduleSlug}`}
             className={button}
           >
             <Plus className="size-3.5" strokeWidth={2} aria-hidden />
@@ -238,7 +239,7 @@ export default async function AdminLessonPage({
         >
           {prev ? (
             <IntentLink
-              href={`/admin/lessons/${prev.id}`}
+              href={`${ADMIN}/lessons/${prev.id}`}
               className="card card-hover group flex items-center gap-3 p-4 sm:max-w-[48%]"
             >
               <ArrowLeft
@@ -261,7 +262,7 @@ export default async function AdminLessonPage({
 
           {next && (
             <IntentLink
-              href={`/admin/lessons/${next.id}`}
+              href={`${ADMIN}/lessons/${next.id}`}
               className="card card-hover group flex items-center gap-3 p-4 text-right sm:max-w-[48%]"
             >
               <span className="min-w-0 flex-1">

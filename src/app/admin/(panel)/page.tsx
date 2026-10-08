@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import {
   Empty,
@@ -14,12 +15,12 @@ import { lastMonths, loadMoney, totals } from "@/lib/business-data";
 export const dynamic = "force-dynamic";
 
 const SERVICE_HREF: Record<string, string> = {
-  marketing: "/admin/services/marketing",
-  software: "/admin/services/software",
-  ai: "/admin/services/ai",
-  software_ai: "/admin/development",
-  training: "/admin/services/training",
-  academy: "/admin/students",
+  marketing: `${ADMIN}/services/marketing`,
+  software: `${ADMIN}/services/software`,
+  ai: `${ADMIN}/services/ai`,
+  software_ai: `${ADMIN}/development`,
+  training: `${ADMIN}/services/training`,
+  academy: `${ADMIN}/students`,
 };
 
 const BAR: Record<string, string> = {
@@ -100,7 +101,7 @@ export default async function AdminRevenuePage() {
                 >
                   <td className={td}>
                     <Link
-                      href={SERVICE_HREF[r.id] ?? "/admin"}
+                      href={SERVICE_HREF[r.id] ?? `${ADMIN}`}
                       className="text-ink hover:text-brand-deep inline-flex items-center gap-2 font-semibold"
                     >
                       <span className={`size-2 rounded-full ${BAR[r.id]}`} />

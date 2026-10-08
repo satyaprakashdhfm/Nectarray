@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, FileText, TriangleAlert } from "lucide-react";
@@ -51,7 +52,7 @@ export default async function AdminPlacementProfile({
   return (
     <>
       <Link
-        href="/admin/placement"
+        href={`${ADMIN}/placement`}
         className="text-ink-soft hover:text-ink inline-flex items-center gap-2 text-[0.875rem] font-medium transition-colors"
       >
         <ArrowLeft className="size-4" strokeWidth={2} aria-hidden />
@@ -79,7 +80,7 @@ export default async function AdminPlacementProfile({
             Hasn&rsquo;t written one — they see the starter template when they
             open the tab. See it on the{" "}
             <Link
-              href="/admin/placement"
+              href={`${ADMIN}/placement`}
               className="text-brand-deep underline underline-offset-2"
             >
               Placement overview

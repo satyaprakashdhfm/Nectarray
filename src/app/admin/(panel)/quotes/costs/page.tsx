@@ -1,3 +1,4 @@
+import { ADMIN } from "@/lib/admin-path";
 import { PageHead } from "@/components/admin/Business";
 import { CostSheet } from "@/components/admin/CostSheet";
 import { QuotesNav } from "@/components/admin/QuotesNav";
@@ -14,7 +15,7 @@ export default async function AdminThirdPartyCostsPage() {
         title="Quotations"
         lede="What email, domains, servers, storage, AI, messages, delivery and payments cost from the companies that provide them. The client pays these on top of our price."
       />
-      <QuotesNav current="/admin/quotes/costs" />
+      <QuotesNav current={`${ADMIN}/quotes/costs`} />
       <CostSheet initial={groups} customised={customised} />
     </>
   );
