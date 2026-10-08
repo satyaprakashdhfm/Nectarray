@@ -5,12 +5,10 @@ set -e
 
 mkdir -p /data/repos /data/home /data/tools
 
-# Claude Code on the volume: installed once, then kept current by the
-# runner's `claude update` (at start and every six hours while idle).
-if ! command -v claude >/dev/null 2>&1; then
-  echo "Installing Claude Code…"
-  npm install -g @anthropic-ai/claude-code --no-audit --no-fund
-fi
+# Claude Code lives on the volume (npm's global prefix is /data/tools). The
+# runner installs it on the very first start, in the background so the
+# service answers its health check straight away, and keeps it current with
+# `claude update` at every start and every six hours while idle.
 
 # git and gh use GITHUB_TOKEN (a Railway variable) for private repos and
 # pushes. The token is read from the environment each time, never written

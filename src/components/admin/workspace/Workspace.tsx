@@ -602,8 +602,15 @@ function StatusStrip({
             </span>
           </p>
         ) : (
-          <p className="text-danger text-[0.875rem] font-semibold">
-            Not installed yet
+          <p
+            className={cn(
+              "text-[0.875rem] font-semibold",
+              claude.updating ? "text-ink-soft" : "text-danger",
+            )}
+          >
+            {claude.updating
+              ? "Installing, first start only (a minute or two)"
+              : (claude.updateNote ?? "Not installed yet")}
           </p>
         )}
       </div>

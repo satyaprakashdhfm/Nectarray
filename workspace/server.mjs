@@ -155,7 +155,11 @@ async function readClaude() {
  * on the page can still force it.
  */
 async function updateClaude(force = false) {
-  if (info.updating || !info.installed) return;
+  if (info.updating) return;
+  if (!info.installed) {
+    if (CLOUD) await installClaude();
+    return;
+  }
   if (!force && [...sessions.values()].some((s) => s.pty)) return;
   info.updating = true;
   info.updateNote = null;
@@ -170,6 +174,34 @@ async function updateClaude(force = false) {
     : info.version !== before
       ? `Updated to ${info.version}.`
       : "Already up to date.";
+  broadcast({ t: "claude", claude: info });
+}
+
+/**
+ * The cloud's first start: Claude Code onto the volume (npm's global prefix
+ * is /data/tools there), where it and its own updates survive redeploys.
+ */
+async function installClaude() {
+  info.updating = true;
+  info.updateNote = "Installing Claude Code…";
+  broadcast({ t: "claude", claude: info });
+  console.log("Installing Claude Code onto the volume…");
+  const ok = await new Promise((resolve) =>
+    execFile(
+      "npm",
+      ["install", "-g", "@anthropic-ai/claude-code", "--no-audit", "--no-fund"],
+      { timeout: 10 * 60_000 },
+      (err, _out, stderr) => {
+        if (err) console.error(String(stderr).slice(-2000));
+        resolve(!err);
+      },
+    ),
+  );
+  info.updating = false;
+  await readClaude();
+  info.updateNote = ok
+    ? `Installed ${info.version ?? ""}.`.trim()
+    : "Claude Code did not install. See the Workspace service's logs on Railway.";
   broadcast({ t: "claude", claude: info });
 }
 
