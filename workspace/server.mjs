@@ -34,9 +34,11 @@ import {
   readdirSync,
   readFileSync,
   statSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import http from "node:http";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pty from "node-pty";
@@ -49,7 +51,6 @@ const PORT = Number(
 );
 /** Verifies the passes the website signs for admins. Required in the cloud. */
 const PASS_SECRET = process.env.WORKSPACE_SECRET || null;
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || null;
 /** In the cloud, sessions nobody is watching are closed after this long. */
 const IDLE_LIMIT = Number(process.env.WORKSPACE_IDLE_MINUTES ?? 30) * 60_000;
 /** The folder whose git repos are the projects: the one this repo sits in. */
@@ -210,21 +211,167 @@ async function installClaude() {
 /* -------------------------------------------------------------------------- */
 
 let projects = [];
-/** The account's GitHub repos, listed with GITHUB_TOKEN: any can be opened. */
+/** The account's GitHub repos, listed with the token: any can be opened. */
 let githubRepos = [];
 
-const github = (route) =>
+/*
+ * The GitHub token. Pasted into the Workspace tab (kept in TOKEN_FILE on the
+ * volume, readable only by this process's user) or, failing that, the
+ * GITHUB_TOKEN variable. The page is only ever told the account, the expiry
+ * and the last four characters; the token itself never goes back out.
+ *
+ * It is put into this process's environment as GITHUB_TOKEN and GH_TOKEN,
+ * which is how git (through the credential helper in cloud-start.sh), gh and
+ * every session started from here get it.
+ */
+const TOKEN_FILE = path.join(
+  os.homedir(),
+  ".config",
+  "nectarray",
+  "github.json",
+);
+const ENV_TOKEN = process.env.GITHUB_TOKEN || null;
+let token = null;
+/** What the page sees: never the token. */
+let githubInfo = { connected: false };
+
+function applyToken(value) {
+  token = value || null;
+  if (token) {
+    process.env.GITHUB_TOKEN = token;
+    process.env.GH_TOKEN = token;
+  } else {
+    delete process.env.GITHUB_TOKEN;
+    delete process.env.GH_TOKEN;
+  }
+}
+
+function loadToken() {
+  try {
+    const saved = JSON.parse(readFileSync(TOKEN_FILE, "utf8"));
+    if (saved.token) return applyToken(saved.token);
+  } catch {}
+  applyToken(ENV_TOKEN);
+}
+
+const github = (route, auth = token) =>
   fetch(`https://api.github.com${route}`, {
     headers: {
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Authorization: `Bearer ${auth}`,
       Accept: "application/vnd.github+json",
       "User-Agent": "nectarray-workspace",
     },
     signal: AbortSignal.timeout(15_000),
   });
 
+/**
+ * Asks GitHub who a token belongs to and when it expires. Fine-grained and
+ * expiring tokens carry the date in a response header; a token that never
+ * expires has none.
+ */
+async function inspectToken(value) {
+  try {
+    const res = await github("/user", value);
+    if (res.status === 401)
+      return {
+        ok: false,
+        error: "GitHub says this token is invalid or has expired.",
+      };
+    if (!res.ok) return { ok: false, error: `GitHub answered ${res.status}.` };
+    const me = await res.json();
+    const header = res.headers.get("github-authentication-token-expiration");
+    const expires = header
+      ? new Date(header.replace(" UTC", "Z").replace(" ", "T"))
+      : null;
+    return {
+      ok: true,
+      login: me.login,
+      name: me.name,
+      id: me.id,
+      expiresAt:
+        expires && !Number.isNaN(+expires) ? expires.toISOString() : null,
+    };
+  } catch (err) {
+    return { ok: false, error: `Could not reach GitHub: ${err.message}` };
+  }
+}
+
+/** Re-checks the current token and tells every open tab. */
+async function refreshGitHubInfo() {
+  if (!token) {
+    githubInfo = { connected: false };
+  } else {
+    const result = await inspectToken(token);
+    let source = "env";
+    let savedAt = null;
+    try {
+      const saved = JSON.parse(readFileSync(TOKEN_FILE, "utf8"));
+      if (saved.token === token) {
+        source = "page";
+        savedAt = saved.savedAt ?? null;
+      }
+    } catch {}
+    githubInfo = result.ok
+      ? {
+          connected: true,
+          login: result.login,
+          expiresAt: result.expiresAt,
+          savedAt,
+          source,
+          last4: token.slice(-4),
+        }
+      : {
+          connected: false,
+          error: result.error,
+          source,
+          last4: token.slice(-4),
+        };
+  }
+  broadcast({ t: "github", github: githubInfo });
+}
+
+/** A token pasted into the page: checked with GitHub first, then kept. */
+async function saveToken(value, reply) {
+  const clean = String(value ?? "").trim();
+  if (!/^(github_pat_|ghp_|gho_|ghu_)[A-Za-z0-9_]{20,}$/.test(clean))
+    return reply({
+      t: "error",
+      message:
+        "That does not look like a GitHub token. Fine-grained ones start with github_pat_.",
+    });
+  const result = await inspectToken(clean);
+  if (!result.ok) return reply({ t: "error", message: result.error });
+  mkdirSync(path.dirname(TOKEN_FILE), { recursive: true, mode: 0o700 });
+  writeFileSync(
+    TOKEN_FILE,
+    JSON.stringify({ token: clean, savedAt: new Date().toISOString() }),
+    { mode: 0o600 },
+  );
+  applyToken(clean);
+  await refreshGitHubInfo();
+  await readGitHub();
+  readProjects();
+  gitIdentity();
+  broadcast({
+    t: "notice",
+    message: `GitHub connected as ${result.login}. New sessions use it; sessions already open keep the old one.`,
+  });
+}
+
+function forgetToken() {
+  try {
+    unlinkSync(TOKEN_FILE);
+  } catch {}
+  applyToken(ENV_TOKEN);
+  githubRepos = [];
+  refreshGitHubInfo().then(() => readGitHub().then(readProjects));
+}
+
 async function readGitHub() {
-  if (!GITHUB_TOKEN) return;
+  if (!token) {
+    githubRepos = [];
+    return;
+  }
   try {
     const res = await github(
       "/user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator,organization_member",
@@ -249,7 +396,7 @@ async function readGitHub() {
  * private noreply address, so they show up on GitHub as yours.
  */
 async function gitIdentity() {
-  if (!CLOUD || !GITHUB_TOKEN) return;
+  if (!CLOUD || !token) return;
   try {
     const me = await (await github("/user")).json();
     const name = process.env.GIT_USER_NAME || me.name || me.login;
@@ -526,6 +673,9 @@ function startSession({
   } catch (err) {
     return { error: `Could not start Claude Code: ${err.message}` };
   }
+  // The terminal's size, so the small live previews draw it the same shape.
+  s.cols = 120;
+  s.rows = 32;
 
   s.pty.onData((data) => {
     s.buffer.push(data);
@@ -557,7 +707,22 @@ function startSession({
       if (ws.readyState === 1)
         ws.send(JSON.stringify({ t: "exit", code: exitCode }));
     changed(s);
-    if (s.kind === "login") readClaude();
+    if (s.kind === "login") {
+      /*
+       * `claude auth login` exits as soon as it has signed in, so its card
+       * would only ever say Closed. Signed in, it goes away and says so;
+       * otherwise it stays, with its terminal, to show what went wrong.
+       */
+      readClaude().then(() => {
+        if (exitCode !== 0 || !info.loggedIn) return;
+        sessions.delete(s.id);
+        broadcast({ t: "removed", id: s.id });
+        broadcast({
+          t: "notice",
+          message: `Signed in to Claude${info.email ? ` as ${info.email}` : ""}. Every session uses this sign-in.`,
+        });
+      });
+    }
   });
 
   sessions.set(id, s);
@@ -775,7 +940,7 @@ function openControl(ws) {
   reply({
     t: "hello",
     cloud: CLOUD,
-    github: !!GITHUB_TOKEN,
+    github: githubInfo,
     root: ROOT,
     claude: info,
     projects,
@@ -880,6 +1045,16 @@ function openControl(ws) {
       case "clone":
         cloneRepo(m.url, reply);
         break;
+      case "github-token":
+        saveToken(m.token, reply);
+        break;
+      case "github-forget":
+        forgetToken();
+        reply({ t: "notice", message: "The saved GitHub token was removed." });
+        break;
+      case "github-check":
+        refreshGitHubInfo();
+        break;
       case "update":
         updateClaude(true);
         break;
@@ -932,8 +1107,14 @@ function openTerminal(ws, id) {
     if (!s.pty) return;
     if (m.t === "in" && typeof m.data === "string") s.pty.write(m.data);
     if (m.t === "resize" && m.cols > 1 && m.rows > 1) {
+      const cols = Math.min(Math.floor(m.cols), 500);
+      const rows = Math.min(Math.floor(m.rows), 200);
+      if (cols === s.cols && rows === s.rows) return;
       try {
-        s.pty.resize(Math.min(m.cols, 500), Math.min(m.rows, 200));
+        s.pty.resize(cols, rows);
+        s.cols = cols;
+        s.rows = rows;
+        changed(s);
       } catch {}
     }
   });
@@ -948,6 +1129,7 @@ if (CLOUD && !PASS_SECRET) {
   process.exit(1);
 }
 mkdirSync(ROOT, { recursive: true });
+loadToken();
 writeHooks();
 readProjects();
 server.on("error", (err) => {
@@ -965,14 +1147,19 @@ server.listen(PORT, CLOUD ? "::" : "127.0.0.1", async () => {
       ? `NectArray Workspace runner (cloud) on port ${PORT}`
       : `NectArray Workspace runner on http://127.0.0.1:${PORT}`,
   );
+  await refreshGitHubInfo();
   await readGitHub();
   readProjects();
   gitIdentity();
+  // Twice a day: an expiry date or a revoked token shows up on the page.
+  setInterval(refreshGitHubInfo, 12 * 60 * 60 * 1000);
   console.log(
     `Repos in ${ROOT}: ${projects.filter((p) => p.cloned).length} cloned, ${projects.length} listed`,
   );
-  if (CLOUD && !GITHUB_TOKEN)
-    console.log("GITHUB_TOKEN is not set: only public repos can be cloned.");
+  if (CLOUD && !token)
+    console.log(
+      "No GitHub token yet: add one in the Workspace tab. Only public repos can be cloned.",
+    );
   if (!CLOUD)
     console.log(
       "Open the Workspace tab in the admin panel. Leave this window open; Ctrl+C stops every session.",

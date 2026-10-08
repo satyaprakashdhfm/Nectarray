@@ -44,6 +44,22 @@ export type Session = {
   startedAt: string;
   updatedAt: string;
   live: boolean;
+  /** The terminal's size, so a small preview draws it the same shape. */
+  cols?: number;
+  rows?: number;
+};
+
+/** The GitHub token, as the page sees it: never the token itself. */
+export type GitHubInfo = {
+  connected: boolean;
+  login?: string;
+  /** ISO date, or null for a token that never expires. */
+  expiresAt?: string | null;
+  savedAt?: string | null;
+  /** "page": pasted in this tab; "env": the Railway variable. */
+  source?: "page" | "env";
+  last4?: string;
+  error?: string;
 };
 
 export type Project = {
@@ -70,13 +86,14 @@ export type RunnerMessage =
   | {
       t: "hello";
       cloud: boolean;
-      github: boolean;
+      github: GitHubInfo;
       root: string;
       claude: ClaudeInfo;
       projects: Project[];
       sessions: Session[];
     }
   | { t: "claude"; claude: ClaudeInfo }
+  | { t: "github"; github: GitHubInfo }
   | { t: "projects"; projects: Project[] }
   | { t: "session"; session: Session }
   | { t: "removed"; id: string }

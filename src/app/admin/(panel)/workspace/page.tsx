@@ -7,17 +7,16 @@ export const metadata: Metadata = {
 };
 
 /**
- * Claude Code sessions on the admin's own PC, side by side, each in its own
- * terminal, with a card per session saying what it is doing. The sessions
- * run in workspace/server.mjs on that PC, not on this server; the page only
- * shows them. Admin-only through the panel's layout, like every other tab.
+ * Claude Code sessions side by side, each in its own terminal, run by the
+ * Workspace service on Railway (workspace/server.mjs), not by this server;
+ * the page only shows them. Admin-only through the panel's layout, like every other tab.
  */
 export default function AdminWorkspacePage() {
   return (
     <>
       <PageHead
         title="Workspace"
-        lede="Claude Code on your PC, one terminal per session. Pick a repo, start as many sessions as you need, and talk or type to each one."
+        lede="Claude Code in the cloud, on any of your GitHub repos. Every session is a live tile; open one to work in it, talk or type to it, and Stop the workspace when you are done."
       />
       <Workspace />
     </>

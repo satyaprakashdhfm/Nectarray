@@ -1,20 +1,39 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { openRunner } from "./runner";
 
 /**
  * One session's terminal: the real Claude Code screen, streamed from the
- * runner. Keystrokes go straight back to it, so it behaves the way Claude
- * Code does in any terminal; links in it open in a new tab.
+ * runner. Remounted per session (keyed by id), which replays that session's
+ * recent output.
+ *
+ * Two ways to show it:
+ * - main: full size, typing goes straight to Claude Code, and its size
+ *   becomes the session's size. Links open in a new tab.
+ * - preview: a small live picture for a tile. Read-only; drawn at the
+ *   session's own size (cols x rows) and scaled down to fit, so it never
+ *   resizes the session out from under the main view.
  *
  * xterm touches `window` when it loads, so it is imported inside the effect.
- * Remounted per session (keyed by id), which replays that session's recent
- * output from the runner.
  */
-export function TerminalView({ id }: { id: string }) {
+export function TerminalView({
+  id,
+  preview = false,
+  cols = 120,
+  rows = 32,
+}: {
+  id: string;
+  preview?: boolean;
+  cols?: number;
+  rows?: number;
+}) {
   const host = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const termRef = useRef<XTerm | null>(null);
+  const fitPreview = useRef<() => void>(() => {});
 
   useEffect(() => {
     let disposed = false;
@@ -28,18 +47,20 @@ export function TerminalView({ id }: { id: string }) {
           import("@xterm/addon-web-links"),
         ],
       );
-      if (disposed || !host.current) return;
+      if (disposed || !host.current || !inner.current) return;
 
       const css = getComputedStyle(document.documentElement);
       const token = (name: string, fallback: string) =>
         css.getPropertyValue(name).trim() || fallback;
       const term = new Terminal({
-        cursorBlink: true,
+        cursorBlink: !preview,
+        disableStdin: preview,
         fontFamily: '"Cascadia Mono", Consolas, ui-monospace, monospace',
         fontSize: 13,
         lineHeight: 1.15,
-        scrollback: 5000,
+        scrollback: preview ? 200 : 5000,
         allowProposedApi: true,
+        ...(preview ? { cols, rows } : {}),
         theme: {
           background: token("--color-night", "#0b1720"),
           foreground: "#e6edf2",
@@ -47,14 +68,28 @@ export function TerminalView({ id }: { id: string }) {
           selectionBackground: "#1fa5de55",
         },
       });
+      termRef.current = term;
       const fit = new FitAddon();
-      term.loadAddon(fit);
-      term.loadAddon(
-        new WebLinksAddon((_event, uri) =>
-          window.open(uri, "_blank", "noopener,noreferrer"),
-        ),
-      );
-      term.open(host.current);
+      if (!preview) {
+        term.loadAddon(fit);
+        term.loadAddon(
+          new WebLinksAddon((_event, uri) =>
+            window.open(uri, "_blank", "noopener,noreferrer"),
+          ),
+        );
+      }
+      term.open(inner.current);
+
+      /* A preview is scaled as a picture: its full-size screen, shrunk to the tile. */
+      fitPreview.current = () => {
+        const box = host.current;
+        const screen =
+          inner.current?.querySelector<HTMLElement>(".xterm-screen");
+        if (!preview || !box || !screen || !inner.current) return;
+        const scale = Math.min(1, box.clientWidth / screen.offsetWidth);
+        inner.current.style.transform = `scale(${scale})`;
+        box.style.height = `${Math.ceil(screen.offsetHeight * scale)}px`;
+      };
 
       const opened = await openRunner(`/term/${id}`);
       if (disposed) {
@@ -75,6 +110,7 @@ export function TerminalView({ id }: { id: string }) {
       const send = (message: object) =>
         ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(message));
       const resize = () => {
+        if (preview) return fitPreview.current();
         try {
           fit.fit();
         } catch {}
@@ -83,7 +119,7 @@ export function TerminalView({ id }: { id: string }) {
 
       ws.onopen = () => {
         resize();
-        term.focus();
+        if (!preview) term.focus();
       };
       ws.onmessage = (event) => {
         const m = JSON.parse(String(event.data));
@@ -91,15 +127,18 @@ export function TerminalView({ id }: { id: string }) {
         if (m.t === "exit")
           term.write("\r\n\x1b[2m[session closed]\x1b[0m\r\n");
       };
-      const input = term.onData((data) => send({ t: "in", data }));
+      const input = preview
+        ? null
+        : term.onData((data) => send({ t: "in", data }));
       const observer = new ResizeObserver(() => resize());
       observer.observe(host.current);
 
       cleanup = () => {
         observer.disconnect();
-        input.dispose();
+        input?.dispose();
         ws.close();
         term.dispose();
+        termRef.current = null;
       };
     })();
 
@@ -107,12 +146,34 @@ export function TerminalView({ id }: { id: string }) {
       disposed = true;
       cleanup();
     };
-  }, [id]);
+    // cols/rows are applied below, without reconnecting.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, preview]);
+
+  // The session was resized in the main view: redraw the preview to match.
+  useEffect(() => {
+    const term = termRef.current;
+    if (!preview || !term) return;
+    if (term.cols !== cols || term.rows !== rows) {
+      term.resize(cols, rows);
+      requestAnimationFrame(() => fitPreview.current());
+    }
+  }, [preview, cols, rows]);
 
   return (
     <div
       ref={host}
-      className="bg-night h-full min-h-0 w-full overflow-hidden p-2"
-    />
+      className={
+        preview
+          ? "bg-night pointer-events-none relative w-full overflow-hidden"
+          : "bg-night h-full min-h-0 w-full overflow-hidden p-2"
+      }
+      aria-hidden={preview || undefined}
+    >
+      <div
+        ref={inner}
+        className={preview ? "absolute top-0 left-0 origin-top-left" : "h-full"}
+      />
+    </div>
   );
 }

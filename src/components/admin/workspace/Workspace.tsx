@@ -12,9 +12,13 @@ import {
   Bell,
   BellOff,
   ExternalLink,
+  KeyRound,
+  LayoutGrid,
   GitBranch,
   Loader2,
   LogIn,
+  Maximize2,
+  Minimize2,
   Mic,
   Play,
   Power,
@@ -31,6 +35,7 @@ import { cn } from "@/lib/utils";
 import {
   openRunner,
   type ClaudeInfo,
+  type GitHubInfo,
   type Mode,
   type Project,
   type RunnerMessage,
@@ -55,7 +60,7 @@ type Phase = "stopped" | "starting" | "connected" | "unset" | "expired";
 type State = {
   phase: Phase;
   cloud: boolean;
-  github: boolean;
+  github: GitHubInfo;
   root: string;
   claude: ClaudeInfo | null;
   projects: Project[];
@@ -67,7 +72,7 @@ type Action = RunnerMessage | { t: "phase"; phase: Phase };
 const INITIAL: State = {
   phase: "stopped",
   cloud: false,
-  github: false,
+  github: { connected: false },
   root: "",
   claude: null,
   projects: [],
@@ -90,6 +95,8 @@ function reduce(state: State, action: Action): State {
       return { ...state, phase: action.phase };
     case "claude":
       return { ...state, claude: action.claude };
+    case "github":
+      return { ...state, github: action.github };
     case "projects":
       return { ...state, projects: action.projects };
     case "session":
@@ -196,6 +203,7 @@ function WorkspaceApp() {
   const [prefs, setPrefs] = useState(readPrefs);
   const [projectName, setProjectName] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [maximized, setMaximized] = useState(false);
   const [toast, setToast] = useState<{ text: string; error: boolean } | null>(
     null,
   );
@@ -333,8 +341,8 @@ function WorkspaceApp() {
     state.projects.find((p) => p.name === "Nectarray") ??
     state.projects[0] ??
     null;
-  const current =
-    (sessionId && state.sessions[sessionId]) || sessions[0] || null;
+  // The session in the main view; none means every session is a tile.
+  const current = (sessionId && state.sessions[sessionId]) || null;
 
   return (
     <div className="mt-6 space-y-6">
@@ -373,12 +381,7 @@ function WorkspaceApp() {
         </p>
       )}
 
-      {state.cloud && !state.github && (
-        <p className="border-amber/30 bg-amber-wash text-amber-deep rounded-lg border px-4 py-2.5 text-[0.8125rem]">
-          No GitHub token yet, so only public repos can be opened and nothing
-          can be pushed. Add GITHUB_TOKEN to the Workspace service on Railway.
-        </p>
-      )}
+      {state.cloud && <TokenWarning github={state.github} now={now} />}
 
       <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <aside className="min-w-0 space-y-6">
@@ -398,25 +401,31 @@ function WorkspaceApp() {
               send={send}
             />
           )}
+          {state.cloud && (
+            <GitHubPanel github={state.github} now={now} send={send} />
+          )}
           <ConnectRepo send={send} />
         </aside>
 
-        <div className="min-w-0 space-y-6">
-          <Board
+        <div className="min-w-0">
+          <Sessions
             sessions={sessions}
-            current={current?.id ?? null}
-            onOpen={setSessionId}
+            focused={current}
+            maximized={maximized && current !== null}
+            onFocus={(id) => {
+              setSessionId(id);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onMinimize={() => {
+              setSessionId(null);
+              setMaximized(false);
+            }}
+            onMaximize={setMaximized}
             now={now}
+            prefs={prefs}
+            setPrefs={setPrefs}
+            send={send}
           />
-          {current && (
-            <SessionPanel
-              session={current}
-              prefs={prefs}
-              setPrefs={setPrefs}
-              send={send}
-              onRemoved={() => setSessionId(null)}
-            />
-          )}
         </div>
       </div>
     </div>
@@ -988,16 +997,34 @@ function StatusPill({ status }: { status: SessionStatus }) {
   );
 }
 
-function Board({
+/**
+ * Every session on one screen. With none open, each is a tile with a small
+ * live picture of its terminal. Click a tile and it opens in the main view
+ * above the rest, which can be maximized to the whole window or sent back to
+ * the tiles.
+ */
+function Sessions({
   sessions,
-  current,
-  onOpen,
+  focused,
+  maximized,
+  onFocus,
+  onMinimize,
+  onMaximize,
   now,
+  prefs,
+  setPrefs,
+  send,
 }: {
   sessions: Session[];
-  current: string | null;
-  onOpen: (id: string) => void;
+  focused: Session | null;
+  maximized: boolean;
+  onFocus: (id: string) => void;
+  onMinimize: () => void;
+  onMaximize: (on: boolean) => void;
   now: number;
+  prefs: Prefs;
+  setPrefs: (update: (p: Prefs) => Prefs) => void;
+  send: (m: object) => void;
 }) {
   if (sessions.length === 0)
     return (
@@ -1012,82 +1039,160 @@ function Board({
       </div>
     );
 
+  const others = focused
+    ? sessions.filter((s) => s.id !== focused.id)
+    : sessions;
+
   return (
-    <section aria-label="Sessions">
-      <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-        {sessions.map((s) => (
-          <li key={s.id}>
-            <button
-              type="button"
-              onClick={() => onOpen(s.id)}
-              aria-current={s.id === current ? "true" : undefined}
-              className={cn(
-                "card block h-full w-full p-4 text-left transition-[box-shadow,transform] active:scale-[0.99]",
-                s.id === current
-                  ? "ring-brand ring-2"
-                  : "hover:ring-line hover:ring-1",
-                s.status === "ended" && "opacity-70",
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-ink line-clamp-2 min-w-0 text-[0.9375rem] font-semibold">
-                  {s.title ||
-                    (s.kind === "login" ? "Sign in to Claude" : "New session")}
-                </p>
-                <StatusPill status={s.status} />
-              </div>
-              <p className="text-ink-faint mt-1 flex items-center gap-1 truncate text-[0.75rem]">
-                {s.project}
-                {s.worktree && (
-                  <>
-                    <GitBranch className="ml-1 size-3 shrink-0" aria-hidden />
-                    {s.worktree}
-                  </>
-                )}
-              </p>
-              <p
-                className={cn(
-                  "mt-3 line-clamp-2 text-[0.8125rem]",
-                  s.status === "needs_you"
-                    ? "text-amber-deep font-medium"
-                    : "text-ink-soft",
-                )}
-              >
-                {s.activity}
-              </p>
-              <p className="text-ink-faint mt-3 text-[0.75rem]">
-                {s.status === "ended" ? "Ran" : "Running"} for{" "}
-                {since(s.startedAt, now)}
-                {s.files.length > 0 &&
-                  `, ${s.files.length} file${s.files.length === 1 ? "" : "s"} edited`}
-              </p>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <div className="space-y-5">
+      {focused && (
+        <SessionPanel
+          key={focused.id}
+          session={focused}
+          maximized={maximized}
+          onMaximize={onMaximize}
+          onMinimize={onMinimize}
+          prefs={prefs}
+          setPrefs={setPrefs}
+          send={send}
+        />
+      )}
+      {others.length > 0 && (
+        <section aria-label={focused ? "Other sessions" : "Sessions"}>
+          {focused && (
+            <h2 className="text-ink-soft mb-2 text-[0.8125rem] font-semibold">
+              Other sessions
+            </h2>
+          )}
+          <ul
+            className={cn(
+              "grid gap-3",
+              focused
+                ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+                : "grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3",
+            )}
+          >
+            {others.map((s) => (
+              <li key={s.id}>
+                <SessionTile
+                  session={s}
+                  now={now}
+                  onOpen={() => onFocus(s.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function SessionTile({
+  session: s,
+  now,
+  onOpen,
+}: {
+  session: Session;
+  now: number;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(
+        "border-line bg-surface hover:border-brand group block w-full overflow-hidden rounded-xl border text-left transition-[border-color,transform] active:scale-[0.99]",
+        s.status === "needs_you" && "border-amber",
+        s.status === "ended" && "opacity-75",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3 px-3 pt-3 pb-2">
+        <div className="min-w-0">
+          <p className="text-ink truncate text-[0.875rem] font-semibold">
+            {s.title ||
+              (s.kind === "login" ? "Sign in to Claude" : "New session")}
+          </p>
+          <p className="text-ink-faint mt-0.5 flex items-center gap-1 truncate text-[0.6875rem]">
+            {s.project}
+            {s.worktree && (
+              <>
+                <GitBranch className="ml-1 size-3 shrink-0" aria-hidden />
+                {s.worktree}
+              </>
+            )}
+          </p>
+        </div>
+        <StatusPill status={s.status} />
+      </div>
+      <TerminalView
+        key={`${s.id}-${s.startedAt}-${s.live}`}
+        id={s.id}
+        preview
+        cols={s.cols ?? 120}
+        rows={s.rows ?? 32}
+      />
+      <div className="px-3 py-2">
+        <p
+          className={cn(
+            "truncate text-[0.75rem]",
+            s.status === "needs_you"
+              ? "text-amber-deep font-medium"
+              : "text-ink-soft",
+          )}
+        >
+          {s.activity}
+        </p>
+        <p className="text-ink-faint mt-0.5 text-[0.6875rem]">
+          {s.status === "ended" ? "Ran" : "Running"} for{" "}
+          {since(s.startedAt, now)}
+          {s.files.length > 0 &&
+            `, ${s.files.length} file${s.files.length === 1 ? "" : "s"} edited`}
+        </p>
+      </div>
+    </button>
   );
 }
 
 function SessionPanel({
   session,
+  maximized,
+  onMaximize,
+  onMinimize,
   prefs,
   setPrefs,
   send,
-  onRemoved,
 }: {
   session: Session;
+  maximized: boolean;
+  onMaximize: (on: boolean) => void;
+  onMinimize: () => void;
   prefs: Prefs;
   setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
-  onRemoved: () => void;
 }) {
+  // Maximized, the page behind stays put.
+  useEffect(() => {
+    if (!maximized) return;
+    const before = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = before;
+    };
+  }, [maximized]);
+
+  const iconButton =
+    "text-ink-soft hover:bg-mist hover:text-ink inline-flex size-8 items-center justify-center rounded-lg transition-colors";
+
   return (
     <section
       aria-label="Terminal"
-      className="border-line bg-surface overflow-hidden rounded-xl border"
+      className={cn(
+        "border-line bg-surface flex flex-col overflow-hidden border",
+        maximized ? "fixed inset-0 z-50 rounded-none" : "rounded-xl",
+      )}
     >
-      <div className="border-line flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-2.5">
+      <div className="border-line flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-2">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <SquareTerminal
             className="text-ink-faint size-4 shrink-0"
@@ -1098,8 +1203,11 @@ function SessionPanel({
             {session.title || session.project}
           </p>
           <StatusPill status={session.status} />
+          <p className="text-ink-faint hidden truncate text-[0.75rem] md:block">
+            {session.activity}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {session.live ? (
             <button
               type="button"
@@ -1131,7 +1239,7 @@ function SessionPanel({
                 type="button"
                 onClick={() => {
                   send({ t: "remove", id: session.id });
-                  onRemoved();
+                  onMinimize();
                 }}
                 className={cn(quietButton, "inline-flex items-center gap-1.5")}
               >
@@ -1140,6 +1248,29 @@ function SessionPanel({
               </button>
             </>
           )}
+          <span className="bg-line mx-1 h-5 w-px" aria-hidden />
+          <button
+            type="button"
+            onClick={() => onMaximize(!maximized)}
+            className={iconButton}
+            title={maximized ? "Restore" : "Maximize"}
+            aria-label={maximized ? "Restore" : "Maximize"}
+          >
+            {maximized ? (
+              <Minimize2 className="size-4" aria-hidden />
+            ) : (
+              <Maximize2 className="size-4" aria-hidden />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onMinimize}
+            className={iconButton}
+            title="Back to all sessions"
+            aria-label="Back to all sessions"
+          >
+            <LayoutGrid className="size-4" aria-hidden />
+          </button>
         </div>
       </div>
 
@@ -1161,7 +1292,11 @@ function SessionPanel({
         </div>
       )}
 
-      <div className="h-[min(64dvh,44rem)] min-h-[20rem]">
+      <div
+        className={
+          maximized ? "min-h-0 flex-1" : "h-[min(64dvh,44rem)] min-h-[20rem]"
+        }
+      >
         <TerminalView
           key={`${session.id}-${session.startedAt}-${session.live}`}
           id={session.id}
@@ -1178,6 +1313,233 @@ function SessionPanel({
         />
       )}
     </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* GitHub token                                                               */
+/* -------------------------------------------------------------------------- */
+
+const day = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+/** Whole days until a date; negative once it has passed. */
+const daysLeft = (iso: string, now: number) =>
+  Math.ceil((Date.parse(iso) - now) / 86_400_000);
+
+/**
+ * The token git, gh and every session use for your repos: pasted here, kept
+ * on the Workspace's own disk, and checked with GitHub, which also says when
+ * it expires. The page only ever sees the account, the last four characters
+ * and the date.
+ */
+function GitHubPanel({
+  github,
+  now,
+  send,
+}: {
+  github: GitHubInfo;
+  now: number;
+  send: (m: object) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("");
+  const showForm = editing || !github.connected;
+  const left =
+    github.connected && github.expiresAt
+      ? daysLeft(github.expiresAt, now)
+      : null;
+
+  return (
+    <section className="card space-y-3 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-ink text-[0.9375rem] font-semibold">GitHub</h2>
+        {github.connected && (
+          <button
+            type="button"
+            onClick={() => send({ t: "github-check" })}
+            className="text-ink-faint hover:text-brand-deep rounded-md p-1 transition-colors"
+            title="Check the token with GitHub again"
+            aria-label="Check the token again"
+          >
+            <RefreshCw className="size-3.5" aria-hidden />
+          </button>
+        )}
+      </div>
+
+      {github.connected ? (
+        <div className="space-y-1.5 text-[0.8125rem]">
+          <p className="text-ink">
+            Connected as <span className="font-semibold">{github.login}</span>
+          </p>
+          <p className="text-ink-faint text-[0.75rem]">
+            Token ending {github.last4}
+            {github.source === "env"
+              ? ", from the Railway variable"
+              : github.savedAt
+                ? `, added ${day(github.savedAt)}`
+                : ""}
+          </p>
+          <p
+            className={cn(
+              "text-[0.8125rem] font-medium",
+              left === null
+                ? "text-ink-soft"
+                : left <= 0
+                  ? "text-danger"
+                  : left <= 7
+                    ? "text-amber-deep"
+                    : "text-ink-soft",
+            )}
+          >
+            {left === null || !github.expiresAt
+              ? "Never expires"
+              : left <= 0
+                ? `Expired on ${day(github.expiresAt)}`
+                : `Expires ${day(github.expiresAt)}, in ${left} day${left === 1 ? "" : "s"}`}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2 text-[0.8125rem]">
+          {github.error && (
+            <p className="text-danger font-medium">
+              {github.error}
+              {github.last4 ? ` (token ending ${github.last4})` : ""}
+            </p>
+          )}
+          <p className="text-ink-soft">
+            Needed to open your private repos and to push. Create a fine-grained
+            token, then paste it below.
+          </p>
+          <ol className="text-ink-soft list-decimal space-y-1 pl-4 text-[0.75rem]">
+            <li>
+              <a
+                href="https://github.com/settings/personal-access-tokens/new"
+                target="_blank"
+                rel="noreferrer"
+                className="text-brand-deep font-semibold hover:underline"
+              >
+                Open GitHub&apos;s new token page
+              </a>
+            </li>
+            <li>
+              Repository access: All repositories, or the ones to work on.
+            </li>
+            <li>
+              Permissions: Contents, Read and write. Add Pull requests, Read and
+              write, for pull requests.
+            </li>
+            <li>Generate, copy, and paste it here.</li>
+          </ol>
+        </div>
+      )}
+
+      {showForm ? (
+        <form
+          className="space-y-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!value.trim()) return;
+            send({ t: "github-token", token: value.trim() });
+            setValue("");
+            setEditing(false);
+          }}
+        >
+          <label
+            htmlFor="ws-token"
+            className="text-ink-faint block text-[0.6875rem] font-semibold"
+          >
+            {github.connected ? "New token" : "Token"}
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="ws-token"
+              type="password"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className={field}
+              placeholder="github_pat_…"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button type="submit" className={primaryButton}>
+              Save
+            </button>
+          </div>
+          {editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="text-ink-faint hover:text-ink text-[0.75rem] font-semibold"
+            >
+              Cancel
+            </button>
+          )}
+        </form>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className={cn(quietButton, "inline-flex items-center gap-1.5")}
+          >
+            <KeyRound className="size-3.5" aria-hidden />
+            Replace token
+          </button>
+          {github.source === "page" && (
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  confirm("Remove the saved GitHub token from the workspace?")
+                )
+                  send({ t: "github-forget" });
+              }}
+              className="text-ink-faint hover:text-danger px-2 text-[0.75rem] font-semibold transition-colors"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** A line across the top when the token is missing, failing or nearly due. */
+function TokenWarning({ github, now }: { github: GitHubInfo; now: number }) {
+  let text: string | null = null;
+  let urgent = false;
+  if (!github.connected) {
+    text = github.error
+      ? "The GitHub token is not working. Replace it in the GitHub box."
+      : "No GitHub token yet: private repos cannot be opened and nothing can be pushed. Add one in the GitHub box.";
+    urgent = !!github.error;
+  } else if (github.expiresAt) {
+    const left = daysLeft(github.expiresAt, now);
+    if (left <= 0) {
+      text = `The GitHub token expired on ${day(github.expiresAt)}. Replace it in the GitHub box.`;
+      urgent = true;
+    } else if (left <= 7) {
+      text = `The GitHub token expires in ${left} day${left === 1 ? "" : "s"} (${day(github.expiresAt)}). Make a new one and replace it in the GitHub box.`;
+    }
+  }
+  if (!text) return null;
+  return (
+    <p
+      className={cn(
+        "rounded-lg border px-4 py-2.5 text-[0.8125rem]",
+        urgent
+          ? "border-danger/30 text-danger bg-surface"
+          : "border-amber/30 bg-amber-wash text-amber-deep",
+      )}
+    >
+      {text}
+    </p>
   );
 }
 

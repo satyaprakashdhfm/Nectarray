@@ -10,9 +10,10 @@ mkdir -p /data/repos /data/home /data/tools
 # service answers its health check straight away, and keeps it current with
 # `claude update` at every start and every six hours while idle.
 
-# git and gh use GITHUB_TOKEN (a Railway variable) for private repos and
-# pushes. The token is read from the environment each time, never written
-# into a file on the volume.
+# git and gh use GITHUB_TOKEN for private repos and pushes. The runner sets it
+# in its environment, and so in every session's, from the token pasted into
+# the Workspace tab (or the Railway variable of the same name). The helper
+# reads it from the environment each time; git config never holds it.
 git config --global credential.https://github.com.helper \
   '!f() { test "$1" = get && echo username=x-access-token && echo "password=$GITHUB_TOKEN"; }; f'
 git config --global init.defaultBranch main
