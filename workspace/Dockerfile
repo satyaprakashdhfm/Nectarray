@@ -24,7 +24,7 @@ WORKDIR /app
 # on purpose, it only matters on Windows.
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
-COPY server.mjs hook.mjs cloud-start.sh ./
+COPY server.mjs hook.mjs cloud-start.sh claude-setup.json ./
 
 ENV WORKSPACE_CLOUD=1 \
     WORKSPACE_ROOT=/data/repos \

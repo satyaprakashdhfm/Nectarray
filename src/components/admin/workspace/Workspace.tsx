@@ -12,20 +12,22 @@ import {
   Bell,
   BellOff,
   ExternalLink,
+  GitBranch,
   KeyRound,
   LayoutGrid,
-  GitBranch,
   Loader2,
   LogIn,
   Maximize2,
-  Minimize2,
   Mic,
+  Minimize2,
   Play,
+  Plus,
   Power,
   RefreshCw,
   RotateCcw,
   Search,
   Send,
+  Settings2,
   Square,
   SquareTerminal,
   X,
@@ -117,13 +119,14 @@ function reduce(state: State, action: Action): State {
 /* Small helpers                                                              */
 /* -------------------------------------------------------------------------- */
 
+/** Status colours on the dark terminal ground. */
 const STATUS: Record<SessionStatus, { label: string; tone: string }> = {
-  starting: { label: "Starting", tone: "bg-mist text-ink-soft" },
-  idle: { label: "Ready", tone: "bg-mist text-ink-soft" },
-  working: { label: "Working", tone: "bg-brand-wash text-brand-deep" },
-  needs_you: { label: "Needs you", tone: "bg-amber-wash text-amber-deep" },
-  done: { label: "Done", tone: "bg-leaf-wash text-leaf-deep" },
-  ended: { label: "Closed", tone: "bg-mist text-ink-faint" },
+  starting: { label: "Starting", tone: "bg-white/10 text-white/70" },
+  idle: { label: "Ready", tone: "bg-white/10 text-white/75" },
+  working: { label: "Working", tone: "bg-brand/20 text-brand" },
+  needs_you: { label: "Needs you", tone: "bg-amber/20 text-amber" },
+  done: { label: "Done", tone: "bg-leaf/20 text-leaf" },
+  ended: { label: "Closed", tone: "bg-white/5 text-white/45" },
 };
 
 const MODES: { id: Mode; label: string }[] = [
@@ -163,7 +166,18 @@ function since(iso: string, now: number) {
   return `${hours} h ${minutes % 60} min`;
 }
 
-/** A clock that ticks every half minute, for the "running for" times. */
+const day = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+/** Whole days until a date; negative once it has passed. */
+const daysLeft = (iso: string, now: number) =>
+  Math.ceil((Date.parse(iso) - now) / 86_400_000);
+
+/** A clock that ticks every half minute, for times and expiry dates. */
 function useNow() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -175,14 +189,25 @@ function useNow() {
 
 const noop = () => () => {};
 
+const sessionName = (s: Session) =>
+  s.title ||
+  (s.kind === "login"
+    ? "Sign in to Claude"
+    : s.kind === "shell"
+      ? "Terminal"
+      : "New session");
+
 /* -------------------------------------------------------------------------- */
 
 /**
- * The Workspace tab: Claude Code sessions in the cloud (the Workspace service
- * on Railway), one card each, and the terminal of whichever is open.
+ * The Workspace tab: a terminal space. Every Claude Code session (and any
+ * plain terminal) is a window in a dark grid, live; click one to bring it
+ * into the main view, maximize it to the whole screen, or send it back.
+ * Repos, the GitHub token and Claude Code's own setup live in side panels,
+ * so the space holds nothing but terminals.
  *
- * Nothing runs until Start. Start wakes the service and connects; Stop closes
- * every session and lets the service go back to sleep, so it costs nothing
+ * Nothing runs until Start. Start wakes the Workspace service on Railway;
+ * Stop closes every session and lets it go back to sleep, so it costs nothing
  * while nobody is working. Every connection carries a one-minute pass the
  * website only gives an admin who is fully signed in.
  *
@@ -201,9 +226,9 @@ export function Workspace() {
 function WorkspaceApp() {
   const [state, dispatch] = useReducer(reduce, INITIAL);
   const [prefs, setPrefs] = useState(readPrefs);
-  const [projectName, setProjectName] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [maximized, setMaximized] = useState(false);
+  const [drawer, setDrawer] = useState<"new" | "setup" | null>(null);
   const [toast, setToast] = useState<{ text: string; error: boolean } | null>(
     null,
   );
@@ -252,7 +277,7 @@ function WorkspaceApp() {
       new Notification(
         session.status === "needs_you" ? "Claude needs you" : "Claude is done",
         {
-          body: `${session.title || session.project}: ${session.activity}`,
+          body: `${sessionName(session)}: ${session.activity}`,
           tag: session.id,
         },
       );
@@ -276,7 +301,10 @@ function WorkspaceApp() {
         if (message.t === "hello")
           for (const s of message.sessions) statuses.current[s.id] = s.status;
         if (message.t === "session") alert(message.session);
-        if (message.t === "started") setSessionId(message.id);
+        if (message.t === "started") {
+          setSessionId(message.id);
+          setDrawer(null);
+        }
         if (message.t === "notice" || message.t === "error")
           setToast({ text: message.message, error: message.t === "error" });
         dispatch(message);
@@ -307,7 +335,7 @@ function WorkspaceApp() {
   const sessions = Object.values(state.sessions).sort(
     (a, b) =>
       Number(a.status === "ended") - Number(b.status === "ended") ||
-      b.startedAt.localeCompare(a.startedAt),
+      a.startedAt.localeCompare(b.startedAt),
   );
   const waiting = sessions.filter((s) => s.status === "needs_you").length;
 
@@ -329,6 +357,19 @@ function WorkspaceApp() {
     send({ t: "shutdown" });
     setTimeout(() => setPrefs((p) => ({ ...p, on: false })), 300);
   };
+  const toggleAlerts = async () => {
+    if (!prefs.alerts && typeof Notification !== "undefined") {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setToast({
+          text: "Alerts are blocked for this site in the browser settings.",
+          error: true,
+        });
+        return;
+      }
+    }
+    setPrefs((p) => ({ ...p, alerts: !p.alerts }));
+  };
 
   if (state.phase === "unset") return <NotSetUp />;
   if (state.phase === "expired") return <Expired />;
@@ -336,35 +377,24 @@ function WorkspaceApp() {
   if (state.phase === "starting" && !state.claude)
     return <Waking onCancel={() => setPrefs((p) => ({ ...p, on: false }))} />;
 
-  const project =
-    state.projects.find((p) => p.name === projectName) ??
-    state.projects.find((p) => p.name === "Nectarray") ??
-    state.projects[0] ??
-    null;
   // The session in the main view; none means every session is a tile.
-  const current = (sessionId && state.sessions[sessionId]) || null;
+  const focused = (sessionId && state.sessions[sessionId]) || null;
+  const others = focused
+    ? sessions.filter((s) => s.id !== focused.id)
+    : sessions;
 
   return (
-    <div className="mt-6 space-y-6">
-      <StatusStrip
+    <div className="mt-6 space-y-4">
+      <Toolbar
         claude={state.claude}
+        github={state.cloud ? state.github : null}
+        now={now}
         reconnecting={state.phase === "starting"}
         alerts={prefs.alerts}
-        onAlerts={async () => {
-          if (!prefs.alerts && typeof Notification !== "undefined") {
-            const permission = await Notification.requestPermission();
-            if (permission !== "granted") {
-              setToast({
-                text: "Alerts are blocked for this site in the browser settings.",
-                error: true,
-              });
-              return;
-            }
-          }
-          setPrefs((p) => ({ ...p, alerts: !p.alerts }));
-        }}
+        onNew={() => setDrawer("new")}
+        onSetup={() => setDrawer("setup")}
+        onAlerts={toggleAlerts}
         onStop={stop}
-        send={send}
       />
 
       {toast && (
@@ -380,24 +410,80 @@ function WorkspaceApp() {
           {toast.text}
         </p>
       )}
+      {state.cloud && (
+        <TokenWarning
+          github={state.github}
+          now={now}
+          onFix={() => setDrawer("setup")}
+        />
+      )}
 
-      {state.cloud && <TokenWarning github={state.github} now={now} />}
+      {/* The terminal space. */}
+      <div className="bg-night rounded-2xl p-2.5 sm:p-3">
+        {sessions.length === 0 ? (
+          <EmptySpace onNew={() => setDrawer("new")} />
+        ) : (
+          <div className="space-y-3">
+            {focused && (
+              <MainTerminal
+                key={focused.id}
+                session={focused}
+                maximized={maximized}
+                onMaximize={setMaximized}
+                onMinimize={() => {
+                  setSessionId(null);
+                  setMaximized(false);
+                }}
+                prefs={prefs}
+                setPrefs={setPrefs}
+                send={send}
+              />
+            )}
+            {others.length > 0 && (
+              <ul
+                aria-label={focused ? "Other sessions" : "Sessions"}
+                className={cn(
+                  "grid gap-2.5",
+                  focused
+                    ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+                    : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3",
+                )}
+              >
+                {others.map((s) => (
+                  <li key={s.id}>
+                    <Tile
+                      session={s}
+                      now={now}
+                      onOpen={() => {
+                        setSessionId(s.id);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
-        <aside className="min-w-0 space-y-6">
-          <Projects
-            root={state.root}
-            projects={state.projects}
-            sessions={sessions}
-            selected={project?.name ?? null}
-            onSelect={setProjectName}
-            send={send}
-          />
-          {project && (
-            <NewSession
-              key={project.name}
-              project={project}
-              busy={sessions.some((s) => s.project === project.name && s.live)}
+      <Drawer
+        open={drawer === "new"}
+        title="New session"
+        onClose={() => setDrawer(null)}
+      >
+        <NewSession projects={state.projects} sessions={sessions} send={send} />
+      </Drawer>
+      <Drawer
+        open={drawer === "setup"}
+        title="Setup"
+        onClose={() => setDrawer(null)}
+      >
+        <div className="space-y-5">
+          {state.claude && (
+            <ClaudeSetup
+              claude={state.claude}
+              cloud={state.cloud}
               send={send}
             />
           )}
@@ -405,29 +491,8 @@ function WorkspaceApp() {
             <GitHubPanel github={state.github} now={now} send={send} />
           )}
           <ConnectRepo send={send} />
-        </aside>
-
-        <div className="min-w-0">
-          <Sessions
-            sessions={sessions}
-            focused={current}
-            maximized={maximized && current !== null}
-            onFocus={(id) => {
-              setSessionId(id);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            onMinimize={() => {
-              setSessionId(null);
-              setMaximized(false);
-            }}
-            onMaximize={setMaximized}
-            now={now}
-            prefs={prefs}
-            setPrefs={setPrefs}
-            send={send}
-          />
         </div>
-      </div>
+      </Drawer>
     </div>
   );
 }
@@ -438,39 +503,29 @@ function WorkspaceApp() {
 
 function Loading() {
   return (
-    <div
-      className="mt-6 grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]"
-      aria-hidden
-    >
-      <div className="bg-mist-deep h-72 animate-pulse rounded-xl" />
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="bg-mist-deep h-32 animate-pulse rounded-xl" />
-          <div className="bg-mist-deep h-32 animate-pulse rounded-xl" />
-        </div>
-        <div className="bg-mist-deep h-80 animate-pulse rounded-xl" />
+    <div className="mt-6 space-y-4" aria-hidden>
+      <div className="bg-mist-deep h-14 animate-pulse rounded-xl" />
+      <div className="bg-night grid gap-2.5 rounded-2xl p-3 md:grid-cols-2 xl:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="bg-night-soft h-56 animate-pulse rounded-xl"
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function Panel({
-  children,
-  icon = true,
-}: {
-  children: React.ReactNode;
-  icon?: boolean;
-}) {
+function Panel({ children }: { children: React.ReactNode }) {
   return (
     <div className="card mt-6 max-w-2xl p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        {icon && (
-          <SquareTerminal
-            className="text-brand-deep mt-0.5 size-5 shrink-0"
-            strokeWidth={1.9}
-            aria-hidden
-          />
-        )}
+        <SquareTerminal
+          className="text-brand-deep mt-0.5 size-5 shrink-0"
+          strokeWidth={1.9}
+          aria-hidden
+        />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
@@ -573,123 +628,29 @@ function Expired() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Claude Code: version, sign-in, alerts, Stop                                 */
-/* -------------------------------------------------------------------------- */
-
-function StatusStrip({
-  claude,
-  reconnecting,
-  alerts,
-  onAlerts,
-  onStop,
-  send,
-}: {
-  claude: ClaudeInfo | null;
-  reconnecting: boolean;
-  alerts: boolean;
-  onAlerts: () => void;
-  onStop: () => void;
-  send: (m: object) => void;
-}) {
-  if (!claude) return null;
+function EmptySpace({ onNew }: { onNew: () => void }) {
   return (
-    <div className="card flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-5">
-      <div className="min-w-0">
-        <p className="text-ink-faint text-[0.6875rem] font-semibold">
-          Claude Code
+    <div className="grid min-h-[50dvh] place-items-center px-4 py-12 text-center">
+      <div className="max-w-md">
+        <SquareTerminal
+          className="mx-auto size-8 text-white/40"
+          strokeWidth={1.5}
+          aria-hidden
+        />
+        <p className="mt-4 text-[1rem] font-semibold text-white">
+          No sessions yet
         </p>
-        {claude.installed ? (
-          <p className="text-ink text-[0.875rem] font-semibold">
-            {claude.version ?? "Installed"}
-            <span className="text-ink-faint ml-2 font-normal">
-              {reconnecting
-                ? "Reconnecting…"
-                : claude.updating
-                  ? "Updating…"
-                  : (claude.updateNote ?? "Updates itself")}
-            </span>
-          </p>
-        ) : (
-          <p
-            className={cn(
-              "text-[0.875rem] font-semibold",
-              claude.updating ? "text-ink-soft" : "text-danger",
-            )}
-          >
-            {claude.updating
-              ? "Installing, first start only (a minute or two)"
-              : (claude.updateNote ?? "Not installed yet")}
-          </p>
-        )}
-      </div>
-
-      <div className="min-w-0">
-        <p className="text-ink-faint text-[0.6875rem] font-semibold">
-          Claude account
+        <p className="mt-1.5 text-[0.875rem] text-white/60">
+          Start Claude Code on any of your repos. Every session gets its own
+          window here, and you can run as many as you like at once.
         </p>
-        <p className="text-ink truncate text-[0.875rem] font-semibold">
-          {claude.loggedIn
-            ? (claude.email ?? "Signed in")
-            : "Not signed in, press Sign in"}
-        </p>
-      </div>
-
-      <div className="ml-auto flex flex-wrap items-center gap-2">
-        {claude.installed && (
-          <button
-            type="button"
-            disabled={claude.updating}
-            onClick={() => send({ t: "update" })}
-            className={cn(
-              quietButton,
-              "inline-flex items-center gap-1.5 disabled:opacity-50",
-            )}
-          >
-            <RefreshCw
-              className={cn(
-                "size-3.5",
-                claude.updating && "motion-safe:animate-spin",
-              )}
-              aria-hidden
-            />
-            {claude.updating ? "Updating" : "Update now"}
-          </button>
-        )}
-        {claude.installed && (
-          <button
-            type="button"
-            onClick={() => send({ t: "login" })}
-            className={cn(
-              claude.loggedIn ? quietButton : primaryButton,
-              "inline-flex items-center gap-1.5",
-            )}
-          >
-            <LogIn className="size-3.5" aria-hidden />
-            {claude.loggedIn ? "Switch account" : "Sign in"}
-          </button>
-        )}
         <button
           type="button"
-          onClick={onAlerts}
-          aria-pressed={alerts}
-          className={cn(quietButton, "inline-flex items-center gap-1.5")}
-          title="A desktop alert when a session needs you or finishes while this tab is in the background"
+          onClick={onNew}
+          className="bg-brand text-night hover:bg-brand/90 mt-5 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[0.875rem] font-semibold transition-[background-color,transform] active:scale-[0.98]"
         >
-          {alerts ? (
-            <Bell className="size-3.5" aria-hidden />
-          ) : (
-            <BellOff className="size-3.5" aria-hidden />
-          )}
-          {alerts ? "Alerts on" : "Alerts off"}
-        </button>
-        <button
-          type="button"
-          onClick={onStop}
-          className="border-danger/40 text-danger hover:bg-danger/10 inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
-        >
-          <Power className="size-3.5" aria-hidden />
-          Stop workspace
+          <Plus className="size-4" aria-hidden />
+          New session
         </button>
       </div>
     </div>
@@ -697,284 +658,172 @@ function StatusStrip({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Repos                                                                      */
+/* The bar above the space                                                    */
 /* -------------------------------------------------------------------------- */
 
-function Projects({
-  root,
-  projects,
-  sessions,
-  selected,
-  onSelect,
-  send,
+function Toolbar({
+  claude,
+  github,
+  now,
+  reconnecting,
+  alerts,
+  onNew,
+  onSetup,
+  onAlerts,
+  onStop,
 }: {
-  root: string;
-  projects: Project[];
-  sessions: Session[];
-  selected: string | null;
-  onSelect: (name: string) => void;
-  send: (m: object) => void;
+  claude: ClaudeInfo | null;
+  github: GitHubInfo | null;
+  now: number;
+  reconnecting: boolean;
+  alerts: boolean;
+  onNew: () => void;
+  onSetup: () => void;
+  onAlerts: () => void;
+  onStop: () => void;
 }) {
-  const [query, setQuery] = useState("");
-  const shown = projects.filter((p) =>
-    p.name.toLowerCase().includes(query.trim().toLowerCase()),
-  );
+  const left =
+    github?.connected && github.expiresAt
+      ? daysLeft(github.expiresAt, now)
+      : null;
   return (
-    <section>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="text-ink text-[1rem] font-semibold">Repos</h2>
+    <div className="card flex flex-wrap items-center gap-x-5 gap-y-3 px-4 py-3">
+      <dl className="flex min-w-0 flex-wrap gap-x-5 gap-y-1 text-[0.8125rem]">
+        <div className="min-w-0">
+          <dt className="text-ink-faint text-[0.6875rem] font-semibold">
+            Claude Code
+          </dt>
+          <dd className="text-ink truncate font-semibold">
+            {reconnecting
+              ? "Reconnecting…"
+              : !claude?.installed
+                ? claude?.updating
+                  ? "Installing…"
+                  : "Not installed"
+                : `${claude.version ?? ""}${claude.loggedIn ? "" : ", not signed in"}`}
+          </dd>
+        </div>
+        {github && (
+          <div className="min-w-0">
+            <dt className="text-ink-faint text-[0.6875rem] font-semibold">
+              GitHub
+            </dt>
+            <dd
+              className={cn(
+                "truncate font-semibold",
+                !github.connected || (left !== null && left <= 0)
+                  ? "text-danger"
+                  : left !== null && left <= 7
+                    ? "text-amber-deep"
+                    : "text-ink",
+              )}
+            >
+              {!github.connected
+                ? "Not connected"
+                : left === null
+                  ? github.login
+                  : left <= 0
+                    ? `${github.login}, token expired`
+                    : `${github.login}, ${left} day${left === 1 ? "" : "s"} left`}
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      <div className="ml-auto flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => send({ t: "projects" })}
-          className="text-ink-faint hover:text-brand-deep rounded-md p-1 transition-colors"
-          title="Look for repos again"
-          aria-label="Refresh repos"
+          onClick={onNew}
+          className={cn(primaryButton, "inline-flex items-center gap-1.5")}
         >
-          <RefreshCw className="size-3.5" aria-hidden />
+          <Plus className="size-3.5" aria-hidden />
+          New session
         </button>
-      </div>
-      {projects.length > 6 && (
-        <div className="relative mb-2">
-          <Search
-            className="text-ink-faint pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
-            aria-hidden
-          />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={cn(field, "pl-8")}
-            placeholder="Find a repo"
-            aria-label="Find a repo"
-          />
-        </div>
-      )}
-      {projects.length === 0 ? (
-        <p className="text-ink-soft text-[0.8125rem]">
-          No repos yet in {root}. Connect one below.
-        </p>
-      ) : (
-        <ul className="max-h-[26rem] space-y-1 overflow-y-auto pr-1">
-          {shown.map((p) => {
-            const live = sessions.filter(
-              (s) => s.project === p.name && s.live,
-            ).length;
-            const active = p.name === selected;
-            return (
-              <li key={p.name} className="relative">
-                <button
-                  type="button"
-                  onClick={() => onSelect(p.name)}
-                  aria-pressed={active}
-                  className={cn(
-                    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 pr-9 text-left transition-colors",
-                    active
-                      ? "bg-brand-solid text-cta-fg"
-                      : "text-ink hover:bg-surface",
-                  )}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[0.875rem] font-semibold">
-                      {p.name}
-                    </span>
-                    <span
-                      className={cn(
-                        "flex items-center gap-1 truncate text-[0.75rem]",
-                        active ? "text-cta-fg/75" : "text-ink-faint",
-                      )}
-                    >
-                      <GitBranch className="size-3 shrink-0" aria-hidden />
-                      {p.branch ?? "no branch"}
-                      {!p.cloned && ", not opened yet"}
-                      {!p.github && ", not on GitHub"}
-                    </span>
-                  </span>
-                  {live > 0 && (
-                    <span
-                      className={cn(
-                        "rounded-full px-1.5 text-[0.6875rem] font-bold",
-                        active
-                          ? "bg-cta-fg/20"
-                          : "bg-brand-wash text-brand-deep",
-                      )}
-                      title={`${live} running`}
-                    >
-                      {live}
-                    </span>
-                  )}
-                </button>
-                {p.github && (
-                  <a
-                    href={p.github.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(
-                      "absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 transition-colors",
-                      active
-                        ? "text-cta-fg/70 hover:text-cta-fg"
-                        : "text-ink-faint hover:text-brand-deep",
-                    )}
-                    title={`${p.github.owner}/${p.github.repo} on GitHub`}
-                    aria-label={`Open ${p.name} on GitHub`}
-                  >
-                    <ExternalLink className="size-3.5" aria-hidden />
-                  </a>
-                )}
-              </li>
-            );
-          })}
-          {shown.length === 0 && (
-            <li className="text-ink-faint px-3 py-2 text-[0.8125rem]">
-              No repo matches.
-            </li>
+        <button
+          type="button"
+          onClick={onSetup}
+          className={cn(quietButton, "inline-flex items-center gap-1.5")}
+        >
+          <Settings2 className="size-3.5" aria-hidden />
+          Setup
+        </button>
+        <button
+          type="button"
+          onClick={onAlerts}
+          aria-pressed={alerts}
+          className={cn(quietButton, "inline-flex items-center px-2")}
+          title={
+            alerts
+              ? "Alerts on: a desktop alert when a session needs you or finishes"
+              : "Alerts off"
+          }
+          aria-label={alerts ? "Turn alerts off" : "Turn alerts on"}
+        >
+          {alerts ? (
+            <Bell className="size-4" aria-hidden />
+          ) : (
+            <BellOff className="size-4" aria-hidden />
           )}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-function NewSession({
-  project,
-  busy,
-  send,
-}: {
-  project: Project;
-  busy: boolean;
-  send: (m: object) => void;
-}) {
-  const [title, setTitle] = useState("");
-  // A second session in the same repo gets its own copy by default.
-  const [ownCopy, setOwnCopy] = useState(busy);
-  const [mode, setMode] = useState<Mode>("auto");
-
-  return (
-    <form
-      className="card space-y-3 p-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-        send({
-          t: "start",
-          project: project.name,
-          title,
-          worktree: ownCopy,
-          mode,
-        });
-        setTitle("");
-      }}
-    >
-      <h2 className="text-ink text-[0.9375rem] font-semibold">
-        New session in {project.name}
-      </h2>
-      {!project.cloned && (
-        <p className="text-ink-faint text-[0.75rem]">
-          The first session gets this repo from GitHub, which can take a minute.
-        </p>
-      )}
-      <div>
-        <label
-          htmlFor="ws-title"
-          className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold"
+        </button>
+        <button
+          type="button"
+          onClick={onStop}
+          className="border-danger/40 text-danger hover:bg-danger/10 inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
         >
-          What it is for (optional)
-        </label>
-        <input
-          id="ws-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className={field}
-          maxLength={80}
-          placeholder="Blog page SEO"
-        />
-      </div>
-      <label className="text-ink-soft flex items-start gap-2 text-[0.8125rem]">
-        <input
-          type="checkbox"
-          checked={ownCopy}
-          onChange={(e) => setOwnCopy(e.target.checked)}
-          className="accent-brand mt-0.5"
-        />
-        <span>
-          Own copy of the repo
-          <span className="text-ink-faint block text-[0.75rem]">
-            A git worktree on its own branch, so parallel sessions never edit
-            the same files.
-          </span>
-        </span>
-      </label>
-      <div>
-        <label
-          htmlFor="ws-mode"
-          className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold"
-        >
-          Permissions
-        </label>
-        <select
-          id="ws-mode"
-          value={mode}
-          onChange={(e) => setMode(e.target.value as Mode)}
-          className={field}
-        >
-          {MODES.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button
-        type="submit"
-        className={cn(
-          primaryButton,
-          "inline-flex w-full items-center justify-center gap-1.5 py-2",
-        )}
-      >
-        <Play className="size-3.5" aria-hidden />
-        Start session
-      </button>
-    </form>
-  );
-}
-
-function ConnectRepo({ send }: { send: (m: object) => void }) {
-  const [url, setUrl] = useState("");
-  return (
-    <form
-      className="space-y-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!url.trim()) return;
-        send({ t: "clone", url: url.trim() });
-        setUrl("");
-      }}
-    >
-      <label
-        htmlFor="ws-clone"
-        className="text-ink text-[0.875rem] font-semibold"
-      >
-        Connect another repo
-      </label>
-      <p className="text-ink-faint text-[0.75rem]">
-        Any GitHub link, including public repos that are not yours.
-      </p>
-      <div className="flex gap-2">
-        <input
-          id="ws-clone"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className={field}
-          placeholder="https://github.com/owner/repo"
-          inputMode="url"
-        />
-        <button type="submit" className={quietButton}>
-          Clone
+          <Power className="size-3.5" aria-hidden />
+          Stop
         </button>
       </div>
-    </form>
+    </div>
+  );
+}
+
+/** A line under the bar when the token is missing, failing or nearly due. */
+function TokenWarning({
+  github,
+  now,
+  onFix,
+}: {
+  github: GitHubInfo;
+  now: number;
+  onFix: () => void;
+}) {
+  let text: string | null = null;
+  let urgent = false;
+  if (!github.connected) {
+    text = github.error
+      ? "The GitHub token is not working."
+      : "No GitHub token yet: private repos cannot be opened and nothing can be pushed.";
+    urgent = !!github.error;
+  } else if (github.expiresAt) {
+    const left = daysLeft(github.expiresAt, now);
+    if (left <= 0) {
+      text = `The GitHub token expired on ${day(github.expiresAt)}.`;
+      urgent = true;
+    } else if (left <= 7) {
+      text = `The GitHub token expires in ${left} day${left === 1 ? "" : "s"}, on ${day(github.expiresAt)}.`;
+    }
+  }
+  if (!text) return null;
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-3 rounded-lg border px-4 py-2.5 text-[0.8125rem]",
+        urgent
+          ? "border-danger/30 text-danger bg-surface"
+          : "border-amber/30 bg-amber-wash text-amber-deep",
+      )}
+    >
+      <p className="min-w-0 flex-1">{text}</p>
+      <button type="button" onClick={onFix} className="font-semibold underline">
+        {github.connected ? "Replace token" : "Add a token"}
+      </button>
+    </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Sessions                                                                   */
+/* Terminal windows                                                           */
 /* -------------------------------------------------------------------------- */
 
 function StatusPill({ status }: { status: SessionStatus }) {
@@ -982,13 +831,13 @@ function StatusPill({ status }: { status: SessionStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.75rem] font-semibold whitespace-nowrap",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold whitespace-nowrap",
         s.tone,
       )}
     >
       {status === "working" && (
         <span
-          className="bg-brand-deep size-1.5 rounded-full motion-safe:animate-pulse"
+          className="bg-brand size-1.5 rounded-full motion-safe:animate-pulse"
           aria-hidden
         />
       )}
@@ -997,98 +846,8 @@ function StatusPill({ status }: { status: SessionStatus }) {
   );
 }
 
-/**
- * Every session on one screen. With none open, each is a tile with a small
- * live picture of its terminal. Click a tile and it opens in the main view
- * above the rest, which can be maximized to the whole window or sent back to
- * the tiles.
- */
-function Sessions({
-  sessions,
-  focused,
-  maximized,
-  onFocus,
-  onMinimize,
-  onMaximize,
-  now,
-  prefs,
-  setPrefs,
-  send,
-}: {
-  sessions: Session[];
-  focused: Session | null;
-  maximized: boolean;
-  onFocus: (id: string) => void;
-  onMinimize: () => void;
-  onMaximize: (on: boolean) => void;
-  now: number;
-  prefs: Prefs;
-  setPrefs: (update: (p: Prefs) => Prefs) => void;
-  send: (m: object) => void;
-}) {
-  if (sessions.length === 0)
-    return (
-      <div className="card p-6">
-        <p className="text-ink text-[0.9375rem] font-semibold">
-          No sessions yet
-        </p>
-        <p className="text-ink-soft mt-1 text-[0.875rem]">
-          Pick a repo and start one. Each session is its own Claude Code, and
-          you can run as many side by side as you like, on one repo or many.
-        </p>
-      </div>
-    );
-
-  const others = focused
-    ? sessions.filter((s) => s.id !== focused.id)
-    : sessions;
-
-  return (
-    <div className="space-y-5">
-      {focused && (
-        <SessionPanel
-          key={focused.id}
-          session={focused}
-          maximized={maximized}
-          onMaximize={onMaximize}
-          onMinimize={onMinimize}
-          prefs={prefs}
-          setPrefs={setPrefs}
-          send={send}
-        />
-      )}
-      {others.length > 0 && (
-        <section aria-label={focused ? "Other sessions" : "Sessions"}>
-          {focused && (
-            <h2 className="text-ink-soft mb-2 text-[0.8125rem] font-semibold">
-              Other sessions
-            </h2>
-          )}
-          <ul
-            className={cn(
-              "grid gap-3",
-              focused
-                ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-                : "grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3",
-            )}
-          >
-            {others.map((s) => (
-              <li key={s.id}>
-                <SessionTile
-                  session={s}
-                  now={now}
-                  onOpen={() => onFocus(s.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
-  );
-}
-
-function SessionTile({
+/** One session as a small live terminal window. Click to open it. */
+function Tile({
   session: s,
   now,
   onOpen,
@@ -1102,27 +861,21 @@ function SessionTile({
       type="button"
       onClick={onOpen}
       className={cn(
-        "border-line bg-surface hover:border-brand group block w-full overflow-hidden rounded-xl border text-left transition-[border-color,transform] active:scale-[0.99]",
-        s.status === "needs_you" && "border-amber",
-        s.status === "ended" && "opacity-75",
+        "border-night-line bg-night-soft hover:border-brand/70 block w-full overflow-hidden rounded-xl border text-left transition-[border-color,transform] active:scale-[0.99]",
+        s.status === "needs_you" && "border-amber/70",
+        s.status === "ended" && "opacity-70",
       )}
     >
-      <div className="flex items-start justify-between gap-3 px-3 pt-3 pb-2">
-        <div className="min-w-0">
-          <p className="text-ink truncate text-[0.875rem] font-semibold">
-            {s.title ||
-              (s.kind === "login" ? "Sign in to Claude" : "New session")}
-          </p>
-          <p className="text-ink-faint mt-0.5 flex items-center gap-1 truncate text-[0.6875rem]">
-            {s.project}
-            {s.worktree && (
-              <>
-                <GitBranch className="ml-1 size-3 shrink-0" aria-hidden />
-                {s.worktree}
-              </>
-            )}
-          </p>
-        </div>
+      <div className="border-night-line flex items-center gap-2 border-b px-3 py-2">
+        <SquareTerminal
+          className="size-3.5 shrink-0 text-white/45"
+          strokeWidth={1.9}
+          aria-hidden
+        />
+        <p className="min-w-0 flex-1 truncate text-[0.8125rem]">
+          <span className="font-semibold text-white">{s.project}</span>
+          <span className="text-white/45"> {sessionName(s)}</span>
+        </p>
         <StatusPill status={s.status} />
       </div>
       <TerminalView
@@ -1132,29 +885,25 @@ function SessionTile({
         cols={s.cols ?? 120}
         rows={s.rows ?? 32}
       />
-      <div className="px-3 py-2">
+      <div className="border-night-line flex items-center gap-2 border-t px-3 py-1.5 text-[0.6875rem]">
         <p
           className={cn(
-            "truncate text-[0.75rem]",
-            s.status === "needs_you"
-              ? "text-amber-deep font-medium"
-              : "text-ink-soft",
+            "min-w-0 flex-1 truncate",
+            s.status === "needs_you" ? "text-amber" : "text-white/55",
           )}
         >
           {s.activity}
         </p>
-        <p className="text-ink-faint mt-0.5 text-[0.6875rem]">
-          {s.status === "ended" ? "Ran" : "Running"} for{" "}
+        <span className="shrink-0 text-white/35">
           {since(s.startedAt, now)}
-          {s.files.length > 0 &&
-            `, ${s.files.length} file${s.files.length === 1 ? "" : "s"} edited`}
-        </p>
+        </span>
       </div>
     </button>
   );
 }
 
-function SessionPanel({
+/** The opened session: large, typed into, maximizable. */
+function MainTerminal({
   session,
   maximized,
   onMaximize,
@@ -1181,55 +930,59 @@ function SessionPanel({
     };
   }, [maximized]);
 
-  const iconButton =
-    "text-ink-soft hover:bg-mist hover:text-ink inline-flex size-8 items-center justify-center rounded-lg transition-colors";
+  const chrome =
+    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.8125rem] font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white";
 
   return (
     <section
       aria-label="Terminal"
       className={cn(
-        "border-line bg-surface flex flex-col overflow-hidden border",
+        "bg-night-soft border-night-line flex flex-col overflow-hidden border",
         maximized ? "fixed inset-0 z-50 rounded-none" : "rounded-xl",
       )}
     >
-      <div className="border-line flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+      <div className="border-night-line flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b px-3 py-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <SquareTerminal
-            className="text-ink-faint size-4 shrink-0"
+            className="size-4 shrink-0 text-white/45"
             strokeWidth={1.9}
             aria-hidden
           />
-          <p className="text-ink truncate text-[0.875rem] font-semibold">
-            {session.title || session.project}
+          <p className="min-w-0 truncate text-[0.875rem]">
+            <span className="font-semibold text-white">{session.project}</span>
+            <span className="text-white/50"> {sessionName(session)}</span>
           </p>
+          {session.worktree && (
+            <span className="hidden items-center gap-1 text-[0.75rem] text-white/45 sm:inline-flex">
+              <GitBranch className="size-3" aria-hidden />
+              {session.worktree}
+            </span>
+          )}
           <StatusPill status={session.status} />
-          <p className="text-ink-faint hidden truncate text-[0.75rem] md:block">
+          <p className="hidden min-w-0 truncate text-[0.75rem] text-white/45 lg:block">
             {session.activity}
           </p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-0.5">
           {session.live ? (
             <button
               type="button"
               onClick={() => {
-                if (confirm("Stop this session? Claude Code closes."))
+                if (confirm("Stop this session?"))
                   send({ t: "stop", id: session.id });
               }}
-              className={cn(quietButton, "inline-flex items-center gap-1.5")}
+              className={chrome}
             >
               <Square className="size-3.5" aria-hidden />
-              Stop
+              <span className="hidden sm:inline">Stop</span>
             </button>
           ) : (
             <>
-              {session.kind === "claude" && (
+              {session.kind !== "login" && (
                 <button
                   type="button"
                   onClick={() => send({ t: "resume", id: session.id })}
-                  className={cn(
-                    primaryButton,
-                    "inline-flex items-center gap-1.5",
-                  )}
+                  className={chrome}
                 >
                   <RotateCcw className="size-3.5" aria-hidden />
                   Resume
@@ -1241,18 +994,18 @@ function SessionPanel({
                   send({ t: "remove", id: session.id });
                   onMinimize();
                 }}
-                className={cn(quietButton, "inline-flex items-center gap-1.5")}
+                className={chrome}
               >
                 <X className="size-3.5" aria-hidden />
                 Remove
               </button>
             </>
           )}
-          <span className="bg-line mx-1 h-5 w-px" aria-hidden />
+          <span className="mx-1 h-5 w-px bg-white/15" aria-hidden />
           <button
             type="button"
             onClick={() => onMaximize(!maximized)}
-            className={iconButton}
+            className={chrome}
             title={maximized ? "Restore" : "Maximize"}
             aria-label={maximized ? "Restore" : "Maximize"}
           >
@@ -1265,9 +1018,9 @@ function SessionPanel({
           <button
             type="button"
             onClick={onMinimize}
-            className={iconButton}
-            title="Back to all sessions"
-            aria-label="Back to all sessions"
+            className={chrome}
+            title="Minimize to the grid"
+            aria-label="Minimize to the grid"
           >
             <LayoutGrid className="size-4" aria-hidden />
           </button>
@@ -1275,16 +1028,16 @@ function SessionPanel({
       </div>
 
       {session.kind === "login" && session.link && session.live && (
-        <div className="border-line bg-brand-wash flex flex-wrap items-center gap-3 border-b px-4 py-3">
-          <p className="text-ink min-w-0 flex-1 text-[0.8125rem]">
+        <div className="border-night-line bg-brand/10 flex flex-wrap items-center gap-3 border-b px-3 py-2.5">
+          <p className="min-w-0 flex-1 text-[0.8125rem] text-white/85">
             Open the sign-in page, choose Continue with Google, then paste the
-            code it shows into the box under the terminal and press Send.
+            code it shows into the box below and press Send.
           </p>
           <a
             href={session.link}
             target="_blank"
             rel="noreferrer"
-            className={cn(primaryButton, "inline-flex items-center gap-1.5")}
+            className="bg-brand text-night inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[0.8125rem] font-semibold"
           >
             <ExternalLink className="size-3.5" aria-hidden />
             Open the sign-in page
@@ -1294,7 +1047,7 @@ function SessionPanel({
 
       <div
         className={
-          maximized ? "min-h-0 flex-1" : "h-[min(64dvh,44rem)] min-h-[20rem]"
+          maximized ? "min-h-0 flex-1" : "h-[min(66dvh,46rem)] min-h-[20rem]"
         }
       >
         <TerminalView
@@ -1317,19 +1070,380 @@ function SessionPanel({
 }
 
 /* -------------------------------------------------------------------------- */
-/* GitHub token                                                               */
+/* Side panels                                                                */
 /* -------------------------------------------------------------------------- */
 
-const day = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+function Drawer({
+  open,
+  title,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
-/** Whole days until a date; negative once it has passed. */
-const daysLeft = (iso: string, now: number) =>
-  Math.ceil((Date.parse(iso) - now) / 86_400_000);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="bg-ink/40 absolute inset-0 cursor-default"
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="bg-canvas relative flex h-full w-full max-w-[28rem] flex-col shadow-2xl"
+      >
+        <div className="border-line flex items-center justify-between border-b px-5 py-4">
+          <h2 className="text-ink text-[1.0625rem] font-semibold">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-ink-faint hover:text-ink rounded-md p-1"
+            aria-label="Close"
+          >
+            <X className="size-5" aria-hidden />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+          {children}
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+/** Pick a repo, say what it is for, and start Claude Code or a terminal in it. */
+function NewSession({
+  projects,
+  sessions,
+  send,
+}: {
+  projects: Project[];
+  sessions: Session[];
+  send: (m: object) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [picked, setPicked] = useState<string | null>(null);
+  const [kind, setKind] = useState<"claude" | "shell">("claude");
+  const [title, setTitle] = useState("");
+  const [ownCopy, setOwnCopy] = useState<boolean | null>(null);
+  const [mode, setMode] = useState<Mode>("auto");
+
+  const project =
+    projects.find((p) => p.name === picked) ??
+    projects.find((p) => p.name === "Nectarray") ??
+    projects[0] ??
+    null;
+  const busy =
+    !!project && sessions.some((s) => s.project === project.name && s.live);
+  // A second session in the same repo gets its own copy unless told otherwise.
+  const copy = ownCopy ?? busy;
+  const shown = projects.filter((p) =>
+    p.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
+  return (
+    <form
+      className="space-y-5"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!project) return;
+        send({
+          t: "start",
+          project: project.name,
+          kind,
+          title,
+          worktree: kind === "claude" && copy,
+          mode,
+        });
+      }}
+    >
+      <fieldset>
+        <legend className="text-ink mb-2 text-[0.875rem] font-semibold">
+          Repo
+        </legend>
+        <div className="relative mb-2">
+          <Search
+            className="text-ink-faint pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+            aria-hidden
+          />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className={cn(field, "pl-8")}
+            placeholder="Find a repo"
+            aria-label="Find a repo"
+          />
+        </div>
+        <ul className="border-line max-h-64 space-y-0.5 overflow-y-auto rounded-lg border p-1">
+          {shown.map((p) => {
+            const active = p.name === project?.name;
+            const live = sessions.filter(
+              (s) => s.project === p.name && s.live,
+            ).length;
+            return (
+              <li key={p.name}>
+                <button
+                  type="button"
+                  onClick={() => setPicked(p.name)}
+                  aria-pressed={active}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left transition-colors",
+                    active ? "bg-brand-solid text-cta-fg" : "hover:bg-mist",
+                  )}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[0.8125rem] font-semibold">
+                      {p.name}
+                    </span>
+                    <span
+                      className={cn(
+                        "block truncate text-[0.6875rem]",
+                        active ? "text-cta-fg/75" : "text-ink-faint",
+                      )}
+                    >
+                      {p.branch ?? "no branch"}
+                      {!p.cloned && ", fetched from GitHub on first use"}
+                    </span>
+                  </span>
+                  {live > 0 && (
+                    <span className="text-[0.6875rem] font-bold">
+                      {live} open
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+          {shown.length === 0 && (
+            <li className="text-ink-faint px-2.5 py-2 text-[0.8125rem]">
+              {projects.length === 0
+                ? "No repos yet. Add a GitHub token in Setup."
+                : "No repo matches."}
+            </li>
+          )}
+        </ul>
+      </fieldset>
+
+      <fieldset>
+        <legend className="text-ink mb-2 text-[0.875rem] font-semibold">
+          Open
+        </legend>
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            [
+              ["claude", "Claude Code", "Work with Claude"],
+              ["shell", "Terminal", "Run git and commands yourself"],
+            ] as const
+          ).map(([id, label, hint]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setKind(id)}
+              aria-pressed={kind === id}
+              className={cn(
+                "rounded-lg border px-3 py-2 text-left transition-colors",
+                kind === id
+                  ? "border-brand bg-brand-wash"
+                  : "border-line bg-surface hover:border-brand",
+              )}
+            >
+              <span className="text-ink block text-[0.8125rem] font-semibold">
+                {label}
+              </span>
+              <span className="text-ink-faint block text-[0.6875rem]">
+                {hint}
+              </span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <div>
+        <label
+          htmlFor="ws-title"
+          className="text-ink mb-1 block text-[0.8125rem] font-semibold"
+        >
+          What it is for (optional)
+        </label>
+        <input
+          id="ws-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className={field}
+          maxLength={80}
+          placeholder="Blog page SEO"
+        />
+      </div>
+
+      {kind === "claude" && (
+        <>
+          <label className="text-ink-soft flex items-start gap-2 text-[0.8125rem]">
+            <input
+              type="checkbox"
+              checked={copy}
+              onChange={(e) => setOwnCopy(e.target.checked)}
+              className="accent-brand mt-0.5"
+            />
+            <span>
+              Own copy of the repo
+              <span className="text-ink-faint block text-[0.75rem]">
+                A git worktree on its own branch, so parallel sessions never
+                edit the same files.
+              </span>
+            </span>
+          </label>
+          <div>
+            <label
+              htmlFor="ws-mode"
+              className="text-ink mb-1 block text-[0.8125rem] font-semibold"
+            >
+              Permissions
+            </label>
+            <select
+              id="ws-mode"
+              value={mode}
+              onChange={(e) => setMode(e.target.value as Mode)}
+              className={field}
+            >
+              {MODES.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
+
+      <button
+        type="submit"
+        disabled={!project}
+        className={cn(
+          primaryButton,
+          "inline-flex w-full items-center justify-center gap-1.5 py-2.5 disabled:opacity-50",
+        )}
+      >
+        <Play className="size-3.5" aria-hidden />
+        {project
+          ? `Start ${kind === "claude" ? "Claude Code" : "a terminal"} in ${project.name}`
+          : "Pick a repo"}
+      </button>
+    </form>
+  );
+}
+
+/** Claude Code itself: version, updates, sign-in, plugins and skills. */
+function ClaudeSetup({
+  claude,
+  cloud,
+  send,
+}: {
+  claude: ClaudeInfo;
+  cloud: boolean;
+  send: (m: object) => void;
+}) {
+  return (
+    <section className="card space-y-3 p-4">
+      <h3 className="text-ink text-[0.9375rem] font-semibold">Claude Code</h3>
+      <div className="space-y-1 text-[0.8125rem]">
+        <p className="text-ink">
+          {claude.installed
+            ? `Version ${claude.version ?? "unknown"}`
+            : claude.updating
+              ? "Installing, first start only"
+              : "Not installed"}
+          <span className="text-ink-faint">
+            {claude.updating
+              ? ", updating…"
+              : claude.updateNote
+                ? `. ${claude.updateNote}`
+                : ""}
+          </span>
+        </p>
+        <p className="text-ink-soft">
+          {claude.loggedIn
+            ? `Signed in as ${claude.email ?? "your account"}, for every session`
+            : "Not signed in yet"}
+        </p>
+        {cloud && claude.setup && claude.setup.state !== "idle" && (
+          <p
+            className={cn(
+              claude.setup.state === "error"
+                ? "text-danger"
+                : claude.setup.state === "running"
+                  ? "text-ink-soft"
+                  : "text-leaf-deep",
+            )}
+          >
+            {claude.setup.note}
+          </p>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {claude.installed && (
+          <button
+            type="button"
+            onClick={() => send({ t: "login" })}
+            className={cn(
+              claude.loggedIn ? quietButton : primaryButton,
+              "inline-flex items-center gap-1.5",
+            )}
+          >
+            <LogIn className="size-3.5" aria-hidden />
+            {claude.loggedIn ? "Switch account" : "Sign in"}
+          </button>
+        )}
+        {claude.installed && (
+          <button
+            type="button"
+            disabled={claude.updating}
+            onClick={() => send({ t: "update" })}
+            className={cn(
+              quietButton,
+              "inline-flex items-center gap-1.5 disabled:opacity-50",
+            )}
+          >
+            <RefreshCw
+              className={cn(
+                "size-3.5",
+                claude.updating && "motion-safe:animate-spin",
+              )}
+              aria-hidden
+            />
+            Update now
+          </button>
+        )}
+        {cloud && claude.installed && (
+          <button
+            type="button"
+            disabled={claude.setup?.state === "running"}
+            onClick={() => send({ t: "setup" })}
+            className={cn(quietButton, "disabled:opacity-50")}
+            title="Install the plugins and skills from workspace/claude-setup.json again"
+          >
+            Set up plugins again
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
 
 /**
  * The token git, gh and every session use for your repos: pasted here, kept
@@ -1357,7 +1471,7 @@ function GitHubPanel({
   return (
     <section className="card space-y-3 p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-ink text-[0.9375rem] font-semibold">GitHub</h2>
+        <h3 className="text-ink text-[0.9375rem] font-semibold">GitHub</h3>
         {github.connected && (
           <button
             type="button"
@@ -1372,7 +1486,7 @@ function GitHubPanel({
       </div>
 
       {github.connected ? (
-        <div className="space-y-1.5 text-[0.8125rem]">
+        <div className="space-y-1 text-[0.8125rem]">
           <p className="text-ink">
             Connected as <span className="font-semibold">{github.login}</span>
           </p>
@@ -1386,14 +1500,12 @@ function GitHubPanel({
           </p>
           <p
             className={cn(
-              "text-[0.8125rem] font-medium",
-              left === null
+              "font-medium",
+              left === null || left > 7
                 ? "text-ink-soft"
                 : left <= 0
                   ? "text-danger"
-                  : left <= 7
-                    ? "text-amber-deep"
-                    : "text-ink-soft",
+                  : "text-amber-deep",
             )}
           >
             {left === null || !github.expiresAt
@@ -1510,36 +1622,42 @@ function GitHubPanel({
   );
 }
 
-/** A line across the top when the token is missing, failing or nearly due. */
-function TokenWarning({ github, now }: { github: GitHubInfo; now: number }) {
-  let text: string | null = null;
-  let urgent = false;
-  if (!github.connected) {
-    text = github.error
-      ? "The GitHub token is not working. Replace it in the GitHub box."
-      : "No GitHub token yet: private repos cannot be opened and nothing can be pushed. Add one in the GitHub box.";
-    urgent = !!github.error;
-  } else if (github.expiresAt) {
-    const left = daysLeft(github.expiresAt, now);
-    if (left <= 0) {
-      text = `The GitHub token expired on ${day(github.expiresAt)}. Replace it in the GitHub box.`;
-      urgent = true;
-    } else if (left <= 7) {
-      text = `The GitHub token expires in ${left} day${left === 1 ? "" : "s"} (${day(github.expiresAt)}). Make a new one and replace it in the GitHub box.`;
-    }
-  }
-  if (!text) return null;
+function ConnectRepo({ send }: { send: (m: object) => void }) {
+  const [url, setUrl] = useState("");
   return (
-    <p
-      className={cn(
-        "rounded-lg border px-4 py-2.5 text-[0.8125rem]",
-        urgent
-          ? "border-danger/30 text-danger bg-surface"
-          : "border-amber/30 bg-amber-wash text-amber-deep",
-      )}
+    <form
+      className="card space-y-2 p-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!url.trim()) return;
+        send({ t: "clone", url: url.trim() });
+        setUrl("");
+      }}
     >
-      {text}
-    </p>
+      <label
+        htmlFor="ws-clone"
+        className="text-ink text-[0.9375rem] font-semibold"
+      >
+        Add another repo
+      </label>
+      <p className="text-ink-faint text-[0.75rem]">
+        Your own repos are listed already. This is for any other GitHub link,
+        such as a public repo.
+      </p>
+      <div className="flex gap-2">
+        <input
+          id="ws-clone"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className={field}
+          placeholder="https://github.com/owner/repo"
+          inputMode="url"
+        />
+        <button type="submit" className={quietButton}>
+          Clone
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -1548,11 +1666,11 @@ function TokenWarning({ github, now }: { github: GitHubInfo; now: number }) {
 /* -------------------------------------------------------------------------- */
 
 /**
- * A message box under the terminal: type or paste (the sign-in code, a long
- * prompt, anything awkward on a phone), or hold the mic and talk. Spoken
- * words land in the box to check first, unless "Send right away" is on.
- * Send types the box into Claude Code and presses Enter; an empty Send just
- * presses Enter.
+ * A message box under the open terminal: type or paste (the sign-in code, a
+ * long prompt, anything awkward on a phone), or hold the mic and talk. Spoken
+ * words land in the box to check first, unless "Send speech right away" is
+ * on. Send types the box into the session and presses Enter; an empty Send
+ * just presses Enter.
  */
 function PromptBar({
   sessionId,
@@ -1599,8 +1717,11 @@ function PromptBar({
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
   };
 
+  const darkField =
+    "border-night-line bg-night rounded-lg border px-3 py-2 text-[0.8125rem] text-white placeholder:text-white/40 focus:border-brand focus:outline-none";
+
   return (
-    <div className="border-line space-y-2 border-t px-4 py-3">
+    <div className="border-night-line space-y-2 border-t px-3 py-2.5">
       <form
         className="flex items-center gap-2"
         onSubmit={(e) => {
@@ -1619,7 +1740,7 @@ function PromptBar({
               "inline-flex shrink-0 touch-none items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold transition-[background-color,transform] select-none active:scale-[0.98]",
               voice.listening
                 ? "bg-amber text-night"
-                : "bg-ink text-cta-fg hover:bg-brand-deep",
+                : "bg-white/10 text-white hover:bg-white/15",
             )}
           >
             <Mic
@@ -1638,29 +1759,27 @@ function PromptBar({
           value={voice.listening ? voice.heard || text : text}
           onChange={(e) => setText(e.target.value)}
           readOnly={voice.listening}
-          className={cn(field, "min-w-0 flex-1 py-2")}
+          className={cn(darkField, "min-w-0 flex-1")}
           placeholder={
             voice.listening
               ? "Speak now"
-              : "Type, paste or talk. Enter sends it to Claude"
+              : "Type, paste or talk. Enter sends it to the terminal"
           }
-          aria-label="Message for Claude"
+          aria-label="Message for the terminal"
         />
         <button
           type="submit"
-          className={cn(primaryButton, "inline-flex items-center gap-1.5 py-2")}
+          className="bg-brand text-night hover:bg-brand/90 inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold transition-colors"
         >
           <Send className="size-3.5" aria-hidden />
           <span className="hidden sm:inline">Send</span>
         </button>
       </form>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.75rem]">
         {voice.error ? (
-          <p className="text-danger text-[0.75rem]">{voice.error}</p>
+          <p className="text-danger">{voice.error}</p>
         ) : !voice.supported ? (
-          <p className="text-ink-faint text-[0.75rem]">
-            Voice needs Chrome or Edge.
-          </p>
+          <p className="text-white/45">Voice needs Chrome or Edge.</p>
         ) : null}
         {voice.supported && (
           <>
@@ -1669,7 +1788,7 @@ function PromptBar({
               onChange={(e) =>
                 setPrefs((p) => ({ ...p, lang: e.target.value }))
               }
-              className={cn(field, "w-auto py-0.5 text-[0.75rem]")}
+              className={cn(darkField, "w-auto py-0.5 text-[0.75rem]")}
               aria-label="Voice language"
             >
               {LANGS.map((l) => (
@@ -1678,7 +1797,7 @@ function PromptBar({
                 </option>
               ))}
             </select>
-            <label className="text-ink-soft flex items-center gap-1.5 text-[0.75rem]">
+            <label className="flex items-center gap-1.5 text-white/60">
               <input
                 type="checkbox"
                 checked={prefs.autoSend}

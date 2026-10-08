@@ -1,0 +1,11 @@
+{
+  "$comment": "What every cloud session has, matching Claude Code on the admin's PC. The runner applies it at start whenever this file changes (server.mjs, setupClaude). Skills that are not in a public package are uploaded to the volume instead (put-claude-file).",
+  "marketplaces": ["anthropics/claude-plugins-official", "blader/humanizer"],
+  "plugins": [
+    "humanizer@humanizer",
+    "railway@claude-plugins-official",
+    "supabase@claude-plugins-official",
+    "vercel@claude-plugins-official"
+  ],
+  "skills": ["Leonxlnx/taste-skill"]
+}

@@ -28,7 +28,8 @@ export type Mode = "default" | "auto" | "acceptEdits";
 
 export type Session = {
   id: string;
-  kind: "claude" | "login";
+  /** claude: Claude Code; shell: a plain terminal; login: signing in to Claude. */
+  kind: "claude" | "shell" | "login";
   project: string;
   title: string;
   worktree: string | null;
@@ -79,6 +80,8 @@ export type ClaudeInfo = {
   updating: boolean;
   lastUpdate: string | null;
   updateNote: string | null;
+  /** The plugins and skills from workspace/claude-setup.json. */
+  setup?: { state: "idle" | "running" | "done" | "error"; note: string | null };
 };
 
 /** Messages from the runner's /control socket. */

@@ -128,6 +128,8 @@ const info = {
   updating: false,
   lastUpdate: null,
   updateNote: null,
+  /** Plugins and skills (setupClaude), in the cloud. */
+  setup: { state: "idle", note: null },
 };
 
 async function readClaude() {
@@ -204,6 +206,132 @@ async function installClaude() {
     ? `Installed ${info.version ?? ""}.`.trim()
     : "Claude Code did not install. See the Workspace service's logs on Railway.";
   broadcast({ t: "claude", claude: info });
+}
+
+/*
+ * The cloud's sessions get the same plugins and skills as Claude Code on the
+ * admin's PC, from claude-setup.json: its marketplaces added, its plugins
+ * installed at user scope, its skill packages installed for Claude Code.
+ * Done once per version of that file (a stamp on the volume remembers it),
+ * and again from the page's Set up again button.
+ */
+const SETUP_FILE = path.join(HERE, "claude-setup.json");
+const SETUP_STAMP = path.join(
+  os.homedir(),
+  ".config",
+  "nectarray",
+  "setup-stamp",
+);
+
+const run = (file, argv, timeout) =>
+  new Promise((resolve) =>
+    execFile(file, argv, { timeout, env: cleanEnv() }, (err, stdout, stderr) =>
+      resolve({ ok: !err, out: `${stdout}\n${stderr}` }),
+    ),
+  );
+
+async function setupClaude(force = false) {
+  if (!CLOUD || !info.installed || info.setup.state === "running") return;
+  let wanted;
+  try {
+    wanted = readFileSync(SETUP_FILE, "utf8");
+  } catch {
+    return;
+  }
+  const done = {
+    state: "done",
+    note: "Your plugins and skills are installed.",
+  };
+  if (
+    !force &&
+    existsSync(SETUP_STAMP) &&
+    readFileSync(SETUP_STAMP, "utf8") === wanted
+  ) {
+    info.setup = done;
+    broadcast({ t: "claude", claude: info });
+    return;
+  }
+
+  const config = JSON.parse(wanted);
+  info.setup = {
+    state: "running",
+    note: "Installing your plugins and skills…",
+  };
+  broadcast({ t: "claude", claude: info });
+  console.log("Setting up plugins and skills…");
+  const failed = [];
+  const already = (out) => /already/i.test(out);
+  for (const source of config.marketplaces ?? []) {
+    const r = await claude(
+      ["plugin", "marketplace", "add", source],
+      3 * 60_000,
+    );
+    if (!r.ok && !already(r.stdout + r.stderr)) failed.push(source);
+  }
+  for (const plugin of config.plugins ?? []) {
+    const r = await claude(
+      ["plugin", "install", plugin, "--scope", "user"],
+      5 * 60_000,
+    );
+    if (!r.ok && !already(r.stdout + r.stderr)) failed.push(plugin);
+  }
+  for (const pkg of config.skills ?? []) {
+    const r = await run(
+      "npx",
+      [
+        "-y",
+        "skills",
+        "add",
+        pkg,
+        "-g",
+        "-y",
+        "-s",
+        "*",
+        "-a",
+        "claude-code",
+        "--copy",
+      ],
+      5 * 60_000,
+    );
+    if (!r.ok) failed.push(pkg);
+  }
+
+  if (failed.length === 0) {
+    mkdirSync(path.dirname(SETUP_STAMP), { recursive: true });
+    writeFileSync(SETUP_STAMP, wanted);
+  }
+  info.setup = failed.length
+    ? {
+        state: "error",
+        note: `Could not install: ${failed.join(", ")}. Try Set up again.`,
+      }
+    : done;
+  console.log(info.setup.note);
+  broadcast({ t: "claude", claude: info });
+}
+
+/*
+ * Files for Claude Code's own folder in the cloud (~/.claude): global
+ * instructions (CLAUDE.md) and skills that are not in any public package.
+ * Sent by an admin over the control socket; only these places, nothing that
+ * could change settings or hooks.
+ */
+const CLAUDE_DIR = path.join(os.homedir(), ".claude");
+function putClaudeFile(relative, content) {
+  const clean = String(relative ?? "").replaceAll("\\", "/");
+  const allowed =
+    clean === "CLAUDE.md" ||
+    /^(skills|agents|commands)\/[\w.\-/ ]+$/.test(clean);
+  if (!allowed || clean.split("/").includes(".."))
+    return "That place is not allowed.";
+  if (typeof content !== "string" || content.length > 1_000_000)
+    return "Too large.";
+  const target = path.join(CLAUDE_DIR, clean);
+  if (!target.startsWith(CLAUDE_DIR + path.sep))
+    return "That place is not allowed.";
+  mkdirSync(path.dirname(target), { recursive: true });
+  writeFileSync(target, content);
+  return null;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -610,10 +738,18 @@ function startSession({
   if (!proj)
     return { error: "That project is not in the list. Refresh and try again." };
 
+  const shell = kind === "shell";
+  let program = CLAUDE;
   const args = ["--settings", HOOKS_FILE.replaceAll("\\", "/")];
   let cwd = proj.path;
   let tree = null;
-  if (kind === "login") {
+  if (shell) {
+    // A plain terminal in the repo, for running git and the like yourself.
+    program = WIN && !CLOUD ? "powershell.exe" : "bash";
+    args.length = 0;
+    args.push(...(WIN && !CLOUD ? ["-NoLogo"] : ["-l"]));
+    if (resume?.cwd && existsSync(resume.cwd)) cwd = resume.cwd;
+  } else if (kind === "login") {
     args.length = 0;
     args.push("auth", "login");
   } else if (resume) {
@@ -625,14 +761,17 @@ function startSession({
     tree = `${slug(title || "session") || "session"}-${id.slice(0, 4)}`;
     args.push("--worktree", tree);
   }
-  if (kind !== "login" && MODES.includes(mode))
+  if (kind === "claude" && MODES.includes(mode))
     args.push("--permission-mode", mode);
 
   const s = resume ?? {
     id,
     kind,
     project: proj.name,
-    title: kind === "login" ? "Sign in to Claude" : title?.trim() || "",
+    title:
+      kind === "login"
+        ? "Sign in to Claude"
+        : title?.trim() || (shell ? "Terminal" : ""),
     worktree: tree,
     mode: MODES.includes(mode) ? mode : "default",
     startedAt: new Date().toISOString(),
@@ -640,9 +779,10 @@ function startSession({
     prompts: 0,
   };
   Object.assign(s, {
-    status: "starting",
-    activity:
-      kind === "login"
+    status: shell ? "idle" : "starting",
+    activity: shell
+      ? "Terminal: type commands, such as git push"
+      : kind === "login"
         ? CLOUD
           ? "Open the sign-in page, then paste the code it shows into the box below"
           : "Opening the sign-in page in your browser"
@@ -655,7 +795,7 @@ function startSession({
   });
 
   try {
-    s.pty = pty.spawn(CLAUDE, args, {
+    s.pty = pty.spawn(program, args, {
       name: "xterm-256color",
       cols: 120,
       rows: 32,
@@ -734,7 +874,7 @@ function startSession({
    */
   const spawned = s.pty;
   setTimeout(() => {
-    if (s.pty === spawned && s.status === "starting" && s.kind !== "login") {
+    if (s.pty === spawned && s.status === "starting" && s.kind === "claude") {
       s.status = "needs_you";
       s.activity = "Answer the question in the terminal to start";
       changed(s);
@@ -957,6 +1097,7 @@ function openControl(ws) {
     const s = m.id ? sessions.get(m.id) : null;
     switch (m.t) {
       case "start": {
+        m.kind = m.kind === "shell" ? "shell" : "claude";
         const proj = projects.find((p) => p.name === m.project);
         const go = () => {
           const result = startSession(m);
@@ -1017,6 +1158,7 @@ function openControl(ws) {
             project: s.project,
             resume: s,
             mode: s.mode,
+            kind: s.kind,
           });
           if (result.error) reply({ t: "error", message: result.error });
         }
@@ -1055,6 +1197,18 @@ function openControl(ws) {
       case "github-check":
         refreshGitHubInfo();
         break;
+      case "setup":
+        setupClaude(true);
+        break;
+      case "put-claude-file": {
+        const error = putClaudeFile(m.path, m.content);
+        reply(
+          error
+            ? { t: "error", message: `${m.path}: ${error}` }
+            : { t: "notice", message: `Saved ${m.path} for Claude Code.` },
+        );
+        break;
+      }
       case "update":
         updateClaude(true);
         break;
@@ -1173,7 +1327,12 @@ server.listen(PORT, CLOUD ? "::" : "127.0.0.1", async () => {
     console.log(
       `Claude Code ${info.version}, ${info.loggedIn ? "signed in" : "not signed in yet"}`,
     );
-  if (!process.env.WORKSPACE_SKIP_UPDATE) updateClaude();
+  // Update (or, on a fresh volume, install) Claude Code, then the plugins
+  // and skills, one after the other so they never run at the same time.
+  (async () => {
+    if (!process.env.WORKSPACE_SKIP_UPDATE) await updateClaude();
+    await setupClaude();
+  })();
   setInterval(() => updateClaude(), UPDATE_EVERY);
   if (CLOUD) setInterval(checkIdle, 60_000);
 });
