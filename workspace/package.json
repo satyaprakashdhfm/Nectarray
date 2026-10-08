@@ -1,0 +1,14 @@
+{
+  "name": "nectarray-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Runs Claude Code sessions on this PC for the admin Workspace tab.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "node-pty": "^1.1.0",
+    "ws": "^8.22.0"
+  }
+}

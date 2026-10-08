@@ -27,6 +27,7 @@ import {
   Palette,
   Search,
   Sparkles,
+  SquareTerminal,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +44,7 @@ const TOP: Tab[] = [
   { href: "/admin/quotes", label: "Quotations", icon: FileText },
   { href: "/admin/tasks", label: "Tasks", icon: ListChecks },
   { href: "/admin/timeline", label: "Timeline", icon: ChartGantt },
+  { href: "/admin/workspace", label: "Workspace", icon: SquareTerminal },
 ];
 
 /**
