@@ -141,6 +141,34 @@ const LANGS = [
   { id: "en-GB", label: "English (UK)" },
 ];
 
+/**
+ * Keys as the terminal sends them: for picking options in Claude Code (the
+ * arrows, Enter, Esc), switching its mode (Shift+Tab) or stopping a command
+ * (Ctrl+C), from a phone or without clicking into the terminal first.
+ */
+const KEYS: [label: string, sequence: string, name: string][] = [
+  ["↑", "\x1b[A", "Up arrow"],
+  ["↓", "\x1b[B", "Down arrow"],
+  ["←", "\x1b[D", "Left arrow"],
+  ["→", "\x1b[C", "Right arrow"],
+  ["Enter", "\r", "Enter"],
+  ["Esc", "\x1b", "Escape"],
+  ["Tab", "\t", "Tab"],
+  ["⇧Tab", "\x1b[Z", "Shift+Tab: switch Claude's mode"],
+  ["Ctrl+C", "\x03", "Ctrl+C: stop what is running"],
+];
+
+/** Keys the empty message box hands straight to the terminal. */
+const PASS_THROUGH: Record<string, string> = {
+  ArrowUp: "\x1b[A",
+  ArrowDown: "\x1b[B",
+  ArrowLeft: "\x1b[D",
+  ArrowRight: "\x1b[C",
+  Escape: "\x1b",
+  Tab: "\t",
+  ShiftTab: "\x1b[Z",
+};
+
 const PREFS = "nectarray-workspace";
 type Prefs = { lang: string; autoSend: boolean; alerts: boolean; on: boolean };
 
@@ -1689,6 +1717,9 @@ function PromptBar({
     send({ t: "type", id: sessionId, text: value, enter: true });
     setText("");
   };
+  /** One key straight into the terminal, as if pressed there. */
+  const press = (sequence: string) =>
+    send({ t: "type", id: sessionId, text: sequence, enter: false });
 
   const voice = useVoice({
     lang: prefs.lang,
@@ -1759,6 +1790,16 @@ function PromptBar({
           value={voice.listening ? voice.heard || text : text}
           onChange={(e) => setText(e.target.value)}
           readOnly={voice.listening}
+          onKeyDown={(e) => {
+            // With nothing typed, arrows, Esc and Tab drive the terminal:
+            // picking an option in Claude Code works from here too.
+            if (text || voice.listening) return;
+            const key = e.key === "Tab" && e.shiftKey ? "ShiftTab" : e.key;
+            const sequence = PASS_THROUGH[key];
+            if (!sequence) return;
+            e.preventDefault();
+            press(sequence);
+          }}
           className={cn(darkField, "min-w-0 flex-1")}
           placeholder={
             voice.listening
@@ -1775,6 +1816,24 @@ function PromptBar({
           <span className="hidden sm:inline">Send</span>
         </button>
       </form>
+      <div
+        className="flex flex-wrap items-center gap-1"
+        role="group"
+        aria-label="Keys"
+      >
+        {KEYS.map(([label, sequence, name]) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => press(sequence)}
+            className="min-w-9 rounded-md border border-white/15 bg-white/5 px-2 py-1 font-mono text-[0.75rem] text-white/80 transition-[background-color,transform] hover:bg-white/15 hover:text-white active:scale-[0.96]"
+            aria-label={name}
+            title={name}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.75rem]">
         {voice.error ? (
           <p className="text-danger">{voice.error}</p>

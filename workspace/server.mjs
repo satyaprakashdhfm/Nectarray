@@ -33,6 +33,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  renameSync,
   statSync,
   unlinkSync,
   writeFileSync,
@@ -338,6 +339,34 @@ function putClaudeFile(relative, content) {
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, content);
   return null;
+}
+
+/**
+ * Marks a repo folder as trusted in Claude Code's own config, so a session
+ * opens straight into Claude instead of the "Do you trust this folder?"
+ * question. Only in the cloud, and only for folders under ROOT: the repos
+ * cloned there from the admin's own GitHub. Worktrees inside inherit it.
+ */
+function trustFolder(dir) {
+  if (!CLOUD || !path.resolve(dir).startsWith(ROOT + path.sep)) return;
+  const file = path.join(os.homedir(), ".claude.json");
+  try {
+    let config = {};
+    try {
+      config = JSON.parse(readFileSync(file, "utf8"));
+    } catch {}
+    config.projects ??= {};
+    if (config.projects[dir]?.hasTrustDialogAccepted) return;
+    config.projects[dir] = {
+      ...config.projects[dir],
+      hasTrustDialogAccepted: true,
+    };
+    const temp = `${file}.${process.pid}.tmp`;
+    writeFileSync(temp, JSON.stringify(config, null, 2));
+    renameSync(temp, file);
+  } catch (err) {
+    console.error("Could not mark the folder as trusted:", err.message);
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -803,6 +832,7 @@ function startSession({
     size: 0,
     viewers: new Set(),
   });
+  if (kind === "claude") trustFolder(proj.path);
 
   try {
     s.pty = pty.spawn(program, args, {

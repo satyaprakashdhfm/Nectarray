@@ -131,10 +131,16 @@ export function TerminalView({
         ? null
         : term.onData((data) => send({ t: "in", data }));
       const observer = new ResizeObserver(() => resize());
-      observer.observe(host.current);
+      const box = host.current;
+      observer.observe(box);
+      // A click anywhere in the main terminal gives it the keyboard, so
+      // arrows, Esc and Tab go to Claude Code rather than the page.
+      const focus = () => term.focus();
+      if (!preview) box.addEventListener("mousedown", focus);
 
       cleanup = () => {
         observer.disconnect();
+        box.removeEventListener("mousedown", focus);
         input?.dispose();
         ws.close();
         term.dispose();
