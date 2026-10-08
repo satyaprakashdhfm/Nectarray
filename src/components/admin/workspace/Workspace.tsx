@@ -135,12 +135,6 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "default", label: "Ask before every step" },
 ];
 
-const LANGS = [
-  { id: "en-IN", label: "English (India)" },
-  { id: "en-US", label: "English (US)" },
-  { id: "en-GB", label: "English (UK)" },
-];
-
 /**
  * Keys as the terminal sends them: for picking options in Claude Code (the
  * arrows, Enter, Esc), switching its mode (Shift+Tab) or stopping a command
@@ -170,11 +164,10 @@ const PASS_THROUGH: Record<string, string> = {
 };
 
 const PREFS = "nectarray-workspace";
-type Prefs = { lang: string; autoSend: boolean; alerts: boolean; on: boolean };
+type Prefs = { autoSend: boolean; alerts: boolean; on: boolean };
 
 function readPrefs(): Prefs {
   const fallback: Prefs = {
-    lang: "en-IN",
     autoSend: false,
     alerts: false,
     on: false,
@@ -1088,6 +1081,7 @@ function MainTerminal({
         <PromptBar
           key={session.id}
           sessionId={session.id}
+          project={session.project}
           prefs={prefs}
           setPrefs={setPrefs}
           send={send}
@@ -1702,11 +1696,14 @@ function ConnectRepo({ send }: { send: (m: object) => void }) {
  */
 function PromptBar({
   sessionId,
+  project,
   prefs,
   setPrefs,
   send,
 }: {
   sessionId: string;
+  /** The repo, which helps the speech engine with its names. */
+  project: string;
   prefs: Prefs;
   setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
@@ -1722,7 +1719,7 @@ function PromptBar({
     send({ t: "type", id: sessionId, text: sequence, enter: false });
 
   const voice = useVoice({
-    lang: prefs.lang,
+    hint: project,
     onText: (heard) => {
       if (prefs.autoSend) submit(text ? `${text} ${heard}` : heard);
       else setText((t) => (t ? `${t} ${heard}` : heard));
@@ -1732,14 +1729,14 @@ function PromptBar({
   const hold = {
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
       e.currentTarget.setPointerCapture(e.pointerId);
-      voice.start();
+      void voice.start();
     },
     onPointerUp: () => voice.stop(),
     onPointerCancel: () => voice.stop(),
     onKeyDown: (e: React.KeyboardEvent) => {
       if ((e.key === " " || e.key === "Enter") && !e.repeat) {
         e.preventDefault();
-        voice.start();
+        void voice.start();
       }
     },
     onKeyUp: (e: React.KeyboardEvent) => {
@@ -1748,6 +1745,7 @@ function PromptBar({
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
   };
 
+  const clock = `${Math.floor(voice.seconds / 60)}:${String(voice.seconds % 60).padStart(2, "0")}`;
   const darkField =
     "border-night-line bg-night rounded-lg border px-3 py-2 text-[0.8125rem] text-white placeholder:text-white/40 focus:border-brand focus:outline-none";
 
@@ -1764,32 +1762,44 @@ function PromptBar({
           <button
             type="button"
             {...hold}
+            disabled={voice.writing}
             aria-pressed={voice.listening}
             aria-label="Hold to talk"
-            title="Hold to talk"
+            title="Hold to talk, let go to turn it into text"
             className={cn(
-              "inline-flex shrink-0 touch-none items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold transition-[background-color,transform] select-none active:scale-[0.98]",
+              "inline-flex shrink-0 touch-none items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold tabular-nums transition-[background-color,transform] select-none active:scale-[0.98] disabled:opacity-70",
               voice.listening
                 ? "bg-amber text-night"
                 : "bg-white/10 text-white hover:bg-white/15",
             )}
           >
-            <Mic
-              className={cn(
-                "size-4",
-                voice.listening && "motion-safe:animate-pulse",
-              )}
-              aria-hidden
-            />
+            {voice.writing ? (
+              <Loader2
+                className="size-4 motion-safe:animate-spin"
+                aria-hidden
+              />
+            ) : (
+              <Mic
+                className={cn(
+                  "size-4",
+                  voice.listening && "motion-safe:animate-pulse",
+                )}
+                aria-hidden
+              />
+            )}
             <span className="hidden sm:inline">
-              {voice.listening ? "Listening" : "Hold to talk"}
+              {voice.listening
+                ? `Listening ${clock}`
+                : voice.writing
+                  ? "Writing"
+                  : "Hold to talk"}
             </span>
           </button>
         )}
         <input
-          value={voice.listening ? voice.heard || text : text}
+          value={text}
           onChange={(e) => setText(e.target.value)}
-          readOnly={voice.listening}
+          readOnly={voice.listening || voice.writing}
           onKeyDown={(e) => {
             // With nothing typed, arrows, Esc and Tab drive the terminal:
             // picking an option in Claude Code works from here too.
@@ -1803,8 +1813,10 @@ function PromptBar({
           className={cn(darkField, "min-w-0 flex-1")}
           placeholder={
             voice.listening
-              ? "Speak now"
-              : "Type, paste or talk. Enter sends it to the terminal"
+              ? "Listening. Let go of the button when you are done"
+              : voice.writing
+                ? "Turning your words into text…"
+                : "Type, paste or hold the mic and talk. Enter sends it"
           }
           aria-label="Message for the terminal"
         />
@@ -1838,36 +1850,22 @@ function PromptBar({
         {voice.error ? (
           <p className="text-danger">{voice.error}</p>
         ) : !voice.supported ? (
-          <p className="text-white/45">Voice needs Chrome or Edge.</p>
+          <p className="text-white/45">
+            This browser cannot record from the microphone.
+          </p>
         ) : null}
         {voice.supported && (
-          <>
-            <select
-              value={prefs.lang}
+          <label className="flex items-center gap-1.5 text-white/60">
+            <input
+              type="checkbox"
+              checked={prefs.autoSend}
               onChange={(e) =>
-                setPrefs((p) => ({ ...p, lang: e.target.value }))
+                setPrefs((p) => ({ ...p, autoSend: e.target.checked }))
               }
-              className={cn(darkField, "w-auto py-0.5 text-[0.75rem]")}
-              aria-label="Voice language"
-            >
-              {LANGS.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-            <label className="flex items-center gap-1.5 text-white/60">
-              <input
-                type="checkbox"
-                checked={prefs.autoSend}
-                onChange={(e) =>
-                  setPrefs((p) => ({ ...p, autoSend: e.target.checked }))
-                }
-                className="accent-brand"
-              />
-              Send speech right away
-            </label>
-          </>
+              className="accent-brand"
+            />
+            Send speech to Claude right away
+          </label>
         )}
       </div>
     </div>
