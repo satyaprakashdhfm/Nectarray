@@ -71,27 +71,27 @@ export async function sendAdminCode({
     };
 
   const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
-  await db.insert(adminCodes).values({
-    sessionHash,
-    userId,
-    codeHash: digest(sessionHash, code).toString("hex"),
-    expiresAt: new Date(Date.now() + CODE_TTL_MS),
-  });
+  const [row] = await db
+    .insert(adminCodes)
+    .values({
+      sessionHash,
+      userId,
+      codeHash: digest(sessionHash, code).toString("hex"),
+      expiresAt: new Date(Date.now() + CODE_TTL_MS),
+    })
+    .returning({ id: adminCodes.id });
 
+  /*
+   * The email is the only way a code leaves the server: it is never logged,
+   * shown or returned. If the email fails, the code is thrown away (nobody
+   * could ever enter it) so the admin can ask again at once.
+   */
   const delivered = await deliver(email, code, userAgent);
   if (!delivered) {
-    /*
-     * Break-glass, so a mail outage cannot lock every admin out of the
-     * panel: the code goes to the server log, which only the owner of the
-     * Railway project can read.
-     */
-    console.error(
-      `[admin-otp] Email to ${email} failed. Code for this sign-in: ${code}`,
-    );
+    await db.delete(adminCodes).where(eq(adminCodes.id, row.id));
     return {
       ok: false,
-      error:
-        "The email could not be sent. The code is in the Web service's logs on Railway.",
+      error: "The email could not be sent. Try Send a new code in a moment.",
     };
   }
   return { ok: true, to: email };
@@ -172,10 +172,14 @@ async function deliver(
     console.error("[admin-otp] RESEND_KEY is not set");
     return false;
   }
+  /*
+   * From the studio's own domain, which is verified with Resend. Resend's
+   * shared test sender (onboarding@resend.dev) only delivers to the Resend
+   * account's own address, so it can never reach an admin's inbox.
+   */
   const from =
     process.env.ADMIN_OTP_FROM_EMAIL ??
-    process.env.CONTACT_FROM_EMAIL ??
-    `${company.name} <onboarding@resend.dev>`;
+    `${company.name} <no-reply@nectarray.com>`;
   const when = new Date().toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
     dateStyle: "medium",
