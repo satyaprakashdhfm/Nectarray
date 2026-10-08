@@ -7,5 +7,6 @@
     "supabase@claude-plugins-official",
     "vercel@claude-plugins-official"
   ],
-  "skills": ["Leonxlnx/taste-skill"]
+  "skills": ["Leonxlnx/taste-skill"],
+  "image": "bun is in the image since this version, for the vercel plugin"
 }

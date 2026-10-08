@@ -19,6 +19,10 @@ RUN apt-get update \
  && apt-get update && apt-get install -y --no-install-recommends gh \
  && rm -rf /var/lib/apt/lists/*
 
+# bun, which the vercel plugin's packages need. Installed into the image
+# (/usr/local), before npm's prefix moves to the volume below.
+RUN npm install -g bun --no-audit --no-fund
+
 WORKDIR /app
 # node-pty compiles here (Linux has no prebuilt binary); .npmrc is left out
 # on purpose, it only matters on Windows.

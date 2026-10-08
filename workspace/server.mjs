@@ -269,6 +269,12 @@ async function setupClaude(force = false) {
     if (!r.ok && !already(r.stdout + r.stderr)) failed.push(source);
   }
   for (const plugin of config.plugins ?? []) {
+    /*
+     * Reinstalled whenever the setup changes (that is the only time this
+     * runs), so a plugin picks up tools added to the image since, such as
+     * bun for the vercel plugin's packages.
+     */
+    await claude(["plugin", "uninstall", plugin, "--scope", "user"], 60_000);
     const r = await claude(
       ["plugin", "install", plugin, "--scope", "user"],
       5 * 60_000,
