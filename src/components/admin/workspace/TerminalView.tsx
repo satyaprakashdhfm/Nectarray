@@ -85,6 +85,13 @@ export function TerminalView({
             window.open(uri, "_blank", "noopener,noreferrer"),
           ),
         );
+        // Left alone, xterm turns Ctrl+V into a raw ^V keystroke: Claude Code
+        // then looks in the server's clipboard, which is always empty, and
+        // the browser never pastes. Skipping it lets the browser paste, so
+        // text goes in as a paste and images reach the upload below.
+        term.attachCustomKeyEventHandler(
+          (e) => !(e.ctrlKey && !e.altKey && e.key.toLowerCase() === "v"),
+        );
       }
       term.open(inner.current);
 
