@@ -154,6 +154,11 @@ export default async function AdminProjectPage({
         status={project.status}
         initial={sheets}
         vaultReady={vaultReady()}
+        thisMonth={new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Kolkata",
+          year: "numeric",
+          month: "2-digit",
+        }).format(new Date())}
       />
     </>
   );

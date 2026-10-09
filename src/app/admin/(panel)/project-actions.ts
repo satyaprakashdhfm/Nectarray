@@ -6,12 +6,14 @@ import { db } from "@/lib/db";
 import { projectDetails } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/access";
 import { cleanSheets } from "@/lib/project-details";
+import { pruneProjectFiles } from "@/lib/project-files";
 import { seal } from "@/lib/vault";
 
 /**
  * Saves a project's working file: status note, deployment links and the
  * three handover sheets. Passwords are encrypted on the way in when
- * PROJECT_VAULT_KEY is set.
+ * PROJECT_VAULT_KEY is set, and documents no payment points to any more
+ * are removed.
  */
 export async function saveProjectSheets(projectId: string, input: unknown) {
   await requireAdmin();
@@ -48,5 +50,9 @@ export async function saveProjectSheets(projectId: string, input: unknown) {
     .insert(projectDetails)
     .values({ projectId, ...values })
     .onConflictDoUpdate({ target: projectDetails.projectId, set: values });
+  await pruneProjectFiles(
+    projectId,
+    sheets.paid.map((p) => p.fileId).filter(Boolean),
+  );
   revalidatePath(`/admin/projects/${projectId}`);
 }

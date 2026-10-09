@@ -12,6 +12,9 @@ export type PaidRow = {
   amount: number;
   date: string;
   note: string;
+  /** The receipt or invoice kept with it (project_files), or "" for none. */
+  fileId: string;
+  fileName: string;
 };
 export type RecurringRow = {
   id: string;
@@ -167,6 +170,16 @@ const day = (v: unknown) => {
 const rows = (v: unknown) => (Array.isArray(v) ? v.slice(0, 200) : []);
 const obj = (v: unknown) => (v ?? {}) as Record<string, unknown>;
 const id = (v: unknown, i: number) => str(v, 64) || `r${i}`;
+const file = (o: Record<string, unknown>) => {
+  const fileId = str(o.fileId, 36);
+  return isFileId(fileId)
+    ? { fileId, fileName: str(o.fileName, 160) }
+    : { fileId: "", fileName: "" };
+};
+
+/** A stored document's id. */
+export const isFileId = (v: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 
 /** Anything the page sends, made safe to store. */
 export function cleanSheets(input: unknown): ProjectSheets {
@@ -191,6 +204,7 @@ export function cleanSheets(input: unknown): ProjectSheets {
         amount: money(o.amount),
         date: day(o.date),
         note: str(o.note, 500),
+        ...file(o),
       };
     }),
     recurring: rows(x.recurring).map((r, i) => {
@@ -219,4 +233,66 @@ export function cleanSheets(input: unknown): ProjectSheets {
       };
     }),
   };
+}
+
+/* The monthly bill: every payment belongs to the month of its date. */
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+/** A month written as "2026-10". */
+export const isMonth = (v: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(v);
+
+/** "2026-10" as "October 2026". */
+export function monthLabel(month: string): string {
+  const [year, m] = month.split("-");
+  return `${MONTH_NAMES[Number(m) - 1] ?? m} ${year}`;
+}
+
+/** The payments dated in a month, oldest first. Undated ones are in none. */
+export function paidInMonth(rows: PaidRow[], month: string): PaidRow[] {
+  return rows
+    .filter((r) => r.date.startsWith(`${month}-`))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** Every month with a payment in it, newest first, and what it came to. */
+export function monthlyTotals(
+  rows: PaidRow[],
+): { month: string; count: number; total: number }[] {
+  const months = new Map<string, { count: number; total: number }>();
+  for (const r of rows) {
+    if (!r.date) continue;
+    const month = r.date.slice(0, 7);
+    const m = months.get(month) ?? { count: 0, total: 0 };
+    months.set(month, { count: m.count + 1, total: m.total + r.amount });
+  }
+  return [...months]
+    .map(([month, m]) => ({ month, ...m }))
+    .sort((a, b) => b.month.localeCompare(a.month));
+}
+
+/**
+ * What the fixed charges come to a month: the monthly ones plus a twelfth
+ * of the yearly ones. On-demand and one-time charges are left out; they
+ * show up as payments in the month they are paid.
+ */
+export function fixedMonthlyCost(rows: RecurringRow[]) {
+  const sum = (billing: Frequency) =>
+    rows.filter((r) => r.billing === billing).reduce((n, r) => n + r.amount, 0);
+  const monthly = sum("monthly");
+  const yearly = sum("yearly");
+  return { monthly, yearly, perMonth: Math.round(monthly + yearly / 12) };
 }

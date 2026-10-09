@@ -18,6 +18,7 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  customType,
   date,
   index,
   integer,
@@ -703,6 +704,33 @@ export const projectDetails = pgTable("project_details", {
   access: jsonb().notNull().default([]),
   updatedAt: now(),
 });
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType: () => "bytea",
+});
+
+/**
+ * A document kept with a project: the receipt or invoice behind a row on
+ * its Amounts paid sheet. For our own reference only; the Excel files never
+ * carry them. A handful of small files a month, so they live in the
+ * database rather than a bucket. A file no row points to any more is
+ * removed the next time the sheet is saved.
+ */
+export const projectFiles = pgTable(
+  "project_files",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => clientProjects.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    type: text().notNull(),
+    size: integer().notNull(),
+    data: bytea().notNull(),
+    createdAt: now(),
+  },
+  (table) => [index("project_files_project_idx").on(table.projectId)],
+);
 
 /** Money actually received against a project. Revenue is the sum of these. */
 export const clientPayments = pgTable(

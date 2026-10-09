@@ -1,15 +1,25 @@
 "use client";
 import { ADMIN } from "@/lib/admin-path";
 
-import { useEffect, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import {
   Download,
   ExternalLink,
   Eye,
   EyeOff,
+  FileText,
+  Paperclip,
   Plus,
   ShieldAlert,
   Trash2,
+  X,
 } from "lucide-react";
 import { setProjectStatus } from "@/app/admin/(panel)/business-actions";
 import { saveProjectSheets } from "@/app/admin/(panel)/project-actions";
@@ -18,6 +28,9 @@ import { MoneyInput } from "@/components/admin/QuoteBuilder";
 import { PROJECT_STATUSES, rupees } from "@/lib/business";
 import {
   FREQUENCIES,
+  monthLabel,
+  monthlyTotals,
+  paidInMonth,
   type AccessRow,
   type LinkRow,
   type PaidRow,
@@ -32,13 +45,18 @@ const label = "text-ink-faint mb-1 block text-[0.6875rem] font-semibold";
 type Col<T> = {
   key: keyof T & string;
   text: string;
-  kind: "text" | "money" | "date" | "billing" | "secret";
+  kind: "text" | "money" | "date" | "billing" | "secret" | "custom";
   /** Desktop column width. */
   w: string;
   placeholder?: string;
+  /** For a "custom" cell: what it shows, and how it changes its row. */
+  render?: (row: T, patch: (change: Partial<T>) => void) => ReactNode;
 };
 
-const PAID_COLS: Col<PaidRow>[] = [
+/** Over this, the upload is refused before it is sent (the server agrees). */
+const MAX_FILE_BYTES = 8 * 1024 * 1024;
+
+const paidCols = (projectId: string): Col<PaidRow>[] => [
   {
     key: "item",
     text: "Item",
@@ -56,6 +74,15 @@ const PAID_COLS: Col<PaidRow>[] = [
   { key: "amount", text: "Amount", kind: "money", w: "8rem" },
   { key: "date", text: "Date", kind: "date", w: "9.5rem" },
   { key: "note", text: "Note", kind: "text", w: "minmax(8rem,1.2fr)" },
+  {
+    key: "fileId",
+    text: "Document",
+    kind: "custom",
+    w: "minmax(7.5rem,0.9fr)",
+    render: (row, patch) => (
+      <DocumentCell projectId={projectId} row={row} onChange={patch} />
+    ),
+  },
 ];
 const RECURRING_COLS: Col<RecurringRow>[] = [
   {
@@ -104,23 +131,30 @@ type Tab = (typeof TABS)[number]["id"];
 
 /**
  * The working file of one project: status, deployment links and the three
- * handover sheets, saved together and downloaded as one Excel workbook.
+ * handover sheets, saved together. Two Excel files come out of it: the
+ * month's bill for the client (Amounts paid), and the full sheet with the
+ * passwords and running costs.
  */
 export function ProjectWorkspace({
   projectId,
   status,
   initial,
   vaultReady,
+  thisMonth,
 }: {
   projectId: string;
   status: string;
   initial: ProjectSheets;
   vaultReady: boolean;
+  /** "2026-10", in India time, so the page and the server agree. */
+  thisMonth: string;
 }) {
   const [s, setS] = useState(initial);
   const [saved, setSaved] = useState(() => JSON.stringify(initial));
   const dirty = JSON.stringify(s) !== saved;
   const [tab, setTab] = useState<Tab>("paid");
+  const [billMonth, setBillMonth] = useState(thisMonth);
+  const cols = useMemo(() => paidCols(projectId), [projectId]);
   const [show, setShow] = useState(false);
   const [pending, start] = useTransition();
   const [statusPending, startStatus] = useTransition();
@@ -160,6 +194,12 @@ export function ProjectWorkspace({
   const yearly = s.recurring
     .filter((r) => r.billing === "yearly")
     .reduce((n, r) => n + r.amount, 0);
+  const months = [
+    ...new Set([thisMonth, ...monthlyTotals(s.paid).map((m) => m.month)]),
+  ].sort((a, b) => b.localeCompare(a));
+  const bill = paidInMonth(s.paid, billMonth);
+  const billTotal = bill.reduce((n, r) => n + r.amount, 0);
+  const undated = s.paid.filter((r) => !r.date).length;
 
   return (
     <div className="mt-6 space-y-6">
@@ -281,14 +321,18 @@ export function ProjectWorkspace({
               Handover sheet
             </h2>
             <p className="text-ink-faint text-[0.75rem]">
-              Filled in as the project goes; given to the client as an Excel
-              file at handover.
+              Filled in as the project goes. The full sheet has everything,
+              passwords and monthly costs included.
             </p>
           </div>
           <a
             href={dirty ? undefined : `${ADMIN}/projects/${projectId}/sheet`}
             aria-disabled={dirty}
-            title={dirty ? "Save first" : "Download as Excel"}
+            title={
+              dirty
+                ? "Save first"
+                : "Everything, with the passwords and monthly costs"
+            }
             className={cn(
               quietButton,
               "inline-flex items-center gap-1.5 py-2",
@@ -296,7 +340,7 @@ export function ProjectWorkspace({
             )}
           >
             <Download className="size-3.5" aria-hidden />
-            Download Excel
+            Full sheet
           </a>
         </header>
 
@@ -358,8 +402,62 @@ export function ProjectWorkspace({
         )}
 
         {tab === "paid" && (
+          <div className="border-line flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-4 py-2.5 sm:px-5">
+            <label className="flex items-center gap-2">
+              <span className="text-ink text-[0.8125rem] font-semibold">
+                Monthly bill
+              </span>
+              <select
+                value={billMonth}
+                onChange={(e) => setBillMonth(e.target.value)}
+                className={cn(field, "w-auto py-1.5")}
+              >
+                {months.map((m) => (
+                  <option key={m} value={m}>
+                    {monthLabel(m)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="text-ink-soft text-[0.8125rem] tabular-nums">
+              {bill.length
+                ? `${rupees.format(billTotal)} from ${bill.length} ${bill.length === 1 ? "payment" : "payments"}`
+                : "Nothing paid this month yet"}
+            </p>
+            <a
+              href={
+                dirty
+                  ? undefined
+                  : `${ADMIN}/projects/${projectId}/bill?month=${billMonth}`
+              }
+              aria-disabled={dirty}
+              title={
+                dirty
+                  ? "Save first"
+                  : `The ${monthLabel(billMonth)} expenses, to send to the client`
+              }
+              className={cn(
+                primaryButton,
+                "inline-flex items-center gap-1.5 py-2 sm:ml-auto",
+                dirty && "pointer-events-none opacity-50",
+              )}
+            >
+              <Download className="size-3.5" aria-hidden />
+              Download bill
+            </a>
+            {undated > 0 && (
+              <p className="text-amber-deep w-full text-[0.75rem]">
+                {undated === 1
+                  ? "One payment has no date, so it is in no monthly bill."
+                  : `${undated} payments have no date, so they are in no monthly bill.`}
+              </p>
+            )}
+          </div>
+        )}
+
+        {tab === "paid" && (
           <SheetTable
-            cols={PAID_COLS}
+            cols={cols}
             rows={s.paid}
             onChange={(paid) => setS({ ...s, paid })}
             blank={() => ({
@@ -367,8 +465,12 @@ export function ProjectWorkspace({
               item: "",
               vendor: "",
               amount: 0,
-              date: new Date().toISOString().slice(0, 10),
+              // Today where the admin is, so a payment made just after
+              // midnight on the 1st lands in the new month's bill.
+              date: new Date().toLocaleDateString("en-CA"),
               note: "",
+              fileId: "",
+              fileName: "",
             })}
             addText="Add payment"
           />
@@ -465,6 +567,10 @@ function SheetTable<T extends { id: string }>({
     onChange(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
 
   const cell = (r: T, i: number, c: Col<T>) => {
+    if (c.render)
+      return c.render(r, (change) =>
+        onChange(rows.map((x, j) => (j === i ? { ...x, ...change } : x))),
+      );
     const value = r[c.key] as unknown;
     if (c.kind === "money")
       return (
@@ -541,15 +647,20 @@ function SheetTable<T extends { id: string }>({
               />
             </div>
             <div className="grid grid-cols-2 gap-2.5 lg:hidden">
-              {cols.map((c, k) => (
-                <label
-                  key={c.key}
-                  className={cn("block min-w-0", k === 0 && "col-span-2")}
-                >
-                  <span className={label}>{c.text}</span>
-                  {cell(r, i, c)}
-                </label>
-              ))}
+              {cols.map((c, k) => {
+                // A custom cell holds its own buttons; a label around them
+                // would click the first one whenever its blank space is tapped.
+                const Wrap = c.render ? "div" : "label";
+                return (
+                  <Wrap
+                    key={c.key}
+                    className={cn("block min-w-0", k === 0 && "col-span-2")}
+                  >
+                    <span className={label}>{c.text}</span>
+                    {cell(r, i, c)}
+                  </Wrap>
+                );
+              })}
               <div className="col-span-2 flex justify-end">
                 <RemoveButton
                   label="Remove row"
@@ -573,6 +684,111 @@ function SheetTable<T extends { id: string }>({
         <Plus className="size-3.5" aria-hidden />
         {addText}
       </button>
+    </div>
+  );
+}
+
+/**
+ * The receipt or invoice behind a payment: attached straight away, kept
+ * with the row once the sheet is saved, and never put in the Excel files.
+ */
+function DocumentCell({
+  projectId,
+  row,
+  onChange,
+}: {
+  projectId: string;
+  row: PaidRow;
+  onChange: (change: Pick<PaidRow, "fileId" | "fileName">) => void;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function upload(file: File) {
+    if (file.size > MAX_FILE_BYTES) {
+      setError("That file is over 8 MB.");
+      return;
+    }
+    setUploading(true);
+    setError(null);
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      const res = await fetch(`${ADMIN}/projects/${projectId}/files`, {
+        method: "POST",
+        body,
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        id?: string;
+        name?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.id)
+        throw new Error(data.error ?? "Could not upload.");
+      onChange({ fileId: data.id, fileName: data.name ?? file.name });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not upload.");
+    } finally {
+      setUploading(false);
+      if (input.current) input.current.value = "";
+    }
+  }
+
+  if (row.fileId)
+    return (
+      <div className="flex min-w-0 items-center gap-1">
+        <a
+          href={`${ADMIN}/projects/${projectId}/files/${row.fileId}`}
+          target="_blank"
+          rel="noreferrer"
+          title={row.fileName}
+          className="text-brand-deep hover:text-ink inline-flex min-w-0 flex-1 items-center gap-1.5 py-2 text-[0.8125rem] font-semibold"
+        >
+          <FileText className="size-3.5 shrink-0" aria-hidden />
+          <span className="truncate">{row.fileName || "Document"}</span>
+        </a>
+        <button
+          type="button"
+          onClick={() => onChange({ fileId: "", fileName: "" })}
+          aria-label={`Remove ${row.fileName || "document"}`}
+          title="Remove document"
+          className="text-ink-faint hover:text-danger hover:bg-mist grid size-7 shrink-0 place-items-center rounded-md transition-colors"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+    );
+
+  return (
+    <div className="min-w-0">
+      <input
+        ref={input}
+        type="file"
+        accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void upload(file);
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => input.current?.click()}
+        disabled={uploading}
+        className={cn(
+          quietButton,
+          "inline-flex w-full items-center justify-center gap-1.5 py-2 disabled:opacity-60",
+        )}
+      >
+        <Paperclip className="size-3.5" aria-hidden />
+        {uploading ? "Uploading" : "Attach"}
+      </button>
+      {error && (
+        <p role="alert" className="text-danger mt-1 text-[0.6875rem]">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

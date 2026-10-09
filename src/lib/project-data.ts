@@ -1,7 +1,8 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { projectDetails } from "@/lib/db/schema";
+import { clientProjects, projectDetails } from "@/lib/db/schema";
+import { AccessError, requireAdmin } from "@/lib/auth/access";
 import {
   EMPTY_SHEETS,
   STARTER_SHEETS,
@@ -9,6 +10,28 @@ import {
   type ProjectSheets,
 } from "@/lib/project-details";
 import { open } from "@/lib/vault";
+
+/**
+ * The project a panel route handler was asked about, for an admin only.
+ * Anything else comes back as the Response to send instead.
+ */
+export async function adminProject(
+  id: string,
+): Promise<typeof clientProjects.$inferSelect | Response> {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    const status = error instanceof AccessError ? error.status : 401;
+    return new Response("Not allowed", { status });
+  }
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return new Response("Not found", { status: 404 });
+  const [project] = await db
+    .select()
+    .from(clientProjects)
+    .where(eq(clientProjects.id, id));
+  return project ?? new Response("Not found", { status: 404 });
+}
 
 /** A project's working file, passwords readable. */
 export async function loadProjectSheets(
