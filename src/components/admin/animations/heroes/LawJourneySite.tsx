@@ -117,14 +117,20 @@ function Scene({
   );
 }
 
-function Story({ progress }: { progress: MotionValue<number> }) {
+function Story({
+  progress,
+  starts,
+}: {
+  progress: MotionValue<number>;
+  /** Where each section begins, as scroll progress (0 to 1). */
+  starts: number[];
+}) {
   const reduce = useReducedMotion();
-  // Each scene's first shot as its first section comes into place, and
-  // the last shot at the end of the page.
-  const last = SECTIONS.length - 1;
+  // Each scene's first shot as its first section arrives, the last shot
+  // at the end of the page.
   const playhead = useTransform(
     progress,
-    [...SCENES.map((s) => s.from / last), 1],
+    [...SCENES.map((s) => starts[s.from] ?? 0), 1],
     [...FIRST, FRAMES.length - 1],
   );
 
@@ -146,87 +152,147 @@ function Story({ progress }: { progress: MotionValue<number> }) {
   );
 }
 
-/* The story's edge towards the words fades into the page. */
-const FADE_WIDE =
-  "linear-gradient(to right, transparent 0%, #000 22%, #000 100%)";
-const FADE_PHONE =
-  "linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%)";
+/* Every edge of the picture fades into the page, so it has no frame. */
+const FEATHER: React.CSSProperties = {
+  maskImage:
+    "linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent)",
+  maskComposite: "intersect",
+  WebkitMaskImage:
+    "linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent)",
+  WebkitMaskComposite: "source-in",
+};
 
+/**
+ * The words on the left, one section after another at their own height,
+ * and on the right a narrow column (about a third of the width) where the
+ * story stays in view and plays as they pass, with a timeline beside it.
+ */
 function Journey() {
   const ref = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
   const eased = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 24,
-    mass: 0.4,
+    stiffness: 80,
+    damping: 22,
+    mass: 0.5,
   });
   const progress = reduce ? scrollYProgress : eased;
+
+  // Where each section starts in the scroll, measured, so a scene begins
+  // exactly as its section arrives whatever the sections' heights.
+  const [starts, setStarts] = useState<number[]>(() =>
+    SECTIONS.map((_, i) => i / (SECTIONS.length - 1)),
+  );
+  useEffect(() => {
+    const wrap = ref.current;
+    if (!wrap) return;
+    const measure = () => {
+      const travel = wrap.offsetHeight - window.innerHeight;
+      if (travel <= 0) return;
+      setStarts(
+        sectionRefs.current.map((el) =>
+          el ? Math.min(Math.max(el.offsetTop / travel, 0), 1) : 0,
+        ),
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(wrap);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
   const [step, setStep] = useState(0);
   useMotionValueEvent(scrollYProgress, "change", (v) =>
-    setStep(Math.round(v * (SECTIONS.length - 1))),
+    setStep(
+      Math.max(
+        0,
+        starts.findLastIndex((s) => s <= v + 0.02),
+      ),
+    ),
   );
 
   return (
-    <div ref={ref} className="relative bg-white">
-      <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[48%] @4xl:inset-y-0 @4xl:right-0 @4xl:left-auto @4xl:h-auto @4xl:w-[58%]">
-          <div
-            className="relative size-full [mask-image:var(--fade-phone)] @4xl:[mask-image:var(--fade-wide)]"
-            style={
-              {
-                "--fade-wide": FADE_WIDE,
-                "--fade-phone": FADE_PHONE,
-              } as React.CSSProperties
-            }
-          >
-            <Story progress={progress} />
+    <div
+      ref={ref}
+      className="relative mx-auto max-w-6xl px-5 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_32%] @4xl:gap-x-12"
+    >
+      {/* The story: pinned under the bar on a phone, beside the words wide. */}
+      <div className="sticky top-16 z-10 -mx-5 bg-white px-5 pt-3 pb-4 @4xl:order-2 @4xl:mx-0 @4xl:self-start @4xl:bg-transparent @4xl:px-0 @4xl:pt-0 @4xl:pb-0">
+        <div className="flex h-[34dvh] gap-4 @4xl:h-[calc(100dvh-4rem)] @4xl:items-center">
+          {/* The timeline: a dot a section, filled as they pass. */}
+          <div className="relative hidden h-[62%] w-3 shrink-0 @4xl:block">
+            <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-zinc-200" />
+            <motion.span
+              className="absolute inset-x-0 top-0 mx-auto h-full w-px origin-top bg-(--p)"
+              style={{ scaleY: scrollYProgress }}
+            />
+            {SECTIONS.map((s, i) => (
+              <span
+                key={s.id}
+                className={`absolute left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 transition-colors duration-300 ${
+                  i <= step
+                    ? "border-(--p) bg-(--p)"
+                    : "border-zinc-300 bg-white"
+                }`}
+                style={{ top: `${(i / (SECTIONS.length - 1)) * 100}%` }}
+              />
+            ))}
           </div>
-          <div className="absolute bottom-[10%] left-4 @4xl:bottom-10 @4xl:left-[24%]">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={step}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-3.5 pl-1.5 text-xs font-semibold text-zinc-800 shadow-lg ring-1 ring-zinc-200 @3xl:text-sm"
-              >
-                <span className="grid size-6 place-items-center rounded-full bg-(--p) text-[0.6875rem] font-bold text-(--p-on) tabular-nums">
-                  {step + 1}
-                </span>
-                {SECTIONS[step].caption}
-              </motion.p>
-            </AnimatePresence>
+
+          <div className="relative h-full flex-1 @4xl:aspect-[4/5] @4xl:h-auto">
+            <div className="absolute inset-0" style={FEATHER}>
+              <Story progress={progress} starts={starts} />
+            </div>
+            <div className="absolute bottom-[8%] left-[10%]">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={step}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-3.5 pl-1.5 text-xs font-semibold text-zinc-800 shadow-lg ring-1 ring-zinc-200"
+                >
+                  <span className="grid size-6 place-items-center rounded-full bg-(--p) text-[0.6875rem] font-bold text-(--p-on) tabular-nums">
+                    {step + 1}
+                  </span>
+                  {SECTIONS[step].caption}
+                </motion.p>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
-        <motion.div
-          className="absolute inset-x-0 top-0 h-0.5 origin-left bg-(--p)"
-          style={{ scaleX: scrollYProgress }}
-        />
       </div>
 
-      {/* The sections, one screen each, beside the story. */}
-      <div className="relative z-10 mx-auto -mt-[calc(100dvh-4rem)] max-w-6xl px-5">
-        {SECTIONS.map((section) => (
+      {/* The words, one section after another. */}
+      <div className="@4xl:order-1">
+        {SECTIONS.map((section, i) => (
           <motion.section
             key={section.id}
             id={section.id}
-            className="flex min-h-[100dvh] flex-col justify-end pb-[5dvh] @4xl:justify-center @4xl:pb-0"
-            initial={{ opacity: 0.25 }}
+            ref={(el) => {
+              sectionRefs.current[i] = el;
+            }}
+            className="flex min-h-[72dvh] scroll-mt-16 flex-col justify-center py-14 @4xl:py-20"
+            initial={{ opacity: 0.3 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ amount: 0.5 }}
-            transition={{ duration: 0.45 }}
+            viewport={{ amount: 0.45 }}
+            transition={{ duration: 0.5 }}
           >
             <motion.div
-              className="rounded-2xl bg-white/95 p-5 shadow-sm ring-1 ring-zinc-200/80 @4xl:max-w-[40%] @4xl:bg-transparent @4xl:p-0 @4xl:shadow-none @4xl:ring-0"
+              className="max-w-2xl"
               initial={{ y: 24 }}
               whileInView={{ y: 0 }}
-              viewport={{ amount: 0.5 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ amount: 0.45 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
               {section.body}
             </motion.div>
