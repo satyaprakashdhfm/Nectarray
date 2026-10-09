@@ -2,6 +2,7 @@
 
 import { createHmac } from "node:crypto";
 import { requireAdmin } from "@/lib/auth/access";
+import { railwayBoard, type RailwayBoard } from "@/lib/railway";
 
 /**
  * A one-minute pass to the Workspace runner, for an admin who is all the way
@@ -36,4 +37,10 @@ export async function workspaceAccess(): Promise<
     .digest("base64url");
   const host = base.replace(/^https?:\/\//, "").replace(/\/+$/, "");
   return { url: `wss://${host}`, pass: `${payload}.${signature}` };
+}
+
+/** Every Railway service and its latest deployment, for the board on top. */
+export async function railwayDeploys(): Promise<RailwayBoard> {
+  await requireAdmin();
+  return railwayBoard();
 }
