@@ -2,7 +2,7 @@
 
 import { createHmac } from "node:crypto";
 import { requireAdmin } from "@/lib/auth/access";
-import { railwayBoard, type RailwayBoard } from "@/lib/railway";
+import { deployBoard, type DeployBoard } from "@/lib/deploys/board";
 
 /**
  * A one-minute pass to the Workspace runner, for an admin who is all the way
@@ -39,8 +39,8 @@ export async function workspaceAccess(): Promise<
   return { url: `wss://${host}`, pass: `${payload}.${signature}` };
 }
 
-/** Every Railway service and its latest deployment, for the board on top. */
-export async function railwayDeploys(): Promise<RailwayBoard> {
+/** Every Railway and Vercel deploy, grouped by app, for the board on top. */
+export async function deploys(): Promise<DeployBoard> {
   await requireAdmin();
-  return railwayBoard();
+  return deployBoard();
 }

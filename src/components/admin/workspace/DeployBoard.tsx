@@ -9,26 +9,29 @@ import {
   Loader2,
   Moon,
   RefreshCw,
-  TrainFront,
+  Rocket,
 } from "lucide-react";
-import { railwayDeploys } from "@/app/admin/(panel)/workspace/actions";
+import { deploys } from "@/app/admin/(panel)/workspace/actions";
 import type {
+  DeployBoard as Board,
+  DeployGroup,
   DeployState,
-  ProjectDeploys,
-  RailwayBoard,
+  Host,
+  HostProblem,
   ServiceDeploy,
-} from "@/lib/railway";
+} from "@/lib/deploys/board";
 import { cn } from "@/lib/utils";
 
 /**
- * Railway at a glance, above the Workspace: what is building or rolling out
- * now, what failed, and what just went live. Everything else that is running
- * fine folds away behind "Show all".
+ * Railway and Vercel at a glance, above the Workspace, grouped by app (an
+ * API on Railway and its front end on Vercel sit together): what is building
+ * now, what failed, and what just went live. Everything else running fine
+ * folds away behind "Show all".
  *
- * Read by the website itself (RAILWAY_API_TOKEN), not by the Workspace
- * service, so it works while the workspace is stopped. It checks every 10
- * seconds while something is deploying and every minute otherwise, and not at
- * all while the tab is hidden: Railway allows 1,000 requests an hour.
+ * Read by the website itself (RAILWAY_API_TOKEN, VERCEL_API_TOKEN), not by
+ * the Workspace service, so it works while the workspace is stopped. It
+ * checks every 10 seconds while something is deploying and every minute
+ * otherwise, and not at all while the tab is hidden.
  */
 
 const FAST_MS = 10_000;
@@ -38,7 +41,10 @@ const BACK_OFF_MS = 5 * 60_000;
 const RECENT_MS = 15 * 60_000;
 const OPEN_KEY = "nectarray.deploys.open";
 
-type View = RailwayBoard | { ok: false; error: "loading" | "expired" };
+type View =
+  { kind: "loading" } | { kind: "expired" } | { kind: "board"; board: Board };
+
+const HOST: Record<Host, string> = { railway: "Railway", vercel: "Vercel" };
 
 const LABEL: Record<string, string> = {
   QUEUED: "Queued",
@@ -48,12 +54,17 @@ const LABEL: Record<string, string> = {
   BUILDING: "Building",
   DEPLOYING: "Deploying",
   SUCCESS: "Live",
+  READY: "Live",
   FAILED: "Failed",
+  ERROR: "Failed",
   CRASHED: "Crashed",
+  BLOCKED: "Blocked",
   SLEEPING: "Asleep",
   REMOVING: "Removing",
   REMOVED: "Removed",
   SKIPPED: "Skipped",
+  CANCELED: "Canceled",
+  DELETED: "Deleted",
 };
 
 function ago(iso: string, now: number) {
@@ -64,6 +75,11 @@ function ago(iso: string, now: number) {
   if (hours < 48) return `${hours} h`;
   return `${Math.floor(hours / 24)} days`;
 }
+
+const agoText = (iso: string, now: number) => {
+  const text = ago(iso, now);
+  return text === "just now" ? text : `${text} ago`;
+};
 
 function readOpen() {
   try {
@@ -79,12 +95,20 @@ const worthShowing = (s: ServiceDeploy, now: number) =>
   s.state === "failed" ||
   now - Date.parse(s.at) < RECENT_MS;
 
+/** How long until the next check, or null to stop until the page reloads. */
+function nextDelay(board: Board): number | null {
+  if (board.hosts.every((h) => h.problem === "unset")) return null;
+  if (board.hosts.some((h) => h.problem === "busy")) return BACK_OFF_MS;
+  return board.groups.some((g) => g.services.some((s) => s.state === "active"))
+    ? FAST_MS
+    : SLOW_MS;
+}
+
 export function DeployBoard() {
-  const [view, setView] = useState<View>({ ok: false, error: "loading" });
+  const [view, setView] = useState<View>({ kind: "loading" });
   const [open, setOpen] = useState(readOpen);
   const [checking, setChecking] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-
   const check = useRef<() => void>(() => {});
 
   useEffect(() => {
@@ -96,27 +120,17 @@ export function DeployBoard() {
       setChecking(true);
       let next: View;
       try {
-        next = await railwayDeploys();
+        next = { kind: "board", board: await deploys() };
       } catch {
         // The action refuses once the admin sign-in has run out.
-        next = { ok: false, error: "expired" };
+        next = { kind: "expired" };
       }
       if (!alive) return;
       setView(next);
       setNow(Date.now());
       setChecking(false);
 
-      const delay = next.ok
-        ? next.projects.some((p) =>
-            p.services.some((s) => s.state === "active"),
-          )
-          ? FAST_MS
-          : SLOW_MS
-        : next.error === "down"
-          ? SLOW_MS
-          : next.error === "busy" || next.error === "token"
-            ? BACK_OFF_MS
-            : null;
+      const delay = next.kind === "board" ? nextDelay(next.board) : null;
       // A hidden tab waits; coming back checks at once (below).
       if (delay !== null && document.visibilityState === "visible")
         timer = setTimeout(run, delay);
@@ -151,45 +165,62 @@ export function DeployBoard() {
     });
   };
 
-  if (!view.ok) {
-    const { error } = view;
-    if (error === "loading")
-      return (
-        <div
-          className="bg-mist-deep mt-6 h-[3.25rem] animate-pulse rounded-xl"
-          aria-hidden
-        />
-      );
+  if (view.kind === "loading")
     return (
-      <section aria-label="Railway deploys" className="card mt-6 px-4 py-3">
+      <div
+        className="bg-mist-deep mt-6 h-[3.25rem] animate-pulse rounded-xl"
+        aria-hidden
+      />
+    );
+
+  if (view.kind === "expired")
+    return (
+      <Frame>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <Title />
-          <p className="text-ink-soft min-w-0 flex-1 text-[0.8125rem]">
-            <Problem error={error} />
+          <p className="text-ink-soft text-[0.8125rem]">
+            Your admin session has ended. Reload the page to sign in again.
           </p>
-          {error !== "unset" && error !== "expired" && (
-            <Refresh checking={checking} onClick={() => check.current()} />
-          )}
         </div>
-      </section>
+      </Frame>
     );
-  }
 
-  const all = view.projects.flatMap((p) => p.services);
+  const { board } = view;
+  if (board.hosts.every((h) => h.problem === "unset"))
+    return (
+      <Frame>
+        <Title />
+        <p className="text-ink-soft mt-1.5 text-[0.8125rem]">
+          See what is deploying on Railway and Vercel here. Add either token, or
+          both, to the Web service on Railway:
+        </p>
+        <ul className="mt-2 space-y-1.5 text-[0.8125rem]">
+          {board.hosts.map((h) => (
+            <li key={h.host} className="text-ink-soft">
+              <Setup host={h.host} />
+            </li>
+          ))}
+        </ul>
+      </Frame>
+    );
+
+  const all = board.groups.flatMap((g) => g.services);
   const count = (state: DeployState) =>
     all.filter((s) => s.state === state).length;
   const shown = open
-    ? view.projects
-    : view.projects
-        .map((p) => ({
-          ...p,
-          services: p.services.filter((s) => worthShowing(s, now)),
+    ? board.groups
+    : board.groups
+        .map((g) => ({
+          ...g,
+          services: g.services.filter((s) => worthShowing(s, now)),
         }))
-        .filter((p) => p.services.length > 0);
-  const hidden = all.length - shown.reduce((n, p) => n + p.services.length, 0);
+        .filter((g) => g.services.length > 0);
+  const problems = board.hosts.flatMap(({ host, problem }) =>
+    problem ? [{ host, problem }] : [],
+  );
 
   return (
-    <section aria-label="Railway deploys" className="card mt-6 px-4 py-3">
+    <Frame>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Title />
         <ul className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[0.8125rem] font-semibold">
@@ -222,8 +253,7 @@ export function DeployBoard() {
 
         <div className="ml-auto flex items-center gap-1">
           <span className="text-ink-faint hidden text-[0.75rem] sm:inline">
-            Checked {ago(view.checkedAt, now)}
-            {ago(view.checkedAt, now) === "just now" ? "" : " ago"}
+            Checked {agoText(board.checkedAt, now)}
           </span>
           <Refresh checking={checking} onClick={() => check.current()} />
           {all.length > 0 && (
@@ -246,22 +276,43 @@ export function DeployBoard() {
         </div>
       </div>
 
+      {problems.length > 0 && (
+        <ul className="mt-2 space-y-1 text-[0.75rem]">
+          {problems.map((h) => (
+            <li key={h.host} className="text-ink-faint">
+              {h.problem === "unset" ? (
+                <Setup host={h.host} />
+              ) : (
+                <Problem host={h.host} problem={h.problem} />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
       {all.length === 0 ? (
         <p className="text-ink-soft mt-2 text-[0.8125rem]">
-          No deployed services on this Railway account yet.
+          Nothing deployed yet.
         </p>
       ) : shown.length === 0 ? (
         <p className="text-ink-faint mt-1.5 text-[0.8125rem]">
-          Nothing deploying, nothing failed.{" "}
-          {hidden > 0 && "Show all to see every service."}
+          Nothing deploying, nothing failed. Show all to see every app.
         </p>
       ) : (
-        <div className="mt-3 space-y-3">
-          {shown.map((p) => (
-            <Project key={p.id} project={p} now={now} />
+        <div className="divide-line mt-3 divide-y">
+          {shown.map((g) => (
+            <Group key={g.id} group={g} now={now} />
           ))}
         </div>
       )}
+    </Frame>
+  );
+}
+
+function Frame({ children }: { children: React.ReactNode }) {
+  return (
+    <section aria-label="Deploys" className="card mt-6 px-4 py-3">
+      {children}
     </section>
   );
 }
@@ -269,12 +320,12 @@ export function DeployBoard() {
 function Title() {
   return (
     <h2 className="text-ink inline-flex items-center gap-2 text-[0.875rem] font-semibold">
-      <TrainFront
+      <Rocket
         className="text-brand-deep size-4"
         strokeWidth={1.9}
         aria-hidden
       />
-      Railway
+      Deploys
     </h2>
   );
 }
@@ -291,7 +342,7 @@ function Refresh({
       type="button"
       onClick={onClick}
       disabled={checking}
-      aria-label="Check Railway now"
+      aria-label="Check deploys now"
       title="Check now"
       className="text-ink-soft hover:text-brand-deep inline-flex size-8 items-center justify-center rounded-md transition-colors disabled:opacity-50"
     >
@@ -303,49 +354,73 @@ function Refresh({
   );
 }
 
-function Problem({
-  error,
-}: {
-  error: "unset" | "token" | "busy" | "down" | "expired";
-}) {
-  if (error === "unset")
-    return (
-      <>
-        See your deploys here: create an account token at{" "}
-        <a
-          href="https://railway.com/account/tokens"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-brand-deep font-semibold underline"
-        >
-          railway.com/account/tokens
-        </a>{" "}
-        (Workspace: No workspace) and add it to the Web service as
-        RAILWAY_API_TOKEN.
-      </>
-    );
-  if (error === "token")
-    return (
-      <span className="text-danger">
-        Railway refused the token in RAILWAY_API_TOKEN. Make a new one and
-        replace it on the Web service.
-      </span>
-    );
-  if (error === "busy")
-    return "Railway asked us to slow down. Checking again in 5 minutes.";
-  if (error === "expired")
-    return "Your admin session has ended. Reload the page to sign in again.";
-  return "Could not reach Railway just now. Trying again in a minute.";
+const LINK = "text-brand-deep font-semibold underline";
+
+/** How to connect a host that has no token yet. */
+function Setup({ host }: { host: Host }) {
+  return host === "railway" ? (
+    <>
+      Railway: an account token from{" "}
+      <a
+        href="https://railway.com/account/tokens"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={LINK}
+      >
+        railway.com/account/tokens
+      </a>{" "}
+      (Workspace: No workspace), as RAILWAY_API_TOKEN.
+    </>
+  ) : (
+    <>
+      Vercel: a token from{" "}
+      <a
+        href="https://vercel.com/account/settings/tokens"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={LINK}
+      >
+        vercel.com/account/settings/tokens
+      </a>{" "}
+      (Scope: your team), as VERCEL_API_TOKEN.
+    </>
+  );
 }
 
-function Project({ project, now }: { project: ProjectDeploys; now: number }) {
+function Problem({
+  host,
+  problem,
+}: {
+  host: Host;
+  problem: Exclude<HostProblem, "unset">;
+}) {
+  const name = HOST[host];
+  const variable =
+    host === "railway" ? "RAILWAY_API_TOKEN" : "VERCEL_API_TOKEN";
+  if (problem === "token")
+    return (
+      <span className="text-danger">
+        {name} refused the token in {variable}. Make a new one and replace it on
+        the Web service.
+      </span>
+    );
+  if (problem === "busy")
+    return `${name} asked us to slow down. Checking again in 5 minutes.`;
+  return `Could not reach ${name} just now. Trying again shortly.`;
+}
+
+function Group({ group, now }: { group: DeployGroup; now: number }) {
+  const hosts = [...new Set(group.services.map((s) => s.host))];
   return (
-    <div>
-      <h3 className="text-ink-faint text-[0.6875rem] font-semibold">
-        {project.name}
+    <div className="py-2.5 first:pt-0 last:pb-0">
+      <h3 className="flex flex-wrap items-baseline gap-x-2 text-[0.8125rem]">
+        <span className="text-ink font-semibold">{group.name}</span>
+        <span className="text-ink-faint text-[0.6875rem]">
+          {hosts.map((h) => HOST[h]).join(" and ")}
+        </span>
       </h3>
       <ul className="mt-1.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
-        {project.services.map((s) => (
+        {group.services.map((s) => (
           <li key={s.key}>
             <Service service={s} now={now} />
           </li>
@@ -374,7 +449,7 @@ function Service({ service: s, now }: { service: ServiceDeploy; now: number }) {
       href={s.href}
       target="_blank"
       rel="noopener noreferrer"
-      title={`Open ${s.service} on Railway`}
+      title={`Open ${s.service} on ${HOST[s.host]}`}
       className={cn(
         "group flex min-w-0 items-start gap-2.5 rounded-lg border px-3 py-2 transition-colors",
         s.state === "failed"
@@ -389,6 +464,9 @@ function Service({ service: s, now }: { service: ServiceDeploy; now: number }) {
         <span className="flex min-w-0 items-baseline gap-1.5">
           <span className="text-ink truncate text-[0.8125rem] font-semibold">
             {s.service}
+          </span>
+          <span className="bg-mist text-ink-faint shrink-0 rounded px-1.5 text-[0.625rem] font-semibold">
+            {HOST[s.host]}
           </span>
           {s.environment !== "production" && (
             <span className="text-ink-faint shrink-0 text-[0.6875rem]">
@@ -406,10 +484,12 @@ function Service({ service: s, now }: { service: ServiceDeploy; now: number }) {
             s.state === "failed" ? "text-danger" : "text-ink-soft",
           )}
         >
-          {label}
+          {label},{" "}
           {s.state === "active"
-            ? `, ${ago(s.at, now) === "just now" ? "just started" : `for ${ago(s.at, now)}`}`
-            : `, ${ago(s.at, now)}${ago(s.at, now) === "just now" ? "" : " ago"}`}
+            ? ago(s.at, now) === "just now"
+              ? "just started"
+              : `for ${ago(s.at, now)}`
+            : agoText(s.at, now)}
         </span>
         {s.commit && (
           <span className="text-ink-faint block truncate text-[0.75rem]">

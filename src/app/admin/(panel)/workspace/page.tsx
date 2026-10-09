@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  * Claude Code sessions side by side, each in its own terminal, run by the
  * Workspace service on Railway (workspace/server.mjs), not by this server;
  * the page only shows them. Admin-only through the panel's layout, like every other tab.
- * Above them, what is deploying on Railway right now (DeployBoard).
+ * Above them, what is deploying on Railway and Vercel right now (DeployBoard).
  */
 export default function AdminWorkspacePage() {
   return (
