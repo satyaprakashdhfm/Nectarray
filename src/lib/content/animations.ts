@@ -134,11 +134,11 @@ export const ANIMATIONS: AnimationEntry[] = [
     with: ["SiteParts.tsx"],
   },
   {
-    id: "deeds-journey-site",
+    id: "law-journey-site",
     category: "legal",
-    name: "Full law firm website, the client's visit in pictures",
-    note: "A whole one-page site with the words on the left and an illustrated story on the right that plays as you scroll: the client arrives, talks the matter through, the documents are verified and researched, the case is handled and the verified file is handed back. 41 frames dissolve into each other, the same frames blurred fill the whole background, and the picture's edges melt into it so the sections stay the clearest thing on the page. A numbered caption names each step. Then the footer. Scroll the page to play it. The frames are WebP files in public/animations/deeds-journey/.",
-    file: "DeedsJourneySite.tsx",
+    name: "Full law firm website, a film that plays on scroll",
+    note: "A whole one-page site for a sample firm, laid out like a real one: about us, practice areas, partners, team, how we work, insights and contact, on the left. On the right a canvas plays a film of the client's visit frame by frame as you scroll, the way Apple and Kiwi do it: no fading one picture over another, just the next frame of the same shot. Its edge towards the words fades into the page, and a numbered caption names each step. The frames are numbered images in public/animations/law-journey/; the placeholder storyboard there is waiting for a rendered film. Scroll the page to play it.",
+    file: "LawJourneySite.tsx",
   },
   {
     id: "law-office-scroll-site",
