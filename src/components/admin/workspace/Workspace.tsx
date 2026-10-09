@@ -1712,7 +1712,7 @@ function ConnectRepo({ send }: { send: (m: object) => void }) {
 
 /**
  * A message box under the open terminal: type or paste (the sign-in code, a
- * long prompt, anything awkward on a phone), or hold the mic and talk. Spoken
+ * long prompt, anything awkward on a phone), or tap the mic and talk. Spoken
  * words land in the box to check first, unless "Send speech right away" is
  * on. Send types the box into the session and presses Enter; an empty Send
  * just presses Enter.
@@ -1752,25 +1752,6 @@ function PromptBar({
     },
   });
 
-  const hold = {
-    onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      void voice.start();
-    },
-    onPointerUp: () => voice.stop(),
-    onPointerCancel: () => voice.stop(),
-    onKeyDown: (e: React.KeyboardEvent) => {
-      if ((e.key === " " || e.key === "Enter") && !e.repeat) {
-        e.preventDefault();
-        void voice.start();
-      }
-    },
-    onKeyUp: (e: React.KeyboardEvent) => {
-      if (e.key === " " || e.key === "Enter") voice.stop();
-    },
-    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
-  };
-
   const clock = `${Math.floor(voice.seconds / 60)}:${String(voice.seconds % 60).padStart(2, "0")}`;
   const darkField =
     "border-night-line bg-night rounded-lg border px-3 py-2 text-[0.8125rem] text-white placeholder:text-white/40 focus:border-brand focus:outline-none";
@@ -1787,13 +1768,19 @@ function PromptBar({
         {voice.supported && (
           <button
             type="button"
-            {...hold}
+            onClick={voice.toggle}
             disabled={voice.writing}
             aria-pressed={voice.listening}
-            aria-label="Hold to talk"
-            title="Hold to talk, let go to turn it into text"
+            aria-label={
+              voice.listening ? "Stop and turn it into text" : "Start talking"
+            }
+            title={
+              voice.listening
+                ? "Tap to stop and turn it into text"
+                : "Tap to talk, tap again when you are done"
+            }
             className={cn(
-              "inline-flex shrink-0 touch-none items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold tabular-nums transition-[background-color,transform] select-none active:scale-[0.98] disabled:opacity-70",
+              "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold tabular-nums transition-[background-color,transform] select-none active:scale-[0.98] disabled:opacity-70",
               voice.listening
                 ? "bg-amber text-night"
                 : "bg-white/10 text-white hover:bg-white/15",
@@ -1804,21 +1791,20 @@ function PromptBar({
                 className="size-4 motion-safe:animate-spin"
                 aria-hidden
               />
-            ) : (
-              <Mic
-                className={cn(
-                  "size-4",
-                  voice.listening && "motion-safe:animate-pulse",
-                )}
+            ) : voice.listening ? (
+              <Square
+                className="size-3.5 fill-current motion-safe:animate-pulse"
                 aria-hidden
               />
+            ) : (
+              <Mic className="size-4" aria-hidden />
             )}
             <span className="hidden sm:inline">
               {voice.listening
-                ? `Listening ${clock}`
+                ? `Stop ${clock}`
                 : voice.writing
                   ? "Writing"
-                  : "Hold to talk"}
+                  : "Talk"}
             </span>
           </button>
         )}
@@ -1866,10 +1852,10 @@ function PromptBar({
           className={cn(darkField, "min-w-0 flex-1")}
           placeholder={
             voice.listening
-              ? "Listening. Let go of the button when you are done"
+              ? "Listening. Tap Stop when you are done"
               : voice.writing
                 ? "Turning your words into text…"
-                : "Type, paste text or an image, or hold the mic and talk"
+                : "Type, paste text or an image, or tap Talk and speak"
           }
           aria-label="Message for the terminal"
         />

@@ -9,9 +9,9 @@ import {
 } from "react";
 
 /**
- * Push to talk: `start` while the mic button is held, `stop` on release.
- * The recording goes to /api/admin/transcribe (Groq Whisper or Gemini, see
- * there) and `onText` gets the words.
+ * Tap to talk: `toggle` starts recording on the first tap and stops it on
+ * the next. The recording goes to /api/admin/transcribe (Groq Whisper or
+ * Gemini, see there) and `onText` gets the words.
  *
  * Recorded with the browser's MediaRecorder, which works in every current
  * browser on desktop and phone, then turned into 16 kHz mono WAV here: the
@@ -97,7 +97,7 @@ export function useVoice({
         );
       const text = (body.text ?? "").replace(/\s+/g, " ").trim();
       if (text) onTextRef.current(text);
-      else setError("Nothing was heard. Hold the button while you speak.");
+      else setError("Nothing was heard. Tap Talk, speak, then tap Stop.");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Could not turn that into text.",
@@ -118,11 +118,12 @@ export function useVoice({
         audio: { echoCancellation: true, noiseSuppression: true },
       });
     } catch (err) {
+      wanted.current = false;
       const name = err instanceof DOMException ? err.name : "";
       setError(MESSAGES[name] ?? "The microphone could not be opened.");
       return;
     }
-    // Let go before the microphone opened: nothing to record.
+    // Tapped again before the microphone opened: nothing to record.
     if (!wanted.current) {
       media.getTracks().forEach((t) => t.stop());
       return;
@@ -135,6 +136,8 @@ export function useVoice({
       if (e.data.size > 0) chunks.current.push(e.data);
     };
     rec.onstop = () => {
+      // Also reached at the time limit, so the next tap starts afresh.
+      wanted.current = false;
       recorder.current = null;
       release();
       const recorded = new Blob(chunks.current, {
@@ -155,11 +158,21 @@ export function useVoice({
     }, 250);
   }, [release, send]);
 
-  /** Release: the recording is sent and turned into text. */
+  /** The second tap: the recording is sent and turned into text. */
   const stop = useCallback(() => {
     wanted.current = false;
     if (recorder.current?.state === "recording") recorder.current.stop();
   }, []);
+
+  /*
+   * One button for both. `wanted` is set from the first tap, so a second
+   * tap while the browser is still asking for the microphone cancels it
+   * rather than opening it twice.
+   */
+  const toggle = useCallback(() => {
+    if (wanted.current) stop();
+    else void start();
+  }, [start, stop]);
 
   return {
     supported,
@@ -167,8 +180,7 @@ export function useVoice({
     writing: state === "writing",
     seconds,
     error,
-    start,
-    stop,
+    toggle,
   };
 }
 
