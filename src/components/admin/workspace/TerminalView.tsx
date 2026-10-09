@@ -1,9 +1,39 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import type { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { filesIn, openRunner } from "./runner";
+
+/*
+ * Selected terminal text, ready to paste elsewhere: trailing padding goes,
+ * and so does the bar Claude Code draws down the left of a quote, so a
+ * message written for someone else pastes as plain text.
+ */
+const cleanCopy = (text: string) =>
+  text
+    .split("\n")
+    // Only a lone bar: a table row has more of them, and keeps them all.
+    .map((line) => line.replace(/^(\s*)[│┃▌▎▏|] ?(?!.*[│┃|])/, "$1").trimEnd())
+    .join("\n")
+    .trim();
+
+async function writeClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // No clipboard permission (some in-app browsers): the old way.
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.append(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  }
+}
 
 /**
  * One session's terminal: the real Claude Code screen, streamed from the
@@ -38,6 +68,9 @@ export function TerminalView({
   const termRef = useRef<XTerm | null>(null);
   const fitPreview = useRef<() => void>(() => {});
   const onFileRef = useRef(onFile);
+  const copyRef = useRef<() => void>(() => {});
+  const [selected, setSelected] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     onFileRef.current = onFile;
@@ -90,11 +123,36 @@ export function TerminalView({
         // then looks in the server's clipboard, which is always empty, and
         // the browser never pastes. Skipping it lets the browser paste, so
         // text goes in as a paste and files reach the upload below.
-        term.attachCustomKeyEventHandler(
-          (e) => !(e.ctrlKey && !e.altKey && e.key.toLowerCase() === "v"),
-        );
+        // Ctrl+C is the same trap the other way: with text selected it
+        // copies (as in Windows Terminal); with nothing selected it stays
+        // Claude Code's interrupt. Ctrl+Shift+C always copies.
+        term.attachCustomKeyEventHandler((e) => {
+          if (!e.ctrlKey || e.altKey) return true;
+          const key = e.key.toLowerCase();
+          if (key === "v") return false;
+          if (key === "c" && (e.shiftKey || term.hasSelection())) {
+            if (e.type === "keydown") {
+              e.preventDefault();
+              copyRef.current();
+            }
+            return false;
+          }
+          return true;
+        });
       }
       term.open(inner.current);
+      copyRef.current = () => {
+        const text = cleanCopy(term.getSelection());
+        if (!text) return;
+        void writeClipboard(text).then(() => {
+          term.clearSelection();
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        });
+      };
+      const selection = preview
+        ? null
+        : term.onSelectionChange(() => setSelected(term.hasSelection()));
 
       /* A preview is scaled as a picture: its full-size screen, shrunk to the tile. */
       fitPreview.current = () => {
@@ -184,6 +242,7 @@ export function TerminalView({
         box.removeEventListener("dragover", allowDrop);
         box.removeEventListener("drop", takeFiles);
         input?.dispose();
+        selection?.dispose();
         ws.close();
         term.dispose();
         termRef.current = null;
@@ -214,10 +273,29 @@ export function TerminalView({
       className={
         preview
           ? "bg-night pointer-events-none relative w-full overflow-hidden"
-          : "bg-night h-full min-h-0 w-full overflow-hidden p-2"
+          : "bg-night relative h-full min-h-0 w-full overflow-hidden p-2"
       }
       aria-hidden={preview || undefined}
     >
+      {!preview && (selected || copied) && (
+        <button
+          type="button"
+          // Keep the selection: the press must not reach the terminal.
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onClick={() => copyRef.current()}
+          className="bg-night-soft border-night-line absolute top-2 right-3 z-10 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.75rem] font-semibold text-white/85 shadow-sm transition-colors hover:text-white"
+        >
+          {copied ? (
+            <Check className="text-leaf size-3.5" aria-hidden />
+          ) : (
+            <Copy className="size-3.5" aria-hidden />
+          )}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      )}
       <div
         ref={inner}
         className={preview ? "absolute top-0 left-0 origin-top-left" : "h-full"}
