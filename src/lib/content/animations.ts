@@ -134,6 +134,13 @@ export const ANIMATIONS: AnimationEntry[] = [
     with: ["SiteParts.tsx"],
   },
   {
+    id: "deeds-journey-site",
+    category: "legal",
+    name: "Full law firm website, the client's visit in pictures",
+    note: "A whole one-page site with the words on the left and an illustrated story on the right that plays as you scroll: the client arrives, talks the matter through, the documents are verified and researched, the case is handled and the verified file is handed back. 41 frames dissolve into each other, the same frames blurred fill the whole background, and the picture's edges melt into it so the sections stay the clearest thing on the page. A numbered caption names each step. Then the footer. Scroll the page to play it. The frames are WebP files in public/animations/deeds-journey/.",
+    file: "DeedsJourneySite.tsx",
+  },
+  {
     id: "law-office-scroll-site",
     category: "legal",
     name: "Full law firm website, the office from above",
