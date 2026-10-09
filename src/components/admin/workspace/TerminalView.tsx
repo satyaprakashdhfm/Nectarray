@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import { openRunner } from "./runner";
+import { imagesIn, openRunner } from "./runner";
 
 /**
  * One session's terminal: the real Claude Code screen, streamed from the
@@ -24,16 +24,24 @@ export function TerminalView({
   preview = false,
   cols = 120,
   rows = 32,
+  onImage,
 }: {
   id: string;
   preview?: boolean;
   cols?: number;
   rows?: number;
+  /** An image pasted or dropped on the main terminal. */
+  onImage?: (file: File) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
   const fitPreview = useRef<() => void>(() => {});
+  const onImageRef = useRef(onImage);
+
+  useEffect(() => {
+    onImageRef.current = onImage;
+  }, [onImage]);
 
   useEffect(() => {
     let disposed = false;
@@ -136,11 +144,33 @@ export function TerminalView({
       // A click anywhere in the main terminal gives it the keyboard, so
       // arrows, Esc and Tab go to Claude Code rather than the page.
       const focus = () => term.focus();
-      if (!preview) box.addEventListener("mousedown", focus);
+      // Images can't travel as typed text: a pasted or dropped picture is
+      // handed up, uploaded, and its path lands in the prompt instead.
+      const takeImages = (e: ClipboardEvent | DragEvent) => {
+        const data = "clipboardData" in e ? e.clipboardData : e.dataTransfer;
+        const images = imagesIn(data);
+        if (!images.length || !onImageRef.current) return;
+        e.preventDefault();
+        e.stopPropagation();
+        images.forEach((file) => onImageRef.current?.(file));
+        term.focus();
+      };
+      const allowDrop = (e: DragEvent) => {
+        if (e.dataTransfer?.types.includes("Files")) e.preventDefault();
+      };
+      if (!preview) {
+        box.addEventListener("mousedown", focus);
+        box.addEventListener("paste", takeImages, true);
+        box.addEventListener("dragover", allowDrop);
+        box.addEventListener("drop", takeImages);
+      }
 
       cleanup = () => {
         observer.disconnect();
         box.removeEventListener("mousedown", focus);
+        box.removeEventListener("paste", takeImages, true);
+        box.removeEventListener("dragover", allowDrop);
+        box.removeEventListener("drop", takeImages);
         input?.dispose();
         ws.close();
         term.dispose();

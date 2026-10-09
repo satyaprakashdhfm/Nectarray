@@ -104,3 +104,33 @@ export type RunnerMessage =
   | { t: "stopped" }
   | { t: "notice"; message: string }
   | { t: "error"; message: string };
+
+/* Images for a session's prompt: the runner saves them and pastes the path. */
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const IMAGE_LIMIT = 10 * 1024 * 1024;
+
+/** The image files in a paste or a drop, if any. */
+export const imagesIn = (data: DataTransfer | null) =>
+  Array.from(data?.files ?? []).filter((f) => f.type.startsWith("image/"));
+
+/** The control message that adds `file` to session `id`, or why it cannot. */
+export async function imageMessage(
+  id: string,
+  file: File,
+): Promise<object | string> {
+  if (!IMAGE_TYPES.includes(file.type))
+    return "Only PNG, JPEG, GIF or WebP images can be added.";
+  if (file.size > IMAGE_LIMIT) return "That image is over 10 MB.";
+  const url = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+  return {
+    t: "image",
+    id,
+    type: file.type,
+    data: url.slice(url.indexOf(",") + 1),
+  };
+}

@@ -13,6 +13,7 @@ import {
   BellOff,
   ExternalLink,
   GitBranch,
+  ImagePlus,
   KeyRound,
   LayoutGrid,
   Loader2,
@@ -35,6 +36,8 @@ import {
 import { field, primaryButton, quietButton } from "@/components/admin/Business";
 import { cn } from "@/lib/utils";
 import {
+  imageMessage,
+  imagesIn,
   openRunner,
   type ClaudeInfo,
   type GitHubInfo,
@@ -270,6 +273,21 @@ function WorkspaceApp() {
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
   }, []);
 
+  /** An image for a session's prompt: the runner saves it, pastes its path. */
+  const addImage = useCallback(
+    async (id: string, file: File) => {
+      try {
+        const message = await imageMessage(id, file);
+        if (typeof message === "string")
+          setToast({ text: message, error: true });
+        else send(message);
+      } catch {
+        setToast({ text: "Could not read that image.", error: true });
+      }
+    },
+    [send],
+  );
+
   /*
    * The control socket, while the workspace is on: retried every few seconds
    * while the service wakes or redeploys. Off, nothing connects, so an open
@@ -458,6 +476,7 @@ function WorkspaceApp() {
                 prefs={prefs}
                 setPrefs={setPrefs}
                 send={send}
+                onImage={(file) => addImage(focused.id, file)}
               />
             )}
             {others.length > 0 && (
@@ -932,6 +951,7 @@ function MainTerminal({
   prefs,
   setPrefs,
   send,
+  onImage,
 }: {
   session: Session;
   maximized: boolean;
@@ -940,6 +960,7 @@ function MainTerminal({
   prefs: Prefs;
   setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
+  onImage: (file: File) => void;
 }) {
   // Maximized, the page behind stays put.
   useEffect(() => {
@@ -1074,6 +1095,7 @@ function MainTerminal({
         <TerminalView
           key={`${session.id}-${session.startedAt}-${session.live}`}
           id={session.id}
+          onImage={session.live ? onImage : undefined}
         />
       </div>
 
@@ -1085,6 +1107,7 @@ function MainTerminal({
           prefs={prefs}
           setPrefs={setPrefs}
           send={send}
+          onImage={onImage}
         />
       )}
     </section>
@@ -1700,6 +1723,7 @@ function PromptBar({
   prefs,
   setPrefs,
   send,
+  onImage,
 }: {
   sessionId: string;
   /** The repo, which helps the speech engine with its names. */
@@ -1707,8 +1731,10 @@ function PromptBar({
   prefs: Prefs;
   setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
+  onImage: (file: File) => void;
 }) {
   const [text, setText] = useState("");
+  const picker = useRef<HTMLInputElement>(null);
 
   const submit = (value: string) => {
     send({ t: "type", id: sessionId, text: value, enter: true });
@@ -1796,9 +1822,36 @@ function PromptBar({
             </span>
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => picker.current?.click()}
+          aria-label="Add an image"
+          title="Add an image. You can also paste or drop one on the terminal"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-[0.8125rem] font-semibold text-white transition-[background-color,transform] hover:bg-white/15 active:scale-[0.98]"
+        >
+          <ImagePlus className="size-4" aria-hidden />
+          <span className="hidden sm:inline">Image</span>
+        </button>
+        <input
+          ref={picker}
+          type="file"
+          accept="image/png,image/jpeg,image/gif,image/webp"
+          multiple
+          hidden
+          onChange={(e) => {
+            Array.from(e.target.files ?? []).forEach(onImage);
+            e.target.value = "";
+          }}
+        />
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onPaste={(e) => {
+            const images = imagesIn(e.clipboardData);
+            if (!images.length) return;
+            e.preventDefault();
+            images.forEach(onImage);
+          }}
           readOnly={voice.listening || voice.writing}
           onKeyDown={(e) => {
             // With nothing typed, arrows, Esc and Tab drive the terminal:
@@ -1816,7 +1869,7 @@ function PromptBar({
               ? "Listening. Let go of the button when you are done"
               : voice.writing
                 ? "Turning your words into text…"
-                : "Type, paste or hold the mic and talk. Enter sends it"
+                : "Type, paste text or an image, or hold the mic and talk"
           }
           aria-label="Message for the terminal"
         />

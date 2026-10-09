@@ -536,15 +536,23 @@ async function readGitHub() {
     return;
   }
   try {
-    const res = await github(
-      "/user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator,organization_member",
-    );
-    if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
-    githubRepos = (await res.json()).map((r) => ({
+    // A hundred a page; up to ten pages, newest pushes first.
+    const found = [];
+    for (let page = 1; page <= 10; page++) {
+      const res = await github(
+        `/user/repos?per_page=100&page=${page}&sort=pushed&affiliation=owner,collaborator,organization_member`,
+      );
+      if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
+      const batch = await res.json();
+      found.push(...batch);
+      if (batch.length < 100) break;
+    }
+    githubRepos = found.map((r) => ({
       owner: r.owner.login,
       repo: r.name,
       url: r.html_url,
       branch: r.default_branch,
+      private: r.private,
     }));
   } catch (err) {
     broadcast({
@@ -744,7 +752,14 @@ const slug = (s) =>
     .slice(0, 32);
 
 function publicSession(s) {
-  const { pty: _p, buffer: _b, size: _s, viewers: _v, ...rest } = s;
+  const {
+    pty: _p,
+    buffer: _b,
+    size: _s,
+    viewers: _v,
+    pasteMode: _m,
+    ...rest
+  } = s;
   return { ...rest, live: !!s.pty };
 }
 
@@ -858,6 +873,11 @@ function startSession({
   s.rows = 32;
 
   s.pty.onData((data) => {
+    // Whether the program asked for bracketed paste, so a pasted image path
+    // arrives as a paste (which Claude Code turns into an attachment).
+    const on = data.lastIndexOf("\x1b[?2004h");
+    const off = data.lastIndexOf("\x1b[?2004l");
+    if (on !== off) s.pasteMode = on > off;
     s.buffer.push(data);
     s.size += data.length;
     while (s.size > BUFFER_LIMIT && s.buffer.length > 1)
@@ -1084,7 +1104,7 @@ const server = http.createServer((req, res) => {
     );
 });
 
-const wss = new WebSocketServer({ noServer: true, maxPayload: 1_000_000 });
+const wss = new WebSocketServer({ noServer: true, maxPayload: 16_000_000 });
 
 server.on("upgrade", (req, socket, head) => {
   const origin = req.headers.origin ?? "";
@@ -1235,7 +1255,19 @@ function openControl(ws) {
         reply({ t: "notice", message: "The saved GitHub token was removed." });
         break;
       case "github-check":
-        refreshGitHubInfo();
+        // The token's access may have changed on GitHub: read the repos again
+        // too, and say how many it now reaches.
+        refreshGitHubInfo()
+          .then(readGitHub)
+          .then(() => {
+            readProjects();
+            if (!githubInfo.connected) return;
+            const privateCount = githubRepos.filter((r) => r.private).length;
+            reply({
+              t: "notice",
+              message: `GitHub: this token reaches ${githubRepos.length} repos, ${privateCount} of them private.`,
+            });
+          });
         break;
       case "setup":
         setupClaude(true);
@@ -1249,6 +1281,15 @@ function openControl(ws) {
         );
         break;
       }
+      case "image": {
+        const error = s?.pty ? saveImage(s, m) : "That session is not running.";
+        reply(
+          error
+            ? { t: "error", message: error }
+            : { t: "notice", message: "Image added to the prompt." },
+        );
+        break;
+      }
       case "update":
         updateClaude(true);
         break;
@@ -1257,6 +1298,58 @@ function openControl(ws) {
         break;
     }
   });
+}
+
+/*
+ * Images pasted or dropped on a terminal in the browser. The browser's
+ * clipboard never reaches this machine, so the page sends the picture here;
+ * it is saved in the session's folder and its path pasted into the prompt,
+ * the way dragging a file onto a local terminal does. The folder ignores
+ * itself in git, and pictures older than a week are cleared out.
+ */
+const IMAGE_TYPES = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
+const IMAGE_LIMIT = 10 * 1024 * 1024;
+const IMAGE_KEEP_MS = 7 * 24 * 60 * 60_000;
+
+/** Saves the image and pastes its path; returns an error message, or null. */
+function saveImage(s, m) {
+  const ext = IMAGE_TYPES[m.type];
+  if (!ext) return "Only PNG, JPEG, GIF or WebP images can be added.";
+  const data = Buffer.from(String(m.data ?? ""), "base64");
+  if (data.length === 0) return "That image is empty.";
+  if (data.length > IMAGE_LIMIT) return "That image is over 10 MB.";
+  const dir = path.join(
+    s.cwd && existsSync(s.cwd) ? s.cwd : ROOT,
+    ".nectarray-uploads",
+  );
+  try {
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, ".gitignore"), "*\n");
+    for (const name of readdirSync(dir)) {
+      const old = path.join(dir, name);
+      if (
+        name !== ".gitignore" &&
+        Date.now() - statSync(old).mtimeMs > IMAGE_KEEP_MS
+      )
+        unlinkSync(old);
+    }
+    const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+    const file = path.join(
+      dir,
+      `image-${stamp}-${randomBytes(2).toString("hex")}.${ext}`,
+    );
+    writeFileSync(file, data);
+    s.pty.write(s.pasteMode ? `\x1b[200~${file}\x1b[201~` : file);
+    s.pty.write(" ");
+  } catch (err) {
+    return `Could not save the image: ${err.message}`;
+  }
+  return null;
 }
 
 function closeAll(reason) {
