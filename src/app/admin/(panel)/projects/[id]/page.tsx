@@ -9,6 +9,7 @@ import { StatusPill } from "@/components/admin/Business";
 import { ProjectWorkspace } from "@/components/admin/ProjectWorkspace";
 import { num, rupees, serviceLabel } from "@/lib/business";
 import { loadProjectSheets } from "@/lib/project-data";
+import { currentMonth } from "@/lib/project-details";
 import { points } from "@/lib/quote-html";
 import { cleanBody, serviceTab } from "@/lib/quotes";
 import { vaultReady } from "@/lib/vault";
@@ -154,11 +155,7 @@ export default async function AdminProjectPage({
         status={project.status}
         initial={sheets}
         vaultReady={vaultReady()}
-        thisMonth={new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Asia/Kolkata",
-          year: "numeric",
-          month: "2-digit",
-        }).format(new Date())}
+        thisMonth={currentMonth()}
       />
     </>
   );

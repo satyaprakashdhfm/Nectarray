@@ -77,7 +77,7 @@ export function monthlyBillBook(
   const book = newBook();
   const rows = paidInMonth(sheets.paid, month);
   const ws = book.addWorksheet(monthLabel(month));
-  [14, 34, 22, 14, 44].forEach(
+  [8, 34, 22, 14, 44].forEach(
     (width, i) => (ws.getColumn(i + 1).width = width),
   );
 
@@ -90,17 +90,12 @@ export function monthlyBillBook(
     ws.addRow([k, v]).getCell(1).font = { bold: true };
   ws.addRow([]);
 
-  const header = ws.addRow([
-    "Date",
-    "Item",
-    "Paid to",
-    "Amount (₹)",
-    "Details",
-  ]);
+  const header = ws.addRow(["No.", "Item", "Paid to", "Amount (₹)", "Details"]);
   styleHeader(header);
   const first = header.number + 1;
-  for (const r of rows)
-    ws.addRow([excelDate(r.date), r.item, r.vendor, r.amount, r.note]);
+  rows.forEach((r, i) =>
+    ws.addRow([i + 1, r.item, r.vendor, r.amount, r.note]),
+  );
   if (!rows.length) ws.addRow([null, "No expenses this month"]);
   const last = ws.lastRow!.number;
 
@@ -120,7 +115,7 @@ export function monthlyBillBook(
   total.font = { bold: true };
   total.getCell(4).border = { top: { style: "thin" } };
 
-  ws.getColumn(1).numFmt = DAY;
+  ws.getColumn(1).alignment = { horizontal: "left" };
   ws.getColumn(4).numFmt = MONEY;
   ws.getColumn(5).alignment = { wrapText: true, vertical: "top" };
   ws.views = [{ state: "frozen", ySplit: header.number }];
@@ -184,17 +179,17 @@ export function fullSheetBook(project: ExcelProject, sheets: ProjectSheets) {
     book,
     "Amounts paid",
     [
-      { header: "Date", key: "date", width: 14 },
+      { header: "Month", key: "month", width: 18 },
       { header: "Item", key: "item", width: 30 },
       { header: "Paid to", key: "vendor", width: 20 },
       { header: "Amount (₹)", key: "amount", width: 14 },
       { header: "Note", key: "note", width: 40 },
     ],
+    // Month by month, each in the order it was added (sort is stable).
     [...sheets.paid]
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .map((r) => ({ ...r, date: excelDate(r.date) })),
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .map((r) => ({ ...r, month: r.month ? monthLabel(r.month) : "" })),
   );
-  paid.getColumn("date").numFmt = DAY;
   paid.getColumn("amount").numFmt = MONEY;
   if (sheets.paid.length)
     paid.addRow({ item: "Total", amount: paidTotal }).font = { bold: true };

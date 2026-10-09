@@ -10,7 +10,8 @@ export type PaidRow = {
   item: string;
   vendor: string;
   amount: number;
-  date: string;
+  /** The month whose bill it goes on, as "2026-10". */
+  month: string;
   note: string;
   /** The receipt or invoice kept with it (project_files), or "" for none. */
   fileId: string;
@@ -58,6 +59,8 @@ export type ProjectSheets = {
   paid: PaidRow[];
   recurring: RecurringRow[];
   access: AccessRow[];
+  /** Months whose bill is done; they fold up above the open month. */
+  closedMonths: string[];
 };
 
 export const EMPTY_SHEETS: ProjectSheets = {
@@ -66,6 +69,7 @@ export const EMPTY_SHEETS: ProjectSheets = {
   paid: [],
   recurring: [],
   access: [],
+  closedMonths: [],
 };
 
 const svc = (
@@ -234,7 +238,10 @@ export function cleanSheets(input: unknown): ProjectSheets {
         item: str(o.item, 160),
         vendor: str(o.vendor, 120),
         amount: money(o.amount),
-        date: day(o.date),
+        // Rows saved before months had a date; theirs gives the month.
+        month: isMonth(str(o.month, 7))
+          ? str(o.month, 7)
+          : day(o.date).slice(0, 7),
         note: str(o.note, 500),
         ...file(o),
       };
@@ -265,10 +272,17 @@ export function cleanSheets(input: unknown): ProjectSheets {
         note: str(o.note, 500),
       };
     }),
+    closedMonths: [
+      ...new Set(
+        rows(x.closedMonths)
+          .map((m) => str(m, 7))
+          .filter(isMonth),
+      ),
+    ].sort(),
   };
 }
 
-/* The monthly bill: every payment belongs to the month of its date. */
+/* The monthly bill: every payment is put on a month's bill by hand. */
 
 const MONTH_NAMES = [
   "January",
@@ -294,21 +308,34 @@ export function monthLabel(month: string): string {
   return `${MONTH_NAMES[Number(m) - 1] ?? m} ${year}`;
 }
 
-/** The payments dated in a month, oldest first. Undated ones are in none. */
-export function paidInMonth(rows: PaidRow[], month: string): PaidRow[] {
-  return rows
-    .filter((r) => r.date.startsWith(`${month}-`))
-    .sort((a, b) => a.date.localeCompare(b.date));
+/** This month in India, as "2026-10". */
+export const currentMonth = (at = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+  }).format(at);
+
+/** "2026-12" moved by n months: 1 gives "2027-01", -1 gives "2026-11". */
+export function addMonths(month: string, n: number): string {
+  const [year, m] = month.split("-").map(Number);
+  const index = year * 12 + (m - 1) + n;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
 }
 
-/** Every month with a payment in it, newest first, and what it came to. */
+/** The payments on a month's bill, in the order they were added. */
+export function paidInMonth(rows: PaidRow[], month: string): PaidRow[] {
+  return rows.filter((r) => r.month === month);
+}
+
+/** Every month with a payment on it, newest first, and what it came to. */
 export function monthlyTotals(
   rows: PaidRow[],
 ): { month: string; count: number; total: number }[] {
   const months = new Map<string, { count: number; total: number }>();
   for (const r of rows) {
-    if (!r.date) continue;
-    const month = r.date.slice(0, 7);
+    if (!r.month) continue;
+    const month = r.month;
     const m = months.get(month) ?? { count: 0, total: 0 };
     months.set(month, { count: m.count + 1, total: m.total + r.amount });
   }

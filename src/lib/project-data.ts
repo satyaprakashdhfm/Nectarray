@@ -7,6 +7,7 @@ import {
   EMPTY_SHEETS,
   STARTER_SHEETS,
   cleanSheets,
+  currentMonth,
   dashboardFor,
   type ProjectSheets,
 } from "@/lib/project-details";
@@ -54,8 +55,11 @@ export async function loadProjectSheets(
   }
   // Never saved: start from the usual services, ready to edit.
   const sheets = row ? cleanSheets(row) : STARTER_SHEETS;
+  const month = currentMonth();
   return {
     ...sheets,
+    // A payment from before months, with no date either, goes on this one.
+    paid: sheets.paid.map((p) => (p.month ? p : { ...p, month })),
     // A service with no link typed gets its platform's dashboard.
     recurring: sheets.recurring.map((r) => ({
       ...r,

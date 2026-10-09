@@ -702,6 +702,8 @@ export const projectDetails = pgTable("project_details", {
   paid: jsonb().notNull().default([]),
   recurring: jsonb().notNull().default([]),
   access: jsonb().notNull().default([]),
+  /** Months whose bill is done ("2026-10"), folded up on the page. */
+  closedMonths: jsonb("closed_months").notNull().default([]),
   updatedAt: now(),
 });
 

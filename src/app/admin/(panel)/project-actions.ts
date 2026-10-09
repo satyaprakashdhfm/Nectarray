@@ -44,6 +44,7 @@ export async function saveProjectSheets(projectId: string, input: unknown) {
     paid: sheets.paid,
     recurring: sheets.recurring,
     access,
+    closedMonths: sheets.closedMonths,
     updatedAt: new Date(),
   };
   await db

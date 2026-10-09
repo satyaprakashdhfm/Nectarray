@@ -10,8 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import {
-  CalendarX,
+  Check,
+  ChevronRight,
   Download,
+  RotateCcw,
   ExternalLink,
   Eye,
   EyeOff,
@@ -29,9 +31,9 @@ import { MoneyInput } from "@/components/admin/QuoteBuilder";
 import { PROJECT_STATUSES, rupees } from "@/lib/business";
 import {
   FREQUENCIES,
+  addMonths,
   dashboardFor,
   monthLabel,
-  monthlyTotals,
   paidInMonth,
   type AccessRow,
   type LinkRow,
@@ -51,8 +53,6 @@ type Col<T> = {
   /** Desktop column width. */
   w: string;
   placeholder?: string;
-  /** Outlined while blank. */
-  required?: boolean;
   /** For a "custom" cell: what it shows, and how it changes its row. */
   render?: (row: T, patch: (change: Partial<T>) => void) => ReactNode;
 };
@@ -76,9 +76,7 @@ const paidCols = (projectId: string): Col<PaidRow>[] => [
     placeholder: "GoDaddy",
   },
   { key: "amount", text: "Amount", kind: "money", w: "8rem" },
-  // The bill takes a payment by its date, so a blank one is outlined.
-  { key: "date", text: "Date", kind: "date", w: "9.5rem", required: true },
-  { key: "note", text: "Note", kind: "text", w: "minmax(8rem,1.2fr)" },
+  { key: "note", text: "Note", kind: "text", w: "minmax(8rem,1.4fr)" },
   {
     key: "fileId",
     text: "Document",
@@ -167,7 +165,6 @@ export function ProjectWorkspace({
   const [saved, setSaved] = useState(() => JSON.stringify(initial));
   const dirty = JSON.stringify(s) !== saved;
   const [tab, setTab] = useState<Tab>("paid");
-  const [billMonth, setBillMonth] = useState(thisMonth);
   const cols = useMemo(() => paidCols(projectId), [projectId]);
   const [show, setShow] = useState(false);
   const [pending, start] = useTransition();
@@ -208,12 +205,6 @@ export function ProjectWorkspace({
   const yearly = s.recurring
     .filter((r) => r.billing === "yearly")
     .reduce((n, r) => n + r.amount, 0);
-  const months = [
-    ...new Set([thisMonth, ...monthlyTotals(s.paid).map((m) => m.month)]),
-  ].sort((a, b) => b.localeCompare(a));
-  const bill = paidInMonth(s.paid, billMonth);
-  const billTotal = bill.reduce((n, r) => n + r.amount, 0);
-  const undated = s.paid.filter((r) => !r.date).length;
 
   return (
     <div className="mt-6 space-y-6">
@@ -416,96 +407,16 @@ export function ProjectWorkspace({
         )}
 
         {tab === "paid" && (
-          <div className="border-line flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-4 py-2.5 sm:px-5">
-            <label className="flex items-center gap-2">
-              <span className="text-ink text-[0.8125rem] font-semibold whitespace-nowrap">
-                Monthly bill
-              </span>
-              <select
-                value={billMonth}
-                onChange={(e) => setBillMonth(e.target.value)}
-                className={cn(field, "w-auto py-1.5")}
-              >
-                {months.map((m) => (
-                  <option key={m} value={m}>
-                    {monthLabel(m)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <p className="text-ink-soft text-[0.8125rem] tabular-nums">
-              {bill.length
-                ? `${rupees.format(billTotal)} from ${bill.length} ${bill.length === 1 ? "payment" : "payments"}`
-                : "Nothing paid this month yet"}
-            </p>
-            <a
-              href={
-                dirty
-                  ? undefined
-                  : `${ADMIN}/projects/${projectId}/bill?month=${billMonth}`
-              }
-              aria-disabled={dirty}
-              title={
-                dirty
-                  ? "Save first"
-                  : `The ${monthLabel(billMonth)} expenses, to send to the client`
-              }
-              className={cn(
-                primaryButton,
-                "inline-flex items-center gap-1.5 py-2 sm:ml-auto",
-                dirty && "pointer-events-none opacity-50",
-              )}
-            >
-              <Download className="size-3.5" aria-hidden />
-              Download bill
-            </a>
-            {undated > 0 && (
-              <div className="bg-amber-wash flex w-full flex-wrap items-center gap-x-3 gap-y-2 rounded-lg px-3 py-2">
-                <p className="text-amber-deep flex items-center gap-1.5 text-[0.8125rem] font-semibold">
-                  <CalendarX className="size-4 shrink-0" aria-hidden />
-                  {undated === 1
-                    ? "1 payment has no date, so it is in no monthly bill."
-                    : `${undated} payments have no date, so they are in no monthly bill.`}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const today = new Date().toLocaleDateString("en-CA");
-                    setS({
-                      ...s,
-                      paid: s.paid.map((r) =>
-                        r.date ? r : { ...r, date: today },
-                      ),
-                    });
-                    setBillMonth(today.slice(0, 7));
-                  }}
-                  className={cn(quietButton, "py-1.5")}
-                >
-                  Date them today
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === "paid" && (
-          <SheetTable
+          <PaidMonths
+            projectId={projectId}
             cols={cols}
             rows={s.paid}
-            onChange={(paid) => setS({ ...s, paid })}
-            blank={() => ({
-              id: newId(),
-              item: "",
-              vendor: "",
-              amount: 0,
-              // Today where the admin is, so a payment made just after
-              // midnight on the 1st lands in the new month's bill.
-              date: new Date().toLocaleDateString("en-CA"),
-              note: "",
-              fileId: "",
-              fileName: "",
-            })}
-            addText="Add payment"
+            closed={s.closedMonths}
+            thisMonth={thisMonth}
+            dirty={dirty}
+            onChange={(paid, closedMonths) =>
+              setS({ ...s, paid, closedMonths })
+            }
           />
         )}
         {tab === "recurring" && (
@@ -643,12 +554,7 @@ function SheetTable<T extends { id: string }>({
         onChange={(e) => set(i, c.key, e.target.value)}
         placeholder={c.placeholder}
         aria-label={c.text}
-        className={cn(
-          field,
-          "py-2",
-          c.kind === "secret" && "font-mono",
-          c.required && !value && "border-amber-deep",
-        )}
+        className={cn(field, "py-2", c.kind === "secret" && "font-mono")}
       />
     );
   };
@@ -724,6 +630,228 @@ function SheetTable<T extends { id: string }>({
         {addText}
       </button>
     </div>
+  );
+}
+
+/**
+ * Amounts paid, month by month. The month being filled in sits at the
+ * bottom; "Complete month" folds it up into the list above and starts the
+ * next one. Every month has its own bill to download, finished or not.
+ */
+function PaidMonths({
+  projectId,
+  cols,
+  rows,
+  closed,
+  thisMonth,
+  dirty,
+  onChange,
+}: {
+  projectId: string;
+  cols: Col<PaidRow>[];
+  rows: PaidRow[];
+  closed: string[];
+  thisMonth: string;
+  dirty: boolean;
+  onChange: (rows: PaidRow[], closed: string[]) => void;
+}) {
+  const [opened, setOpened] = useState<string[]>([]);
+  const [draft, setDraft] = useState<string | null>(null);
+
+  const used = [...new Set(rows.map((r) => r.month))];
+  const open = used.filter((m) => !closed.includes(m)).sort();
+  // Nothing open: an empty month to start, the one after the last finished.
+  const fresh =
+    draft ?? (closed.length ? addMonths(closed.at(-1)!, 1) : thisMonth);
+  const openMonths = open.length ? open : [fresh];
+
+  const setMonthRows = (month: string, next: PaidRow[]) =>
+    onChange([...rows.filter((r) => r.month !== month), ...next], closed);
+  const relabel = (from: string, to: string) => {
+    if (!rows.some((r) => r.month === from)) return setDraft(to);
+    onChange(
+      rows.map((r) => (r.month === from ? { ...r, month: to } : r)),
+      closed,
+    );
+  };
+  const complete = (month: string) => {
+    const next = [...closed, month].sort();
+    setDraft(addMonths(next.at(-1)!, 1));
+    onChange(rows, next);
+  };
+  const reopen = (month: string) => {
+    setOpened((o) => o.filter((m) => m !== month));
+    onChange(
+      rows,
+      closed.filter((m) => m !== month),
+    );
+  };
+  // A month can be picked if no other section already has it.
+  const choices = (current: string) =>
+    Array.from({ length: 19 }, (_, i) => addMonths(thisMonth, 3 - i)).filter(
+      (m) => m === current || (!closed.includes(m) && !open.includes(m)),
+    );
+
+  const table = (month: string) => (
+    <SheetTable
+      cols={cols}
+      rows={paidInMonth(rows, month)}
+      onChange={(next) => setMonthRows(month, next)}
+      blank={() => ({
+        id: newId(),
+        item: "",
+        vendor: "",
+        amount: 0,
+        month,
+        note: "",
+        fileId: "",
+        fileName: "",
+      })}
+      addText="Add expense"
+    />
+  );
+
+  return (
+    <div>
+      {closed.length > 0 && (
+        <ul className="divide-line border-line divide-y border-b">
+          {closed.map((month) => {
+            const items = paidInMonth(rows, month);
+            const isOpen = opened.includes(month);
+            return (
+              <li key={month}>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:px-5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpened((o) =>
+                        isOpen ? o.filter((m) => m !== month) : [...o, month],
+                      )
+                    }
+                    aria-expanded={isOpen}
+                    className="text-ink hover:text-brand-deep inline-flex items-center gap-1.5 text-[0.875rem] font-semibold"
+                  >
+                    <ChevronRight
+                      className={cn(
+                        "size-4 transition-transform",
+                        isOpen && "rotate-90",
+                      )}
+                      aria-hidden
+                    />
+                    {monthLabel(month)}
+                  </button>
+                  <span className="text-leaf-deep inline-flex items-center gap-1 text-[0.75rem] font-semibold">
+                    <Check className="size-3.5" aria-hidden />
+                    Completed
+                  </span>
+                  <span className="text-ink-soft text-[0.8125rem] tabular-nums">
+                    {items.length} {items.length === 1 ? "item" : "items"},{" "}
+                    {rupees.format(items.reduce((n, r) => n + r.amount, 0))}
+                  </span>
+                  <div className="flex gap-2 sm:ml-auto">
+                    <BillLink
+                      projectId={projectId}
+                      month={month}
+                      dirty={dirty}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => reopen(month)}
+                      title="Open this month again to add to it"
+                      className={cn(
+                        quietButton,
+                        "inline-flex items-center gap-1.5 py-1.5",
+                      )}
+                    >
+                      <RotateCcw className="size-3.5" aria-hidden />
+                      Reopen
+                    </button>
+                  </div>
+                </div>
+                {isOpen && table(month)}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {openMonths.map((month) => {
+        const items = paidInMonth(rows, month);
+        return (
+          <section key={month} className="border-line border-b last:border-b-0">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3 sm:px-5">
+              <select
+                value={month}
+                onChange={(e) => relabel(month, e.target.value)}
+                aria-label="Month these expenses are billed in"
+                className={cn(field, "w-auto py-1.5 font-semibold")}
+              >
+                {choices(month).map((m) => (
+                  <option key={m} value={m}>
+                    {monthLabel(m)}
+                  </option>
+                ))}
+              </select>
+              <span className="text-ink-soft text-[0.8125rem] tabular-nums">
+                {items.length
+                  ? `${items.length} ${items.length === 1 ? "item" : "items"}, ${rupees.format(items.reduce((n, r) => n + r.amount, 0))}`
+                  : "No expenses yet"}
+              </span>
+              <div className="flex gap-2 sm:ml-auto">
+                <BillLink projectId={projectId} month={month} dirty={dirty} />
+                <button
+                  type="button"
+                  onClick={() => complete(month)}
+                  disabled={items.length === 0}
+                  title="Fold this month up and start the next one"
+                  className={cn(
+                    primaryButton,
+                    "inline-flex items-center gap-1.5 py-2 disabled:opacity-50",
+                  )}
+                >
+                  <Check className="size-3.5" aria-hidden />
+                  Complete month
+                </button>
+              </div>
+            </div>
+            {table(month)}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/** One month's bill as Excel. Off until the sheet is saved, so it matches. */
+function BillLink({
+  projectId,
+  month,
+  dirty,
+}: {
+  projectId: string;
+  month: string;
+  dirty: boolean;
+}) {
+  return (
+    <a
+      href={
+        dirty ? undefined : `${ADMIN}/projects/${projectId}/bill?month=${month}`
+      }
+      aria-disabled={dirty}
+      title={
+        dirty
+          ? "Save first"
+          : `The ${monthLabel(month)} bill, to send to the client`
+      }
+      className={cn(
+        quietButton,
+        "inline-flex items-center gap-1.5 py-1.5",
+        dirty && "pointer-events-none opacity-50",
+      )}
+    >
+      <Download className="size-3.5" aria-hidden />
+      Download bill
+    </a>
   );
 }
 
