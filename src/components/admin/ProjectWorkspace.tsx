@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  CalendarX,
   Download,
   ExternalLink,
   Eye,
@@ -50,6 +51,8 @@ type Col<T> = {
   /** Desktop column width. */
   w: string;
   placeholder?: string;
+  /** Outlined while blank. */
+  required?: boolean;
   /** For a "custom" cell: what it shows, and how it changes its row. */
   render?: (row: T, patch: (change: Partial<T>) => void) => ReactNode;
 };
@@ -73,7 +76,8 @@ const paidCols = (projectId: string): Col<PaidRow>[] => [
     placeholder: "GoDaddy",
   },
   { key: "amount", text: "Amount", kind: "money", w: "8rem" },
-  { key: "date", text: "Date", kind: "date", w: "9.5rem" },
+  // The bill takes a payment by its date, so a blank one is outlined.
+  { key: "date", text: "Date", kind: "date", w: "9.5rem", required: true },
   { key: "note", text: "Note", kind: "text", w: "minmax(8rem,1.2fr)" },
   {
     key: "fileId",
@@ -414,7 +418,7 @@ export function ProjectWorkspace({
         {tab === "paid" && (
           <div className="border-line flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-4 py-2.5 sm:px-5">
             <label className="flex items-center gap-2">
-              <span className="text-ink text-[0.8125rem] font-semibold">
+              <span className="text-ink text-[0.8125rem] font-semibold whitespace-nowrap">
                 Monthly bill
               </span>
               <select
@@ -456,11 +460,30 @@ export function ProjectWorkspace({
               Download bill
             </a>
             {undated > 0 && (
-              <p className="text-amber-deep w-full text-[0.75rem]">
-                {undated === 1
-                  ? "One payment has no date, so it is in no monthly bill."
-                  : `${undated} payments have no date, so they are in no monthly bill.`}
-              </p>
+              <div className="bg-amber-wash flex w-full flex-wrap items-center gap-x-3 gap-y-2 rounded-lg px-3 py-2">
+                <p className="text-amber-deep flex items-center gap-1.5 text-[0.8125rem] font-semibold">
+                  <CalendarX className="size-4 shrink-0" aria-hidden />
+                  {undated === 1
+                    ? "1 payment has no date, so it is in no monthly bill."
+                    : `${undated} payments have no date, so they are in no monthly bill.`}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date().toLocaleDateString("en-CA");
+                    setS({
+                      ...s,
+                      paid: s.paid.map((r) =>
+                        r.date ? r : { ...r, date: today },
+                      ),
+                    });
+                    setBillMonth(today.slice(0, 7));
+                  }}
+                  className={cn(quietButton, "py-1.5")}
+                >
+                  Date them today
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -620,7 +643,12 @@ function SheetTable<T extends { id: string }>({
         onChange={(e) => set(i, c.key, e.target.value)}
         placeholder={c.placeholder}
         aria-label={c.text}
-        className={cn(field, "py-2", c.kind === "secret" && "font-mono")}
+        className={cn(
+          field,
+          "py-2",
+          c.kind === "secret" && "font-mono",
+          c.required && !value && "border-amber-deep",
+        )}
       />
     );
   };
