@@ -1,11 +1,9 @@
 "use client";
 
-import { useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
-  useMotionTemplate,
-  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -15,138 +13,144 @@ import {
 } from "motion/react";
 
 /**
- * A whole one-page site for a property law firm (a sample firm), told by
- * one object that stays beside the words the whole way down: a model house
- * on its title-deed folder.
+ * A whole one-page site for a property law firm (a sample firm), with the
+ * client's visit playing beside the words as the page scrolls: he walks in,
+ * is sent through by reception, hands his file over in the meeting room, a
+ * partner joins, and the documents are examined, ticked and stamped.
  *
- * Like Kiwi's card, the object never leaves; the scroll changes it. The
- * folder is opened, the documents fan out behind the house, every page is
- * checked and ticked. Each state is an image of the same object from the
- * same camera, so moving between them is a morph in place: the outgoing
- * state softens and grows a touch while the next sharpens into it. On top
- * of that the object floats, turns a little with the scroll, tilts towards
- * the pointer and keeps a soft shadow under it, so it is never a still.
+ * The story is a run of illustrations in scenes. Inside a scene every
+ * picture keeps the same camera, room and people and only the people move,
+ * so each one dissolves into the next like stop-motion. Each scene also
+ * pushes in slowly, so the camera is never still. Between scenes the cut
+ * is quicker. The scroll is the playhead; scrolling back plays it in
+ * reverse.
  *
- * The images (made in Canva) sit on a warm white that the section shares,
- * so they have no edges. Colours otherwise come from the palette variables
- * (--p, --p-on).
+ * The pictures were made with Gemini's image editor and live in
+ * public/animations/law-journey/ as scene-<scene>-<shot>.webp. A scene is
+ * added by listing its shots in SCENES with the section it starts on.
+ * Colours otherwise come from the palette variables (--p, --p-on).
  */
 
 const FIRM = "Ashlar Chambers";
-/** The images' own background, so they meet the page with no seam. */
-const PAPER = "#f9f0e5";
+const DIR = "/animations/law-journey";
 
-const STATES = [
-  "/animations/law-journey/state-1.webp",
-  "/animations/law-journey/state-2.webp",
-  "/animations/law-journey/state-3.webp",
-  "/animations/law-journey/state-4.webp",
+/** Each scene, the section it starts on, and its shots in order. */
+const SCENES: { from: number; shots: string[] }[] = [
+  { from: 0, shots: ["1-1", "1-2", "1-3", "1-4", "1-5"] },
+  { from: 2, shots: ["2-1", "2-2", "2-3", "2-4", "2-5"] },
+  { from: 4, shots: ["3-1", "3-2", "3-3", "3-4"] },
 ];
 
-/*
- * Where each state holds and where it changes, as scroll progress. Two
- * sections per state; each change happens across the gap between them.
- */
-const AT = [0, 0.2, 0.3, 0.46, 0.56, 0.72, 0.82, 1];
-const STATE_AT = [0, 0, 1, 1, 2, 2, 3, 3];
+const FRAMES = SCENES.flatMap((s, scene) =>
+  s.shots.map((shot) => ({ src: `${DIR}/scene-${shot}.webp`, scene })),
+);
+/** The index of each scene's first shot in FRAMES. */
+const FIRST = SCENES.map((_, i) =>
+  SCENES.slice(0, i).reduce((n, s) => n + s.shots.length, 0),
+);
 
-/** One state of the object, seen only while the scroll is near it. */
-function StateImage({
+/**
+ * How much of the way to a shot is spent holding the one before it. Inside
+ * a scene the dissolve takes the second half; across scenes it is a short
+ * cut at the end, so two different rooms are rarely seen at once.
+ */
+const HOLD_IN_SCENE = 0.45;
+const HOLD_ACROSS = 0.8;
+
+const ease = (t: number) => t * t * (3 - 2 * t);
+
+/** How visible shot `i` is when the playhead is at `f`. */
+function shotOpacity(i: number, f: number) {
+  const at = Math.floor(f);
+  // Shots already reached in the current scene stay under the newest one.
+  if (i <= at) return FRAMES[i].scene === FRAMES[at].scene ? 1 : 0;
+  if (i !== at + 1) return 0;
+  const hold =
+    FRAMES[i].scene === FRAMES[at].scene ? HOLD_IN_SCENE : HOLD_ACROSS;
+  return ease(Math.min(Math.max((f - at - hold) / (1 - hold), 0), 1));
+}
+
+function Shot({
   src,
   index,
-  state,
+  playhead,
 }: {
   src: string;
   index: number;
-  state: MotionValue<number>;
+  playhead: MotionValue<number>;
 }) {
-  const away = useTransform(state, (s) => Math.min(Math.abs(s - index), 1));
-  const opacity = useTransform(away, [0, 1], [1, 0]);
-  const scale = useTransform(away, [0, 1], [1, 1.05]);
-  const blur = useTransform(away, [0, 1], [0, 6]);
-  const filter = useMotionTemplate`blur(${blur}px)`;
+  const opacity = useTransform(playhead, (f) => shotOpacity(index, f));
   return (
     <motion.img
       src={src}
       alt=""
       draggable={false}
-      className="absolute inset-0 size-full object-contain select-none"
-      style={{ opacity, scale, filter }}
+      className="absolute inset-0 size-full object-cover will-change-[opacity] select-none"
+      style={{ opacity }}
     />
   );
 }
 
-/** The object: its states, its float, its turn and its tilt. */
-function PropertyObject({ progress }: { progress: MotionValue<number> }) {
-  const reduce = useReducedMotion();
-  const state = useTransform(progress, AT, STATE_AT);
-  // A quarter turn's worth of lean across the whole page, and a slow rise.
-  const turn = useTransform(progress, [0, 1], reduce ? [0, 0] : [-4, 4]);
-  const lift = useTransform(
-    progress,
-    [0, 0.5, 1],
-    reduce ? [0, 0, 0] : [0, -14, 0],
+/** A scene's shots, pushing in slowly while the scene plays. */
+function Scene({
+  index,
+  playhead,
+  still,
+}: {
+  index: number;
+  playhead: MotionValue<number>;
+  still: boolean;
+}) {
+  const first = FIRST[index];
+  const length = SCENES[index].shots.length;
+  const scale = useTransform(playhead, (f) =>
+    still ? 1 : 1 + 0.07 * Math.min(Math.max((f - first) / length, 0), 1),
   );
-  const grow = useTransform(progress, [0, 0.25, 1], [0.94, 1, 1.02]);
+  return (
+    <motion.div className="absolute inset-0" style={{ scale }}>
+      {FRAMES.map((frame, i) =>
+        frame.scene === index ? (
+          <Shot key={frame.src} src={frame.src} index={i} playhead={playhead} />
+        ) : null,
+      )}
+    </motion.div>
+  );
+}
 
-  const px = useMotionValue(0);
-  const py = useMotionValue(0);
-  const tiltX = useSpring(useTransform(py, [-1, 1], [6, -6]), {
-    stiffness: 120,
-    damping: 18,
-  });
-  const tiltY = useSpring(useTransform(px, [-1, 1], [-8, 8]), {
-    stiffness: 120,
-    damping: 18,
-  });
-  const onMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (reduce || e.pointerType !== "mouse") return;
-    const r = e.currentTarget.getBoundingClientRect();
-    px.set(((e.clientX - r.left) / r.width) * 2 - 1);
-    py.set(((e.clientY - r.top) / r.height) * 2 - 1);
-  };
-  const onLeave = () => {
-    px.set(0);
-    py.set(0);
-  };
+function Story({ progress }: { progress: MotionValue<number> }) {
+  const reduce = useReducedMotion();
+  // Each scene's first shot as its first section comes into place, and
+  // the last shot at the end of the page.
+  const last = SECTIONS.length - 1;
+  const playhead = useTransform(
+    progress,
+    [...SCENES.map((s) => s.from / last), 1],
+    [...FIRST, FRAMES.length - 1],
+  );
+
+  // Every shot fetched up front, so scrolling never waits for one.
+  useEffect(() => {
+    for (const { src } of FRAMES) new Image().src = src;
+  }, []);
 
   return (
     <div
       role="img"
-      aria-label="A model house on its deed folder: the folder opens, the documents fan out and each one is checked"
-      className="relative grid size-full place-items-center [perspective:1200px]"
-      onPointerMove={onMove}
-      onPointerLeave={onLeave}
+      aria-label="A client walks into the chambers, hands over his property file, and the documents are examined, ticked and stamped"
+      className="absolute inset-0 overflow-hidden"
     >
-      <motion.div
-        className="relative aspect-square w-[min(100%,78vh)]"
-        style={{
-          rotateX: tiltX,
-          rotateY: tiltY,
-          rotate: turn,
-          y: lift,
-          scale: grow,
-        }}
-      >
-        <motion.div
-          className="absolute inset-0"
-          animate={reduce ? undefined : { y: [0, -8, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          {STATES.map((src, i) => (
-            <StateImage key={src} src={src} index={i} state={state} />
-          ))}
-        </motion.div>
-      </motion.div>
+      {SCENES.map((_, i) => (
+        <Scene key={i} index={i} playhead={playhead} still={Boolean(reduce)} />
+      ))}
     </div>
   );
 }
 
-/* The object's edge towards the words fades into the paper. */
+/* The story's edge towards the words fades into the page. */
 const FADE_WIDE =
-  "linear-gradient(to right, transparent 0%, #000 14%, #000 100%)";
+  "linear-gradient(to right, transparent 0%, #000 22%, #000 100%)";
 const FADE_PHONE =
-  "linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%)";
+  "linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%)";
 
 function Journey() {
   const ref = useRef<HTMLDivElement>(null);
@@ -167,11 +171,11 @@ function Journey() {
   );
 
   return (
-    <div ref={ref} className="relative" style={{ backgroundColor: PAPER }}>
+    <div ref={ref} className="relative bg-white">
       <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[48%] @4xl:inset-y-0 @4xl:right-0 @4xl:left-auto @4xl:h-auto @4xl:w-[56%]">
+        <div className="absolute inset-x-0 top-0 h-[48%] @4xl:inset-y-0 @4xl:right-0 @4xl:left-auto @4xl:h-auto @4xl:w-[58%]">
           <div
-            className="size-full [mask-image:var(--fade-phone)] @4xl:[mask-image:var(--fade-wide)]"
+            className="relative size-full [mask-image:var(--fade-phone)] @4xl:[mask-image:var(--fade-wide)]"
             style={
               {
                 "--fade-wide": FADE_WIDE,
@@ -179,9 +183,9 @@ function Journey() {
               } as React.CSSProperties
             }
           >
-            <PropertyObject progress={progress} />
+            <Story progress={progress} />
           </div>
-          <div className="absolute bottom-[10%] left-4 @4xl:bottom-10 @4xl:left-[18%]">
+          <div className="absolute bottom-[10%] left-4 @4xl:bottom-10 @4xl:left-[24%]">
             <AnimatePresence mode="wait">
               <motion.p
                 key={step}
@@ -205,7 +209,7 @@ function Journey() {
         />
       </div>
 
-      {/* The sections, one screen each, beside the object. */}
+      {/* The sections, one screen each, beside the story. */}
       <div className="relative z-10 mx-auto -mt-[calc(100dvh-4rem)] max-w-6xl px-5">
         {SECTIONS.map((section) => (
           <motion.section
@@ -218,7 +222,7 @@ function Journey() {
             transition={{ duration: 0.45 }}
           >
             <motion.div
-              className="rounded-2xl bg-white/95 p-5 shadow-sm ring-1 ring-zinc-200/80 @4xl:max-w-[42%] @4xl:bg-transparent @4xl:p-0 @4xl:shadow-none @4xl:ring-0"
+              className="rounded-2xl bg-white/95 p-5 shadow-sm ring-1 ring-zinc-200/80 @4xl:max-w-[40%] @4xl:bg-transparent @4xl:p-0 @4xl:shadow-none @4xl:ring-0"
               initial={{ y: 24 }}
               whileInView={{ y: 0 }}
               viewport={{ amount: 0.5 }}
@@ -243,7 +247,7 @@ const tile = "rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-zinc-200";
 const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   {
     id: "top",
-    caption: "Your property and its file",
+    caption: "Arriving at the chambers",
     body: (
       <>
         <h1 className="text-4xl leading-[1.05] font-semibold tracking-tight text-zinc-900 @3xl:text-5xl">
@@ -272,7 +276,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "about",
-    caption: "Kept safe from day one",
+    caption: "Welcomed at reception",
     body: (
       <>
         <p className={eyebrow}>About us</p>
@@ -299,7 +303,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "practice",
-    caption: "The file is opened",
+    caption: "Handing over the papers",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
@@ -331,7 +335,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "partners",
-    caption: "A partner reads it",
+    caption: "A partner joins",
     body: (
       <>
         <p className={eyebrow}>Our partners</p>
@@ -365,7 +369,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "team",
-    caption: "Every document laid out",
+    caption: "Every page examined",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
@@ -396,7 +400,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "approach",
-    caption: "One area of law each",
+    caption: "Checked line by line",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
@@ -425,7 +429,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "insights",
-    caption: "Each page checked",
+    caption: "Ticked off, one by one",
     body: (
       <>
         <p className={eyebrow}>Insights</p>
@@ -454,7 +458,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "contact",
-    caption: "Verified, ready to hand back",
+    caption: "Stamped and approved",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
