@@ -24,6 +24,11 @@ export type RecurringRow = {
   billing: Frequency;
   renews: string;
   note: string;
+  /**
+   * Where its billing and usage are, for us to open (the browser is already
+   * signed in). Kept off the Excel files.
+   */
+  link: string;
 };
 /** How often a service is paid for. */
 export type Frequency = "monthly" | "yearly" | "on_demand" | "once";
@@ -77,7 +82,29 @@ const svc = (
   billing,
   renews: "",
   note,
+  link: "",
 });
+
+/**
+ * The dashboard page of the platforms a build usually runs on, matched on
+ * the platform's name. Fills a row's link when none was typed.
+ */
+const DASHBOARDS: [RegExp, string][] = [
+  [/railway/i, "https://railway.com/dashboard"],
+  [/cloudflare/i, "https://dash.cloudflare.com/?to=/:account/billing"],
+  [/ola\s*maps|krutrim/i, "https://cloud.olakrutrim.com/"],
+  [/godaddy/i, "https://account.godaddy.com/products"],
+  [/message\s*central/i, "https://console.messagecentral.com/"],
+  [/google/i, "https://console.cloud.google.com/billing"],
+  [/shiprocket/i, "https://app.shiprocket.in/"],
+  [/delhivery/i, "https://one.delhivery.com/"],
+  [/razorpay/i, "https://dashboard.razorpay.com/"],
+  [/vercel/i, "https://vercel.com/dashboard"],
+  [/supabase/i, "https://supabase.com/dashboard"],
+];
+
+export const dashboardFor = (platform: string) =>
+  DASHBOARDS.find(([name]) => name.test(platform))?.[1] ?? "";
 
 /**
  * What a project's handover sheet starts with before anything is saved:
@@ -170,6 +197,11 @@ const day = (v: unknown) => {
 const rows = (v: unknown) => (Array.isArray(v) ? v.slice(0, 200) : []);
 const obj = (v: unknown) => (v ?? {}) as Record<string, unknown>;
 const id = (v: unknown, i: number) => str(v, 64) || `r${i}`;
+/** An address typed without its scheme gets https://. */
+const web = (v: string) => {
+  const url = v.trim();
+  return /^https?:\/\//.test(url) ? url : url ? `https://${url}` : "";
+};
 const file = (o: Record<string, unknown>) => {
   const fileId = str(o.fileId, 36);
   return isFileId(fileId)
@@ -192,7 +224,7 @@ export function cleanSheets(input: unknown): ProjectSheets {
       return {
         id: id(o.id, i),
         label: str(o.label, 120),
-        url: /^https?:\/\//.test(url) ? url : url ? `https://${url}` : "",
+        url: web(url),
       };
     }),
     paid: rows(x.paid).map((r, i) => {
@@ -219,6 +251,7 @@ export function cleanSheets(input: unknown): ProjectSheets {
           : "monthly",
         renews: day(o.renews),
         note: str(o.note, 500),
+        link: web(str(o.link, 500)),
       };
     }),
     access: rows(x.access).map((r, i) => {

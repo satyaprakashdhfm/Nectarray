@@ -7,6 +7,7 @@ import {
   EMPTY_SHEETS,
   STARTER_SHEETS,
   cleanSheets,
+  dashboardFor,
   type ProjectSheets,
 } from "@/lib/project-details";
 import { open } from "@/lib/vault";
@@ -52,10 +53,14 @@ export async function loadProjectSheets(
     throw error;
   }
   // Never saved: start from the usual services, ready to edit.
-  if (!row) return STARTER_SHEETS;
-  const sheets = cleanSheets(row);
+  const sheets = row ? cleanSheets(row) : STARTER_SHEETS;
   return {
     ...sheets,
+    // A service with no link typed gets its platform's dashboard.
+    recurring: sheets.recurring.map((r) => ({
+      ...r,
+      link: r.link || dashboardFor(r.item),
+    })),
     access: sheets.access.map((a) => ({ ...a, password: open(a.password) })),
   };
 }

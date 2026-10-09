@@ -28,6 +28,7 @@ import { MoneyInput } from "@/components/admin/QuoteBuilder";
 import { PROJECT_STATUSES, rupees } from "@/lib/business";
 import {
   FREQUENCIES,
+  dashboardFor,
   monthLabel,
   monthlyTotals,
   paidInMonth,
@@ -96,6 +97,15 @@ const RECURRING_COLS: Col<RecurringRow>[] = [
   { key: "amount", text: "Amount", kind: "money", w: "8rem" },
   { key: "renews", text: "Next renewal", kind: "date", w: "9.5rem" },
   { key: "note", text: "Details", kind: "text", w: "minmax(12rem,2.2fr)" },
+  {
+    key: "link",
+    text: "Link (only for us)",
+    kind: "custom",
+    w: "minmax(9rem,1.1fr)",
+    render: (row, patch) => (
+      <LinkCell row={row} onChange={(link) => patch({ link })} />
+    ),
+  },
 ];
 const ACCESS_COLS: Col<AccessRow>[] = [
   {
@@ -488,6 +498,7 @@ export function ProjectWorkspace({
               billing: "monthly",
               renews: "",
               note: "",
+              link: "",
             })}
             addText="Add charge"
           />
@@ -684,6 +695,49 @@ function SheetTable<T extends { id: string }>({
         <Plus className="size-3.5" aria-hidden />
         {addText}
       </button>
+    </div>
+  );
+}
+
+/**
+ * Where a service's billing is, opened in a new tab. Blank, it offers the
+ * platform's usual dashboard. Never put in the Excel files.
+ */
+function LinkCell({
+  row,
+  onChange,
+}: {
+  row: RecurringRow;
+  onChange: (link: string) => void;
+}) {
+  const suggested = dashboardFor(row.item);
+  const href = row.link
+    ? /^https?:\/\//.test(row.link)
+      ? row.link
+      : `https://${row.link}`
+    : suggested;
+  return (
+    <div className="flex min-w-0 items-center gap-1">
+      <input
+        type="url"
+        value={row.link}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={suggested || "https://"}
+        aria-label={`${row.item || "Service"} billing page`}
+        className={cn(field, "min-w-0 flex-1 py-2")}
+      />
+      {href && (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Open ${row.item || "the service"}`}
+          title={`Open ${href}`}
+          className="text-brand-deep hover:bg-mist grid size-8 shrink-0 place-items-center rounded-md"
+        >
+          <ExternalLink className="size-4" />
+        </a>
+      )}
     </div>
   );
 }
