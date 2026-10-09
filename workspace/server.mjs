@@ -1104,7 +1104,7 @@ const server = http.createServer((req, res) => {
     );
 });
 
-const wss = new WebSocketServer({ noServer: true, maxPayload: 16_000_000 });
+const wss = new WebSocketServer({ noServer: true, maxPayload: 40_000_000 });
 
 server.on("upgrade", (req, socket, head) => {
   const origin = req.headers.origin ?? "";
@@ -1281,12 +1281,14 @@ function openControl(ws) {
         );
         break;
       }
-      case "image": {
-        const error = s?.pty ? saveImage(s, m) : "That session is not running.";
+      case "upload": {
+        const result = s?.pty
+          ? saveUpload(s, m)
+          : { error: "That session is not running." };
         reply(
-          error
-            ? { t: "error", message: error }
-            : { t: "notice", message: "Image added to the prompt." },
+          result.error
+            ? { t: "error", message: result.error }
+            : { t: "notice", message: `Added ${result.name} to the prompt.` },
         );
         break;
       }
@@ -1301,28 +1303,29 @@ function openControl(ws) {
 }
 
 /*
- * Images pasted or dropped on a terminal in the browser. The browser's
- * clipboard never reaches this machine, so the page sends the picture here;
- * it is saved in the session's folder and its path pasted into the prompt,
- * the way dragging a file onto a local terminal does. The folder ignores
- * itself in git, and pictures older than a week are cleared out.
+ * Files from the browser: uploaded with the Upload button, or pasted or
+ * dropped on a terminal (screenshots, PDFs, documents, code, anything). The
+ * browser's clipboard and disk never reach this machine, so the page sends
+ * the file here; it is saved in the session's folder and its path pasted
+ * into the prompt, the way dragging a file onto a local terminal does
+ * (Claude Code attaches an image, and reads anything else). The folder
+ * ignores itself in git, and files older than a week are cleared out.
  */
-const IMAGE_TYPES = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/gif": "gif",
-  "image/webp": "webp",
-};
-const IMAGE_LIMIT = 10 * 1024 * 1024;
-const IMAGE_KEEP_MS = 7 * 24 * 60 * 60_000;
+const UPLOAD_LIMIT = 25 * 1024 * 1024;
+const UPLOAD_KEEP_MS = 7 * 24 * 60 * 60_000;
 
-/** Saves the image and pastes its path; returns an error message, or null. */
-function saveImage(s, m) {
-  const ext = IMAGE_TYPES[m.type];
-  if (!ext) return "Only PNG, JPEG, GIF or WebP images can be added.";
+/** Saves the file and pastes its path: `{ name }`, or `{ error }`. */
+function saveUpload(s, m) {
   const data = Buffer.from(String(m.data ?? ""), "base64");
-  if (data.length === 0) return "That image is empty.";
-  if (data.length > IMAGE_LIMIT) return "That image is over 10 MB.";
+  if (data.length === 0) return { error: "That file is empty." };
+  if (data.length > UPLOAD_LIMIT) return { error: "That file is over 25 MB." };
+  // Only the last part of the name, in safe characters: never a path.
+  const name =
+    path
+      .basename(String(m.name ?? ""))
+      .replace(/[^\w.-]+/g, "-")
+      .replace(/^[.-]+/, "")
+      .slice(-80) || "file";
   const dir = path.join(
     s.cwd && existsSync(s.cwd) ? s.cwd : ROOT,
     ".nectarray-uploads",
@@ -1330,26 +1333,26 @@ function saveImage(s, m) {
   try {
     mkdirSync(dir, { recursive: true });
     writeFileSync(path.join(dir, ".gitignore"), "*\n");
-    for (const name of readdirSync(dir)) {
-      const old = path.join(dir, name);
+    for (const entry of readdirSync(dir)) {
+      const old = path.join(dir, entry);
       if (
-        name !== ".gitignore" &&
-        Date.now() - statSync(old).mtimeMs > IMAGE_KEEP_MS
+        entry !== ".gitignore" &&
+        Date.now() - statSync(old).mtimeMs > UPLOAD_KEEP_MS
       )
         unlinkSync(old);
     }
     const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
     const file = path.join(
       dir,
-      `image-${stamp}-${randomBytes(2).toString("hex")}.${ext}`,
+      `${stamp}-${randomBytes(2).toString("hex")}-${name}`,
     );
     writeFileSync(file, data);
     s.pty.write(s.pasteMode ? `\x1b[200~${file}\x1b[201~` : file);
     s.pty.write(" ");
   } catch (err) {
-    return `Could not save the image: ${err.message}`;
+    return { error: `Could not save ${name}: ${err.message}` };
   }
-  return null;
+  return { name };
 }
 
 function closeAll(reason) {

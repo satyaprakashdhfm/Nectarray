@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import { imagesIn, openRunner } from "./runner";
+import { filesIn, openRunner } from "./runner";
 
 /**
  * One session's terminal: the real Claude Code screen, streamed from the
@@ -24,24 +24,24 @@ export function TerminalView({
   preview = false,
   cols = 120,
   rows = 32,
-  onImage,
+  onFile,
 }: {
   id: string;
   preview?: boolean;
   cols?: number;
   rows?: number;
-  /** An image pasted or dropped on the main terminal. */
-  onImage?: (file: File) => void;
+  /** A file (an image, a PDF, anything) pasted or dropped on the terminal. */
+  onFile?: (file: File) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
   const fitPreview = useRef<() => void>(() => {});
-  const onImageRef = useRef(onImage);
+  const onFileRef = useRef(onFile);
 
   useEffect(() => {
-    onImageRef.current = onImage;
-  }, [onImage]);
+    onFileRef.current = onFile;
+  }, [onFile]);
 
   useEffect(() => {
     let disposed = false;
@@ -88,7 +88,7 @@ export function TerminalView({
         // Left alone, xterm turns Ctrl+V into a raw ^V keystroke: Claude Code
         // then looks in the server's clipboard, which is always empty, and
         // the browser never pastes. Skipping it lets the browser paste, so
-        // text goes in as a paste and images reach the upload below.
+        // text goes in as a paste and files reach the upload below.
         term.attachCustomKeyEventHandler(
           (e) => !(e.ctrlKey && !e.altKey && e.key.toLowerCase() === "v"),
         );
@@ -151,15 +151,15 @@ export function TerminalView({
       // A click anywhere in the main terminal gives it the keyboard, so
       // arrows, Esc and Tab go to Claude Code rather than the page.
       const focus = () => term.focus();
-      // Images can't travel as typed text: a pasted or dropped picture is
+      // Files can't travel as typed text: a pasted or dropped file is
       // handed up, uploaded, and its path lands in the prompt instead.
-      const takeImages = (e: ClipboardEvent | DragEvent) => {
+      const takeFiles = (e: ClipboardEvent | DragEvent) => {
         const data = "clipboardData" in e ? e.clipboardData : e.dataTransfer;
-        const images = imagesIn(data);
-        if (!images.length || !onImageRef.current) return;
+        const files = filesIn(data);
+        if (!files.length || !onFileRef.current) return;
         e.preventDefault();
         e.stopPropagation();
-        images.forEach((file) => onImageRef.current?.(file));
+        files.forEach((file) => onFileRef.current?.(file));
         term.focus();
       };
       const allowDrop = (e: DragEvent) => {
@@ -167,17 +167,17 @@ export function TerminalView({
       };
       if (!preview) {
         box.addEventListener("mousedown", focus);
-        box.addEventListener("paste", takeImages, true);
+        box.addEventListener("paste", takeFiles, true);
         box.addEventListener("dragover", allowDrop);
-        box.addEventListener("drop", takeImages);
+        box.addEventListener("drop", takeFiles);
       }
 
       cleanup = () => {
         observer.disconnect();
         box.removeEventListener("mousedown", focus);
-        box.removeEventListener("paste", takeImages, true);
+        box.removeEventListener("paste", takeFiles, true);
         box.removeEventListener("dragover", allowDrop);
-        box.removeEventListener("drop", takeImages);
+        box.removeEventListener("drop", takeFiles);
         input?.dispose();
         ws.close();
         term.dispose();
