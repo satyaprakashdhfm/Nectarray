@@ -16,7 +16,7 @@ export default function AdminWorkspacePage() {
     <>
       <PageHead
         title="Workspace"
-        lede="Claude Code in the cloud, on any of your GitHub repos. Every session is a live tile; open one to work in it, talk or type to it, and Stop the workspace when you are done."
+        lede="Claude Code in the cloud, on any of your GitHub repos. Every session is a live tile; open one to work in it, talk or type to it. Sessions stay: one left alone for 5 minutes goes to sleep and wakes, on the same conversation, when you open it."
       />
       <Workspace />
     </>

@@ -129,6 +129,7 @@ const STATUS: Record<SessionStatus, { label: string; tone: string }> = {
   working: { label: "Working", tone: "bg-brand/20 text-brand" },
   needs_you: { label: "Needs you", tone: "bg-amber/20 text-amber" },
   done: { label: "Done", tone: "bg-leaf/20 text-leaf" },
+  asleep: { label: "Asleep", tone: "bg-white/5 text-white/55" },
   ended: { label: "Closed", tone: "bg-white/5 text-white/45" },
 };
 
@@ -903,7 +904,7 @@ function Tile({
       className={cn(
         "border-night-line bg-night-soft hover:border-brand/70 block w-full overflow-hidden rounded-xl border text-left transition-[border-color,transform] active:scale-[0.99]",
         s.status === "needs_you" && "border-amber/70",
-        s.status === "ended" && "opacity-70",
+        (s.status === "ended" || s.status === "asleep") && "opacity-70",
       )}
     >
       <div className="border-night-line flex items-center gap-2 border-b px-3 py-2">
@@ -962,6 +963,18 @@ function MainTerminal({
   send: (m: object) => void;
   onFile: (file: File) => void;
 }) {
+  /*
+   * Opening a sleeping session wakes it: Claude Code comes back on the same
+   * conversation. Only once per opening, so one that falls asleep again
+   * while open stays asleep until Resume.
+   */
+  const woke = useRef(false);
+  useEffect(() => {
+    if (woke.current || session.live || session.status !== "asleep") return;
+    woke.current = true;
+    send({ t: "resume", id: session.id });
+  }, [session.id, session.live, session.status, send]);
+
   // Maximized, the page behind stays put.
   useEffect(() => {
     if (!maximized) return;
@@ -1876,7 +1889,7 @@ function PromptBar({
             key={label}
             type="button"
             onClick={() => press(sequence)}
-            className="min-w-9 rounded-md border border-white/15 bg-white/5 px-2 py-1 font-mono text-[0.75rem] text-white/80 transition-[background-color,transform] hover:bg-white/15 hover:text-white active:scale-[0.96]"
+            className="min-w-10 rounded-md border border-white/15 bg-white/5 px-2 py-1.5 font-mono text-[0.75rem] text-white/80 transition-[background-color,transform] hover:bg-white/15 hover:text-white active:scale-[0.96] sm:min-w-9 sm:py-1"
             aria-label={name}
             title={name}
           >

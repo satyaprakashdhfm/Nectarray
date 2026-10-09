@@ -64,7 +64,8 @@ export function TerminalView({
         cursorBlink: !preview,
         disableStdin: preview,
         fontFamily: '"Cascadia Mono", Consolas, ui-monospace, monospace',
-        fontSize: 13,
+        // Smaller on a phone, so Claude Code's screen keeps enough columns.
+        fontSize: !preview && window.innerWidth < 640 ? 11 : 13,
         lineHeight: 1.15,
         scrollback: preview ? 200 : 5000,
         allowProposedApi: true,
@@ -140,7 +141,11 @@ export function TerminalView({
         const m = JSON.parse(String(event.data));
         if (m.t === "out") term.write(m.data);
         if (m.t === "exit")
-          term.write("\r\n\x1b[2m[session closed]\x1b[0m\r\n");
+          term.write(
+            m.asleep
+              ? "\r\n\x1b[2m[asleep: open it to carry on]\x1b[0m\r\n"
+              : "\r\n\x1b[2m[session closed]\x1b[0m\r\n",
+          );
       };
       const input = preview
         ? null

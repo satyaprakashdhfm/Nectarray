@@ -99,6 +99,9 @@ const loopback = (address = "") =>
 const WIN = process.platform === "win32";
 const CLAUDE = process.env.CLAUDE_BIN ?? (WIN ? "claude.cmd" : "claude");
 const BUFFER_LIMIT = 400_000;
+/** A session with nothing happening for this long is put to sleep. */
+const SLEEP_AFTER = Number(process.env.WORKSPACE_SLEEP_MINUTES ?? 5) * 60_000;
+const ASLEEP = "Asleep. Open it to carry on where you left off";
 const UPDATE_EVERY = 6 * 60 * 60 * 1000;
 
 /* -------------------------------------------------------------------------- */
@@ -758,6 +761,10 @@ function publicSession(s) {
     size: _s,
     viewers: _v,
     pasteMode: _m,
+    asleep: _a,
+    stopping: _st,
+    stopReason: _r,
+    lastActive: _la,
     ...rest
   } = s;
   return { ...rest, live: !!s.pty };
@@ -766,6 +773,86 @@ function publicSession(s) {
 function changed(s) {
   s.updatedAt = new Date().toISOString();
   broadcast({ t: "session", session: publicSession(s) });
+  saveSessions();
+}
+
+/*
+ * Sessions outlive the process. The list is kept on the volume, so after a
+ * sleep, a restart or a redeploy every session is still there, asleep, and
+ * opening one resumes its Claude conversation (claude --resume). The last
+ * of each screen is kept too, so its tile shows where it stopped.
+ */
+const SESSIONS_FILE = path.join(
+  os.homedir(),
+  ".config",
+  "nectarray",
+  "sessions.json",
+);
+const SAVED_SCREEN = 64 * 1024;
+let saveTimer = null;
+
+function saveSessions() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(writeSessions, 1000);
+}
+
+function writeSessions() {
+  clearTimeout(saveTimer);
+  const list = [...sessions.values()]
+    .filter((s) => s.kind !== "login")
+    .map((s) => {
+      const { live: _l, ...record } = publicSession(s);
+      return { ...record, screen: s.buffer.join("").slice(-SAVED_SCREEN) };
+    });
+  try {
+    mkdirSync(path.dirname(SESSIONS_FILE), { recursive: true, mode: 0o700 });
+    const temp = `${SESSIONS_FILE}.${process.pid}.tmp`;
+    writeFileSync(temp, JSON.stringify(list), { mode: 0o600 });
+    renameSync(temp, SESSIONS_FILE);
+  } catch (err) {
+    console.error("Could not save the sessions:", err.message);
+  }
+}
+
+function loadSessions() {
+  let list;
+  try {
+    list = JSON.parse(readFileSync(SESSIONS_FILE, "utf8"));
+  } catch (err) {
+    if (err.code !== "ENOENT")
+      console.error("Could not read the saved sessions:", err.message);
+    return;
+  }
+  for (const { screen, ...record } of list) {
+    // Nothing survives a restart running: what was open is now asleep.
+    const asleep = record.status !== "ended";
+    sessions.set(record.id, {
+      ...record,
+      status: asleep ? "asleep" : "ended",
+      activity: asleep ? ASLEEP : record.activity,
+      pty: null,
+      buffer: screen ? [screen] : [],
+      size: screen?.length ?? 0,
+      viewers: new Set(),
+    });
+  }
+}
+
+/*
+ * Every session left alone for SLEEP_AFTER is stopped, so nothing runs (or
+ * costs) while you are away; it stays in the list and wakes on opening.
+ * Claude at work, or a terminal still printing, counts as activity.
+ */
+function checkSleep() {
+  for (const s of sessions.values()) {
+    if (!s.pty || s.kind === "login") continue;
+    if (s.status === "working" || s.status === "starting")
+      s.lastActive = Date.now();
+    if (Date.now() - (s.lastActive ?? 0) < SLEEP_AFTER) continue;
+    s.asleep = true;
+    s.stopping = true;
+    s.pty.kill();
+  }
 }
 
 /**
@@ -846,6 +933,7 @@ function startSession({
     buffer: [],
     size: 0,
     viewers: new Set(),
+    lastActive: Date.now(),
   });
   if (kind === "claude") trustFolder(proj.path);
 
@@ -878,6 +966,7 @@ function startSession({
     const on = data.lastIndexOf("\x1b[?2004h");
     const off = data.lastIndexOf("\x1b[?2004l");
     if (on !== off) s.pasteMode = on > off;
+    if (s.kind === "shell") s.lastActive = Date.now();
     s.buffer.push(data);
     s.size += data.length;
     while (s.size > BUFFER_LIMIT && s.buffer.length > 1)
@@ -895,17 +984,26 @@ function startSession({
   s.pty.onExit(({ exitCode }) => {
     s.pty = null;
     s.exitCode = exitCode;
-    s.status = "ended";
-    s.activity = s.stopping
-      ? (s.stopReason ?? "Stopped by you")
-      : exitCode === 0
-        ? "Closed"
-        : `Closed with exit code ${exitCode}`;
+    s.status = s.asleep ? "asleep" : "ended";
+    s.activity = s.asleep
+      ? ASLEEP
+      : s.stopping
+        ? (s.stopReason ?? "Stopped by you")
+        : exitCode === 0
+          ? "Closed"
+          : `Closed with exit code ${exitCode}`;
+    s.asleep = false;
     s.stopping = false;
     s.stopReason = null;
     for (const ws of s.viewers)
       if (ws.readyState === 1)
-        ws.send(JSON.stringify({ t: "exit", code: exitCode }));
+        ws.send(
+          JSON.stringify({
+            t: "exit",
+            code: exitCode,
+            asleep: s.status === "asleep",
+          }),
+        );
     changed(s);
     if (s.kind === "login") {
       /*
@@ -917,6 +1015,7 @@ function startSession({
         if (exitCode !== 0 || !info.loggedIn) return;
         sessions.delete(s.id);
         broadcast({ t: "removed", id: s.id });
+        saveSessions();
         broadcast({
           t: "notice",
           message: `Signed in to Claude${info.email ? ` as ${info.email}` : ""}. Every session uses this sign-in.`,
@@ -1013,6 +1112,7 @@ function describe(tool, input = {}) {
 function onHook(e) {
   const s = sessions.get(e.session);
   if (!s) return;
+  s.lastActive = Date.now();
   if (e.cwd) s.cwd = e.cwd;
   if (e.claudeSession) s.claudeSession = e.claudeSession;
   switch (e.event) {
@@ -1202,6 +1302,7 @@ function openControl(ws) {
       case "type":
         // Voice and the Send button: text into the prompt, then Enter if asked.
         if (s?.pty) {
+          s.lastActive = Date.now();
           if (m.text) s.pty.write(String(m.text));
           if (m.enter) setTimeout(() => s.pty?.write("\r"), m.text ? 60 : 0);
         }
@@ -1227,6 +1328,7 @@ function openControl(ws) {
         if (s && !s.pty) {
           sessions.delete(s.id);
           broadcast({ t: "removed", id: s.id });
+          saveSessions();
         }
         break;
       case "rename":
@@ -1282,6 +1384,7 @@ function openControl(ws) {
         break;
       }
       case "upload": {
+        if (s?.pty) s.lastActive = Date.now();
         const result = s?.pty
           ? saveUpload(s, m)
           : { error: "That session is not running." };
@@ -1358,6 +1461,7 @@ function saveUpload(s, m) {
 function closeAll(reason) {
   for (const s of sessions.values())
     if (s.pty) {
+      s.asleep = true;
       s.stopping = true;
       s.stopReason = reason;
       s.pty.kill();
@@ -1395,7 +1499,10 @@ function openTerminal(ws, id) {
       return;
     }
     if (!s.pty) return;
-    if (m.t === "in" && typeof m.data === "string") s.pty.write(m.data);
+    if (m.t === "in" && typeof m.data === "string") {
+      s.lastActive = Date.now();
+      s.pty.write(m.data);
+    }
     if (m.t === "resize" && m.cols > 1 && m.rows > 1) {
       const cols = Math.min(Math.floor(m.cols), 500);
       const rows = Math.min(Math.floor(m.rows), 200);
@@ -1422,6 +1529,7 @@ mkdirSync(ROOT, { recursive: true });
 loadToken();
 writeHooks();
 readProjects();
+loadSessions();
 server.on("error", (err) => {
   if (err.code === "EADDRINUSE") {
     console.error(
@@ -1471,9 +1579,12 @@ server.listen(PORT, CLOUD ? "::" : "127.0.0.1", async () => {
   })();
   setInterval(() => updateClaude(), UPDATE_EVERY);
   if (CLOUD) setInterval(checkIdle, 60_000);
+  setInterval(checkSleep, 30_000);
 });
 
 const shutdown = () => {
+  // Saved first: whatever was running comes back asleep after the restart.
+  writeSessions();
   for (const s of sessions.values()) s.pty?.kill();
   process.exit(0);
 };

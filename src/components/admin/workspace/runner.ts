@@ -22,7 +22,7 @@ export async function openRunner(path: string): Promise<Opened> {
 }
 
 export type SessionStatus =
-  "starting" | "idle" | "working" | "needs_you" | "done" | "ended";
+  "starting" | "idle" | "working" | "needs_you" | "done" | "asleep" | "ended";
 
 export type Mode = "default" | "auto" | "acceptEdits";
 
