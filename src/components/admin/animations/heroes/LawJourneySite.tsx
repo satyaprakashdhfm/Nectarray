@@ -1,128 +1,152 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import {
   AnimatePresence,
   motion,
+  useMotionTemplate,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useSpring,
+  useTransform,
   type MotionValue,
 } from "motion/react";
 
 /**
- * A whole one-page site for a property law firm (a sample firm), with a
- * client's visit playing on the right as the page scrolls.
+ * A whole one-page site for a property law firm (a sample firm), told by
+ * one object that stays beside the words the whole way down: a model house
+ * on its title-deed folder.
  *
- * Built the way scroll-sequence sites are (Apple's product pages, Kiwi's
- * card): a canvas holds still beside the words and draws one frame of a
- * rendered film for each point of the scroll. The frames are consecutive
- * stills of one continuous shot, so moving between neighbours is motion,
- * not a cut, and nothing is ever laid over anything else. Scrolling back
- * plays it backwards.
+ * Like Kiwi's card, the object never leaves; the scroll changes it. The
+ * folder is opened, the documents fan out behind the house, every page is
+ * checked and ticked. Each state is an image of the same object from the
+ * same camera, so moving between them is a morph in place: the outgoing
+ * state softens and grows a touch while the next sharpens into it. On top
+ * of that the object floats, turns a little with the scroll, tilts towards
+ * the pointer and keeps a soft shadow under it, so it is never a still.
  *
- * The film lives in public/ as numbered images (SEQUENCE below). Frames
- * load in the background; until one arrives the nearest loaded one is
- * drawn. The canvas is covered edge to edge (cropped, never stretched),
- * and its edge towards the words fades into the page. Colours come from
- * the palette variables (--p, --p-on).
+ * The images (made in Canva) sit on a warm white that the section shares,
+ * so they have no edges. Colours otherwise come from the palette variables
+ * (--p, --p-on).
  */
 
 const FIRM = "Ashlar Chambers";
+/** The images' own background, so they meet the page with no seam. */
+const PAPER = "#f9f0e5";
 
-/** The frames: path/01.webp … path/41.webp. Swap for the rendered film. */
-const SEQUENCE = {
-  path: "/animations/law-journey",
-  count: 41,
-  digits: 2,
-  ext: "webp",
-};
-const frameSrc = (n: number) =>
-  `${SEQUENCE.path}/${String(n).padStart(SEQUENCE.digits, "0")}.${SEQUENCE.ext}`;
+const STATES = [
+  "/animations/law-journey/state-1.webp",
+  "/animations/law-journey/state-2.webp",
+  "/animations/law-journey/state-3.webp",
+  "/animations/law-journey/state-4.webp",
+];
 
-/** Draws frame `index` (0-based), or the nearest one that has loaded. */
-function paint(
-  canvas: HTMLCanvasElement | null,
-  frames: HTMLImageElement[],
-  index: number,
-) {
-  const ctx = canvas?.getContext("2d");
-  if (!canvas || !ctx) return;
-  const ready = (i: number) => frames[i]?.complete && frames[i].naturalWidth;
-  let img: HTMLImageElement | undefined;
-  for (let d = 0; d < frames.length && !img; d += 1) {
-    if (ready(index - d)) img = frames[index - d];
-    else if (ready(index + d)) img = frames[index + d];
-  }
-  if (!img) return;
-  // Cover: fill the canvas, cropping the longer side evenly.
-  const scale = Math.max(
-    canvas.width / img.naturalWidth,
-    canvas.height / img.naturalHeight,
-  );
-  const w = img.naturalWidth * scale;
-  const h = img.naturalHeight * scale;
-  ctx.imageSmoothingQuality = "high";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-}
+/*
+ * Where each state holds and where it changes, as scroll progress. Two
+ * sections per state; each change happens across the gap between them.
+ */
+const AT = [0, 0.2, 0.3, 0.46, 0.56, 0.72, 0.82, 1];
+const STATE_AT = [0, 0, 1, 1, 2, 2, 3, 3];
 
-function Film({ progress }: { progress: MotionValue<number> }) {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const frames = useRef<HTMLImageElement[]>([]);
-  const current = useRef(0);
-
-  const at = (v: number) => Math.round(v * (SEQUENCE.count - 1));
-  useMotionValueEvent(progress, "change", (v) => {
-    const i = at(v);
-    if (i === current.current) return;
-    current.current = i;
-    paint(canvas.current, frames.current, i);
-  });
-
-  useEffect(() => {
-    const el = canvas.current;
-    if (!el) return;
-    current.current = Math.round(progress.get() * (SEQUENCE.count - 1));
-    // Every frame requested now; each one redraws if it is the one wanted
-    // or nearer to it than what is showing.
-    frames.current = Array.from({ length: SEQUENCE.count }, (_, i) => {
-      const img = new Image();
-      img.decoding = "async";
-      img.onload = () => paint(el, frames.current, current.current);
-      img.src = frameSrc(i + 1);
-      return img;
-    });
-    // Sharp on every screen: the canvas is sized to its box in device pixels.
-    const ro = new ResizeObserver(([entry]) => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      el.width = Math.round(entry.contentRect.width * dpr);
-      el.height = Math.round(entry.contentRect.height * dpr);
-      paint(el, frames.current, current.current);
-    });
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      for (const img of frames.current) img.onload = null;
-    };
-  }, [progress]);
-
+/** One state of the object, seen only while the scroll is near it. */
+function StateImage({
+  src,
+  index,
+  state,
+}: {
+  src: string;
+  index: number;
+  state: MotionValue<number>;
+}) {
+  const away = useTransform(state, (s) => Math.min(Math.abs(s - index), 1));
+  const opacity = useTransform(away, [0, 1], [1, 0]);
+  const scale = useTransform(away, [0, 1], [1, 1.05]);
+  const blur = useTransform(away, [0, 1], [0, 6]);
+  const filter = useMotionTemplate`blur(${blur}px)`;
   return (
-    <canvas
-      ref={canvas}
-      role="img"
-      aria-label="A client's visit to the chambers, from arriving to leaving with the verified file"
-      className="size-full"
+    <motion.img
+      src={src}
+      alt=""
+      draggable={false}
+      className="absolute inset-0 size-full object-contain select-none"
+      style={{ opacity, scale, filter }}
     />
   );
 }
 
-/* The film's edge towards the words fades into the page. */
+/** The object: its states, its float, its turn and its tilt. */
+function PropertyObject({ progress }: { progress: MotionValue<number> }) {
+  const reduce = useReducedMotion();
+  const state = useTransform(progress, AT, STATE_AT);
+  // A quarter turn's worth of lean across the whole page, and a slow rise.
+  const turn = useTransform(progress, [0, 1], reduce ? [0, 0] : [-4, 4]);
+  const lift = useTransform(
+    progress,
+    [0, 0.5, 1],
+    reduce ? [0, 0, 0] : [0, -14, 0],
+  );
+  const grow = useTransform(progress, [0, 0.25, 1], [0.94, 1, 1.02]);
+
+  const px = useMotionValue(0);
+  const py = useMotionValue(0);
+  const tiltX = useSpring(useTransform(py, [-1, 1], [6, -6]), {
+    stiffness: 120,
+    damping: 18,
+  });
+  const tiltY = useSpring(useTransform(px, [-1, 1], [-8, 8]), {
+    stiffness: 120,
+    damping: 18,
+  });
+  const onMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (reduce || e.pointerType !== "mouse") return;
+    const r = e.currentTarget.getBoundingClientRect();
+    px.set(((e.clientX - r.left) / r.width) * 2 - 1);
+    py.set(((e.clientY - r.top) / r.height) * 2 - 1);
+  };
+  const onLeave = () => {
+    px.set(0);
+    py.set(0);
+  };
+
+  return (
+    <div
+      role="img"
+      aria-label="A model house on its deed folder: the folder opens, the documents fan out and each one is checked"
+      className="relative grid size-full place-items-center [perspective:1200px]"
+      onPointerMove={onMove}
+      onPointerLeave={onLeave}
+    >
+      <motion.div
+        className="relative aspect-square w-[min(100%,78vh)]"
+        style={{
+          rotateX: tiltX,
+          rotateY: tiltY,
+          rotate: turn,
+          y: lift,
+          scale: grow,
+        }}
+      >
+        <motion.div
+          className="absolute inset-0"
+          animate={reduce ? undefined : { y: [0, -8, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {STATES.map((src, i) => (
+            <StateImage key={src} src={src} index={i} state={state} />
+          ))}
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* The object's edge towards the words fades into the paper. */
 const FADE_WIDE =
-  "linear-gradient(to right, transparent 0%, #000 24%, #000 100%)";
+  "linear-gradient(to right, transparent 0%, #000 14%, #000 100%)";
 const FADE_PHONE =
-  "linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%)";
+  "linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%)";
 
 function Journey() {
   const ref = useRef<HTMLDivElement>(null);
@@ -132,9 +156,9 @@ function Journey() {
     offset: ["start start", "end end"],
   });
   const eased = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 28,
-    mass: 0.3,
+    stiffness: 90,
+    damping: 24,
+    mass: 0.4,
   });
   const progress = reduce ? scrollYProgress : eased;
   const [step, setStep] = useState(0);
@@ -143,9 +167,9 @@ function Journey() {
   );
 
   return (
-    <div ref={ref} className="relative">
-      <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden bg-white">
-        <div className="absolute inset-x-0 top-0 h-[46%] @4xl:inset-y-0 @4xl:right-0 @4xl:left-auto @4xl:h-auto @4xl:w-[56%]">
+    <div ref={ref} className="relative" style={{ backgroundColor: PAPER }}>
+      <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[48%] @4xl:inset-y-0 @4xl:right-0 @4xl:left-auto @4xl:h-auto @4xl:w-[56%]">
           <div
             className="size-full [mask-image:var(--fade-phone)] @4xl:[mask-image:var(--fade-wide)]"
             style={
@@ -155,9 +179,9 @@ function Journey() {
               } as React.CSSProperties
             }
           >
-            <Film progress={progress} />
+            <PropertyObject progress={progress} />
           </div>
-          <div className="absolute bottom-[16%] left-4 @4xl:bottom-8 @4xl:left-[26%]">
+          <div className="absolute bottom-[10%] left-4 @4xl:bottom-10 @4xl:left-[18%]">
             <AnimatePresence mode="wait">
               <motion.p
                 key={step}
@@ -181,7 +205,7 @@ function Journey() {
         />
       </div>
 
-      {/* The sections, one screen each, beside the film. */}
+      {/* The sections, one screen each, beside the object. */}
       <div className="relative z-10 mx-auto -mt-[calc(100dvh-4rem)] max-w-6xl px-5">
         {SECTIONS.map((section) => (
           <motion.section
@@ -219,7 +243,7 @@ const tile = "rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-zinc-200";
 const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   {
     id: "top",
-    caption: "Arriving at the chambers",
+    caption: "Your property and its file",
     body: (
       <>
         <h1 className="text-4xl leading-[1.05] font-semibold tracking-tight text-zinc-900 @3xl:text-5xl">
@@ -248,7 +272,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "about",
-    caption: "Welcomed at reception",
+    caption: "Kept safe from day one",
     body: (
       <>
         <p className={eyebrow}>About us</p>
@@ -275,7 +299,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "practice",
-    caption: "Understanding the matter",
+    caption: "The file is opened",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
@@ -307,7 +331,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "partners",
-    caption: "Counsel from a partner",
+    caption: "A partner reads it",
     body: (
       <>
         <p className={eyebrow}>Our partners</p>
@@ -341,7 +365,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "team",
-    caption: "Every document verified",
+    caption: "Every document laid out",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
@@ -372,7 +396,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "approach",
-    caption: "Research and records",
+    caption: "One area of law each",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
@@ -401,7 +425,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "insights",
-    caption: "The verified file, handed over",
+    caption: "Each page checked",
     body: (
       <>
         <p className={eyebrow}>Insights</p>
@@ -430,7 +454,7 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "contact",
-    caption: "Leaving with certainty",
+    caption: "Verified, ready to hand back",
     body: (
       <>
         <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">

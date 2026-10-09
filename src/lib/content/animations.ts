@@ -136,8 +136,8 @@ export const ANIMATIONS: AnimationEntry[] = [
   {
     id: "law-journey-site",
     category: "legal",
-    name: "Full law firm website, a film that plays on scroll",
-    note: "A whole one-page site for a sample firm, laid out like a real one: about us, practice areas, partners, team, how we work, insights and contact, on the left. On the right a canvas plays a film of the client's visit frame by frame as you scroll, the way Apple and Kiwi do it: no fading one picture over another, just the next frame of the same shot. Its edge towards the words fades into the page, and a numbered caption names each step. The frames are numbered images in public/animations/law-journey/; the placeholder storyboard there is waiting for a rendered film. Scroll the page to play it.",
+    name: "Full law firm website, one object that changes as you scroll",
+    note: "A whole one-page site for a sample firm, laid out like a real one: about us, practice areas, partners, team, how we work, insights and contact, on the left. On the right, like Kiwi's card, one object stays the whole way down: a model house on its title-deed folder. The scroll changes it: the folder opens, the documents fan out, every page is checked and ticked, each change a morph in place. It floats, leans with the scroll and tilts towards the mouse, on a warm white the images share so they have no edges. A numbered caption names each step. The images were made in Canva and live in public/animations/law-journey/. Scroll the page to play it.",
     file: "LawJourneySite.tsx",
   },
   {
