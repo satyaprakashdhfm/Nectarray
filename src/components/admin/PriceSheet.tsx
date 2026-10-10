@@ -6,6 +6,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   ExternalLink,
+  Pencil,
   Search,
   X,
 } from "lucide-react";
@@ -15,9 +16,11 @@ import {
   type Cell,
   type Column,
   type Money,
+  type PriceRow,
   type PriceTable,
   type Sheet,
 } from "@/lib/price-book";
+import { TableEditor } from "@/components/admin/PriceTableEditor";
 import { cn } from "@/lib/utils";
 
 type Currency = "usd" | "inr";
@@ -91,6 +94,7 @@ export function PriceSheet({ sheet }: { sheet: Sheet }) {
       {sheet.tables.map((table) => (
         <PriceGrid
           key={table.id}
+          sheet={sheet.slug}
           table={table}
           currency={currency}
           query={query.trim().toLowerCase()}
@@ -137,17 +141,20 @@ export function PriceSheet({ sheet }: { sheet: Sheet }) {
 type Sort = { column: number; descending: boolean } | null;
 
 function PriceGrid({
+  sheet,
   table,
   currency,
   query,
 }: {
+  sheet: string;
   table: PriceTable;
   currency: Currency;
   query: string;
 }) {
   const [sort, setSort] = useState<Sort>(null);
   const [facets, setFacets] = useState<Record<number, string>>({});
-  const [picked, setPicked] = useState<number[]>([]);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [editing, setEditing] = useState(false);
 
   const facetColumns = table.columns
     .map((column, index) => ({ column, index }))
@@ -155,7 +162,6 @@ function PriceGrid({
 
   const visible = useMemo(() => {
     const rows = table.rows
-      .map((cells, index) => ({ cells, index }))
       .filter(({ cells }) =>
         Object.entries(facets).every(
           ([col, value]) => !value || cellText(cells[Number(col)]) === value,
@@ -190,17 +196,21 @@ function PriceGrid({
           : { column, descending: true },
     );
 
-  const togglePick = (index: number) =>
+  const togglePick = (id: string) =>
     setPicked((list) =>
-      list.includes(index) ? list.filter((i) => i !== index) : [...list, index],
+      list.includes(id) ? list.filter((i) => i !== id) : [...list, id],
     );
+  // Ticks on rows that an edit has since removed simply drop out.
+  const pickedRows = picked
+    .map((id) => table.rows.find((r) => r.id === id))
+    .filter((r): r is PriceRow => r !== undefined);
 
   const nameOf = (cells: Cell[]) =>
     table.nameColumns.map((i) => cellText(cells[i])).join(" ");
 
   // Searching hides a table with nothing to show, so the sheet reads as
   // the answer rather than a stack of empty grids.
-  if (query && visible.length === 0) return null;
+  if (query && visible.length === 0 && !editing) return null;
 
   return (
     <section className="mt-8" aria-labelledby={`t-${table.id}`}>
@@ -211,152 +221,184 @@ function PriceGrid({
         >
           {table.title}
         </h2>
-        {facetColumns.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+        {!editing && (
+          <div className="flex flex-wrap items-center gap-2">
             {facetColumns.map(({ column, index }) => (
               <FacetSelect
                 key={index}
                 label={column.label}
-                values={distinct(table.rows.map((r) => cellText(r[index])))}
+                values={distinct(
+                  table.rows.map((r) => cellText(r.cells[index])),
+                )}
                 value={facets[index] ?? ""}
                 onChange={(value) =>
                   setFacets((f) => ({ ...f, [index]: value }))
                 }
               />
             ))}
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="border-line bg-surface text-ink hover:border-brand inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.8125rem] font-semibold transition-colors active:scale-[0.98]"
+            >
+              <Pencil className="size-3.5" aria-hidden />
+              Edit
+            </button>
           </div>
         )}
       </div>
 
-      {table.compare && picked.length > 0 && (
-        <Comparison
+      {editing ? (
+        <TableEditor
+          sheet={sheet}
           table={table}
-          rows={picked}
-          currency={currency}
-          nameOf={nameOf}
-          onRemove={togglePick}
-          onClear={() => setPicked([])}
+          onDone={() => setEditing(false)}
         />
-      )}
+      ) : (
+        <>
+          {table.compare && pickedRows.length > 0 && (
+            <Comparison
+              table={table}
+              rows={pickedRows}
+              currency={currency}
+              nameOf={nameOf}
+              onRemove={togglePick}
+              onClear={() => setPicked([])}
+            />
+          )}
 
-      <div className="border-line bg-surface mt-3 overflow-x-auto rounded-xl border">
-        <table className="w-full border-collapse text-left text-[0.8125rem]">
-          <thead>
-            <tr className="bg-mist">
-              {table.columns.map((column, index) => (
-                <th
-                  key={index}
-                  scope="col"
-                  aria-sort={
-                    sort?.column === index
-                      ? sort.descending
-                        ? "descending"
-                        : "ascending"
-                      : undefined
-                  }
-                  className={cn(
-                    "border-line border-b px-3 py-2 align-bottom font-semibold",
-                    index === 0 && "bg-mist sticky left-0 z-[1]",
-                    isNumeric(column) && "text-right",
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleSort(index)}
-                    className={cn(
-                      "text-ink-soft hover:text-ink inline-flex items-center gap-1 text-left whitespace-nowrap",
-                      isNumeric(column) && "flex-row-reverse",
-                    )}
-                  >
-                    <span>
-                      {column.label}
-                      {column.unit && (
-                        <span className="text-ink-faint font-normal">
-                          {" "}
-                          ({column.unit})
-                        </span>
-                      )}
-                    </span>
-                    <SortIcon
-                      state={
+          <div className="border-line bg-surface mt-3 overflow-x-auto rounded-xl border">
+            <table className="w-full border-collapse text-left text-[0.8125rem]">
+              <thead>
+                <tr className="bg-mist">
+                  {table.columns.map((column, index) => (
+                    <th
+                      key={index}
+                      scope="col"
+                      aria-sort={
                         sort?.column === index
                           ? sort.descending
-                            ? "down"
-                            : "up"
-                          : "none"
+                            ? "descending"
+                            : "ascending"
+                          : undefined
                       }
-                    />
-                  </button>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map(({ cells, index: row }) => {
-              const isPicked = picked.includes(row);
-              return (
-                <tr
-                  key={row}
-                  className={cn(
-                    "group border-line-soft border-b last:border-b-0",
-                    isPicked && "bg-brand-wash/60",
-                  )}
-                >
-                  {table.columns.map((column, col) => (
-                    <td
-                      key={col}
                       className={cn(
-                        "px-3 py-2 align-top",
-                        col === 0 &&
-                          cn(
-                            "text-ink sticky left-0 z-[1] max-w-[16rem] min-w-[10rem] font-semibold",
-                            isPicked ? "bg-brand-wash" : "bg-surface",
-                          ),
-                        col !== 0 && cellClass(column),
+                        "border-line border-b px-3 py-2 align-bottom font-semibold",
+                        index === 0 && "bg-mist sticky left-0 z-[1]",
+                        isNumeric(column) && "text-right",
                       )}
                     >
-                      {col === 0 && table.compare ? (
-                        <label className="flex cursor-pointer items-start gap-2">
-                          <input
-                            type="checkbox"
-                            checked={isPicked}
-                            onChange={() => togglePick(row)}
-                            aria-label={`Compare ${nameOf(cells)}`}
-                            className="accent-brand mt-0.5 size-3.5 shrink-0"
-                          />
-                          <CellView
-                            cell={cells[col]}
-                            column={column}
-                            currency={currency}
-                            href={table.links?.[row]?.[col]}
-                          />
-                        </label>
-                      ) : (
-                        <CellView
-                          cell={cells[col]}
-                          column={column}
-                          currency={currency}
-                          href={table.links?.[row]?.[col]}
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(index)}
+                        className={cn(
+                          "text-ink-soft hover:text-ink inline-flex items-center gap-1 text-left whitespace-nowrap",
+                          isNumeric(column) && "flex-row-reverse",
+                        )}
+                      >
+                        <span>
+                          {column.label}
+                          {column.unit && (
+                            <span className="text-ink-faint font-normal">
+                              {" "}
+                              ({column.unit})
+                            </span>
+                          )}
+                        </span>
+                        <SortIcon
+                          state={
+                            sort?.column === index
+                              ? sort.descending
+                                ? "down"
+                                : "up"
+                              : "none"
+                          }
                         />
-                      )}
-                    </td>
+                      </button>
+                    </th>
                   ))}
                 </tr>
-              );
-            })}
-            {visible.length === 0 && (
-              <tr>
-                <td
-                  colSpan={table.columns.length}
-                  className="text-ink-faint px-3 py-6 text-center"
-                >
-                  No rows match these filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {visible.map((row) => {
+                  const { cells } = row;
+                  const isPicked = picked.includes(row.id);
+                  return (
+                    <tr
+                      key={row.id}
+                      className={cn(
+                        "group border-line-soft border-b last:border-b-0",
+                        isPicked && "bg-brand-wash/60",
+                      )}
+                    >
+                      {table.columns.map((column, col) => (
+                        <td
+                          key={col}
+                          className={cn(
+                            "px-3 py-2 align-top",
+                            col === 0 &&
+                              cn(
+                                "text-ink sticky left-0 z-[1] max-w-[16rem] min-w-[10rem] font-semibold",
+                                isPicked ? "bg-brand-wash" : "bg-surface",
+                              ),
+                            col !== 0 && cellClass(column),
+                          )}
+                        >
+                          {col === 0 && table.compare ? (
+                            <label className="flex cursor-pointer items-start gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isPicked}
+                                onChange={() => togglePick(row.id)}
+                                aria-label={`Compare ${nameOf(cells)}`}
+                                className="accent-brand mt-0.5 size-3.5 shrink-0"
+                              />
+                              <CellView
+                                cell={cells[col]}
+                                column={column}
+                                currency={currency}
+                                href={col === 0 ? row.href : undefined}
+                              />
+                            </label>
+                          ) : (
+                            <CellView
+                              cell={cells[col]}
+                              column={column}
+                              currency={currency}
+                              href={col === 0 ? row.href : undefined}
+                            />
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+                {visible.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={table.columns.length}
+                      className="text-ink-faint px-3 py-6 text-center"
+                    >
+                      No rows match these filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      {table.edited && !editing && (
+        <p className="text-ink-faint mt-2 text-[0.75rem]">
+          Edited by {table.edited.by} on{" "}
+          {new Date(table.edited.at).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}
+          .
+        </p>
+      )}
       {table.note && (
         <p className="text-ink-faint mt-2 max-w-4xl text-[0.75rem]">
           {table.note}
@@ -379,16 +421,16 @@ function Comparison({
   onClear,
 }: {
   table: PriceTable;
-  rows: number[];
+  rows: PriceRow[];
   currency: Currency;
   nameOf: (cells: Cell[]) => string;
-  onRemove: (row: number) => void;
+  onRemove: (id: string) => void;
   onClear: () => void;
 }) {
   if (rows.length < 2)
     return (
       <p className="bg-brand-wash text-brand-deep mt-3 rounded-lg px-3 py-2 text-[0.8125rem]">
-        Tick one more row to compare it with {nameOf(table.rows[rows[0]])}.
+        Tick one more row to compare it with {nameOf(rows[0].cells)}.
       </p>
     );
 
@@ -417,16 +459,16 @@ function Comparison({
               <th className="bg-surface border-line sticky left-0 z-[1] w-40 border-b px-3 py-2" />
               {rows.map((row) => (
                 <th
-                  key={row}
+                  key={row.id}
                   scope="col"
                   className="border-line text-ink min-w-[11rem] border-b px-3 py-2 align-top font-semibold"
                 >
                   <span className="flex items-start justify-between gap-2">
-                    {nameOf(table.rows[row])}
+                    {nameOf(row.cells)}
                     <button
                       type="button"
-                      onClick={() => onRemove(row)}
-                      aria-label={`Remove ${nameOf(table.rows[row])}`}
+                      onClick={() => onRemove(row.id)}
+                      aria-label={`Remove ${nameOf(row.cells)}`}
                       className="text-ink-faint hover:text-ink mt-0.5"
                     >
                       <X className="size-3.5" aria-hidden />
@@ -440,7 +482,7 @@ function Comparison({
             {fields.map(({ column, index }) => {
               const lowest = lowestOf(
                 column,
-                rows.map((r) => table.rows[r][index]),
+                rows.map((r) => r.cells[index]),
               );
               return (
                 <tr
@@ -455,13 +497,13 @@ function Comparison({
                     {column.unit && ` (${column.unit})`}
                   </th>
                   {rows.map((row) => {
-                    const cell = table.rows[row][index];
+                    const cell = row.cells[index];
                     const best =
                       lowest !== null &&
                       sortValue(cell, column.kind) === lowest;
                     return (
                       <td
-                        key={row}
+                        key={row.id}
                         className={cn(
                           "px-3 py-2 align-top",
                           column.kind === "long" ? "text-ink-soft" : "text-ink",

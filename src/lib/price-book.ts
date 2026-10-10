@@ -30,6 +30,15 @@ export type Column = {
   facet?: boolean;
 };
 
+export type PriceRow = {
+  /** Stable across edits: "w3" for the workbook's fourth row, a uuid for added ones. */
+  id: string;
+  /** In column order. */
+  cells: Cell[];
+  /** Where the row's name links to (our provider pages). */
+  href?: string;
+};
+
 export type PriceTable = {
   id: string;
   title: string;
@@ -39,10 +48,9 @@ export type PriceTable = {
   /** The columns that together name a row (for the comparison's headings). */
   nameColumns: number[];
   columns: Column[];
-  /** Cells in column order. */
-  rows: Cell[][];
-  /** Links per row, by row index and column index. */
-  links?: Record<number, Record<number, string>>;
+  rows: PriceRow[];
+  /** Set when the team has changed this table from the workbook. */
+  edited?: { at: string; by: string };
 };
 
 export type Sheet = {
@@ -55,10 +63,15 @@ export type Sheet = {
   sources: { label: string; url: string }[];
 };
 
+/** A sheet as generated from the workbook, rows still as plain cell lists. */
+type WorkbookSheet = Omit<Sheet, "tables"> & {
+  tables: (Omit<PriceTable, "rows"> & { rows: Cell[][] })[];
+};
+
 export const FX_INR_PER_USD = 96.43;
 export const CHECKED = "6 Oct 2026";
 
-export const SHEETS: Sheet[] = [
+const WORKBOOK: WorkbookSheet[] = [
   {
     slug: "ai-models",
     title: "AI models",
@@ -2051,6 +2064,15 @@ export const SHEETS: Sheet[] = [
     ],
   },
 ];
+
+/** The workbook's sheets, before any edits the team has saved. */
+export const SHEETS: Sheet[] = WORKBOOK.map((sheet) => ({
+  ...sheet,
+  tables: sheet.tables.map((table) => ({
+    ...table,
+    rows: table.rows.map((cells, i) => ({ id: `w${i}`, cells })),
+  })),
+}));
 
 export function sheetBySlug(slug: string | undefined) {
   return SHEETS.find((s) => s.slug === slug);

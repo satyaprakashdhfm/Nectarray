@@ -787,6 +787,21 @@ export const driveFiles = pgTable(
   ],
 );
 
+/**
+ * Price book tables the team has edited (admin Integrations). The id is
+ * "sheet/table"; `rows` replaces that table's rows from lib/price-book.ts
+ * and is checked against the table's columns on every read and write. A
+ * table with no row here shows the workbook's numbers.
+ */
+export const priceTables = pgTable("price_tables", {
+  id: text().primaryKey(),
+  rows: jsonb().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedBy: text("updated_by").notNull(),
+});
+
 /** Money actually received against a project. Revenue is the sum of these. */
 export const clientPayments = pgTable(
   "client_payments",
