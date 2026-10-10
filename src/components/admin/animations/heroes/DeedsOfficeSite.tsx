@@ -101,7 +101,7 @@ export function DeedsOfficeSite({ full = false }: { full?: boolean }) {
         {full && <DisclaimerGate />}
         <DeedsHeader />
         <main id="top" className="overflow-x-clip">
-          <OfficeStory steps={STEPS} copy={COPY} />
+          <OfficeStory steps={STEPS} copy={COPY} split />
 
           <section aria-label="Our standard" className={band(false)}>
             <div className={`${container} text-center`}>

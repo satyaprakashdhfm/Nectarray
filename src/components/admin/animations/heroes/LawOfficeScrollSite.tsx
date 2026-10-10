@@ -9,6 +9,7 @@ import {
   useSpring,
   useTime,
   useTransform,
+  easeInOut,
   type MotionValue,
 } from "motion/react";
 
@@ -160,17 +161,31 @@ type Frame = {
   wide: boolean;
 };
 
-function frameFor(width: number, height: number): Frame {
+/**
+ * `wide` is whether the page has room for words beside the office. With
+ * `own` the office has a box of its own beside the words (the split
+ * layout), so it plays in all of it; otherwise it fills the screen and
+ * plays in the part the words leave free.
+ */
+function frameFor(
+  width: number,
+  height: number,
+  wide = width >= 896,
+  own = false,
+): Frame {
   const vh = 600;
   const vw = height > 0 ? (600 * width) / height : 800;
-  const wide = width >= 896;
   return {
     vw,
     vh,
     wide,
-    stage: wide
-      ? { x: vw * 0.42, y: 20, w: vw * 0.58 - 20, h: vh - 40 }
-      : { x: 0, y: 30, w: vw, h: vh * 0.5 },
+    stage: own
+      ? wide
+        ? { x: vw * 0.1, y: 30, w: vw * 0.86, h: vh - 60 }
+        : { x: vw * 0.04, y: 24, w: vw * 0.92, h: vh - 48 }
+      : wide
+        ? { x: vw * 0.42, y: 20, w: vw * 0.58 - 20, h: vh - 40 }
+        : { x: 0, y: 30, w: vw, h: vh * 0.5 },
   };
 }
 
@@ -611,20 +626,26 @@ function Office({ t, frame }: { t: MotionValue<number>; frame: Frame }) {
   const time = useTime();
   const clock = useTransform(time, (ms) => (reduce ? 0 : ms));
   const times = CAMERA.map((c) => c[0]);
+  // Each move eases in and out, so the camera glides between desks
+  // rather than starting and stopping on a line.
+  const glide = { ease: easeInOut };
   const fx = useTransform(
     t,
     times,
     CAMERA.map((c) => c[1]),
+    glide,
   );
   const fy = useTransform(
     t,
     times,
     CAMERA.map((c) => c[2]),
+    glide,
   );
   const fw = useTransform(
     t,
     times,
     CAMERA.map((c) => c[3]),
+    glide,
   );
   const { stage } = frame;
   // Fit the world box (fw wide, three quarters as tall) into the stage.
@@ -993,9 +1014,12 @@ const COPY: StoryCopy = {
 export function OfficeStory({
   steps = STEPS,
   copy = COPY,
+  split = false,
 }: {
   steps?: StoryStep[];
   copy?: StoryCopy;
+  /** Wide, keep the office in its own box on the right, clear of the words. */
+  split?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -1004,11 +1028,12 @@ export function OfficeStory({
     target: ref,
     offset: ["start start", "end end"],
   });
-  const eased = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 24,
-    mass: 0.4,
-  });
+  const eased = useSpring(
+    scrollYProgress,
+    split
+      ? { stiffness: 55, damping: 22, mass: 0.6 }
+      : { stiffness: 90, damping: 24, mass: 0.4 },
+  );
   const t = useTransform(eased, [0, 1], [0, END]);
   const [step, setStep] = useState(0);
   const finale = useTransform(t, [29.2, 29.8], [0, 1]);
@@ -1021,18 +1046,24 @@ export function OfficeStory({
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      if (width > 0 && height > 0) setFrame(frameFor(width, height));
+      const page = ref.current?.offsetWidth ?? width;
+      if (width > 0 && height > 0)
+        setFrame(frameFor(width, height, page >= 896, split));
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [split]);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={`relative ${split ? "bg-[#fafafa]" : ""}`}>
       {/* The office, the whole background, held while the words pass. */}
       <div
         ref={stageRef}
-        className="sticky top-[var(--hh,4rem)] h-[calc(100dvh-var(--hh,4rem))] overflow-hidden bg-[#fafafa]"
+        className={`sticky top-[var(--hh,4rem)] overflow-hidden bg-[#fafafa] ${
+          split
+            ? "z-20 h-[44dvh] [mask-image:linear-gradient(to_bottom,#000_85%,transparent)] @4xl:z-auto @4xl:ml-auto @4xl:h-[calc(100dvh-var(--hh,4rem))] @4xl:w-[56%] @4xl:[mask-image:linear-gradient(to_right,transparent,#000_14%)]"
+            : "h-[calc(100dvh-var(--hh,4rem))]"
+        }`}
       >
         <Office
           key={`${Math.round(frame.vw)}-${frame.wide}`}
@@ -1040,8 +1071,12 @@ export function OfficeStory({
           frame={frame}
         />
         {/* A soft white behind the words, so they read like on a page. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-[#fafafa] via-[#fafafa]/90 to-transparent @4xl:hidden" />
-        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-gradient-to-r from-[#fafafa] via-[#fafafa]/85 to-transparent @4xl:block" />
+        {!split && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-[#fafafa] via-[#fafafa]/90 to-transparent @4xl:hidden" />
+        )}
+        {!split && (
+          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-gradient-to-r from-[#fafafa] via-[#fafafa]/85 to-transparent @4xl:block" />
+        )}
         <motion.div
           className="absolute inset-x-0 top-0 h-1 origin-left bg-(--p)"
           style={{ scaleX: bar }}
@@ -1051,7 +1086,9 @@ export function OfficeStory({
         </div>
         {/* The whole office again, with the seal on it. */}
         <motion.div
-          className="pointer-events-none absolute inset-x-0 top-0 grid h-[50%] place-items-center @4xl:inset-y-0 @4xl:right-0 @4xl:left-[42%] @4xl:h-auto"
+          className={`pointer-events-none absolute inset-x-0 top-0 grid h-[50%] place-items-center @4xl:inset-y-0 @4xl:right-0 @4xl:h-auto ${
+            split ? "@4xl:left-0" : "@4xl:left-[42%]"
+          }`}
           style={{ opacity: finale }}
         >
           <motion.div
@@ -1079,11 +1116,21 @@ export function OfficeStory({
       </div>
 
       {/* The words, one screen each, over the office. */}
-      <ol className="relative z-10 mx-auto -mt-[calc(100dvh-var(--hh,4rem))] max-w-6xl px-5">
+      <ol
+        className={`relative z-10 mx-auto max-w-6xl px-5 ${
+          split
+            ? "@4xl:-mt-[calc(100dvh-var(--hh,4rem))]"
+            : "-mt-[calc(100dvh-var(--hh,4rem))]"
+        }`}
+      >
         {steps.map((s, i) => (
           <motion.li
             key={s.title}
-            className="flex min-h-[100dvh] flex-col justify-end pb-[7dvh] @4xl:justify-center @4xl:pb-0"
+            className={`flex flex-col @4xl:min-h-[100dvh] @4xl:justify-center @4xl:pb-0 ${
+              split
+                ? "min-h-[60dvh] justify-center py-10"
+                : "min-h-[100dvh] justify-end pb-[7dvh]"
+            }`}
             onViewportEnter={() => setStep(i)}
             viewport={{ amount: 0.55 }}
           >

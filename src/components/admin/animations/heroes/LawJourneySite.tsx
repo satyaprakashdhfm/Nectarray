@@ -43,8 +43,8 @@ import {
  * file, every page is checked and stamped, and the file is handed back.
  * Inside a scene only the people move, so a shot dissolves into the next
  * like stop-motion while the scene pushes in slowly; between scenes the
- * cut is quick. The picture fades and blurs into the page towards the
- * words, and a curved line swings down its right part through a node per
+ * cut is quick. Towards the words the picture blurs into a soft dark haze
+ * before meeting the page, and a curved line swings down its right part through a node per
  * section, drawn in as the page scrolls, with the current step's caption
  * beside it. On a phone the picture is pinned under the header and the
  * words scroll beneath it. Then the call to action and the footer.
@@ -203,12 +203,18 @@ function Story({
 
 /* The picture fades in from the words on an eased ramp. */
 const FADE =
-  "linear-gradient(to right, transparent, rgb(0 0 0 / 0.05) 4%, rgb(0 0 0 / 0.16) 9%, rgb(0 0 0 / 0.34) 14%, rgb(0 0 0 / 0.56) 19%, rgb(0 0 0 / 0.77) 24%, rgb(0 0 0 / 0.92) 29%, #000 34%)";
+  "linear-gradient(to right, transparent, rgb(0 0 0 / 0.08) 3%, rgb(0 0 0 / 0.26) 7%, rgb(0 0 0 / 0.52) 11%, rgb(0 0 0 / 0.78) 15%, rgb(0 0 0 / 0.94) 19%, #000 23%)";
+/*
+ * Over the side towards the words, a deep warm shade, so the picture comes
+ * out of a soft dark haze rather than washing out to a milky white.
+ */
+const SHADE =
+  "linear-gradient(to right, rgb(24 5 6 / 0.7) 0%, rgb(24 5 6 / 0.52) 10%, rgb(24 5 6 / 0.3) 20%, rgb(24 5 6 / 0.12) 30%, transparent 42%)";
 /* And softens into the page along its foot, where the story ends. */
 const FOOT = "linear-gradient(to bottom, #000 88%, transparent)";
 /* The blurred copy over it shows towards the words and is gone by a third. */
 const BLUR_MASK =
-  "linear-gradient(to right, #000 10%, rgb(0 0 0 / 0.6) 20%, rgb(0 0 0 / 0.2) 30%, transparent 40%)";
+  "linear-gradient(to right, #000 14%, rgb(0 0 0 / 0.7) 24%, rgb(0 0 0 / 0.3) 34%, transparent 44%)";
 
 /* ---------- The curved flow over the picture ---------- */
 
@@ -453,6 +459,11 @@ function Journey() {
           <Story playhead={playhead} />
           <div className="hidden @4xl:block">
             <Story playhead={playhead} blurred />
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{ background: SHADE }}
+            />
           </div>
         </div>
         {/* A soft fade into the page underneath, on a phone. */}
