@@ -17,6 +17,7 @@
 
 import { relations } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   customType,
   date,
@@ -30,6 +31,7 @@ import {
   timestamp,
   unique,
   uuid,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 /** Every timestamp is stored with its zone. A date without one is a bug. */
@@ -732,6 +734,57 @@ export const projectFiles = pgTable(
     createdAt: now(),
   },
   (table) => [index("project_files_project_idx").on(table.projectId)],
+);
+
+/**
+ * A project's Drive: folders inside folders, as deep as wanted. A folder
+ * with no parent sits at the top of the project's Drive. Deleting a folder
+ * deletes everything under it.
+ */
+export const driveFolders = pgTable(
+  "drive_folders",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => clientProjects.id, { onDelete: "cascade" }),
+    parentId: uuid("parent_id").references((): AnyPgColumn => driveFolders.id, {
+      onDelete: "cascade",
+    }),
+    name: text().notNull(),
+    createdAt: now(),
+  },
+  (table) => [
+    index("drive_folders_place_idx").on(table.projectId, table.parentId),
+  ],
+);
+
+/**
+ * A file in a project's Drive. The bytes live in the storage bucket under
+ * `key`; this row is its name, place and size. A row starts "pending" when
+ * the upload is handed out and turns "ready" once the bucket has the file,
+ * so an upload abandoned halfway never shows up as a broken file.
+ */
+export const driveFiles = pgTable(
+  "drive_files",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => clientProjects.id, { onDelete: "cascade" }),
+    folderId: uuid("folder_id").references(() => driveFolders.id, {
+      onDelete: "cascade",
+    }),
+    name: text().notNull(),
+    type: text().notNull(),
+    size: bigint({ mode: "number" }).notNull(),
+    key: text().notNull().unique(),
+    status: text().notNull().default("pending"),
+    createdAt: now(),
+  },
+  (table) => [
+    index("drive_files_place_idx").on(table.projectId, table.folderId),
+  ],
 );
 
 /** Money actually received against a project. Revenue is the sum of these. */

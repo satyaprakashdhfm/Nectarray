@@ -2,7 +2,7 @@ import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
-import { ChevronLeft, FileText } from "lucide-react";
+import { ChevronLeft, FileText, HardDrive } from "lucide-react";
 import { db } from "@/lib/db";
 import { clientProjects, quotations } from "@/lib/db/schema";
 import { StatusPill } from "@/components/admin/Business";
@@ -67,6 +67,13 @@ export default async function AdminProjectPage({
           {project.title}
         </h1>
         <StatusPill status={project.status} />
+        <Link
+          href={`${ADMIN}/drive/${project.id}`}
+          className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+        >
+          <HardDrive className="size-3.5" aria-hidden />
+          Drive
+        </Link>
       </div>
       <p className="text-ink-soft mt-1 text-[0.875rem]">
         {project.client} · {serviceLabel(project.service)}
