@@ -9,6 +9,7 @@ import {
   Check,
   Code,
   Copy,
+  ExternalLink,
   Monitor,
   RotateCcw,
   Smartphone,
@@ -270,6 +271,17 @@ function AnimationCard({
             <Code className="size-3.5" strokeWidth={2} aria-hidden />
             {showCode ? "Hide code" : "Code"}
           </button>
+          {animation.page && (
+            <a
+              href={animation.page}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={smallButton}
+            >
+              <ExternalLink className="size-3.5" strokeWidth={2} aria-hidden />
+              Open full page
+            </a>
+          )}
           <button type="button" onClick={copy} className={smallButton}>
             {copied ? (
               <Check className="size-3.5" strokeWidth={2} aria-hidden />

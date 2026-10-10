@@ -36,6 +36,8 @@ export type AnimationEntry = {
   install?: string;
   /** Other files it imports from heroes/, shown and copied after it. */
   with?: string[];
+  /** A page of its own showing it full width, to open or send to a client. */
+  page?: string;
 };
 
 const THREE_STACK =
@@ -136,9 +138,10 @@ export const ANIMATIONS: AnimationEntry[] = [
   {
     id: "law-journey-site",
     category: "legal",
-    name: "Full law firm website, the client's visit plays as you scroll",
-    note: "A whole one-page site for a sample firm, Deeds & Co., in the character-flow layout: hero, about, team with portraits, services, approach, and location and careers run down the left, and down the right runs one continuous strip of the client's visit, a picture beside every section, the pictures bleeding into each other, fading into the page and blurring softly towards the words. A curved flow swings down through them, a dashed line drawn solid as you scroll, each node lighting up with a numbered caption as the line reaches it: he walks in, talks it through, a partner reviews the file, the documents are checked, stamped and handed back with a handshake. Each picture plays its own shots as its section scrolls by, dissolving like stop-motion inside a scene and pushing in slowly. The pictures were made with Gemini and live in public/animations/law-journey/. Scroll the page to play it.",
+    name: "Full law firm website (Deeds & Co.), the client's visit plays as you scroll",
+    note: "The Deeds & Co. home page rebuilt with a story in place of the hero film: about the firm, the team, practice areas, articles, our approach, and locations and careers down the left, and on the right, half the width and out to the edge, one picture pinned beside them that plays the client's visit as the page scrolls. He walks in, is shown through, talks it over, a partner reviews the file, every page is examined, checked and stamped, and the file is handed back. Inside a scene only the people move, so shots dissolve like stop-motion while the scene pushes in; the picture fades and blurs into the page towards the words, and a curved line swings down its right side, drawn in as you scroll, with a node and caption per section. Open the full page to see it as the client will. The pictures were made with Gemini and live in public/animations/law-journey/.",
     file: "LawJourneySite.tsx",
+    page: "/showcase/law-firm",
   },
   {
     id: "law-office-scroll-site",
