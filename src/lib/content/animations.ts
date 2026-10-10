@@ -156,10 +156,11 @@ export const ANIMATIONS: AnimationEntry[] = [
   {
     id: "deeds-office-site",
     category: "legal",
-    name: "Deeds & Co. template 3: the office from above",
-    note: "The office-from-above story told for Deeds & Co., in its maroon and its own words under its header: the client hands his file in at reception, it is searched against Kaveri's records, held against the khata, plans and approvals, signed and stamped by a senior advocate in the cabin, and handed back at the meeting table as the view pulls out with the seal. Then the live site's sections on their alternating bands, the call to action and the maroon footer.",
+    name: "Deeds & Co. template 3: the file's journey, the way gokiwi.in scrolls",
+    note: "The Deeds & Co. home page with the scroll flow of the Kiwi credit card site: the firm's film under a maroon-tinted panel that slides up over it, the firm's standard filling in word by word with the record names in maroon, then the client's title file in live 3D carrying the reader down the page. It tumbles in through a soft haze, rests beside each step and flies across to the next: in at the front desk, spun round to the associate's desk, opened on the sale deed and EC, then the RTC, e-Khata and sanctioned plan with ticks, stamped with the firm's seal, and dropped into a phone as the signed opinion. Where it rests is measured from the sections, so file and words stay together on any screen; on a phone the file keeps to the top and the words sit on a card below. Then about, team, practices, approach, locations and careers, the call to action and the maroon footer.",
     file: "DeedsOfficeSite.tsx",
-    with: ["DeedsParts.tsx", "LawOfficeScrollSite.tsx"],
+    with: ["DeedsFileJourney.tsx", "DeedsParts.tsx", "LawFirmScrollSite.tsx"],
+    install: "npm i motion three @react-three/fiber",
     page: "/showcase/deeds-and-co/office",
   },
   {

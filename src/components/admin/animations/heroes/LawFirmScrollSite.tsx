@@ -95,7 +95,7 @@ const backOut = (x: number) => {
 
 const SANS = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
 
-function texture(
+export function texture(
   w: number,
   h: number,
   draw: (ctx: CanvasRenderingContext2D) => void,
@@ -111,7 +111,7 @@ function texture(
   return tex;
 }
 
-function paperTexture(title: string, sub: string, colour: string) {
+export function paperTexture(title: string, sub: string, colour: string) {
   return texture(600, 800, (c) => {
     c.fillStyle = "#ffffff";
     c.fillRect(0, 0, 600, 800);
@@ -264,7 +264,7 @@ function screenTexture(colour: string) {
   });
 }
 
-function roundedSlab(w: number, h: number, r: number, depth: number) {
+export function roundedSlab(w: number, h: number, r: number, depth: number) {
   const s = new THREE.Shape();
   s.moveTo(-w / 2 + r, -h / 2);
   s.lineTo(w / 2 - r, -h / 2);

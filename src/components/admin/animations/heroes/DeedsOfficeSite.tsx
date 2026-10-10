@@ -1,6 +1,10 @@
 "use client";
 
-import { OfficeStory } from "./LawOfficeScrollSite";
+import {
+  FileJourney,
+  type JourneyCopy,
+  type JourneyStep,
+} from "./DeedsFileJourney";
 import {
   About,
   Approach,
@@ -12,40 +16,29 @@ import {
   HEADER_HEIGHT,
   Locations,
   Practices,
-  Tagline,
+  TAGLINE,
   Team,
   WhatsAppFloat,
   container,
 } from "./DeedsParts";
 
 /**
- * The Deeds & Co. home page told by its office seen from above: the
- * "office from above" template's story (the client hands his file in at
- * reception, it is searched against the records, held against the plans,
- * signed and stamped by a senior advocate in the cabin, and handed back at
- * the meeting table, the view pulling out to the whole office with the
- * seal) in the firm's maroon and its own words, under the firm's header.
- * After it, the live site's sections from DeedsParts.tsx on their
- * alternating bands: the standard, about, the team, practices, approach,
- * locations and careers, the call to action and the footer.
+ * The Deeds & Co. home page with the scroll flow of gokiwi.in: the firm's
+ * film under a tinted panel that slides up over it, the firm's standard
+ * filling in word by word, and then the client's title file, in 3D,
+ * carrying the reader down the page. It drops in, rests beside each step
+ * and flies across to the next: the front desk, the associate's desk, the
+ * records, the khata and plans, the senior advocate's stamp, and the phone
+ * the signed opinion arrives on (DeedsFileJourney.tsx). After it, the live
+ * site's sections from DeedsParts.tsx on their alternating bands: about,
+ * the team, practices, approach, locations and careers, the call to action
+ * and the footer.
  *
- * The office reads its colours from the palette variables, set here to
- * the firm's. With `full` (the page at /showcase/deeds-and-co/office) it
- * opens with the Bar Council disclaimer and keeps the WhatsApp button in
- * the corner.
+ * With `full` (the page at /showcase/deeds-and-co/office) it opens with the
+ * Bar Council disclaimer and keeps the WhatsApp button in the corner.
  */
 
-const OFFICE_COLOURS = {
-  "--p": "#7a0204",
-  "--p-on": "#ffffff",
-  "--p-dark": "#5e0103",
-  "--p-light": "#faf1f0",
-  "--s": "#b08968",
-  "--s-light": "#f4ebe4",
-  "--t": "#45100f",
-} as React.CSSProperties;
-
-const STEPS = [
+const STEPS: JourneyStep[] = [
   {
     title: "Walk in with your papers.",
     text: "Bring what the seller gave you. We take it from the front desk, and one advocate holds your file from here.",
@@ -78,14 +71,15 @@ const STEPS = [
   },
 ];
 
-const COPY = {
+const COPY: JourneyCopy = {
   title: "Property lawyers for Bengaluru.",
   body: "Title checks, sale deeds, registration and khata, handled by one team from the first document to the keys.",
   primary: "Book a title check",
   secondary: "Our practices",
-  hint: "Scroll to follow a file through our office.",
-  sealTitle: "Every title clear.",
-  sealBody: "Records read, plans checked, opinion signed and stamped.",
+  fill: `${TAGLINE.join(" ")} Property in Karnataka is decided by its documents: the chain of title, the revenue records in Bhoomi, the registered instruments in Kaveri, and the approvals behind them. We read each of them before we advise.`,
+  accent:
+    "the chain of title, the revenue records in Bhoomi, the registered instruments in Kaveri,",
+  last: "Book a title check",
 };
 
 const band = (tinted: boolean) =>
@@ -96,44 +90,38 @@ export function DeedsOfficeSite({ full = false }: { full?: boolean }) {
     <div className={DEEDS_SHELL}>
       <div
         className={`${HEADER_HEIGHT} [&_:is(h1,h2)]:font-[family-name:var(--font-outfit,ui-sans-serif)]`}
-        style={OFFICE_COLOURS}
       >
         {full && <DisclaimerGate />}
         <DeedsHeader />
-        <main id="top" className="overflow-x-clip">
-          <OfficeStory steps={STEPS} copy={COPY} split />
+        <main className="overflow-x-clip">
+          <FileJourney steps={STEPS} copy={COPY} />
 
-          <section aria-label="Our standard" className={band(false)}>
-            <div className={`${container} text-center`}>
-              <Tagline className="@xl:py-4" />
-            </div>
-          </section>
-          <section id="about" className={band(true)}>
+          <section id="about" className={band(false)}>
             <div className={container}>
               <About />
             </div>
           </section>
-          <section id="team" className={band(false)}>
+          <section id="team" className={band(true)}>
             <div className={container}>
               <Team />
             </div>
           </section>
-          <section id="practices" className={band(true)}>
+          <section id="practices" className={band(false)}>
             <div className={container}>
               <Practices />
             </div>
           </section>
-          <section className={band(false)}>
+          <section className={band(true)}>
             <div className={container}>
               <Approach />
             </div>
           </section>
-          <section id="careers" className={band(true)}>
+          <section id="careers" className={band(false)}>
             <div className={container}>
               <Locations />
             </div>
           </section>
-          <section className={band(false)}>
+          <section className={band(true)}>
             <div className={container}>
               <CtaBand />
             </div>

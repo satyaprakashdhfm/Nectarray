@@ -24,10 +24,9 @@ const TEMPLATES = [
   {
     href: "/showcase/deeds-and-co/office",
     label: "Template 3",
-    title: "The office from above",
-    body: "The whole office seen from above while the words scroll over it: a file goes from reception to the records, the plans, the senior advocate's stamp, and back.",
-    image:
-      "/animations/law-journey/deeds/practice-real-estate-infrastructure.webp",
+    title: "The file's journey",
+    body: "The film slides away under a soft panel, then your title file, in 3D, travels down the page beside the words: opened on the records, checked, stamped, and sent to your phone.",
+    image: "/animations/law-journey/deeds/template-journey.webp",
   },
 ];
 
