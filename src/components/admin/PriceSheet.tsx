@@ -38,10 +38,15 @@ import { cn } from "@/lib/utils";
 export function PriceSheet({ sheet }: { sheet: Sheet }) {
   const [currency, setCurrency] = useState<Currency>("usd");
   const [query, setQuery] = useState("");
-  const apiPrices =
+  const table = (id: string) =>
     sheet.slug === "ai-models"
-      ? sheet.tables.find((t) => t.id === "api")
+      ? sheet.tables.find((t) => t.id === id)
       : undefined;
+  const modelPrices = {
+    text: table("api"),
+    image: table("image"),
+    video: table("video"),
+  };
 
   return (
     <div className="mt-5">
@@ -99,7 +104,7 @@ export function PriceSheet({ sheet }: { sheet: Sheet }) {
         </p>
       </div>
 
-      {apiPrices && <CostEstimator table={apiPrices} currency={currency} />}
+      <CostEstimator tables={modelPrices} currency={currency} />
 
       {sheet.tables.map((table) => (
         <PriceGrid
