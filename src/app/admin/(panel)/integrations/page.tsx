@@ -1,58 +1,109 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { PageHead } from "@/components/admin/Business";
-import { IntegrationMark } from "@/components/admin/IntegrationMark";
-import { INTEGRATIONS, integrationsByCategory } from "@/lib/integrations";
+import { PriceSheet } from "@/components/admin/PriceSheet";
+import { CATEGORIES, CONFIDENCE_LABEL, INTEGRATIONS } from "@/lib/integrations";
+import { CHECKED, SHEETS, sheetBySlug, type Sheet } from "@/lib/price-book";
+
+const PROVIDERS = "providers";
 
 /**
- * Every outside service we connect for clients, by kind. Each one opens a
- * page that answers the same questions in the same order.
+ * The price book, one sheet at a time like the workbook it came from, with
+ * every table open. The last sheet lists every price from our own provider
+ * pages in one table, each provider linking to its full page.
  */
-export default function AdminIntegrationsPage() {
-  const groups = integrationsByCategory();
+export default async function AdminIntegrationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sheet?: string }>;
+}) {
+  const { sheet: slug } = await searchParams;
+  const sheet =
+    slug === PROVIDERS ? providersSheet() : (sheetBySlug(slug) ?? SHEETS[0]);
+  const tabs = [
+    ...SHEETS.map((s) => ({ slug: s.slug, title: s.title })),
+    { slug: PROVIDERS, title: "Our providers" },
+  ];
+
   return (
     <>
       <PageHead
         title="Integrations"
-        lede={`The ${INTEGRATIONS.length} outside services we connect for clients: what each one can do, what it costs, how to get access and what to watch for. Every provider page follows the same contents, so two are easy to compare.`}
+        lede={`What the services we build on cost, as tables you can sort, filter and compare. Tick two or more rows in a table to set them side by side. Prices checked ${CHECKED}.`}
       />
-
-      {groups.map((group) => (
-        <section key={group.id} className="mt-8">
-          <h2 className="text-ink text-[1.125rem] font-semibold">
-            {group.label}
-          </h2>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-            {group.items.map((i) => (
-              <li key={i.slug}>
-                <Link
-                  href={`${ADMIN}/integrations/${i.slug}`}
-                  className="card card-hover group flex h-full gap-4 p-4 active:scale-[0.99] sm:p-5"
-                >
-                  <IntegrationMark slug={i.slug} name={i.name} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-ink flex items-center gap-1 text-[0.9375rem] font-semibold">
-                      {i.name}
-                      <ArrowUpRight
-                        className="text-ink-faint group-hover:text-brand-deep size-4 transition-colors"
-                        aria-hidden
-                      />
-                    </p>
-                    <p className="text-ink-soft mt-1 text-[0.8125rem]">
-                      {i.tagline}
-                    </p>
-                    <p className="text-ink-faint mt-2 text-[0.75rem]">
-                      {i.products.length} integrations, {i.pricing.length}{" "}
-                      prices
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <nav aria-label="Sheets" className="mt-5">
+        <div className="tab-bar">
+          {tabs.map((t) => (
+            <Link
+              key={t.slug}
+              href={`${ADMIN}/integrations?sheet=${t.slug}`}
+              aria-current={t.slug === sheet.slug ? "page" : undefined}
+              className="tab"
+            >
+              {t.title}
+            </Link>
+          ))}
+        </div>
+      </nav>
+      <p className="text-ink-soft mt-4 max-w-3xl text-[0.875rem]">
+        {sheet.lede}
+      </p>
+      {/* Keyed so filters and ticks start fresh on each sheet. */}
+      <PriceSheet key={sheet.slug} sheet={sheet} />
     </>
   );
+}
+
+/** Every price row from the provider pages, as one comparable table. */
+function providersSheet(): Sheet {
+  const category = (id: string) =>
+    CATEGORIES.find((c) => c.id === id)?.label ?? id;
+  const rows = INTEGRATIONS.flatMap((i) =>
+    i.pricing.map((p) => ({
+      slug: i.slug,
+      cells: [
+        i.name,
+        category(i.category),
+        p.item,
+        p.price,
+        p.basis,
+        CONFIDENCE_LABEL[p.confidence],
+      ],
+    })),
+  );
+  return {
+    slug: PROVIDERS,
+    title: "Our providers",
+    lede: `Every price from the ${INTEGRATIONS.length} provider pages in one table. A provider's name opens its full page: what it does, how to get access and how it connects.`,
+    tables: [
+      {
+        id: "providers",
+        title: "Provider prices",
+        compare: true,
+        nameColumns: [0, 2],
+        columns: [
+          { label: "Provider", kind: "text", facet: true },
+          { label: "Kind", kind: "text", facet: true },
+          { label: "Item", kind: "text" },
+          { label: "Price", kind: "text" },
+          { label: "Basis", kind: "long" },
+          { label: "Confidence", kind: "confidence", facet: true },
+        ],
+        rows: rows.map((r) => r.cells),
+        links: Object.fromEntries(
+          rows.map((r, index) => [
+            index,
+            { 0: `${ADMIN}/integrations/${r.slug}` },
+          ]),
+        ),
+      },
+    ],
+    checks: [],
+    sources: INTEGRATIONS.flatMap((i) =>
+      i.links.slice(0, 1).map((l) => ({
+        label: `${i.name}: ${l.label}`,
+        url: l.url,
+      })),
+    ),
+  };
 }

@@ -1316,10 +1316,3 @@ export const INTEGRATIONS: Integration[] = [
 export function integrationBySlug(slug: string) {
   return INTEGRATIONS.find((i) => i.slug === slug) ?? null;
 }
-
-export function integrationsByCategory() {
-  return CATEGORIES.map((c) => ({
-    ...c,
-    items: INTEGRATIONS.filter((i) => i.category === c.id),
-  })).filter((c) => c.items.length > 0);
-}
