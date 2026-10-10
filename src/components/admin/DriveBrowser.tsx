@@ -3,16 +3,10 @@
 import { ADMIN, DRIVE_VIEW_COOKIE } from "@/lib/admin-path";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
   ChevronRight,
   Download,
-  File,
-  FileArchive,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileVideo,
   Folder,
   FolderPlus,
   HardDrive,
@@ -33,6 +27,8 @@ import {
   renameFolder,
   startUpload,
 } from "@/app/admin/(panel)/drive/actions";
+import { FileIcon } from "@/components/admin/DriveFileIcon";
+import { DriveViewer } from "@/components/admin/DriveViewer";
 import { fileSize } from "@/lib/file-size";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +83,8 @@ export function DriveBrowser({
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [dragging, setDragging] = useState(false);
   const [view, setView] = useState<View>(initialView);
+  /** The file open in the viewer, by its place in this folder. */
+  const [viewing, setViewing] = useState<number | null>(null);
   const picker = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
 
@@ -94,8 +92,11 @@ export function DriveBrowser({
     id
       ? `${ADMIN}/drive/${projectId}?folder=${id}`
       : `${ADMIN}/drive/${projectId}`;
-  const fileHref = (id: string, download = false) =>
-    `${ADMIN}/drive/${projectId}/file/${id}${download ? "?download=1" : ""}`;
+  const fileHref = useCallback(
+    (id: string, download = false) =>
+      `${ADMIN}/drive/${projectId}/file/${id}${download ? "?download=1" : ""}`,
+    [projectId],
+  );
 
   /** Runs an action, shows its error if any, and reloads the folder. */
   const act = (work: () => Promise<{ ok: boolean; error?: string }>) =>
@@ -336,10 +337,11 @@ export function DriveBrowser({
           <h2 className="text-ink-faint text-[0.75rem] font-semibold">Files</h2>
           {view === "grid" ? (
             <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-              {files.map((f) => (
+              {files.map((f, i) => (
                 <FileCard
                   key={f.id}
                   file={f}
+                  onOpen={() => setViewing(i)}
                   href={fileHref(f.id)}
                   downloadHref={fileHref(f.id, true)}
                   busy={pending}
@@ -355,11 +357,11 @@ export function DriveBrowser({
             </ul>
           ) : (
             <ul className="card divide-line-soft mt-2 divide-y">
-              {files.map((f) => (
+              {files.map((f, i) => (
                 <FileRow
                   key={f.id}
                   file={f}
-                  href={fileHref(f.id)}
+                  onOpen={() => setViewing(i)}
                   downloadHref={fileHref(f.id, true)}
                   busy={pending}
                   onRename={(name) =>
@@ -391,6 +393,16 @@ export function DriveBrowser({
             inside this one.
           </p>
         </div>
+      )}
+
+      {viewing !== null && files[viewing] && (
+        <DriveViewer
+          files={files}
+          index={viewing}
+          hrefOf={fileHref}
+          onIndex={setViewing}
+          onClose={() => setViewing(null)}
+        />
       )}
 
       {dragging && (
@@ -461,14 +473,14 @@ function FolderTile({
 
 function FileRow({
   file,
-  href,
+  onOpen,
   downloadHref,
   busy,
   onRename,
   onDelete,
 }: {
   file: DriveFile;
-  href: string;
+  onOpen: () => void;
   downloadHref: string;
   busy: boolean;
   onRename: (name: string) => void;
@@ -493,11 +505,10 @@ function FileRow({
     );
   return (
     <li className="group flex items-center gap-2 pr-1">
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3"
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left"
       >
         <FileIcon type={file.type} name={file.name} />
         <span className="text-ink min-w-0 flex-1 truncate text-[0.875rem] font-medium">
@@ -513,7 +524,7 @@ function FileRow({
             year: "numeric",
           })}
         </span>
-      </a>
+      </button>
       <a
         href={downloadHref}
         aria-label={`Download ${file.name}`}
@@ -578,6 +589,7 @@ function ViewSwitch({
  */
 function FileCard({
   file,
+  onOpen,
   href,
   downloadHref,
   busy,
@@ -585,6 +597,8 @@ function FileCard({
   onDelete,
 }: {
   file: DriveFile;
+  onOpen: () => void;
+  /** For the preview picture. */
   href: string;
   downloadHref: string;
   busy: boolean;
@@ -613,15 +627,14 @@ function FileCard({
             name={file.name}
             className="text-ink-soft size-4"
           />
-          <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={onOpen}
             title={file.name}
-            className="text-ink min-w-0 flex-1 truncate text-[0.8125rem] font-semibold"
+            className="text-ink min-w-0 flex-1 truncate text-left text-[0.8125rem] font-semibold"
           >
             {file.name}
-          </a>
+          </button>
           <CardMenu
             name={file.name}
             downloadHref={downloadHref}
@@ -631,16 +644,15 @@ function FileCard({
           />
         </div>
       )}
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
+      <button
+        type="button"
+        onClick={onOpen}
         tabIndex={-1}
         aria-hidden
-        className="bg-mist block aspect-[4/3] overflow-hidden rounded-lg"
+        className="bg-mist block aspect-[4/3] w-full overflow-hidden rounded-lg"
       >
         <Preview file={file} src={href} />
-      </a>
+      </button>
     </li>
   );
 }
@@ -934,30 +946,6 @@ function UploadQueue({
       )}
     </section>
   );
-}
-
-function FileIcon({
-  type,
-  name,
-  className,
-}: {
-  type: string;
-  name: string;
-  className?: string;
-}) {
-  const props = {
-    className: cn("shrink-0", className ?? "text-ink-soft size-5"),
-    strokeWidth: 1.7,
-    "aria-hidden": true,
-  } as const;
-  if (type.startsWith("image/")) return <FileImage {...props} />;
-  if (type.startsWith("video/")) return <FileVideo {...props} />;
-  if (/zip|rar|7z|tar|gzip/.test(type) || /\.(zip|rar|7z|tar|gz)$/i.test(name))
-    return <FileArchive {...props} />;
-  if (/sheet|excel|csv/.test(type) || /\.(xlsx?|csv)$/i.test(name))
-    return <FileSpreadsheet {...props} />;
-  if (/pdf|word|document|text/.test(type)) return <FileText {...props} />;
-  return <File {...props} />;
 }
 
 export function NotConnected() {
