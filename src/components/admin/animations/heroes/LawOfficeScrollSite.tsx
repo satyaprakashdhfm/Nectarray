@@ -38,7 +38,7 @@ const BRAND = "Vidhi Legal";
 const END = 30;
 
 /* [time, x, y, facing in degrees: 0 up, 90 right, 180 down] */
-type Key = [number, number, number, number];
+export type Key = [number, number, number, number];
 
 const CLIENT: Key[] = [
   [0, -70, 505, 90],
@@ -266,7 +266,7 @@ const turn = { transformBox: "fill-box", transformOrigin: "center" } as const;
 /* People and things.                                                  */
 /* ------------------------------------------------------------------ */
 
-function Person({
+export function Person({
   t,
   clock,
   track,
@@ -576,7 +576,7 @@ function Stamp({ t }: { t: MotionValue<number> }) {
   );
 }
 
-function Chair({ x, y, r = 0 }: { x: number; y: number; r?: number }) {
+export function Chair({ x, y, r = 0 }: { x: number; y: number; r?: number }) {
   return (
     <rect
       x={x - 15}
@@ -591,7 +591,7 @@ function Chair({ x, y, r = 0 }: { x: number; y: number; r?: number }) {
   );
 }
 
-function Desk({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
+export function Desk({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
   return (
     <g>
       <rect

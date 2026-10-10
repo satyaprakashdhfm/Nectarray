@@ -164,6 +164,15 @@ export const ANIMATIONS: AnimationEntry[] = [
     page: "/showcase/deeds-and-co/office",
   },
   {
+    id: "deeds-office-tour",
+    category: "legal",
+    name: "Deeds & Co. template 4: a walk through the office",
+    note: "The Deeds & Co. office, seen from above, as the background of the whole site. A client walks through it as the page scrolls, and each section pops out of the room it belongs to, its card springing up with a tail pointing back at the room while the room lights up: about the firm at reception, the team at their desks, practice areas in the library, the approach in the senior advocate's cabin, articles and publications in the reading corner, and the banks the firm works with at the meeting table, then back to reception to get in touch. The camera glides to each room and frames it beside the card (above it on a phone); people type and hands swing on the clock, so the office keeps moving while you read.",
+    file: "DeedsOfficeTour.tsx",
+    with: ["DeedsParts.tsx", "LawOfficeScrollSite.tsx"],
+    page: "/showcase/deeds-and-co/tour",
+  },
+  {
     id: "law-office-scroll-site",
     category: "legal",
     name: "Full law firm website, the office from above",

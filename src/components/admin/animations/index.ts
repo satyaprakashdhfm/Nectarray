@@ -9,6 +9,7 @@ import { AiTypingPrompt } from "./heroes/AiTypingPrompt";
 import { ClinicCareSite } from "./heroes/ClinicCareSite";
 import { CommerceCitySite } from "./heroes/CommerceCitySite";
 import { DeedsOfficeSite } from "./heroes/DeedsOfficeSite";
+import { DeedsOfficeTour } from "./heroes/DeedsOfficeTour";
 import { DeedsOriginalSite } from "./heroes/DeedsOriginalSite";
 import { LawJourneySite } from "./heroes/LawJourneySite";
 import { EcommerceColourPicker } from "./heroes/EcommerceColourPicker";
@@ -95,6 +96,7 @@ export const HEROES: Record<string, ComponentType> = {
   "deeds-original-site": DeedsOriginalSite,
   "law-journey-site": LawJourneySite,
   "deeds-office-site": DeedsOfficeSite,
+  "deeds-office-tour": DeedsOfficeTour,
   "law-office-scroll-site": LawOfficeScrollSite,
   "law-firm-scroll-site": LawFirmScrollSite,
   "law-property-verification": LawPropertyVerification,

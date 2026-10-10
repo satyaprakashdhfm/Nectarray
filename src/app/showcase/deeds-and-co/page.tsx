@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 /**
- * The three Deeds & Co. templates side by side, for the client to choose
+ * The four Deeds & Co. templates side by side, for the client to choose
  * between: each card opens its template's own page.
  */
 
@@ -28,6 +28,13 @@ const TEMPLATES = [
     body: "The film slides away under a soft panel, then your title file, in 3D, travels down the page beside the words: opened on the records, checked, stamped, and sent to your phone.",
     image: "/animations/law-journey/deeds/template-journey.webp",
   },
+  {
+    href: "/showcase/deeds-and-co/tour",
+    label: "Template 4",
+    title: "A walk through the office",
+    body: "The office from above behind the whole site. A client walks room to room as you scroll, and each section opens out of its room: the firm, the team, practices, approach, articles and partners.",
+    image: "/animations/law-journey/deeds/template-tour.webp",
+  },
 ];
 
 export default function DeedsTemplates() {
@@ -40,13 +47,13 @@ export default function DeedsTemplates() {
         className="h-12 w-auto"
       />
       <h1 className="mt-8 max-w-2xl font-[family-name:var(--font-outfit)] text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-        Three ways your website could look
+        Four ways your website could look
       </h1>
       <p className="mt-4 max-w-xl text-lg leading-relaxed text-[#5c4446]">
         Open each one and scroll through it. Every template carries the same
         firm, the same words and the same team.
       </p>
-      <ul className="mt-12 grid gap-6 md:grid-cols-3">
+      <ul className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {TEMPLATES.map((t) => (
           <li key={t.href}>
             <Link
