@@ -11,46 +11,51 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
+import { ArrowRight } from "lucide-react";
 import {
-  ArrowRight,
-  ArrowUpRight,
-  Compass,
-  Globe,
-  Mail,
-  MessageCircle,
-  MessagesSquare,
-  Phone,
-  Scale,
-  Stamp,
-} from "lucide-react";
+  About,
+  Approach,
+  CtaBand,
+  DEEDS_SHELL,
+  DeedsFooter,
+  DeedsHeader,
+  DisclaimerGate,
+  HEADER_HEIGHT,
+  Locations,
+  Practices,
+  Tagline,
+  Team,
+  WhatsAppFloat,
+  display,
+  pill,
+} from "./DeedsParts";
 
 /**
- * The Deeds & Co. home page (Advanced Property Lawyers, Bengaluru), rebuilt
- * with the client's visit as its story instead of the hero film.
+ * The Deeds & Co. home page (Advanced Property Lawyers, Bengaluru) with the
+ * client's visit as its story in place of the hero film.
  *
- * The page's sections run down the left. On the right, half the width and
- * out to the edge, one picture stays pinned beside them and plays the
- * visit as the page scrolls: he walks in, is shown through, talks it over,
- * a partner reviews the file, every page is examined, checked and stamped,
- * and the file is handed back. Inside a scene only the people move, so a
- * shot dissolves into the next like stop-motion while the scene pushes in
- * slowly; between scenes the cut is quick. The picture fades and blurs
- * into the page towards the words. Over its right part a curved line
- * swings down through a node per section, drawn in as the page scrolls,
- * and the current step's caption sits beside its node. On a phone the
- * picture is pinned under the header and the words scroll beneath it.
+ * The live site's sections (the hero and the firm's standard, about, the
+ * team, practices, approach, locations and careers) run down the left on
+ * its alternating bands, built from the same parts as the original in
+ * DeedsParts.tsx. On the right, half the width and out to the edge, one
+ * picture stays pinned under the header and plays the visit as they pass:
+ * he walks in, is shown through, talks it over, a partner reviews the
+ * file, every page is checked and stamped, and the file is handed back.
+ * Inside a scene only the people move, so a shot dissolves into the next
+ * like stop-motion while the scene pushes in slowly; between scenes the
+ * cut is quick. The picture fades and blurs into the page towards the
+ * words, and a curved line swings down its right part through a node per
+ * section, drawn in as the page scrolls, with the current step's caption
+ * beside it. On a phone the picture is pinned under the header and the
+ * words scroll beneath it. Then the call to action and the footer.
  *
  * The pictures were made with Gemini's image editor and live in
- * public/animations/law-journey/; the firm's photographs, portraits and
- * logo are in its deeds/ folder. Each section lists its shots in STEPS.
- * The accent is the palette variable --p (the firm's maroon, #7a0204, on
- * the full page at /showcase/law-firm). Headings use --font-outfit and
- * body --font-figtree when the page provides them.
+ * public/animations/law-journey/. Each section lists its shots in STEPS.
+ * With `full` (the page at /showcase/deeds-and-co/story) it opens with the
+ * Bar Council disclaimer and keeps the WhatsApp button in the corner.
  */
 
-const FIRM = "Deeds & Co.";
 const DIR = "/animations/law-journey";
-const ASSET = `${DIR}/deeds`;
 const PAGE = "#ffffff";
 const INK = "#2a0a0c";
 
@@ -333,7 +338,7 @@ function FlowLine({
                 }`}
               >
                 <span
-                  className={`size-2 rounded-full bg-(--p) transition-opacity duration-500 ${
+                  className={`size-2 rounded-full bg-[#7a0204] transition-opacity duration-500 ${
                     i <= active ? "opacity-100" : "opacity-0"
                   }`}
                 />
@@ -346,7 +351,7 @@ function FlowLine({
                 }`}
                 style={{ color: INK }}
               >
-                <span className="grid size-6 place-items-center rounded-full bg-(--p) text-[0.6875rem] font-bold text-(--p-on) tabular-nums">
+                <span className="grid size-6 place-items-center rounded-full bg-[#7a0204] text-[0.6875rem] font-bold text-white tabular-nums">
                   {i + 1}
                 </span>
                 {STEPS[i].caption}
@@ -436,7 +441,7 @@ function Journey() {
     >
       {/* The picture: pinned under the header, beside the words when wide. */}
       <div
-        className="sticky top-16 z-10 h-[38dvh] overflow-hidden @4xl:order-2 @4xl:h-[calc(100dvh-4rem)] @4xl:self-start"
+        className="sticky top-(--hh) z-10 h-[38dvh] overflow-hidden @4xl:order-2 @4xl:h-[calc(100dvh-var(--hh))] @4xl:self-start"
         style={{ background: PAGE }}
       >
         <div
@@ -471,7 +476,7 @@ function Journey() {
               className="flex items-center gap-2 rounded-full bg-white/95 py-1 pr-3 pl-1 text-xs font-semibold shadow-md ring-1 ring-black/5"
               style={{ color: INK }}
             >
-              <span className="grid size-5 place-items-center rounded-full bg-(--p) text-[0.625rem] font-bold text-(--p-on)">
+              <span className="grid size-5 place-items-center rounded-full bg-[#7a0204] text-[0.625rem] font-bold text-white">
                 {active + 1}
               </span>
               {STEPS[active].caption}
@@ -489,10 +494,10 @@ function Journey() {
             ref={(el) => {
               sectionRefs.current[i] = el;
             }}
-            className="flex scroll-mt-16 flex-col justify-center px-5 py-14 @4xl:min-h-[calc(100dvh-4rem)] @4xl:py-20 @4xl:pr-10 @4xl:pl-[max(1.25rem,calc((100cqw-76rem)/2+1.25rem))]"
+            className={`flex scroll-mt-(--hh) flex-col justify-center px-6 py-14 @4xl:min-h-[calc(100dvh-var(--hh))] @4xl:py-20 @4xl:pr-12 @5xl:pl-10`}
           >
             <motion.div
-              className="max-w-[40rem]"
+              className="w-full max-w-[44rem]"
               initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ amount: 0.3, once: true }}
@@ -509,77 +514,6 @@ function Journey() {
 
 /* ---------- Content ---------- */
 
-const display = "font-[family-name:var(--font-outfit,ui-sans-serif)]";
-const eyebrow =
-  "text-[0.6875rem] font-semibold tracking-[0.18em] uppercase text-(--p)";
-const h2 = `mt-2 ${display} text-3xl leading-[1.1] font-semibold tracking-tight text-balance @3xl:text-[2.4rem]`;
-const lead = "mt-3 max-w-[56ch] text-base leading-relaxed text-[#5c4446]";
-const pill =
-  "mt-8 inline-flex items-center gap-2 self-start rounded-full border border-[#d9d2d2] px-6 py-3 text-sm font-semibold transition hover:border-(--p) hover:text-(--p) active:scale-[0.98]";
-const card = "rounded-2xl border border-[#ece8e8] bg-white";
-
-const TAGLINE =
-  "Every document checked. Every deed sealed. Every title clear.".split(" ");
-
-const PEOPLE = [
-  ["Adv. Raghavendra Murthy", "Founding Partner"],
-  ["Adv. Arjun Nair", "Partner, Real Estate"],
-  ["Adv. Kavya Hegde", "Senior Associate"],
-  ["Adv. Rohan Iyer", "Associate"],
-];
-
-const PRACTICES = [
-  ["real-estate-infrastructure", "Real Estate & Infrastructure"],
-  ["litigation", "Litigation"],
-  ["dispute-resolution", "Alternative Dispute Resolution"],
-  ["banking-finance", "Banking & Finance"],
-  ["corporate-ma", "Corporate Advisory"],
-  ["taxation", "Taxation"],
-];
-
-const APPROACH = [
-  [
-    Scale,
-    "Title, verified line by line",
-    "Thirty-year chain of title, encumbrance certificates, RTCs and mutation records, read and reconciled before you pay.",
-  ],
-  [
-    Stamp,
-    "Registration handled",
-    "Stamp duty, Kaveri slots, sub-registrar appointments and the post-registration khata transfer.",
-  ],
-  [
-    MessagesSquare,
-    "Updates you can follow",
-    "One point of contact and a written status at each stage, so you always know what is pending.",
-  ],
-  [
-    Globe,
-    "For NRIs, from abroad",
-    "Power of attorney drafting and adjudication, embassy attestation, and purchases and sales completed without travel.",
-  ],
-  [
-    Compass,
-    "Practical, not theoretical",
-    "Advice that fits the deal in front of you: what to ask the seller for, and what to walk away from.",
-  ],
-] as const;
-
-const ARTICLES = [
-  [
-    "Guide",
-    "12 Sep 2026",
-    "Reading an encumbrance certificate before you buy",
-    "What the EC shows, the thirty years it should cover, and the entries that mean you should stop and ask.",
-  ],
-  [
-    "Regulatory update",
-    "28 Aug 2026",
-    "e-Khata in Bengaluru: what owners need to do now",
-    "The new digital khata, the documents it asks for, and how it changes a sale or a loan against the property.",
-  ],
-];
-
 const STEPS: StepData[] = [
   {
     id: "top",
@@ -587,47 +521,33 @@ const STEPS: StepData[] = [
     shots: ["1-1", "1-2", "1-3"],
     body: (
       <>
-        <p className={eyebrow}>Advanced property lawyers · Bengaluru</p>
+        <p className="inline-flex items-center gap-2.5 text-[0.6875rem] font-semibold tracking-[0.18em] text-[#5e0103] uppercase">
+          <span aria-hidden className="w-8 border-t border-[#7a0204]/70" />
+          Advanced property lawyers · Bengaluru
+        </p>
         <h1
-          className={`mt-3 ${display} text-[2.6rem] leading-[1.05] font-semibold tracking-tight text-balance @3xl:text-[3.4rem]`}
+          className={`mt-4 ${display} text-4xl leading-[1.08] font-semibold tracking-tight text-balance @3xl:text-5xl @5xl:text-[3.4rem]`}
         >
-          The title, the deal and the dispute, under one roof
+          Property lawyers for Bengaluru
         </h1>
-        <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-[#5c4446]">
-          Due diligence, drafting and registration, and the partition,
-          injunction and RERA cases that follow when paperwork fails.
+        <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-[#5c4446]">
+          Title checks, sale deeds, registration and khata, handled by one team
+          from the first document to the keys.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a
             href="#contact"
-            className="inline-flex items-center gap-2 rounded-full bg-(--p) px-6 py-3 text-sm font-semibold text-(--p-on) transition active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-full bg-[#7a0204] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5e0103] active:scale-[0.98]"
           >
             Book a title check <ArrowRight className="size-4" />
           </a>
-          <a
-            href="#practice"
-            className="inline-flex items-center gap-2 rounded-full border border-[#d9d2d2] px-6 py-3 text-sm font-semibold transition hover:border-(--p) hover:text-(--p)"
-          >
-            Explore our services
+          <a href="#practices" className={pill}>
+            Our practices
           </a>
         </div>
-        <p
-          className={`mt-14 border-t border-[#ece8e8] pt-8 ${display} text-2xl leading-[1.25] font-semibold tracking-tight text-balance @3xl:text-[1.75rem]`}
-        >
-          {TAGLINE.map((word, i) => (
-            <motion.span
-              key={`${word}-${i}`}
-              className={`inline-block ${i >= TAGLINE.length - 3 ? "text-(--p)" : ""}`}
-              initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 + i * 0.06 }}
-            >
-              {word}
-              {i < TAGLINE.length - 1 ? " " : ""}
-            </motion.span>
-          ))}
-        </p>
+        <div className="mt-14 border-t border-[#ece8e8] pt-8">
+          <Tagline className="@xl:text-3xl" />
+        </div>
       </>
     ),
   },
@@ -635,416 +555,55 @@ const STEPS: StepData[] = [
     id: "about",
     caption: "Shown through by reception",
     shots: ["1-4", "1-5"],
-    body: (
-      <>
-        <p className={eyebrow}>About the firm</p>
-        <h2 className={h2}>A property practice, start to finish</h2>
-        <div className="mt-6 space-y-4 text-base leading-relaxed text-[#5c4446]">
-          <p>
-            {FIRM} is a property law practice in Bengaluru. We verify titles,
-            draft and register deeds, regularise khata and conversion records,
-            and act in the disputes that follow when a property&apos;s paperwork
-            does not hold.
-          </p>
-          <p>
-            Property in Karnataka is decided by its documents: the chain of
-            title, the revenue records in Bhoomi, the registered instruments in
-            Kaveri, and the municipal and development-authority approvals behind
-            them. We read each of them before we advise.
-          </p>
-          <p>
-            We work for home buyers, landowners and families, NRIs managing
-            property from abroad, developers, and the banks and businesses that
-            lend against or occupy land.
-          </p>
-        </div>
-        <a href="#about" className={pill}>
-          About the firm <ArrowRight className="size-3.5" />
-        </a>
-      </>
-    ),
+    body: <About stacked />,
   },
   {
     id: "team",
     caption: "Discusses requirements",
     shots: ["2-1", "2-2", "2-3"],
-    body: (
-      <>
-        <h2 className={h2}>Experienced minds, trusted counsel</h2>
-        <p className={lead}>
-          Advocates who read every document in the chain before they advise, and
-          stay with the file until the records are in your name.
-        </p>
-        <ul className="mt-8 grid grid-cols-2 gap-4 @6xl:grid-cols-4">
-          {PEOPLE.map(([name, role], i) => (
-            <li key={name} className="group">
-              <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-[#f6f4f4]">
-                {/* eslint-disable-next-line @next/next/no-img-element -- copied into other projects, which may not use next/image */}
-                <img
-                  src={`${ASSET}/person-${i + 1}.webp`}
-                  alt={name}
-                  className="size-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                />
-              </div>
-              <p className="mt-3 text-sm font-semibold">{name}</p>
-              <p className="text-xs text-[#806a6b]">{role}</p>
-            </li>
-          ))}
-        </ul>
-        <a href="#team" className={pill}>
-          Meet the team <ArrowRight className="size-3.5" />
-        </a>
-      </>
-    ),
+    body: <Team narrow />,
   },
   {
-    id: "practice",
+    id: "practices",
     caption: "A partner reviews the file",
-    shots: ["2-4", "2-5"],
-    body: (
-      <>
-        <h2 className={h2}>Practice areas</h2>
-        <p className={lead}>
-          Property law at the centre, with the corporate, finance, dispute and
-          regulatory work that property matters lead into.
-        </p>
-        <ul className="mt-8 grid grid-cols-2 gap-3 @6xl:grid-cols-3">
-          {PRACTICES.map(([slug, name]) => (
-            <li key={slug}>
-              <a
-                href="#practice"
-                className="group relative block aspect-[4/3] overflow-hidden rounded-xl"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- copied into other projects, which may not use next/image */}
-                <img
-                  src={`${ASSET}/practice-${slug}.webp`}
-                  alt=""
-                  className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.05]"
-                />
-                <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                <span className="absolute inset-x-3 bottom-3 flex items-end justify-between gap-2 text-sm leading-tight font-semibold text-white">
-                  {name}
-                  <ArrowUpRight className="size-4 shrink-0 opacity-70 transition group-hover:opacity-100" />
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-        <a href="#practice" className={pill}>
-          View all practices <ArrowRight className="size-3.5" />
-        </a>
-      </>
-    ),
-  },
-  {
-    id: "insights",
-    caption: "Every page examined",
-    shots: ["3-1", "3-2"],
-    body: (
-      <>
-        <h2 className={h2}>Articles and publications</h2>
-        <p className={lead}>
-          Judgments and rule changes that affect buyers, owners and title in
-          Karnataka, in plain English.
-        </p>
-        <ul className="mt-8 grid gap-4 @6xl:grid-cols-2">
-          {ARTICLES.map(([tag, date, title, summary]) => (
-            <li key={title}>
-              <a
-                href="#insights"
-                className={`${card} group flex h-full flex-col p-6 transition hover:border-(--p)/40 hover:shadow-lg`}
-              >
-                <p className="flex items-center gap-3 text-xs text-[#806a6b]">
-                  <span className="rounded-full bg-[#faf1f0] px-2.5 py-1 font-semibold text-(--p)">
-                    {tag}
-                  </span>
-                  {date}
-                </p>
-                <p
-                  className={`mt-4 ${display} text-lg leading-snug font-semibold`}
-                >
-                  {title}
-                </p>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-[#5c4446]">
-                  {summary}
-                </p>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-(--p)">
-                  Read the article
-                  <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" />
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-        <a href="#insights" className={pill}>
-          All articles <ArrowRight className="size-3.5" />
-        </a>
-      </>
-    ),
+    shots: ["2-4", "2-5", "3-1"],
+    body: <Practices stacked />,
   },
   {
     id: "approach",
-    caption: "Checked and stamped",
-    shots: ["3-3", "3-4"],
-    body: (
-      <>
-        <p className={eyebrow}>Why us</p>
-        <h2 className={h2}>Our approach</h2>
-        <p className={lead}>Five commitments on every property matter.</p>
-        <ol className={`${card} mt-8 divide-y divide-[#ece8e8]`}>
-          {APPROACH.map(([Icon, title, body], i) => (
-            <li key={title} className="flex gap-4 p-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#faf1f0] text-(--p)">
-                <Icon className="size-5" strokeWidth={1.6} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold">
-                  <span className="mr-2 text-(--p) tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  {title}
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-[#5c4446]">
-                  {body}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </>
-    ),
+    caption: "Every page checked and stamped",
+    shots: ["3-2", "3-3", "3-4"],
+    body: <Approach stacked />,
   },
   {
-    id: "contact",
+    id: "careers",
     caption: "Documents handed back",
     shots: ["4-1", "4-2", "4-3", "4-4", "4-5"],
-    body: (
-      <div className="grid gap-4">
-        <article className={`${card} p-6 @3xl:p-8`}>
-          <p className={eyebrow}>Locations</p>
-          <h2
-            className={`mt-2 ${display} text-2xl font-semibold tracking-tight @3xl:text-3xl`}
-          >
-            Our legal presence
-          </h2>
-          <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-[#5c4446]">
-            Local practice matters in property law: sub-registrar offices, BBMP
-            and BDA procedures, and Karnataka&apos;s revenue records each have
-            their own ways, and we work with them every day.
-          </p>
-          <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-5">
-            {/* The High Court of Karnataka, in the accent through its own alpha. */}
-            <div
-              aria-hidden
-              className="aspect-[697/260] w-full max-w-[12rem] bg-(--p)/85"
-              style={{
-                mask: `url(${ASSET}/hc-karnataka.webp) center/contain no-repeat`,
-                WebkitMask: `url(${ASSET}/hc-karnataka.webp) center/contain no-repeat`,
-              }}
-            />
-            <div>
-              <p className={`${display} text-lg font-semibold`}>Bengaluru</p>
-              <p className="mt-1 text-sm leading-relaxed text-[#5c4446]">
-                Bengaluru
-                <br />
-                Karnataka, India
-              </p>
-            </div>
-          </div>
-          <ul className="mt-6 flex flex-wrap gap-2">
-            {["Bengaluru Urban", "Bengaluru Rural", "Across Karnataka"].map(
-              (place) => (
-                <li
-                  key={place}
-                  className="rounded-full border border-[#d9d2d2] px-3.5 py-1.5 text-sm"
-                >
-                  {place}
-                </li>
-              ),
-            )}
-          </ul>
-        </article>
-        <article className={`${card} overflow-hidden`}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- copied into other projects, which may not use next/image */}
-          <img
-            src={`${ASSET}/office-desk.webp`}
-            alt=""
-            className="aspect-[16/5] w-full object-cover object-[78%_50%]"
-          />
-          <div className="p-6 @3xl:p-8">
-            <h2
-              className={`${display} text-2xl font-semibold tracking-tight @3xl:text-3xl`}
-            >
-              Work with us
-            </h2>
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-[#5c4446]">
-              We look for advocates who want responsibility early and take the
-              time to read a file properly.
-            </p>
-            <a href="#contact" className={pill}>
-              View openings <ArrowRight className="size-3.5" />
-            </a>
-          </div>
-        </article>
-      </div>
-    ),
+    body: <Locations stacked />,
   },
 ];
 
 const FRAMES = framesOf(STEPS);
 
-const NAV = [
-  ["About", "#about"],
-  ["Services", "#practice"],
-  ["Insights", "#insights"],
-  ["Careers", "#contact"],
-  ["Contact", "#contact"],
-];
-
-const CONTACTS = [
-  [MessageCircle, "WhatsApp"],
-  [Phone, "Call"],
-  [Mail, "Email"],
-] as const;
-
 /* ---------- The page ---------- */
 
-export function LawJourneySite() {
+export function LawJourneySite({ full = false }: { full?: boolean }) {
   return (
-    <div
-      className="@container font-[family-name:var(--font-figtree,ui-sans-serif)]"
-      style={{ background: PAGE, color: INK }}
-    >
-      <header className="sticky top-0 z-30 border-b border-[#ece8e8] bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-5">
-          <a href="#top" className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element -- copied into other projects, which may not use next/image */}
-            <img
-              src={`${ASSET}/logo-oval.webp`}
-              alt={FIRM}
-              className="h-10 w-auto"
-            />
-            <span className="hidden flex-col text-[0.55rem] leading-[1.5] tracking-[0.22em] text-[#5c4446] uppercase @lg:flex">
-              <span>Advanced Property Lawyers</span>
-              <span>Bengaluru</span>
-            </span>
-          </a>
-          <nav className="hidden items-center gap-7 text-sm font-medium text-[#5c4446] @4xl:flex">
-            {NAV.map(([label, href]) => (
-              <a
-                key={label}
-                href={href}
-                className="transition hover:text-(--p)"
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-          <a
-            href="#contact"
-            className="inline-flex items-center gap-1.5 rounded-full bg-(--p) px-4 py-2 text-sm font-semibold whitespace-nowrap text-(--p-on) @lg:px-5"
-          >
-            Book a title check
-            <ArrowRight className="hidden size-4 @lg:block" />
-          </a>
-        </div>
-      </header>
-
-      <main className="overflow-x-clip">
-        <Journey />
-
-        {/* The closing call to action. */}
-        <section className="mx-auto max-w-[76rem] px-5 py-14 @3xl:py-20">
-          <motion.div
-            className="grid gap-6 rounded-2xl bg-(--p) px-6 py-8 text-(--p-on) @3xl:px-10 @3xl:py-10 @5xl:grid-cols-[minmax(0,1fr)_auto] @5xl:items-center @5xl:gap-10"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div>
-              <h2
-                className={`max-w-lg ${display} text-2xl font-semibold tracking-tight @3xl:text-3xl`}
-              >
-                Have a property document you want checked?
-              </h2>
-              <p className="mt-3 max-w-lg text-sm leading-relaxed opacity-85 @3xl:text-base">
-                Send us what you have. We will tell you what it shows, what is
-                missing and what it will take to make the title clear.
-              </p>
+    <div className={DEEDS_SHELL}>
+      <div className={HEADER_HEIGHT}>
+        {full && <DisclaimerGate />}
+        <DeedsHeader />
+        <main className="overflow-x-clip">
+          <Journey />
+          <section className="py-12 @xl:py-16">
+            <div className="mx-auto w-full max-w-[100rem] px-6 @5xl:px-10">
+              <CtaBand />
             </div>
-            <div className="flex flex-wrap gap-3">
-              <a
-                href="#contact"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-(--p)"
-              >
-                Book a title check <ArrowRight className="size-3.5" />
-              </a>
-              {CONTACTS.map(([Icon, label]) => (
-                <a
-                  key={label}
-                  href="#contact"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/40 px-5 py-2.5 text-sm font-semibold transition hover:border-white"
-                >
-                  <Icon className="size-4" /> {label}
-                </a>
-              ))}
-            </div>
-          </motion.div>
-        </section>
-      </main>
-
-      <footer className="text-white/75" style={{ background: "#180506" }}>
-        <div className="mx-auto grid max-w-[76rem] gap-10 px-5 py-14 @3xl:grid-cols-[1.4fr_1fr_1fr]">
-          <div>
-            {/* eslint-disable-next-line @next/next/no-img-element -- copied into other projects, which may not use next/image */}
-            <img
-              src={`${ASSET}/logo-white.webp`}
-              alt={`${FIRM}, Advanced Property Lawyers, Bengaluru`}
-              className="h-20 w-auto"
-            />
-            <p className="mt-4 max-w-[36ch] text-sm leading-relaxed">
-              A property law practice in Bengaluru: title verification, sale
-              deeds, registration, khata and RERA work, and property disputes.
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold tracking-[0.18em] text-white uppercase">
-              Practices
-            </p>
-            <ul className="mt-4 space-y-2 text-sm">
-              {PRACTICES.slice(0, 4).map(([slug, name]) => (
-                <li key={slug}>
-                  <a href="#practice" className="hover:text-white">
-                    {name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="text-xs font-semibold tracking-[0.18em] text-white uppercase">
-              The firm
-            </p>
-            <ul className="mt-4 space-y-2 text-sm">
-              {NAV.map(([label, href]) => (
-                <li key={label}>
-                  <a href={href} className="hover:text-white">
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-white/10">
-          <p className="mx-auto max-w-[76rem] px-5 py-6 text-xs leading-relaxed text-white/55">
-            As per the rules of the Bar Council of India, this website is for
-            information only and is not an advertisement or a solicitation of
-            work. Clear titles. Registered deeds. No loose ends.
-          </p>
-        </div>
-      </footer>
+          </section>
+        </main>
+        <DeedsFooter />
+        {full && <WhatsAppFloat />}
+      </div>
     </div>
   );
 }

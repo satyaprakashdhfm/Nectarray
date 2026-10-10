@@ -8,6 +8,8 @@ import { AiOrbitNetwork } from "./heroes/AiOrbitNetwork";
 import { AiTypingPrompt } from "./heroes/AiTypingPrompt";
 import { ClinicCareSite } from "./heroes/ClinicCareSite";
 import { CommerceCitySite } from "./heroes/CommerceCitySite";
+import { DeedsOfficeSite } from "./heroes/DeedsOfficeSite";
+import { DeedsOriginalSite } from "./heroes/DeedsOriginalSite";
 import { LawJourneySite } from "./heroes/LawJourneySite";
 import { EcommerceColourPicker } from "./heroes/EcommerceColourPicker";
 import { EcommerceMaskReveal } from "./heroes/EcommerceMaskReveal";
@@ -90,7 +92,9 @@ export const HEROES: Record<string, ComponentType> = {
   "clinic-care-site": ClinicCareSite,
   "commerce-city-site": CommerceCitySite,
   "kitchen-taste-site": KitchenTasteSite,
+  "deeds-original-site": DeedsOriginalSite,
   "law-journey-site": LawJourneySite,
+  "deeds-office-site": DeedsOfficeSite,
   "law-office-scroll-site": LawOfficeScrollSite,
   "law-firm-scroll-site": LawFirmScrollSite,
   "law-property-verification": LawPropertyVerification,

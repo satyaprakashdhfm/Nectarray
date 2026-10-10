@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { MotionConfig } from "motion/react";
 import {
   Check,
+  ChevronDown,
   Code,
   Copy,
   ExternalLink,
@@ -197,7 +198,7 @@ export function AnimationLibrary({
         <p className="text-ink-soft mt-4 text-[0.875rem]">{blurb}</p>
 
         <MotionConfig reducedMotion="user">
-          <ul className="mt-4 space-y-6">
+          <ul className="mt-4 space-y-3">
             {animations.map((a) => (
               <li key={a.id} className="min-w-0">
                 <AnimationCard animation={a} vars={vars} width={width} />
@@ -223,6 +224,7 @@ function AnimationCard({
   const palette = Object.values(vars).join();
   // Bumped to remount the hero, which plays its entrance again.
   const [run, setRun] = useState(0);
+  const [open, setOpen] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -241,80 +243,116 @@ function AnimationCard({
     // makes a scroll container, which stops the scroll stories' sticky
     // panels from pinning to the window.
     <article className="card overflow-clip p-0">
-      <div className="border-line flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-ink text-[0.9375rem] font-semibold">
-            {animation.name}
-          </h3>
-          <p className="text-ink-soft max-w-3xl text-[0.8125rem]">
-            {animation.note}
-          </p>
-          <code className="bg-mist text-ink-soft mt-1.5 inline-block rounded px-1.5 py-0.5 font-mono text-[0.6875rem]">
-            {animation.install ?? "npm i motion"}
-          </code>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setRun(run + 1)}
-            className={smallButton}
-          >
-            <RotateCcw className="size-3.5" strokeWidth={2} aria-hidden />
-            Replay
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowCode(!showCode)}
-            aria-expanded={showCode}
-            className={smallButton}
-          >
-            <Code className="size-3.5" strokeWidth={2} aria-hidden />
-            {showCode ? "Hide code" : "Code"}
-          </button>
-          {animation.page && (
-            <a
-              href={animation.page}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={smallButton}
-            >
-              <ExternalLink className="size-3.5" strokeWidth={2} aria-hidden />
-              Open full page
-            </a>
-          )}
-          <button type="button" onClick={copy} className={smallButton}>
-            {copied ? (
-              <Check className="size-3.5" strokeWidth={2} aria-hidden />
-            ) : (
-              <Copy className="size-3.5" strokeWidth={2} aria-hidden />
-            )}
-            {copied ? "Copied" : "Copy TSX"}
-          </button>
-        </div>
-      </div>
-
-      {showCode && (
-        <pre className="bg-night border-night-line max-h-96 overflow-auto border-b p-4 font-mono text-[0.75rem] leading-relaxed text-white/85">
-          <code>{animation.source}</code>
-        </pre>
-      )}
-
-      <div className="bg-mist p-2 sm:p-3">
-        <div
-          className="mx-auto max-w-full overflow-clip rounded-md bg-white"
-          style={{ ...vars, width: width ?? "100%" } as React.CSSProperties}
+      {/* Closed, a card is one line: its name, and a link to its own page
+          when it has one. Opening it shows the rest and mounts the hero. */}
+      <div
+        className={cn(
+          "flex items-center gap-3 px-4 py-3",
+          open && "border-line border-b",
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="group flex min-w-0 flex-1 items-center gap-3 text-left"
         >
-          {Hero ? (
-            // Keyed on the palette too: the 3D heroes read their colours
-            // once, on mount, so a new palette remounts them.
-            <Hero key={`${run}-${palette}`} />
-          ) : (
-            <p className="text-ink-soft p-6 text-[0.875rem]">
-              No component is registered for {animation.id}.
-            </p>
-          )}
-        </div>
+          <ChevronDown
+            className={cn(
+              "text-ink-soft size-4 shrink-0 transition-transform duration-300",
+              open ? "rotate-0" : "-rotate-90",
+            )}
+            strokeWidth={2}
+            aria-hidden
+          />
+          <span className="min-w-0">
+            <span className="text-ink group-hover:text-brand block text-[0.9375rem] font-semibold transition-colors">
+              {animation.name}
+            </span>
+            {!open && (
+              <span className="text-ink-soft block truncate text-[0.8125rem]">
+                {animation.note}
+              </span>
+            )}
+          </span>
+        </button>
+        {animation.page && (
+          <a
+            href={animation.page}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={smallButton}
+          >
+            <ExternalLink className="size-3.5" strokeWidth={2} aria-hidden />
+            Open full page
+          </a>
+        )}
       </div>
+
+      {open && (
+        <>
+          <div className="border-line flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-ink-soft max-w-3xl text-[0.8125rem]">
+                {animation.note}
+              </p>
+              <code className="bg-mist text-ink-soft mt-1.5 inline-block rounded px-1.5 py-0.5 font-mono text-[0.6875rem]">
+                {animation.install ?? "npm i motion"}
+              </code>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setRun(run + 1)}
+                className={smallButton}
+              >
+                <RotateCcw className="size-3.5" strokeWidth={2} aria-hidden />
+                Replay
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCode(!showCode)}
+                aria-expanded={showCode}
+                className={smallButton}
+              >
+                <Code className="size-3.5" strokeWidth={2} aria-hidden />
+                {showCode ? "Hide code" : "Code"}
+              </button>
+              <button type="button" onClick={copy} className={smallButton}>
+                {copied ? (
+                  <Check className="size-3.5" strokeWidth={2} aria-hidden />
+                ) : (
+                  <Copy className="size-3.5" strokeWidth={2} aria-hidden />
+                )}
+                {copied ? "Copied" : "Copy TSX"}
+              </button>
+            </div>
+          </div>
+
+          {showCode && (
+            <pre className="bg-night border-night-line max-h-96 overflow-auto border-b p-4 font-mono text-[0.75rem] leading-relaxed text-white/85">
+              <code>{animation.source}</code>
+            </pre>
+          )}
+
+          <div className="bg-mist p-2 sm:p-3">
+            <div
+              className="mx-auto max-w-full overflow-clip rounded-md bg-white"
+              style={{ ...vars, width: width ?? "100%" } as React.CSSProperties}
+            >
+              {Hero ? (
+                // Keyed on the palette too: the 3D heroes read their colours
+                // once, on mount, so a new palette remounts them.
+                <Hero key={`${run}-${palette}`} />
+              ) : (
+                <p className="text-ink-soft p-6 text-[0.875rem]">
+                  No component is registered for {animation.id}.
+                </p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </article>
   );
 }

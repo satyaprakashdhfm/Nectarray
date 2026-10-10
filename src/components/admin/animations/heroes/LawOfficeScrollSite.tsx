@@ -929,7 +929,9 @@ function Office({ t, frame }: { t: MotionValue<number>; frame: Frame }) {
 /* The story: words on the left, the office on the right.              */
 /* ------------------------------------------------------------------ */
 
-const STEPS = [
+type StoryStep = { title: string; text: string; points?: string[] };
+
+const STEPS: StoryStep[] = [
   {
     title: "Walk in with your papers.",
     text: "Bring what the seller gave you. We take it from the front desk.",
@@ -962,7 +964,39 @@ const STEPS = [
   },
 ];
 
-function Story() {
+/** The first screen's words, and the seal at the end. */
+type StoryCopy = {
+  title: string;
+  body: string;
+  primary: string;
+  secondary: string;
+  hint: string;
+  sealTitle: string;
+  sealBody: string;
+};
+
+const COPY: StoryCopy = {
+  title: "Walk in with your papers. Walk out sure.",
+  body: "Property lawyers who check the title, loans and approvals before you pay a rupee.",
+  primary: "Verify my property",
+  secondary: "Our services",
+  hint: "Scroll to follow a file through our office.",
+  sealTitle: "Verified. Safe to buy.",
+  sealBody: "Title clear, no loans, plan approved, opinion signed.",
+};
+
+/**
+ * The office and the words over it, on their own so another site can tell
+ * its story with them (the Deeds & Co. office template does). It pins under
+ * a header of height --hh (4rem when unset).
+ */
+export function OfficeStory({
+  steps = STEPS,
+  copy = COPY,
+}: {
+  steps?: StoryStep[];
+  copy?: StoryCopy;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [frame, setFrame] = useState<Frame>(() => frameFor(1280, 720));
@@ -998,7 +1032,7 @@ function Story() {
       {/* The office, the whole background, held while the words pass. */}
       <div
         ref={stageRef}
-        className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden bg-[#fafafa]"
+        className="sticky top-[var(--hh,4rem)] h-[calc(100dvh-var(--hh,4rem))] overflow-hidden bg-[#fafafa]"
       >
         <Office
           key={`${Math.round(frame.vw)}-${frame.wide}`}
@@ -1013,7 +1047,7 @@ function Story() {
           style={{ scaleX: bar }}
         />
         <div className="absolute top-3 right-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-700 shadow-sm ring-1 ring-zinc-200">
-          Step {step + 1} of {STEPS.length}
+          Step {step + 1} of {steps.length}
         </div>
         {/* The whole office again, with the seal on it. */}
         <motion.div
@@ -1037,18 +1071,16 @@ function Story() {
               </svg>
             </span>
             <p className="mt-3 text-xl font-semibold tracking-tight text-zinc-900">
-              Verified. Safe to buy.
+              {copy.sealTitle}
             </p>
-            <p className="mt-1 text-sm text-zinc-600">
-              Title clear, no loans, plan approved, opinion signed.
-            </p>
+            <p className="mt-1 text-sm text-zinc-600">{copy.sealBody}</p>
           </motion.div>
         </motion.div>
       </div>
 
       {/* The words, one screen each, over the office. */}
-      <ol className="relative z-10 mx-auto -mt-[calc(100dvh-4rem)] max-w-6xl px-5">
-        {STEPS.map((s, i) => (
+      <ol className="relative z-10 mx-auto -mt-[calc(100dvh-var(--hh,4rem))] max-w-6xl px-5">
+        {steps.map((s, i) => (
           <motion.li
             key={s.title}
             className="flex min-h-[100dvh] flex-col justify-end pb-[7dvh] @4xl:justify-center @4xl:pb-0"
@@ -1065,29 +1097,26 @@ function Story() {
               {i === 0 ? (
                 <>
                   <h1 className="text-4xl leading-[1.05] font-semibold tracking-tight text-zinc-900 @3xl:text-6xl">
-                    Walk in with your papers. Walk out sure.
+                    {copy.title}
                   </h1>
                   <p className="mt-5 max-w-[40ch] text-base leading-relaxed text-zinc-600 @3xl:text-lg">
-                    Property lawyers who check the title, loans and approvals
-                    before you pay a rupee.
+                    {copy.body}
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <a
                       href="#start"
                       className="rounded-full bg-(--p) px-6 py-3 text-sm font-semibold whitespace-nowrap text-(--p-on) transition-transform active:scale-[0.98]"
                     >
-                      Verify my property
+                      {copy.primary}
                     </a>
                     <a
                       href="#services"
                       className="rounded-full border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold whitespace-nowrap text-zinc-900 transition-colors hover:border-zinc-900"
                     >
-                      Our services
+                      {copy.secondary}
                     </a>
                   </div>
-                  <p className="mt-10 text-sm text-zinc-500">
-                    Scroll to follow a file through our office.
-                  </p>
+                  <p className="mt-10 text-sm text-zinc-500">{copy.hint}</p>
                 </>
               ) : (
                 <>
@@ -1127,12 +1156,12 @@ function Story() {
                       ))}
                     </ul>
                   )}
-                  {i === STEPS.length - 1 && (
+                  {i === steps.length - 1 && (
                     <a
                       href="#start"
                       className="mt-8 inline-flex rounded-full bg-(--p) px-6 py-3 text-sm font-semibold text-(--p-on)"
                     >
-                      Verify my property
+                      {copy.primary}
                     </a>
                   )}
                 </>
@@ -1454,7 +1483,7 @@ export function LawOfficeScrollSite() {
       </header>
 
       <section>
-        <Story />
+        <OfficeStory />
       </section>
 
       <Rest />
