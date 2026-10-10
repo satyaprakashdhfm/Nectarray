@@ -34,3 +34,6 @@ export function adminRoute(pathname: string): string | null {
 
 /** Remembers whether the panel's sidebar was put away (components/admin/AdminSidebar). */
 export const SIDEBAR_COOKIE = "admin-sidebar";
+
+/** Remembers whether the Drive shows files as a grid or a list (components/admin/DriveBrowser). */
+export const DRIVE_VIEW_COOKIE = "admin-drive-view";

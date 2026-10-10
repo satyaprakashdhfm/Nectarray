@@ -6,7 +6,7 @@ import { downloadLink } from "@/lib/drive-storage";
  * Opens or downloads a Drive file: checks the admin and the project, then
  * sends the browser to a short-lived link straight to the bucket.
  * `?download=1` always downloads; otherwise PDFs, images, video and text
- * open in the browser.
+ * open in the browser. The Drive's grid uses it for image and video previews.
  */
 export async function GET(
   request: Request,
@@ -20,5 +20,13 @@ export async function GET(
   if (!file) return new Response("Not found", { status: 404 });
 
   const download = new URL(request.url).searchParams.has("download");
-  return Response.redirect(await downloadLink(file.key, file, download), 302);
+  // The link lasts 15 minutes; letting the browser reuse this redirect for
+  // ten of them keeps the grid's previews from refetching on every refresh.
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: await downloadLink(file.key, file, download),
+      "Cache-Control": "private, max-age=600",
+    },
+  });
 }

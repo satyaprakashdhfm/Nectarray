@@ -1,5 +1,6 @@
-import { ADMIN } from "@/lib/admin-path";
+import { ADMIN, DRIVE_VIEW_COOKIE } from "@/lib/admin-path";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
@@ -34,6 +35,10 @@ export default async function AdminProjectDrivePage({
   const folderId = isId(folder) ? folder : null;
   const contents = await loadFolder(project.id, folderId);
   if (!contents) notFound();
+  const view =
+    (await cookies()).get(DRIVE_VIEW_COOKIE)?.value === "list"
+      ? "list"
+      : "grid";
 
   return (
     <>
@@ -68,6 +73,7 @@ export default async function AdminProjectDrivePage({
           createdAt: f.createdAt.toISOString(),
         }))}
         storage={driveReady()}
+        initialView={view}
       />
     </>
   );

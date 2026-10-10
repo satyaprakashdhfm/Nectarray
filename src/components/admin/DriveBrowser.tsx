@@ -1,9 +1,9 @@
 "use client";
 
-import { ADMIN } from "@/lib/admin-path";
+import { ADMIN, DRIVE_VIEW_COOKIE } from "@/lib/admin-path";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   ChevronRight,
   Download,
@@ -16,6 +16,9 @@ import {
   Folder,
   FolderPlus,
   HardDrive,
+  LayoutGrid,
+  List,
+  MoreVertical,
   Pencil,
   Trash2,
   Upload,
@@ -42,6 +45,7 @@ type DriveFile = {
   createdAt: string;
 };
 type Crumb = { id: string | null; name: string };
+type View = "grid" | "list";
 
 type Upload = {
   key: string;
@@ -65,6 +69,7 @@ export function DriveBrowser({
   folders,
   files,
   storage,
+  initialView,
 }: {
   projectId: string;
   folderId: string | null;
@@ -72,6 +77,8 @@ export function DriveBrowser({
   folders: Folder[];
   files: DriveFile[];
   storage: boolean;
+  /** Grid or list, as last chosen (kept in a cookie). */
+  initialView: View;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -79,6 +86,7 @@ export function DriveBrowser({
   const [naming, setNaming] = useState(false);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [view, setView] = useState<View>(initialView);
   const picker = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
 
@@ -130,6 +138,11 @@ export function DriveBrowser({
     // Landed: drop it from the queue and show it in the folder.
     setUploads((list) => list.filter((u) => u.key !== key));
     router.refresh();
+  }
+
+  function chooseView(next: View) {
+    setView(next);
+    document.cookie = `${DRIVE_VIEW_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
   }
 
   function upload(list: FileList | null) {
@@ -219,6 +232,7 @@ export function DriveBrowser({
           </ol>
         </nav>
         <div className="flex gap-2">
+          <ViewSwitch view={view} onChange={chooseView} />
           <button
             type="button"
             onClick={() => setNaming(true)}
@@ -320,24 +334,45 @@ export function DriveBrowser({
       {files.length > 0 && (
         <section className="mt-6">
           <h2 className="text-ink-faint text-[0.75rem] font-semibold">Files</h2>
-          <ul className="card divide-line-soft mt-2 divide-y">
-            {files.map((f) => (
-              <FileRow
-                key={f.id}
-                file={f}
-                href={fileHref(f.id)}
-                downloadHref={fileHref(f.id, true)}
-                busy={pending}
-                onRename={(name) =>
-                  act(() => renameFile(projectId, f.id, name))
-                }
-                onDelete={() => {
-                  if (confirm(`Delete "${f.name}"? This cannot be undone.`))
-                    act(() => deleteFile(projectId, f.id));
-                }}
-              />
-            ))}
-          </ul>
+          {view === "grid" ? (
+            <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+              {files.map((f) => (
+                <FileCard
+                  key={f.id}
+                  file={f}
+                  href={fileHref(f.id)}
+                  downloadHref={fileHref(f.id, true)}
+                  busy={pending}
+                  onRename={(name) =>
+                    act(() => renameFile(projectId, f.id, name))
+                  }
+                  onDelete={() => {
+                    if (confirm(`Delete "${f.name}"? This cannot be undone.`))
+                      act(() => deleteFile(projectId, f.id));
+                  }}
+                />
+              ))}
+            </ul>
+          ) : (
+            <ul className="card divide-line-soft mt-2 divide-y">
+              {files.map((f) => (
+                <FileRow
+                  key={f.id}
+                  file={f}
+                  href={fileHref(f.id)}
+                  downloadHref={fileHref(f.id, true)}
+                  busy={pending}
+                  onRename={(name) =>
+                    act(() => renameFile(projectId, f.id, name))
+                  }
+                  onDelete={() => {
+                    if (confirm(`Delete "${f.name}"? This cannot be undone.`))
+                      act(() => deleteFile(projectId, f.id));
+                  }}
+                />
+              ))}
+            </ul>
+          )}
         </section>
       )}
 
@@ -497,6 +532,264 @@ function FileRow({
   );
 }
 
+/** Grid or list, like the pair of buttons at the top right of Google Drive. */
+function ViewSwitch({
+  view,
+  onChange,
+}: {
+  view: View;
+  onChange: (view: View) => void;
+}) {
+  const options = [
+    { value: "grid", label: "Grid", Icon: LayoutGrid },
+    { value: "list", label: "List", Icon: List },
+  ] as const;
+  return (
+    <div
+      role="group"
+      aria-label="Show files as"
+      className="border-line bg-surface flex rounded-lg border p-0.5"
+    >
+      {options.map(({ value, label, Icon }) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => onChange(value)}
+          aria-pressed={view === value}
+          aria-label={label}
+          title={label}
+          className={cn(
+            "rounded-md px-2.5 py-1.5 transition-colors",
+            view === value
+              ? "bg-brand-wash text-brand-deep"
+              : "text-ink-faint hover:text-ink",
+          )}
+        >
+          <Icon className="size-4" aria-hidden />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * A file in the grid: its name and a menu on top, a preview below. Images
+ * and videos show themselves; anything else shows its kind.
+ */
+function FileCard({
+  file,
+  href,
+  downloadHref,
+  busy,
+  onRename,
+  onDelete,
+}: {
+  file: DriveFile;
+  href: string;
+  downloadHref: string;
+  busy: boolean;
+  onRename: (name: string) => void;
+  onDelete: () => void;
+}) {
+  const [renaming, setRenaming] = useState(false);
+  return (
+    <li className="card card-hover flex flex-col p-2">
+      {renaming ? (
+        <NameForm
+          flat
+          label="Rename"
+          initial={file.name}
+          submit="Save"
+          onCancel={() => setRenaming(false)}
+          onSave={(name) => {
+            setRenaming(false);
+            onRename(name);
+          }}
+        />
+      ) : (
+        <div className="flex items-center gap-2 pb-2 pl-1.5">
+          <FileIcon
+            type={file.type}
+            name={file.name}
+            className="text-ink-soft size-4"
+          />
+          <a
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            title={file.name}
+            className="text-ink min-w-0 flex-1 truncate text-[0.8125rem] font-semibold"
+          >
+            {file.name}
+          </a>
+          <CardMenu
+            name={file.name}
+            downloadHref={downloadHref}
+            busy={busy}
+            onRename={() => setRenaming(true)}
+            onDelete={onDelete}
+          />
+        </div>
+      )}
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        tabIndex={-1}
+        aria-hidden
+        className="bg-mist block aspect-[4/3] overflow-hidden rounded-lg"
+      >
+        <Preview file={file} src={href} />
+      </a>
+    </li>
+  );
+}
+
+function Preview({ file, src }: { file: DriveFile; src: string }) {
+  const [broken, setBroken] = useState(false);
+  if (!broken && file.type.startsWith("image/"))
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- a signed, private link; next/image's optimiser cannot fetch it
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={() => setBroken(true)}
+        className="size-full object-cover object-top"
+      />
+    );
+  if (!broken && file.type.startsWith("video/"))
+    return (
+      // The kind shows through until the first frame arrives (or if none does).
+      <span className="relative block size-full">
+        <Kind file={file} />
+        <video
+          // #t asks for a frame just past the start, so the card is not black.
+          src={`${src}#t=0.1`}
+          preload="metadata"
+          muted
+          playsInline
+          onError={() => setBroken(true)}
+          className="pointer-events-none absolute inset-0 size-full object-cover"
+        />
+      </span>
+    );
+  return <Kind file={file} />;
+}
+
+/** A large icon and the file's extension, for files with no picture. */
+function Kind({ file }: { file: DriveFile }) {
+  const extension = file.name.includes(".")
+    ? file.name.split(".").pop()?.slice(0, 5).toUpperCase()
+    : null;
+  return (
+    <span className="flex size-full flex-col items-center justify-center gap-2">
+      <FileIcon
+        type={file.type}
+        name={file.name}
+        className="text-ink-faint size-10"
+      />
+      {extension && (
+        <span className="text-ink-faint text-[0.6875rem] font-semibold">
+          {extension}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** The ⋮ menu on a card: download, rename, delete. */
+function CardMenu({
+  name,
+  downloadHref,
+  busy,
+  onRename,
+  onDelete,
+}: {
+  name: string;
+  downloadHref: string;
+  busy: boolean;
+  onRename: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const escape = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open]);
+
+  const item =
+    "hover:bg-mist flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[0.8125rem] font-medium disabled:opacity-40";
+  return (
+    <div ref={box} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`More for ${name}`}
+        className="text-ink-faint hover:text-ink hover:bg-mist rounded-md p-1.5 transition-colors"
+      >
+        <MoreVertical className="size-4" aria-hidden />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="border-line bg-surface absolute top-full right-0 z-20 mt-1 w-40 rounded-lg border p-1 shadow-lg"
+        >
+          <a
+            role="menuitem"
+            href={downloadHref}
+            onClick={() => setOpen(false)}
+            className={cn(item, "text-ink")}
+          >
+            <Download className="size-4" aria-hidden />
+            Download
+          </a>
+          <button
+            role="menuitem"
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              onRename();
+            }}
+            className={cn(item, "text-ink")}
+          >
+            <Pencil className="size-4" aria-hidden />
+            Rename
+          </button>
+          <button
+            role="menuitem"
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+            className={cn(item, "text-danger")}
+          >
+            <Trash2 className="size-4" aria-hidden />
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RowActions({
   name,
   busy,
@@ -643,9 +936,17 @@ function UploadQueue({
   );
 }
 
-function FileIcon({ type, name }: { type: string; name: string }) {
+function FileIcon({
+  type,
+  name,
+  className,
+}: {
+  type: string;
+  name: string;
+  className?: string;
+}) {
   const props = {
-    className: "text-ink-soft size-5 shrink-0",
+    className: cn("shrink-0", className ?? "text-ink-soft size-5"),
     strokeWidth: 1.7,
     "aria-hidden": true,
   } as const;
