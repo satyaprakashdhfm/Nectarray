@@ -1,340 +1,256 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
-  AnimatePresence,
   motion,
-  useMotionValueEvent,
   useReducedMotion,
   useScroll,
-  useSpring,
   useTransform,
   type MotionValue,
 } from "motion/react";
+import {
+  ArrowRight,
+  Briefcase,
+  FileText,
+  Handshake,
+  MapPin,
+  Route,
+  ShieldCheck,
+  Target,
+} from "lucide-react";
 
 /**
- * A whole one-page site for a property law firm (a sample firm), with the
- * client's visit playing beside the words as the page scrolls: he walks in,
- * is sent through by reception, hands his file over in the meeting room, a
- * partner joins, and the documents are examined, ticked and stamped.
+ * A whole one-page site for a property law firm (a sample firm), laid out
+ * like the "character flow" reference: the sections run down the left, and
+ * down the right runs one continuous strip of the client's visit, a picture
+ * beside every section, joined by a dashed timeline with a node and a
+ * caption per step. He walks in, talks it through, a partner reviews the
+ * file, the documents are checked and stamped, and the file is handed back.
  *
- * The story is a run of illustrations in scenes. Inside a scene every
- * picture keeps the same camera, room and people and only the people move,
- * so each one dissolves into the next like stop-motion. Each scene also
- * pushes in slowly, so the camera is never still. Between scenes the cut
- * is quicker. The scroll is the playhead; scrolling back plays it in
- * reverse.
+ * Each section's picture plays its own shots as the section scrolls past:
+ * inside a scene only the people move, so a shot dissolves into the next
+ * like stop-motion; across scenes the cut is quick. The pictures bleed
+ * into each other top and bottom, fade into the page on the left, and blur
+ * softly towards the words so the eye stays on the text.
  *
  * The pictures were made with Gemini's image editor and live in
- * public/animations/law-journey/ as scene-<scene>-<shot>.webp. A scene is
- * added by listing its shots in SCENES with the section it starts on.
- * Colours otherwise come from the palette variables (--p, --p-on).
+ * public/animations/law-journey/ as scene-<scene>-<shot>.webp; the two
+ * portraits are cropped from the last scene. A step's shots are listed in
+ * STEPS. Colours otherwise come from the palette variables (--p, --p-on).
  */
 
-const FIRM = "Ashlar Chambers";
+const FIRM = "Deeds & Co.";
 const DIR = "/animations/law-journey";
+const PAGE = "#fbf7f1";
 
-/** Each scene, the section it starts on, and its shots in order. */
-const SCENES: { from: number; shots: string[] }[] = [
-  { from: 0, shots: ["1-1", "1-2", "1-3", "1-4", "1-5"] },
-  { from: 2, shots: ["2-1", "2-2", "2-3", "2-4", "2-5"] },
-  { from: 4, shots: ["3-1", "3-2", "3-3", "3-4"] },
-];
-
-const FRAMES = SCENES.flatMap((s, scene) =>
-  s.shots.map((shot) => ({ src: `${DIR}/scene-${shot}.webp`, scene })),
-);
-/** The index of each scene's first shot in FRAMES. */
-const FIRST = SCENES.map((_, i) =>
-  SCENES.slice(0, i).reduce((n, s) => n + s.shots.length, 0),
-);
-
-/**
- * How much of the way to a shot is spent holding the one before it. Inside
- * a scene the dissolve takes the second half; across scenes it is a short
- * cut at the end, so two different rooms are rarely seen at once.
- */
 const HOLD_IN_SCENE = 0.45;
 const HOLD_ACROSS = 0.8;
 
 const ease = (t: number) => t * t * (3 - 2 * t);
+const clamp = (t: number) => Math.min(Math.max(t, 0), 1);
+const sceneOf = (shot: string) => shot.split("-")[0];
 
-/** How visible shot `i` is when the playhead is at `f`. */
-function shotOpacity(i: number, f: number) {
+/** How visible shot `i` of `shots` is when the playhead is at `f`. */
+function shotOpacity(shots: string[], i: number, f: number) {
   const at = Math.floor(f);
-  // Shots already reached in the current scene stay under the newest one.
-  if (i <= at) return FRAMES[i].scene === FRAMES[at].scene ? 1 : 0;
+  if (i <= at) return sceneOf(shots[i]) === sceneOf(shots[at]) ? 1 : 0;
   if (i !== at + 1) return 0;
   const hold =
-    FRAMES[i].scene === FRAMES[at].scene ? HOLD_IN_SCENE : HOLD_ACROSS;
-  return ease(Math.min(Math.max((f - at - hold) / (1 - hold), 0), 1));
+    sceneOf(shots[i]) === sceneOf(shots[at]) ? HOLD_IN_SCENE : HOLD_ACROSS;
+  return ease(clamp((f - at - hold) / (1 - hold)));
 }
 
 function Shot({
-  src,
+  shots,
   index,
   playhead,
 }: {
-  src: string;
+  shots: string[];
   index: number;
   playhead: MotionValue<number>;
 }) {
-  const opacity = useTransform(playhead, (f) => shotOpacity(index, f));
+  const opacity = useTransform(playhead, (f) => shotOpacity(shots, index, f));
   return (
     <motion.img
-      src={src}
+      src={`${DIR}/scene-${shots[index]}.webp`}
       alt=""
       draggable={false}
-      className="absolute inset-0 size-full object-cover will-change-[opacity] select-none"
+      className="absolute inset-0 size-full object-cover object-[62%_50%] will-change-[opacity] select-none"
       style={{ opacity }}
     />
   );
 }
 
-/** A scene's shots, pushing in slowly while the scene plays. */
-function Scene({
-  index,
+function Shots({
+  shots,
   playhead,
-  still,
 }: {
-  index: number;
+  shots: string[];
   playhead: MotionValue<number>;
-  still: boolean;
 }) {
-  const first = FIRST[index];
-  const length = SCENES[index].shots.length;
-  const scale = useTransform(playhead, (f) =>
-    still ? 1 : 1 + 0.07 * Math.min(Math.max((f - first) / length, 0), 1),
-  );
   return (
-    <motion.div className="absolute inset-0" style={{ scale }}>
-      {FRAMES.map((frame, i) =>
-        frame.scene === index ? (
-          <Shot key={frame.src} src={frame.src} index={i} playhead={playhead} />
-        ) : null,
-      )}
-    </motion.div>
-  );
-}
-
-function Story({
-  progress,
-  starts,
-}: {
-  progress: MotionValue<number>;
-  /** Where each section begins, as scroll progress (0 to 1). */
-  starts: number[];
-}) {
-  const reduce = useReducedMotion();
-  // Each scene's first shot as its first section arrives, the last shot
-  // at the end of the page.
-  const playhead = useTransform(
-    progress,
-    [...SCENES.map((s) => starts[s.from] ?? 0), 1],
-    [...FIRST, FRAMES.length - 1],
-  );
-
-  // Every shot fetched up front, so scrolling never waits for one.
-  useEffect(() => {
-    for (const { src } of FRAMES) new Image().src = src;
-  }, []);
-
-  return (
-    <div
-      role="img"
-      aria-label="A client walks into the chambers, hands over his property file, and the documents are examined, ticked and stamped"
-      className="absolute inset-0 overflow-hidden"
-    >
-      {SCENES.map((_, i) => (
-        <Scene key={i} index={i} playhead={playhead} still={Boolean(reduce)} />
+    <>
+      {shots.map((shot, i) => (
+        <Shot key={shot} shots={shots} index={i} playhead={playhead} />
       ))}
-    </div>
+    </>
   );
 }
 
-/* Every edge of the picture fades into the page, so it has no frame. */
-const FEATHER: React.CSSProperties = {
-  maskImage:
-    "linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent)",
-  maskComposite: "intersect",
-  WebkitMaskImage:
-    "linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent)",
-  WebkitMaskComposite: "source-in",
-};
+/* Faded out at the top and bottom (into the next picture) and the left. */
+const FEATHER_WIDE =
+  "linear-gradient(to right, transparent, #000 38%), linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent)";
+const FEATHER_NARROW =
+  "linear-gradient(to bottom, transparent, #000 10%, #000 70%, transparent)";
+/* The blurred copy shows on the left and is gone by the middle. */
+const BLUR_MASK = "linear-gradient(to right, #000 15%, transparent 62%)";
 
-/**
- * The words on the left, one section after another at their own height,
- * and on the right a narrow column (about a third of the width) where the
- * story stays in view and plays as they pass, with a timeline beside it.
- */
-function Journey() {
-  const ref = useRef<HTMLDivElement>(null);
-  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+/** One section: the words on the left, its part of the story on the right. */
+function Step({ step, index }: { step: StepData; index: number }) {
+  const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
-  const eased = useSpring(scrollYProgress, {
-    stiffness: 80,
-    damping: 22,
-    mass: 0.5,
+  const last = step.shots.length - 1;
+  const playhead = useTransform(scrollYProgress, [0.3, 0.7], [0, last], {
+    clamp: true,
   });
-  const progress = reduce ? scrollYProgress : eased;
-
-  // Where each section starts in the scroll, measured, so a scene begins
-  // exactly as its section arrives whatever the sections' heights.
-  const [starts, setStarts] = useState<number[]>(() =>
-    SECTIONS.map((_, i) => i / (SECTIONS.length - 1)),
+  const scale = useTransform(scrollYProgress, (p) =>
+    reduce ? 1.04 : 1.03 + 0.09 * p,
   );
-  useEffect(() => {
-    const wrap = ref.current;
-    if (!wrap) return;
-    const measure = () => {
-      const travel = wrap.offsetHeight - window.innerHeight;
-      if (travel <= 0) return;
-      setStarts(
-        sectionRefs.current.map((el) =>
-          el ? Math.min(Math.max(el.offsetTop / travel, 0), 1) : 0,
-        ),
-      );
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(wrap);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  const [step, setStep] = useState(0);
-  useMotionValueEvent(scrollYProgress, "change", (v) =>
-    setStep(
-      Math.max(
-        0,
-        starts.findLastIndex((s) => s <= v + 0.02),
-      ),
-    ),
+  const y = useTransform(scrollYProgress, (p) =>
+    reduce ? "0%" : `${(p - 0.5) * 8}%`,
   );
+  const fill = useTransform(scrollYProgress, [0.2, 0.55], [0, 1]);
 
   return (
-    <div
+    <section
       ref={ref}
-      className="relative mx-auto max-w-6xl px-5 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_32%] @4xl:gap-x-12"
+      id={step.id}
+      className="relative grid scroll-mt-16 @4xl:min-h-[88dvh] @4xl:grid-cols-[minmax(0,1fr)_46%]"
     >
-      {/* The story: pinned under the bar on a phone, beside the words wide. */}
-      <div className="sticky top-16 z-10 -mx-5 bg-white px-5 pt-3 pb-4 @4xl:order-2 @4xl:mx-0 @4xl:self-start @4xl:bg-transparent @4xl:px-0 @4xl:pt-0 @4xl:pb-0">
-        <div className="flex h-[34dvh] gap-4 @4xl:h-[calc(100dvh-4rem)] @4xl:items-center">
-          {/* The timeline: a dot a section, filled as they pass. */}
-          <div className="relative hidden h-[62%] w-3 shrink-0 @4xl:block">
-            <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-zinc-200" />
-            <motion.span
-              className="absolute inset-x-0 top-0 mx-auto h-full w-px origin-top bg-(--p)"
-              style={{ scaleY: scrollYProgress }}
-            />
-            {SECTIONS.map((s, i) => (
-              <span
-                key={s.id}
-                className={`absolute left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 transition-colors duration-300 ${
-                  i <= step
-                    ? "border-(--p) bg-(--p)"
-                    : "border-zinc-300 bg-white"
-                }`}
-                style={{ top: `${(i / (SECTIONS.length - 1)) * 100}%` }}
-              />
-            ))}
-          </div>
-
-          <div className="relative h-full flex-1 @4xl:aspect-[4/5] @4xl:h-auto">
-            <div className="absolute inset-0" style={FEATHER}>
-              <Story progress={progress} starts={starts} />
-            </div>
-            <div className="absolute bottom-[8%] left-[10%]">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={step}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-3.5 pl-1.5 text-xs font-semibold text-zinc-800 shadow-lg ring-1 ring-zinc-200"
-                >
-                  <span className="grid size-6 place-items-center rounded-full bg-(--p) text-[0.6875rem] font-bold text-(--p-on) tabular-nums">
-                    {step + 1}
-                  </span>
-                  {SECTIONS[step].caption}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* The words, one section after another. */}
-      <div className="@4xl:order-1">
-        {SECTIONS.map((section, i) => (
-          <motion.section
-            key={section.id}
-            id={section.id}
-            ref={(el) => {
-              sectionRefs.current[i] = el;
-            }}
-            className="flex min-h-[72dvh] scroll-mt-16 flex-col justify-center py-14 @4xl:py-20"
-            initial={{ opacity: 0.3 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ amount: 0.45 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div
-              className="max-w-2xl"
-              initial={{ y: 24 }}
-              whileInView={{ y: 0 }}
-              viewport={{ amount: 0.45 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      {/* The picture: above the words on a phone, beside them wide. */}
+      <div className="relative h-[62vw] max-h-96 @4xl:order-2 @4xl:h-auto @4xl:max-h-none">
+        <div
+          role="img"
+          aria-label={step.caption}
+          className="absolute inset-0 overflow-hidden @4xl:-inset-y-[9%] [mask-image:var(--narrow)] @4xl:[mask-image:var(--wide)] [mask-composite:intersect] [-webkit-mask-composite:source-in] [-webkit-mask-image:var(--narrow)] @4xl:[-webkit-mask-image:var(--wide)]"
+          style={
+            {
+              "--wide": FEATHER_WIDE,
+              "--narrow": FEATHER_NARROW,
+            } as React.CSSProperties
+          }
+        >
+          <motion.div className="absolute inset-0" style={{ scale, y }}>
+            <Shots shots={step.shots} playhead={playhead} />
+            {/* The same shots, blurred, over the side next to the words. */}
+            <div
+              aria-hidden
+              className="absolute inset-0 hidden @4xl:block"
+              style={{
+                filter: "blur(9px) saturate(0.9)",
+                maskImage: BLUR_MASK,
+                WebkitMaskImage: BLUR_MASK,
+              }}
             >
-              {section.body}
-            </motion.div>
-          </motion.section>
-        ))}
+              <Shots shots={step.shots} playhead={playhead} />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* The timeline: dashed down the strip, solid as the step passes. */}
+        <div className="pointer-events-none absolute inset-y-0 left-[18%] hidden w-0.5 @4xl:block">
+          <span className="absolute inset-0 border-l-2 border-dashed border-(--p)/35" />
+          <motion.span
+            className="absolute inset-0 origin-top bg-(--p)"
+            style={{ scaleY: fill, opacity: 0.9 }}
+          />
+          <motion.span
+            className="absolute top-[58%] left-1/2 grid size-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-(--p) bg-white shadow"
+            initial={{ scale: 0.6 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ amount: 0.6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+          >
+            <span className="size-2 rounded-full bg-(--p)" />
+          </motion.span>
+        </div>
+
+        {/* The step's caption on the picture. */}
+        <motion.p
+          className="absolute bottom-4 left-5 flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-4 pl-1.5 text-xs font-semibold text-zinc-800 shadow-lg ring-1 ring-zinc-200 @4xl:top-[58%] @4xl:bottom-auto @4xl:left-[calc(18%+1.5rem)] @4xl:-translate-y-1/2"
+          initial={{ opacity: 0, x: -10 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ amount: 0.5 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="grid size-6 place-items-center rounded-full bg-(--p) text-[0.6875rem] font-bold text-(--p-on) tabular-nums">
+            {index + 1}
+          </span>
+          {step.caption}
+        </motion.p>
       </div>
-    </div>
+
+      {/* The words. */}
+      <motion.div
+        className="relative z-10 flex flex-col justify-center px-5 py-12 @4xl:order-1 @4xl:py-20 @4xl:pr-4 @4xl:pl-[max(1.25rem,calc((100cqw-72rem)/2+1.25rem))]"
+        initial={{ opacity: 0.35, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ amount: 0.4 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="max-w-xl">{step.body}</div>
+      </motion.div>
+    </section>
   );
 }
 
-const eyebrow = "text-xs font-semibold tracking-[0.16em] text-(--p) uppercase";
-const h2 =
-  "mt-3 text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl";
+const eyebrow =
+  "flex items-center gap-3 text-xs font-semibold tracking-[0.16em] text-(--p) uppercase before:h-px before:w-8 before:bg-(--p)";
+const serif = "font-serif tracking-tight text-zinc-900";
+const h2 = `mt-3 text-3xl leading-[1.1] @3xl:text-4xl ${serif}`;
 const lede =
-  "mt-4 max-w-[48ch] text-base leading-relaxed text-zinc-600 @3xl:text-[1.0625rem]";
-const tile = "rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-zinc-200";
+  "mt-4 max-w-[52ch] text-[0.9375rem] leading-relaxed text-zinc-600";
+const card = "rounded-xl bg-white shadow-sm ring-1 ring-zinc-200/80";
+const textLink =
+  "mt-6 inline-flex items-center gap-1.5 self-start rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 transition-colors hover:border-(--p) hover:text-(--p)";
 
-const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
+type StepData = {
+  id: string;
+  caption: string;
+  shots: string[];
+  body: React.ReactNode;
+};
+
+const STEPS: StepData[] = [
   {
     id: "top",
-    caption: "Arriving at the chambers",
+    caption: "Walks into our office",
+    shots: ["1-1", "1-2", "1-3", "1-4", "1-5"],
     body: (
       <>
-        <h1 className="text-4xl leading-[1.05] font-semibold tracking-tight text-zinc-900 @3xl:text-5xl">
-          Property law, from the first search to the final registration
+        <h1 className={`text-4xl leading-[1.05] @3xl:text-[3.25rem] ${serif}`}>
+          The title, the deal and the dispute, under one roof
         </h1>
         <p className={lede}>
-          {FIRM} advises buyers, owners and developers in Bengaluru on titles,
-          transactions and the disputes that follow them.
+          Due diligence, drafting and registration, and the partition,
+          injunction and RERA cases that follow when paperwork fails.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a
             href="#contact"
-            className="rounded-full bg-(--p) px-5 py-3 text-sm font-semibold text-(--p-on) transition-transform active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-md bg-(--p) px-5 py-3 text-sm font-semibold text-(--p-on) transition-transform active:scale-[0.98]"
           >
-            Book a consultation
+            Book a title check <ArrowRight className="size-4" />
           </a>
           <a
-            href="#practice"
-            className="rounded-full border border-zinc-300 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-transform active:scale-[0.98]"
+            href="#services"
+            className="rounded-md border border-zinc-300 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-transform active:scale-[0.98]"
           >
-            Practice areas
+            Explore our services
           </a>
         </div>
       </>
@@ -342,122 +258,101 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "about",
-    caption: "Welcomed at reception",
+    caption: "Discusses requirements",
+    shots: ["2-1", "2-2", "2-3"],
     body: (
       <>
-        <p className={eyebrow}>About us</p>
-        <h2 className={h2}>A chambers built around property</h2>
+        <p className={eyebrow}>About the firm</p>
+        <h2 className={h2}>A property practice, start to finish</h2>
         <p className={lede}>
-          We began as a title practice and grew with our clients into drafting,
-          registration, revenue records and, when it comes to it, the courts.
-          One team holds your matter from the first document to the last.
+          {FIRM} is a property law practice in Bengaluru. We verify titles,
+          draft and register deeds, regularise khata and conversion records,
+          and act in the disputes that follow when a property&apos;s
+          paperwork does not hold.
         </p>
-        <dl className="mt-6 grid gap-2.5 @lg:grid-cols-3">
+        <dl className="mt-6 grid grid-cols-3 gap-2.5">
           {[
-            ["Office", "Bengaluru"],
-            ["Forums", "Civil courts, High Court of Karnataka, RERA"],
-            ["Languages", "English, Kannada, Hindi, Telugu"],
+            ["22 yrs", "in practice"],
+            ["4,800+", "titles checked"],
+            ["3", "forums we appear in"],
           ].map(([k, v]) => (
-            <div key={k} className={tile}>
-              <dt className="text-xs font-semibold text-zinc-500">{k}</dt>
-              <dd className="mt-1 text-sm font-medium text-zinc-900">{v}</dd>
+            <div key={v} className={`${card} p-3.5`}>
+              <dt className={`text-xl ${serif}`}>{k}</dt>
+              <dd className="mt-0.5 text-xs text-zinc-500">{v}</dd>
             </div>
           ))}
         </dl>
-      </>
-    ),
-  },
-  {
-    id: "practice",
-    caption: "Handing over the papers",
-    body: (
-      <>
-        <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
-          Practice areas
-        </h2>
-        <p className={lede}>Everything a property needs, under one roof.</p>
-        <ul className="mt-6 grid gap-2.5 @lg:grid-cols-2">
-          {[
-            [
-              "Title due diligence",
-              "Thirty-year searches and a written opinion.",
-            ],
-            ["Sale, gift and lease deeds", "Drafted, stamped and registered."],
-            ["Khata, mutation and conversion", "Revenue records set right."],
-            ["RERA and builder disputes", "Delays, defects and refunds."],
-            ["Partition and succession", "Family property, settled fairly."],
-            ["Injunctions and civil suits", "Protecting possession in court."],
-          ].map(([name, text]) => (
-            <li key={name} className={tile}>
-              <p className="text-sm font-semibold text-zinc-900">{name}</p>
-              <p className="mt-1 text-xs leading-relaxed text-zinc-600">
-                {text}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </>
-    ),
-  },
-  {
-    id: "partners",
-    caption: "A partner joins",
-    body: (
-      <>
-        <p className={eyebrow}>Our partners</p>
-        <h2 className={h2}>Senior counsel on every matter</h2>
-        <p className={lede}>
-          A partner reads your file and signs the opinion. You will know who is
-          advising you from the first meeting.
-        </p>
-        <ul className="mt-6 grid gap-2.5">
-          {[
-            ["Managing Partner", "Title, transactions and registration"],
-            ["Partner", "Real estate litigation and injunctions"],
-            ["Partner", "RERA and developer advisory"],
-          ].map(([role, work], i) => (
-            <li key={i} className={`${tile} flex items-center gap-3`}>
-              <span
-                aria-hidden
-                className="size-10 shrink-0 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300"
-              />
-              <span>
-                <span className="block text-sm font-semibold text-zinc-900">
-                  {role}
-                </span>
-                <span className="block text-xs text-zinc-600">{work}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <a href="#team" className={textLink}>
+          About the firm <ArrowRight className="size-4" />
+        </a>
       </>
     ),
   },
   {
     id: "team",
-    caption: "Every page examined",
+    caption: "A partner reviews the file",
+    shots: ["2-4", "2-5"],
     body: (
       <>
-        <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
-          Our team
-        </h2>
+        <p className={eyebrow}>Our team</p>
+        <h2 className={h2}>Experienced minds, trusted counsel</h2>
         <p className={lede}>
-          Associates and paralegals who read every page in the chain, go to the
-          sub-registrar and revenue offices themselves, and keep you told at
-          each step.
+          Advocates who read every document in the chain before they advise,
+          and stay with the file until the records are in your name.
         </p>
-        <ul className="mt-6 flex flex-wrap gap-2">
+        <ul className="mt-6 grid grid-cols-2 gap-3">
           {[
-            "Associates",
-            "Paralegals",
-            "Records and searches",
-            "Client desk",
-          ].map((t) => (
-            <li
-              key={t}
-              className="rounded-full bg-white px-3.5 py-1.5 text-sm font-medium text-zinc-800 shadow-sm ring-1 ring-zinc-200"
-            >
-              {t}
+            ["partner", "Adv. Raghavendra Murthy", "Founding Partner"],
+            ["associate", "Adv. Meera Iyer", "Associate, Title & Registration"],
+          ].map(([img, name, role]) => (
+            <li key={name} className={`${card} overflow-hidden`}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- copied into other projects, which may not use next/image */}
+              <img
+                src={`${DIR}/${img}.webp`}
+                alt={name}
+                className="aspect-[4/3.4] w-full object-cover"
+              />
+              <div className="p-3">
+                <p className="text-sm font-semibold text-zinc-900">{name}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">{role}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "services",
+    caption: "We verify every document",
+    shots: ["3-1", "3-2", "3-3"],
+    body: (
+      <>
+        <p className={eyebrow}>Our services</p>
+        <h2 className={h2}>The whole property lifecycle</h2>
+        <p className={lede}>
+          From title verification to dispute resolution, one team holds your
+          matter from the first document to the last.
+        </p>
+        <ul className={`mt-6 divide-y divide-zinc-200/80 ${card}`}>
+          {[
+            "Title verification & due diligence",
+            "Drafting & registration",
+            "Khata & conversion",
+            "Property disputes (partition, injunction, RERA)",
+            "Advisory for home buyers, NRIs and developers",
+          ].map((t, i) => (
+            <li key={t}>
+              <a
+                href="#contact"
+                className="group flex items-center gap-3 px-4 py-3 text-sm font-medium text-zinc-800 hover:text-(--p)"
+              >
+                <span className="grid h-6 w-8 place-items-center rounded bg-(--p)/10 text-xs font-bold text-(--p) tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="flex-1">{t}</span>
+                <ArrowRight className="size-4 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-(--p)" />
+              </a>
             </li>
           ))}
         </ul>
@@ -466,165 +361,164 @@ const SECTIONS: { id: string; caption: string; body: React.ReactNode }[] = [
   },
   {
     id: "approach",
-    caption: "Checked line by line",
+    caption: "Checked, stamped, signed off",
+    shots: ["3-4", "4-1", "4-2"],
     body: (
       <>
-        <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
-          How we work
-        </h2>
-        <ol className="mt-6 grid gap-2.5 @lg:grid-cols-2">
+        <p className={eyebrow}>Our approach</p>
+        <h2 className={h2}>Clear advice. Careful work. Fewer surprises.</h2>
+        <ul className="mt-6 grid grid-cols-3 gap-2.5 @lg:grid-cols-5">
           {[
-            ["Listen", "We hear the whole story and collect the papers."],
-            ["Verify", "Searches at the sub-registrar, revenue and courts."],
-            ["Advise", "A written opinion in plain words, risks named."],
-            ["Act", "Drafting, registration or court, through to the end."],
-          ].map(([name, text], i) => (
-            <li key={name} className={tile}>
-              <p className="text-sm font-semibold text-zinc-900">
-                <span className="mr-2 text-(--p) tabular-nums">{i + 1}</span>
-                {name}
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-zinc-600">
-                {text}
-              </p>
-            </li>
-          ))}
-        </ol>
-      </>
-    ),
-  },
-  {
-    id: "insights",
-    caption: "Ticked off, one by one",
-    body: (
-      <>
-        <p className={eyebrow}>Insights</p>
-        <h2 className={h2}>Notes for property owners</h2>
-        <ul className="mt-6 divide-y divide-zinc-200 rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
-          {[
-            "What an encumbrance certificate shows, and what it does not",
-            "Buying a resale flat: the documents to ask for",
-            "When a khata transfer stalls, and what to do next",
-          ].map((t) => (
-            <li key={t}>
-              <a
-                href="#insights"
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-zinc-800 hover:text-zinc-950"
+            [ShieldCheck, "Verify thoroughly"],
+            [FileText, "Explain clearly"],
+            [Route, "Plan pragmatically"],
+            [Target, "Act efficiently"],
+            [Handshake, "Stay with you"],
+          ].map(([Icon, label]) => {
+            const I = Icon as typeof ShieldCheck;
+            return (
+              <li
+                key={label as string}
+                className={`${card} flex flex-col items-center gap-2 px-2 py-4 text-center`}
               >
-                <span className="flex-1">{t}</span>
-                <span aria-hidden className="text-zinc-400">
-                  →
+                <I className="size-6 text-(--p)" strokeWidth={1.6} />
+                <span className="text-xs leading-tight font-medium text-zinc-700">
+                  {label as string}
                 </span>
-              </a>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </>
     ),
   },
   {
     id: "contact",
-    caption: "Stamped and approved",
+    caption: "Documents returned",
+    shots: ["4-3", "4-4", "4-5"],
     body: (
       <>
-        <h2 className="text-3xl leading-[1.1] font-semibold tracking-tight text-zinc-900 @3xl:text-4xl">
-          Talk to us
-        </h2>
+        <p className={eyebrow}>Location & careers</p>
+        <h2 className={h2}>Our location and careers</h2>
         <p className={lede}>
-          Bring the papers you have. We will tell you what is missing, what it
-          costs and how long it takes.
+          Based in Bengaluru. Working with clients across Karnataka and
+          beyond.
         </p>
-        <div className="mt-6 grid gap-2.5 @lg:grid-cols-2">
-          <div className={tile}>
-            <p className="text-sm font-semibold text-zinc-900">Chambers</p>
-            <p className="mt-1 text-sm leading-relaxed text-zinc-600">
-              2nd Floor, Residency Road
+        <div className="mt-6 grid gap-3 @lg:grid-cols-2">
+          <div className={`${card} p-4`}>
+            <p className="flex items-center gap-2 text-sm font-semibold text-zinc-900">
+              <MapPin className="size-4 text-(--p)" /> Bengaluru
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+              #301, 1st Floor, Brigade Road
               <br />
               Bengaluru, Karnataka
             </p>
+            <a
+              href="#contact"
+              className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-(--p)"
+            >
+              Get directions <ArrowRight className="size-3.5" />
+            </a>
           </div>
-          <div className={tile}>
-            <p className="text-sm font-semibold text-zinc-900">Hours</p>
-            <p className="mt-1 text-sm leading-relaxed text-zinc-600">
-              Monday to Saturday
-              <br />
-              10am to 7pm, by appointment
+          <div className={`${card} p-4`}>
+            <p className="flex items-center gap-2 text-sm font-semibold text-zinc-900">
+              <Briefcase className="size-4 text-(--p)" /> Careers
             </p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+              We&apos;re always interested in hearing from property law
+              professionals.
+            </p>
+            <a
+              href="#contact"
+              className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-(--p)"
+            >
+              View openings <ArrowRight className="size-3.5" />
+            </a>
           </div>
         </div>
-        <a
-          href="#contact"
-          className="mt-6 inline-block rounded-full bg-(--p) px-5 py-3 text-sm font-semibold text-(--p-on) transition-transform active:scale-[0.98]"
-        >
-          Book a consultation
-        </a>
       </>
     ),
   },
 ];
 
 const NAV = [
-  ["About", "#about"],
-  ["Practice areas", "#practice"],
-  ["Partners", "#partners"],
-  ["Team", "#team"],
-  ["Insights", "#insights"],
+  ["Home", "#top"],
+  ["Our services", "#services"],
+  ["Our team", "#team"],
+  ["Approach", "#approach"],
   ["Contact", "#contact"],
 ];
 
-export function LawJourneySite() {
+function Logo() {
   return (
-    <div className="@container bg-white">
-      <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/90 backdrop-blur">
+    <span className="rounded-full bg-(--p) px-3.5 py-1.5 font-serif text-sm font-semibold whitespace-nowrap text-(--p-on)">
+      {FIRM}
+    </span>
+  );
+}
+
+export function LawJourneySite() {
+  // Every shot fetched up front, so scrolling never waits for one.
+  useEffect(() => {
+    for (const step of STEPS)
+      for (const shot of step.shots)
+        new Image().src = `${DIR}/scene-${shot}.webp`;
+  }, []);
+
+  return (
+    <div className="@container" style={{ background: PAGE }}>
+      <header
+        className="sticky top-0 z-20 border-b border-zinc-200/70 backdrop-blur"
+        style={{ background: `${PAGE}e6` }}
+      >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
-          <a href="#top" className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg bg-(--p) text-sm font-bold text-(--p-on)">
-              A
-            </span>
-            <span className="text-base font-semibold tracking-tight text-zinc-900">
-              {FIRM}
-            </span>
+          <a href="#top">
+            <Logo />
           </a>
-          <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 @5xl:flex">
+          <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 @4xl:flex">
             {NAV.map(([label, href]) => (
-              <a key={label} href={href} className="hover:text-zinc-900">
+              <a key={label} href={href} className="hover:text-(--p)">
                 {label}
               </a>
             ))}
           </nav>
           <a
             href="#contact"
-            className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white"
+            className="inline-flex items-center gap-1.5 rounded-md bg-(--p) px-4 py-2 text-sm font-semibold whitespace-nowrap text-(--p-on)"
           >
-            Book a consultation
+            Book a title check <ArrowRight className="size-4" />
           </a>
         </div>
       </header>
 
-      <Journey />
+      <main className="overflow-x-clip">
+        {STEPS.map((step, i) => (
+          <Step key={step.id} step={step} index={i} />
+        ))}
+      </main>
 
-      <footer className="border-t border-zinc-200 bg-zinc-50">
-        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 @3xl:grid-cols-3">
-          <div>
-            <p className="text-base font-semibold text-zinc-900">{FIRM}</p>
-            <p className="mt-2 max-w-[36ch] text-sm leading-relaxed text-zinc-600">
-              Property and real estate lawyers in Bengaluru.
-            </p>
+      <footer className="bg-(--p) text-(--p-on)">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 px-5 py-8">
+          <div className="flex items-center gap-4">
+            <span className="rounded-full bg-white px-3.5 py-1.5 font-serif text-sm font-semibold text-(--p)">
+              {FIRM}
+            </span>
+            <span className="text-[0.6875rem] leading-snug font-semibold tracking-[0.18em] uppercase opacity-80">
+              Advanced property lawyers
+              <br />
+              Bengaluru
+            </span>
           </div>
-          <nav className="grid grid-cols-2 gap-2 text-sm text-zinc-600">
+          <nav className="flex flex-wrap gap-5 text-sm opacity-90">
             {NAV.map(([label, href]) => (
-              <a key={label} href={href} className="hover:text-zinc-900">
+              <a key={label} href={href} className="hover:opacity-100">
                 {label}
               </a>
             ))}
           </nav>
-          <div className="text-sm text-zinc-600">
-            <p className="font-semibold text-zinc-900">Contact</p>
-            <p className="mt-2">hello@ashlarchambers.example</p>
-            <p>Monday to Saturday, 10am to 7pm</p>
-          </div>
         </div>
-        <p className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-zinc-500">
+        <p className="mx-auto max-w-6xl px-5 pb-8 text-xs leading-relaxed opacity-70">
           As per the rules of the Bar Council of India, this website is for
           information only and is not an advertisement or a solicitation of
           work. {FIRM} is a sample firm.
