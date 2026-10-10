@@ -1,14 +1,18 @@
 # Ships the Android app from mobile/ whenever it changes on main.
 #
-# - The version in mobile/app.json has no GitHub release yet: build an APK on
-#   EAS and publish it as release app-v<version>, with NectArray.apk attached.
-#   Always downloadable from
-#   https://github.com/satyaprakashdhfm/Nectarray/releases/latest/download/NectArray.apk
-# - That version is already released: publish an over-the-air update instead,
-#   which installed apps pick up the next time they open.
+# When the version in mobile/app.json has no GitHub release yet, this builds
+# the APK here on GitHub (expo prebuild, then Gradle) and publishes it as
+# release app-v<version> with NectArray.apk attached, always downloadable from
+# https://github.com/satyaprakashdhfm/Nectarray/releases/latest/download/NectArray.apk
+# Installed apps see the new release when they next open and offer it.
+# A change without a version bump builds nothing: raise the version to ship.
 #
-# Needs the repository secret EXPO_TOKEN (expo.dev > Account settings > Access
-# tokens). Without it the workflow skips with a note instead of failing.
+# Needs two repository secrets, both from the signing key kept off the repo:
+#   ANDROID_KEYSTORE           the key file (release.p12), base64
+#   ANDROID_KEYSTORE_PASSWORD  its password
+# Every release must be signed with that same key, or Android refuses to
+# install it over the one already on the phone. Without them the workflow
+# skips with a note instead of failing.
 name: Mobile app
 
 on:
@@ -29,41 +33,38 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.plan.outputs.version }}
-      released: ${{ steps.plan.outputs.released }}
-      ready: ${{ steps.plan.outputs.ready }}
+      build: ${{ steps.plan.outputs.build }}
     steps:
       - uses: actions/checkout@v4
       - id: plan
         env:
           GH_TOKEN: ${{ github.token }}
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          HAS_KEY: ${{ secrets.ANDROID_KEYSTORE != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
         run: |
           version=$(jq -r '.expo.version' mobile/app.json)
           echo "version=$version" >> "$GITHUB_OUTPUT"
           if gh release view "app-v$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::app-v$version is already released. Raise version in mobile/app.json to ship a new APK."
+          elif [ "$HAS_KEY" != "true" ]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Add the ANDROID_KEYSTORE and ANDROID_KEYSTORE_PASSWORD repository secrets to build the app."
           else
-            echo "released=false" >> "$GITHUB_OUTPUT"
-          fi
-          if [ -n "$EXPO_TOKEN" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Add the EXPO_TOKEN repository secret to build and update the app."
+            echo "build=true" >> "$GITHUB_OUTPUT"
           fi
 
   release:
     needs: plan
-    if: needs.plan.outputs.ready == 'true' && needs.plan.outputs.released == 'false'
+    if: needs.plan.outputs.build == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: mobile
     env:
-      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       GH_TOKEN: ${{ github.token }}
       VERSION: ${{ needs.plan.outputs.version }}
+      KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,11 +72,42 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
-      - name: Build the APK on EAS
-        run: npx eas-cli@latest build --platform android --profile preview --non-interactive --wait --json > build.json
-      - name: Download it
-        run: curl -fsSL -o NectArray.apk "$(jq -r '.[0].artifacts.buildUrl' build.json)"
+      # Android only installs over an older versionCode, so it follows the
+      # version: 1.2.3 becomes 10203.
+      - name: Set the versionCode
+        run: |
+          code=$(echo "$VERSION" | awk -F. '{ print $1 * 10000 + $2 * 100 + $3 }')
+          jq --argjson code "$code" '.expo.android.versionCode = $code' app.json > app.tmp && mv app.tmp app.json
+      - name: Generate the Android project
+        run: npx expo prebuild --platform android --no-install --clean
+      - name: Unpack the signing key
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+        run: echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.p12"
+      - name: Build the APK
+        working-directory: mobile/android
+        run: |
+          ./gradlew assembleRelease --no-daemon \
+            -PreactNativeArchitectures=arm64-v8a,armeabi-v7a \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.p12" \
+            -Pandroid.injected.signing.store.password="$KEY_PASSWORD" \
+            -Pandroid.injected.signing.key.alias=nectarray \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          cp app/build/outputs/apk/release/app-release.apk ../NectArray.apk
+      - name: Check it carries the release key
+        run: |
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner
+          "$apksigner" verify --print-certs NectArray.apk | tee certs.txt
+          if grep -q "CN=Android Debug" certs.txt; then
+            echo "::error::The APK is signed with the debug key, not the release key."
+            exit 1
+          fi
       - name: Publish the GitHub release
         run: |
           gh release create "app-v$VERSION" NectArray.apk \
@@ -84,25 +116,3 @@ jobs:
             --title "NectArray $VERSION for Android" \
             --latest \
             --notes "Download **NectArray.apk** below on an Android phone and open it to install. If NectArray is already installed, this installs over it and keeps your sign-in."
-
-  update:
-    needs: plan
-    if: needs.plan.outputs.ready == 'true' && needs.plan.outputs.released == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: mobile
-    env:
-      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      MESSAGE: ${{ github.event.head_commit.message || 'Manual update' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - run: npm ci
-      - name: Publish an over-the-air update
-        run: npx eas-cli@latest update --channel preview --environment preview --platform android --non-interactive --message "$(echo "$MESSAGE" | head -n 1)"

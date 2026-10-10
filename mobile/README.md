@@ -12,16 +12,26 @@ in Chrome. The APK downloads. Open it and allow Chrome to "install unknown apps"
 
 ### How the installed app stays up to date
 
-The `Mobile app` GitHub workflow (`.github/workflows/mobile-app.yml`) runs whenever `mobile/` changes on `main`:
+The `Mobile app` GitHub workflow (`.github/workflows/mobile-app.yml`) builds the APK on GitHub itself, with Gradle. There is no Expo account or Expo cloud build.
 
-- **Code-only changes** (screens, text, styles; the `version` in `app.json` unchanged) go out as an over-the-air update. When the app opens it downloads the update and offers **Restart now**. If you choose Later, the update applies the next time the app starts.
-- **Native changes** (a new native package, an icon or `app.json` setting) need a new installer. Raise `version` in `app.json` (for example 1.1.0 to 1.2.0) and push. The workflow builds the APK on EAS (about 10 to 20 minutes) and publishes GitHub release `app-v1.2.0`. The installed app then shows **NectArray 1.2.0 is out > Download**. The new APK installs over the old one, and you stay signed in.
+- **To ship a change** (screens, text, styles, a new package, the icon), raise `version` in `app.json` (for example 1.1.0 to 1.2.0) and push to `main`. The workflow builds the APK (about 15 to 25 minutes) and publishes GitHub release `app-v1.2.0`. The installed app then shows **NectArray 1.2.0 is out > Download**. The new APK installs over the old one, and you stay signed in.
+- Pushing `mobile/` changes without raising the version builds nothing; the workflow leaves a note saying so.
+- Android's `versionCode` follows the version (1.2.3 becomes 10203), so keep each part under 100.
 
-Website content (services, blog, academy text) never needs either: the app reads it live from the site.
+Website content (services, blog, academy text) never needs a new APK: the app reads it live from the site.
 
-One-time setup: create an access token at https://expo.dev/settings/access-tokens and add it to the GitHub repository as the secret `EXPO_TOKEN` (Settings > Secrets and variables > Actions > New repository secret). Then run the workflow once from the Actions tab (**Mobile app > Run workflow**) to publish the first release.
+### The signing key
 
-To publish an update by hand instead: `npm run update -- "what changed"`.
+Every APK must be signed with the same key, or Android refuses to install it over the one on the phone. The key is a `release.p12` file kept **off the repo** (it was made on the dev machine in `~/nectarray-android-signing/`). Keep a backup of that folder somewhere safe, such as a password manager. If it is lost, everyone has to uninstall the app before installing the next version.
+
+One-time setup, in GitHub > Settings > Secrets and variables > Actions > New repository secret:
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE` | the contents of `ANDROID_KEYSTORE.txt` (the key file, base64) |
+| `ANDROID_KEYSTORE_PASSWORD` | the contents of `ANDROID_KEYSTORE_PASSWORD.txt` |
+
+Then run the workflow once from the Actions tab (**Mobile app > Run workflow**) to publish the first release.
 
 ## Run it on your phone (development)
 
@@ -50,7 +60,7 @@ The person icon on Home (and "Student sign in" on Academy) opens the Account scr
 - **Admin** checks the address against the same rules as the website's `/admin`: `ADMIN_EMAILS` on Railway or the user's admin role. It checks at sign-in, again when the code is swapped, and again every time the app starts. An account that isn't allowed gets no session, and the app says which Google account was refused.
 - Tokens are kept in the phone's encrypted storage. Sign out deletes the session on the server too.
 
-Sign-in does **not** work inside Expo Go. Expo Go cannot receive `nectarray://` links, and the live site refuses to send codes anywhere else. To test sign-in, install the test APK (`npm run build:apk`).
+Sign-in does **not** work inside Expo Go. Expo Go cannot receive `nectarray://` links, and the live site refuses to send codes anywhere else. To test sign-in, install the APK from the GitHub release.
 
 ## Checks
 
@@ -61,14 +71,13 @@ npm run typecheck
 
 ## Build and publish
 
-Builds run in Expo's cloud (EAS). Android Studio is not needed.
+Releases are built by the GitHub workflow above. To build an APK on your own machine instead, you need Android Studio's SDK and Java 17:
 
-1. Create a free account at https://expo.dev, then run `npx eas-cli@latest login` and `npx eas-cli@latest init` (once).
-2. **Test APK:** run `npm run build:apk` and install the APK link it prints on any Android phone.
-3. **Store build:** run `npm run build:store`. This produces the `.aab` the Play Store takes. EAS creates and keeps the signing key.
-4. **Play Console:** create a developer account ($25, one time) and create an app named NectArray with the package `com.nectarray.app`. Upload the first `.aab` by hand to **Testing > Internal testing**.
-5. After that, `npm run submit:store` uploads new builds to the internal track. It needs a Google service-account key; see https://docs.expo.dev/submit/android/.
+```
+npx expo prebuild --platform android
+cd android && ./gradlew assembleRelease
+```
 
-New personal developer accounts must run a closed test with at least 12 testers for 14 days before production access opens. Organisation accounts do not need to.
+That APK is signed with the debug key, so it will not install over a release from GitHub; use it for testing only.
 
-Before each store release, raise `version` in `app.json`. EAS raises the Android `versionCode` itself.
+A Play Store release would need an `.aab` (`./gradlew bundleRelease`) signed with the same key, and a Play Console developer account ($25, one time).
