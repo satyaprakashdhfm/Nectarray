@@ -15,15 +15,19 @@ import {
   FX_INR_PER_USD,
   type Cell,
   type Column,
-  type Money,
   type PriceRow,
   type PriceTable,
   type Sheet,
 } from "@/lib/price-book";
+import { CostEstimator } from "@/components/admin/CostEstimator";
 import { TableEditor } from "@/components/admin/PriceTableEditor";
+import {
+  formatMoney,
+  inCurrency,
+  isMoney,
+  type Currency,
+} from "@/lib/price-money";
 import { cn } from "@/lib/utils";
-
-type Currency = "usd" | "inr";
 
 /**
  * One sheet of the price book, laid out like the workbook it came from:
@@ -34,6 +38,10 @@ type Currency = "usd" | "inr";
 export function PriceSheet({ sheet }: { sheet: Sheet }) {
   const [currency, setCurrency] = useState<Currency>("usd");
   const [query, setQuery] = useState("");
+  const apiPrices =
+    sheet.slug === "ai-models"
+      ? sheet.tables.find((t) => t.id === "api")
+      : undefined;
 
   return (
     <div className="mt-5">
@@ -90,6 +98,8 @@ export function PriceSheet({ sheet }: { sheet: Sheet }) {
           was quoted in.
         </p>
       </div>
+
+      {apiPrices && <CostEstimator table={apiPrices} currency={currency} />}
 
       {sheet.tables.map((table) => (
         <PriceGrid
@@ -634,37 +644,6 @@ function cellClass(column: Column) {
     default:
       return "text-ink text-right whitespace-nowrap";
   }
-}
-
-const isMoney = (cell: Cell): cell is Money =>
-  typeof cell === "object" && cell !== null;
-
-function inCurrency(money: Money, currency: Currency) {
-  if ("usd" in money)
-    return currency === "usd" ? money.usd : money.usd * FX_INR_PER_USD;
-  return currency === "inr" ? money.inr : money.inr / FX_INR_PER_USD;
-}
-
-/** $0.20, $1.40, $1,935, $0.00000386; ₹19.29, ₹1,49,900. */
-function formatMoney(money: Money, currency: Currency) {
-  const value = inCurrency(money, currency);
-  const locale = currency === "usd" ? "en-US" : "en-IN";
-  const style: Intl.NumberFormatOptions = {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  };
-  if (value === 0 || value >= 100)
-    return value.toLocaleString(locale, { ...style, maximumFractionDigits: 0 });
-  if (value >= 1 || Math.abs(value * 100 - Math.round(value * 100)) < 1e-9)
-    return value.toLocaleString(locale, {
-      ...style,
-      minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
-      maximumFractionDigits: 2,
-    });
-  return value.toLocaleString(locale, {
-    ...style,
-    maximumSignificantDigits: 3,
-  });
 }
 
 function formatCell(cell: Cell, column: Column, currency: Currency) {
