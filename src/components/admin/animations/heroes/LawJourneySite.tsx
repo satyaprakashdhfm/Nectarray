@@ -100,11 +100,12 @@ function Shots({
 
 /* Faded out at the top and bottom (into the next picture) and the left. */
 const FEATHER_WIDE =
-  "linear-gradient(to right, transparent, #000 38%), linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent)";
+  "linear-gradient(to right, transparent, rgb(0 0 0 / 0.03) 8%, rgb(0 0 0 / 0.12) 17%, rgb(0 0 0 / 0.28) 26%, rgb(0 0 0 / 0.5) 35%, rgb(0 0 0 / 0.72) 44%, rgb(0 0 0 / 0.9) 53%, #000 62%), linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent)";
 const FEATHER_NARROW =
   "linear-gradient(to bottom, transparent, #000 10%, #000 70%, transparent)";
 /* The blurred copy shows on the left and is gone by the middle. */
-const BLUR_MASK = "linear-gradient(to right, #000 15%, transparent 62%)";
+const BLUR_MASK =
+  "linear-gradient(to right, #000 25%, rgb(0 0 0 / 0.7) 40%, rgb(0 0 0 / 0.3) 55%, transparent 70%)";
 
 /** One section: the words on the left, its part of the story on the right. */
 function Step({
@@ -140,7 +141,7 @@ function Step({
         onMount(el);
       }}
       id={step.id}
-      className="relative grid scroll-mt-16 @4xl:min-h-[88dvh] @4xl:grid-cols-[minmax(0,1fr)_46%]"
+      className="relative grid scroll-mt-16 @4xl:min-h-[88dvh] @4xl:grid-cols-[minmax(0,1fr)_50%]"
     >
       {/* The picture: above the words on a phone, beside them wide. */}
       <div className="relative h-[62vw] max-h-96 @4xl:order-2 @4xl:h-auto @4xl:max-h-none">
@@ -162,7 +163,7 @@ function Step({
               aria-hidden
               className="absolute inset-0 hidden @4xl:block"
               style={{
-                filter: "blur(9px) saturate(0.9)",
+                filter: "blur(14px) saturate(0.9)",
                 maskImage: BLUR_MASK,
                 WebkitMaskImage: BLUR_MASK,
               }}
@@ -202,9 +203,12 @@ function Step({
 }
 
 /** The picture strip's share of the width, wide. */
-const STRIP = 0.46;
-/** Where each node sits across the strip, swinging from side to side. */
-const SWING = [0.16, 0.44];
+const STRIP = 0.5;
+/**
+ * Where each node sits across the strip, swinging within its right half so
+ * the line stays clear of the fade into the words. Captions sit to the left.
+ */
+const SWING = [0.66, 0.88];
 /** Where each node sits down its section. */
 const NODE_AT = 0.56;
 
@@ -324,7 +328,7 @@ function Flow({
           d={d}
           fill="none"
           stroke="white"
-          strokeOpacity={0.75}
+          strokeOpacity={0.55}
           strokeWidth={2}
           strokeDasharray="2 9"
           strokeLinecap="round"
@@ -334,7 +338,7 @@ function Flow({
           d={d}
           fill="none"
           stroke="white"
-          strokeWidth={3}
+          strokeWidth={2.5}
           strokeLinecap="round"
           strokeDasharray={total || 1}
           style={{ strokeDashoffset: offset }}
@@ -343,8 +347,12 @@ function Flow({
       {nodes.map((n, i) => (
         <div
           key={STEPS[i].id}
-          className="absolute flex items-center gap-3"
-          style={{ left: n.x, top: n.y, transform: "translate(-11px, -50%)" }}
+          className="absolute flex flex-row-reverse items-center gap-3"
+          style={{
+            left: n.x,
+            top: n.y,
+            transform: "translate(calc(-100% + 11px), -50%)",
+          }}
         >
           <span
             className={`grid size-[22px] shrink-0 place-items-center rounded-full border-2 border-white shadow-md transition-all duration-500 ${
@@ -361,7 +369,7 @@ function Flow({
             className={`flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-4 pl-1.5 text-xs font-semibold whitespace-nowrap text-zinc-800 shadow-lg ring-1 ring-black/5 transition-all duration-500 ${
               i <= reached
                 ? "translate-x-0 opacity-100"
-                : "-translate-x-2 opacity-0"
+                : "translate-x-2 opacity-0"
             }`}
           >
             <span className="grid size-6 place-items-center rounded-full bg-(--p) text-[0.6875rem] font-bold text-(--p-on) tabular-nums">
