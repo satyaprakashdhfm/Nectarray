@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion,
+  useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useTransform,
@@ -23,7 +24,7 @@ import {
  * A whole one-page site for a property law firm (a sample firm), laid out
  * like the "character flow" reference: the sections run down the left, and
  * down the right runs one continuous strip of the client's visit, a picture
- * beside every section, joined by a dashed timeline with a node and a
+ * beside every section, joined by a curved flow with a node and a
  * caption per step. He walks in, talks it through, a partner reviews the
  * file, the documents are checked and stamped, and the file is handed back.
  *
@@ -106,7 +107,15 @@ const FEATHER_NARROW =
 const BLUR_MASK = "linear-gradient(to right, #000 15%, transparent 62%)";
 
 /** One section: the words on the left, its part of the story on the right. */
-function Step({ step, index }: { step: StepData; index: number }) {
+function Step({
+  step,
+  index,
+  onMount,
+}: {
+  step: StepData;
+  index: number;
+  onMount: (el: HTMLElement | null) => void;
+}) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
@@ -123,11 +132,13 @@ function Step({ step, index }: { step: StepData; index: number }) {
   const y = useTransform(scrollYProgress, (p) =>
     reduce ? "0%" : `${(p - 0.5) * 8}%`,
   );
-  const fill = useTransform(scrollYProgress, [0.2, 0.55], [0, 1]);
 
   return (
     <section
-      ref={ref}
+      ref={(el) => {
+        ref.current = el;
+        onMount(el);
+      }}
       id={step.id}
       className="relative grid scroll-mt-16 @4xl:min-h-[88dvh] @4xl:grid-cols-[minmax(0,1fr)_46%]"
     >
@@ -136,7 +147,7 @@ function Step({ step, index }: { step: StepData; index: number }) {
         <div
           role="img"
           aria-label={step.caption}
-          className="absolute inset-0 overflow-hidden @4xl:-inset-y-[9%] [mask-image:var(--narrow)] @4xl:[mask-image:var(--wide)] [mask-composite:intersect] [-webkit-mask-composite:source-in] [-webkit-mask-image:var(--narrow)] @4xl:[-webkit-mask-image:var(--wide)]"
+          className="absolute inset-0 overflow-hidden [mask-image:var(--narrow)] [mask-composite:intersect] [-webkit-mask-composite:source-in] [-webkit-mask-image:var(--narrow)] @4xl:-inset-y-[9%] @4xl:[mask-image:var(--wide)] @4xl:[-webkit-mask-image:var(--wide)]"
           style={
             {
               "--wide": FEATHER_WIDE,
@@ -161,27 +172,9 @@ function Step({ step, index }: { step: StepData; index: number }) {
           </motion.div>
         </div>
 
-        {/* The timeline: dashed down the strip, solid as the step passes. */}
-        <div className="pointer-events-none absolute inset-y-0 left-[18%] hidden w-0.5 @4xl:block">
-          <span className="absolute inset-0 border-l-2 border-dashed border-(--p)/35" />
-          <motion.span
-            className="absolute inset-0 origin-top bg-(--p)"
-            style={{ scaleY: fill, opacity: 0.9 }}
-          />
-          <motion.span
-            className="absolute top-[58%] left-1/2 grid size-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-(--p) bg-white shadow"
-            initial={{ scale: 0.6 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ amount: 0.6 }}
-            transition={{ type: "spring", stiffness: 300, damping: 18 }}
-          >
-            <span className="size-2 rounded-full bg-(--p)" />
-          </motion.span>
-        </div>
-
-        {/* The step's caption on the picture. */}
+        {/* The step's caption on the picture (the flow carries it wide). */}
         <motion.p
-          className="absolute bottom-4 left-5 flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-4 pl-1.5 text-xs font-semibold text-zinc-800 shadow-lg ring-1 ring-zinc-200 @4xl:top-[58%] @4xl:bottom-auto @4xl:left-[calc(18%+1.5rem)] @4xl:-translate-y-1/2"
+          className="absolute bottom-4 left-5 flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-4 pl-1.5 text-xs font-semibold text-zinc-800 shadow-lg ring-1 ring-zinc-200 @4xl:hidden"
           initial={{ opacity: 0, x: -10 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ amount: 0.5 }}
@@ -208,12 +201,185 @@ function Step({ step, index }: { step: StepData; index: number }) {
   );
 }
 
+/** The picture strip's share of the width, wide. */
+const STRIP = 0.46;
+/** Where each node sits across the strip, swinging from side to side. */
+const SWING = [0.16, 0.44];
+/** Where each node sits down its section. */
+const NODE_AT = 0.56;
+
+type Point = { x: number; y: number };
+
+/** A smooth path through the points, leaving and arriving vertically. */
+function curve(points: Point[]) {
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const k = (b.y - a.y) * 0.55;
+    d += ` C ${a.x} ${a.y + k}, ${b.x} ${b.y - k}, ${b.x} ${b.y}`;
+  }
+  return d;
+}
+
+/**
+ * The flow over the picture strip: one dashed curve swinging down through
+ * a node per section, drawn solid behind the reader as the page scrolls,
+ * each node lighting up with its caption as the line reaches it.
+ */
+function Flow({
+  wrap,
+  sections,
+}: {
+  wrap: React.RefObject<HTMLElement | null>;
+  sections: React.RefObject<(HTMLElement | null)[]>;
+}) {
+  const path = useRef<SVGPathElement>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [nodes, setNodes] = useState<Point[]>([]);
+  // y down the path against length along it, to turn scroll into length.
+  const table = useRef<{ y: number; l: number }[]>([]);
+  const [total, setTotal] = useState(0);
+  const [reached, setReached] = useState(-1);
+
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      const left = w * (1 - STRIP);
+      setSize({ w, h });
+      setNodes(
+        sections.current.map((s, i) => ({
+          x: left + w * STRIP * SWING[i % 2],
+          y: s ? s.offsetTop + s.offsetHeight * NODE_AT : 0,
+        })),
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [wrap, sections]);
+
+  const points =
+    nodes.length > 0
+      ? [
+          { x: nodes[0].x, y: 0 },
+          ...nodes,
+          { x: nodes[nodes.length - 1].x, y: size.h },
+        ]
+      : [];
+  const d = points.length ? curve(points) : "";
+
+  useEffect(() => {
+    const el = path.current;
+    if (!el || !d) return;
+    const len = el.getTotalLength();
+    const rows = [];
+    for (let i = 0; i <= 240; i++) {
+      const l = (len * i) / 240;
+      rows.push({ y: el.getPointAtLength(l).y, l });
+    }
+    table.current = rows;
+    setTotal(len);
+  }, [d]);
+
+  // The tip of the line rides a little below the middle of the screen.
+  const { scrollYProgress } = useScroll({
+    target: wrap,
+    offset: ["start 0.68", "end 0.68"],
+  });
+  const lengthAt = (y: number) => {
+    const rows = table.current;
+    if (!rows.length) return 0;
+    const i = rows.findIndex((r) => r.y >= y);
+    if (i <= 0) return i === 0 ? 0 : total;
+    const a = rows[i - 1];
+    const b = rows[i];
+    return a.l + ((y - a.y) / (b.y - a.y || 1)) * (b.l - a.l);
+  };
+  const offset = useTransform(
+    scrollYProgress,
+    (p) => total - lengthAt(p * size.h),
+  );
+  useMotionValueEvent(scrollYProgress, "change", (p) =>
+    setReached(nodes.findLastIndex((n) => n.y <= p * size.h + 1)),
+  );
+
+  if (!size.w) return null;
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-10 hidden @4xl:block"
+    >
+      <svg
+        width={size.w}
+        height={size.h}
+        className="absolute inset-0 overflow-visible"
+        style={{ filter: "drop-shadow(0 1px 3px rgb(0 0 0 / 0.35))" }}
+      >
+        <path
+          d={d}
+          fill="none"
+          stroke="white"
+          strokeOpacity={0.75}
+          strokeWidth={2}
+          strokeDasharray="2 9"
+          strokeLinecap="round"
+        />
+        <motion.path
+          ref={path}
+          d={d}
+          fill="none"
+          stroke="white"
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeDasharray={total || 1}
+          style={{ strokeDashoffset: offset }}
+        />
+      </svg>
+      {nodes.map((n, i) => (
+        <div
+          key={STEPS[i].id}
+          className="absolute flex items-center gap-3"
+          style={{ left: n.x, top: n.y, transform: "translate(-11px, -50%)" }}
+        >
+          <span
+            className={`grid size-[22px] shrink-0 place-items-center rounded-full border-2 border-white shadow-md transition-all duration-500 ${
+              i <= reached ? "scale-100 bg-white" : "scale-75 bg-white/30"
+            }`}
+          >
+            <span
+              className={`size-2 rounded-full bg-(--p) transition-opacity duration-500 ${
+                i <= reached ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          </span>
+          <span
+            className={`flex items-center gap-2 rounded-full bg-white/95 py-1.5 pr-4 pl-1.5 text-xs font-semibold whitespace-nowrap text-zinc-800 shadow-lg ring-1 ring-black/5 transition-all duration-500 ${
+              i <= reached
+                ? "translate-x-0 opacity-100"
+                : "-translate-x-2 opacity-0"
+            }`}
+          >
+            <span className="grid size-6 place-items-center rounded-full bg-(--p) text-[0.6875rem] font-bold text-(--p-on) tabular-nums">
+              {i + 1}
+            </span>
+            {STEPS[i].caption}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const eyebrow =
   "flex items-center gap-3 text-xs font-semibold tracking-[0.16em] text-(--p) uppercase before:h-px before:w-8 before:bg-(--p)";
 const serif = "font-serif tracking-tight text-zinc-900";
 const h2 = `mt-3 text-3xl leading-[1.1] @3xl:text-4xl ${serif}`;
-const lede =
-  "mt-4 max-w-[52ch] text-[0.9375rem] leading-relaxed text-zinc-600";
+const lede = "mt-4 max-w-[52ch] text-[0.9375rem] leading-relaxed text-zinc-600";
 const card = "rounded-xl bg-white shadow-sm ring-1 ring-zinc-200/80";
 const textLink =
   "mt-6 inline-flex items-center gap-1.5 self-start rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 transition-colors hover:border-(--p) hover:text-(--p)";
@@ -266,9 +432,9 @@ const STEPS: StepData[] = [
         <h2 className={h2}>A property practice, start to finish</h2>
         <p className={lede}>
           {FIRM} is a property law practice in Bengaluru. We verify titles,
-          draft and register deeds, regularise khata and conversion records,
-          and act in the disputes that follow when a property&apos;s
-          paperwork does not hold.
+          draft and register deeds, regularise khata and conversion records, and
+          act in the disputes that follow when a property&apos;s paperwork does
+          not hold.
         </p>
         <dl className="mt-6 grid grid-cols-3 gap-2.5">
           {[
@@ -297,8 +463,8 @@ const STEPS: StepData[] = [
         <p className={eyebrow}>Our team</p>
         <h2 className={h2}>Experienced minds, trusted counsel</h2>
         <p className={lede}>
-          Advocates who read every document in the chain before they advise,
-          and stay with the file until the records are in your name.
+          Advocates who read every document in the chain before they advise, and
+          stay with the file until the records are in your name.
         </p>
         <ul className="mt-6 grid grid-cols-2 gap-3">
           {[
@@ -401,8 +567,7 @@ const STEPS: StepData[] = [
         <p className={eyebrow}>Location & careers</p>
         <h2 className={h2}>Our location and careers</h2>
         <p className={lede}>
-          Based in Bengaluru. Working with clients across Karnataka and
-          beyond.
+          Based in Bengaluru. Working with clients across Karnataka and beyond.
         </p>
         <div className="mt-6 grid gap-3 @lg:grid-cols-2">
           <div className={`${card} p-4`}>
@@ -459,6 +624,9 @@ function Logo() {
 }
 
 export function LawJourneySite() {
+  const main = useRef<HTMLElement>(null);
+  const sections = useRef<(HTMLElement | null)[]>([]);
+
   // Every shot fetched up front, so scrolling never waits for one.
   useEffect(() => {
     for (const step of STEPS)
@@ -492,10 +660,18 @@ export function LawJourneySite() {
         </div>
       </header>
 
-      <main className="overflow-x-clip">
+      <main ref={main} className="relative overflow-x-clip">
         {STEPS.map((step, i) => (
-          <Step key={step.id} step={step} index={i} />
+          <Step
+            key={step.id}
+            step={step}
+            index={i}
+            onMount={(el) => {
+              sections.current[i] = el;
+            }}
+          />
         ))}
+        <Flow wrap={main} sections={sections} />
       </main>
 
       <footer className="bg-(--p) text-(--p-on)">
