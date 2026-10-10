@@ -31,3 +31,6 @@ export function adminRoute(pathname: string): string | null {
   if (pathname !== ADMIN && !pathname.startsWith(`${ADMIN}/`)) return null;
   return `/admin${pathname.slice(ADMIN.length)}`;
 }
+
+/** Remembers whether the panel's sidebar was put away (components/admin/AdminSidebar). */
+export const SIDEBAR_COOKIE = "admin-sidebar";

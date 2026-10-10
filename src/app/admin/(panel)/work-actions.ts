@@ -50,10 +50,7 @@ function status(form: FormData) {
   return v;
 }
 
-const done = () => {
-  revalidatePath("/admin/tasks");
-  revalidatePath("/admin/timeline");
-};
+const done = () => revalidatePath("/admin/tasks");
 
 export async function createWorkItem(form: FormData) {
   await requireAdmin();

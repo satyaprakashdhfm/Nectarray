@@ -1,9 +1,15 @@
-import { ADMIN } from "@/lib/admin-path";
+import { ADMIN, SIDEBAR_COOKIE } from "@/lib/admin-path";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/layout/Logo";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import {
+  SidebarFrame,
+  SidebarProvider,
+  SidebarToggle,
+} from "@/components/admin/AdminSidebar";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
 import {
   ThemeCleanup,
@@ -50,48 +56,46 @@ export default async function AdminPanelLayout({
   // Google said yes; the emailed code for this session is still owed.
   if (!gate.verified) redirect(`${ADMIN}/verify`);
   const user = gate.user;
+  const sidebarOpen = (await cookies()).get(SIDEBAR_COOKIE)?.value !== "closed";
 
   return (
-    <div className="bg-mist min-h-screen">
-      <ThemeScript />
-      <ThemeCleanup />
-      <header className="border-night-line bg-night sticky top-0 z-50 border-b">
-        <div className="shell flex h-[72px] items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <Logo markClassName="size-9" wordClassName="text-[1.25rem]" />
-            <span className="bg-amber/15 text-amber rounded-full px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
-              Admin
-            </span>
+    <SidebarProvider initialOpen={sidebarOpen}>
+      <div className="bg-mist min-h-screen">
+        <ThemeScript />
+        <ThemeCleanup />
+        <header className="border-night-line bg-night sticky top-0 z-50 border-b">
+          <div className="shell flex h-[72px] items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <SidebarToggle />
+              <Logo markClassName="size-9" wordClassName="text-[1.25rem]" />
+              <span className="bg-amber/15 text-amber rounded-full px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+                Admin
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="hidden text-[0.875rem] text-white/50 lg:inline">
+                {user.email}
+              </span>
+              <Link
+                href="/"
+                className="hidden text-[0.875rem] text-white/60 transition-colors hover:text-white sm:inline"
+              >
+                Main site
+              </Link>
+              <ThemeToggle />
+              <SignOutButton realm="admin" redirectTo={`${ADMIN}/login`} />
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden text-[0.875rem] text-white/50 lg:inline">
-              {user.email}
-            </span>
-            <Link
-              href="/"
-              className="hidden text-[0.875rem] text-white/60 transition-colors hover:text-white sm:inline"
-            >
-              Main site
-            </Link>
-            <ThemeToggle />
-            <SignOutButton realm="admin" redirectTo={`${ADMIN}/login`} />
-          </div>
-        </div>
-      </header>
+        </header>
 
-      {/*
-       * Wider than the site's shell: these pages are tables and figures, and
-       * at 80rem a wide screen left a third of itself empty. From 1280px the
-       * sidebar sticks under the 72px header and scrolls on its own if it must.
-       */}
-      <div className="mx-auto w-full max-w-[112rem] px-4 sm:px-6 xl:grid xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-8 xl:px-8">
-        <aside className="xl:border-line py-5 xl:sticky xl:top-[72px] xl:h-[calc(100vh-72px)] xl:overflow-y-auto xl:border-r xl:py-6 xl:pr-4">
-          <AdminTabs />
-        </aside>
-        <main id="main" className="min-w-0 pb-12 xl:py-6">
-          {children}
-        </main>
+        {/*
+         * Wider than the site's shell: these pages are tables and figures, and
+         * at 80rem a wide screen left a third of itself empty. From 1280px the
+         * sidebar sticks under the 72px header, scrolls on its own if it must,
+         * and can be hidden from the header for the full width.
+         */}
+        <SidebarFrame nav={<AdminTabs />}>{children}</SidebarFrame>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

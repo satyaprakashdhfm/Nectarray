@@ -8,7 +8,6 @@ import {
   Bot,
   Briefcase,
   CalendarDays,
-  ChartGantt,
   ChartLine,
   ChevronDown,
   Code,
@@ -26,6 +25,7 @@ import {
   Megaphone,
   NotebookPen,
   Palette,
+  Plug,
   Search,
   Sparkles,
   SquareTerminal,
@@ -43,8 +43,8 @@ const TOP: Tab[] = [
   { href: `${ADMIN}/ads`, label: "Ads", icon: Megaphone },
   { href: `${ADMIN}/development`, label: "All projects", icon: Layers },
   { href: `${ADMIN}/quotes`, label: "Quotations", icon: FileText },
-  { href: `${ADMIN}/tasks`, label: "Tasks", icon: ListChecks },
-  { href: `${ADMIN}/timeline`, label: "Timeline", icon: ChartGantt },
+  { href: `${ADMIN}/integrations`, label: "Integrations", icon: Plug },
+  { href: `${ADMIN}/tasks`, label: "Tasks & timeline", icon: ListChecks },
   { href: `${ADMIN}/workspace`, label: "Workspace", icon: SquareTerminal },
 ];
 
