@@ -11,7 +11,7 @@ import {
 import { formatMoney, type Currency } from "@/lib/price-money";
 import { cn } from "@/lib/utils";
 
-const box =
+export const box =
   "border-line bg-surface text-ink focus:border-brand h-10 w-full rounded-lg border px-3 text-[0.875rem] outline-none";
 
 /** Every mode lays out the same: model, three fields, then the cost. */
@@ -370,7 +370,7 @@ function Empty() {
   );
 }
 
-function Field({
+export function Field({
   label,
   className,
   children,
@@ -389,7 +389,7 @@ function Field({
   );
 }
 
-function NumberInput({
+export function NumberInput({
   value,
   onChange,
 }: {
