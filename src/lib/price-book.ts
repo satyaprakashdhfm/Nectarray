@@ -1164,7 +1164,7 @@ const WORKBOOK: WorkbookSheet[] = [
   {
     slug: "deployment",
     title: "Deployment",
-    lede: "AWS, Google Cloud and Azure in India side by side (virtual machines, load balancers and other services), then Railway, Render, Vercel and other hosting platforms.",
+    lede: "AWS, Google Cloud and Azure in India side by side (virtual machines, load balancers and other services), then Railway and Vercel plans and rates, and other hosting platforms.",
     tables: [
       {
         id: "ec2",
@@ -1541,6 +1541,81 @@ const WORKBOOK: WorkbookSheet[] = [
         ],
       },
       {
+        id: "vercel-plans",
+        title: "Vercel plans",
+        compare: true,
+        nameColumns: [0],
+        columns: [
+          { label: "Plan", kind: "text" },
+          { label: "Per month", kind: "money" },
+          { label: "Usage included", kind: "text" },
+          { label: "Traffic included", kind: "text" },
+          { label: "Notes", kind: "long" },
+        ],
+        rows: [
+          [
+            "Hobby",
+            usd(0),
+            "4 h active CPU, 360 GB-h memory, 1M function calls",
+            "100 GB, 1M requests",
+            "Personal, non-commercial use only. Hard caps: nothing extra can be bought.",
+          ],
+          [
+            "Pro",
+            usd(20),
+            "$20 usage credit, then the rates below",
+            "1 TB, 1M requests (Flat Rate CDN)",
+            "Per paid seat; each extra seat $20/mo. More traffic: $20/mo for 10M requests and 50 TB, $100 for 50M, $300 for 150M.",
+          ],
+          [
+            "Enterprise",
+            "Custom",
+            "Custom",
+            "Custom",
+            "SSO, SLAs and dedicated support.",
+          ],
+        ],
+      },
+      {
+        id: "vercel-usage",
+        title: "Vercel usage rates, Mumbai (bom1), Pro plan",
+        note: "Billed after the Pro credit. Traffic and requests are covered by the Flat Rate CDN tier while it is on; the per-GB rates apply beyond the top tier or with it off.",
+        compare: true,
+        nameColumns: [0],
+        columns: [
+          { label: "Resource", kind: "text" },
+          { label: "Unit", kind: "text" },
+          { label: "Rate", kind: "money" },
+          { label: "Notes", kind: "long" },
+        ],
+        rows: [
+          [
+            "Active CPU",
+            "per hour",
+            usd(0.14),
+            "Only while function code is running, not while it waits",
+          ],
+          ["Provisioned memory", "per GB-hour", usd(0.0116), null],
+          ["Data transfer to users", "per GB", usd(0.2), null],
+          ["CDN requests", "per 1M", usd(2.2), null],
+          [
+            "Origin transfer",
+            "per GB",
+            usd(0.25),
+            "Between Vercel's CDN and functions",
+          ],
+          ["Image optimisation", "per 1,000 images", usd(0.0527), null],
+          ["Blob file storage", "per GB-month", usd(0.025), null],
+          ["Blob data transfer", "per GB", usd(0.067), null],
+          [
+            "Build minutes (Basic machine)",
+            "per minute",
+            usd(0.007),
+            "Free on Hobby",
+          ],
+        ],
+      },
+      {
         id: "hosting",
         title: "Hosting platforms (they run the servers for you)",
         note: "Prices are each platform's listed monthly rate for an always-on app. Usage-billed platforms (Railway, Vercel, Fly.io) charge less when idle.",
@@ -1615,9 +1690,9 @@ const WORKBOOK: WorkbookSheet[] = [
             "Pro",
             usd(20),
             "Per seat, with $20 of usage credit",
-            "1 TB, then from $0.15/GB",
+            "1 TB and 1M requests",
             "Mumbai (functions)",
-            "Functions bill on active CPU, from $0.128 an hour. Best for Next.js front ends.",
+            "Functions bill on active CPU ($0.14 an hour in Mumbai). See the Vercel tables above. Best for Next.js front ends.",
           ],
           [
             "Fly.io",
@@ -1789,6 +1864,14 @@ const WORKBOOK: WorkbookSheet[] = [
       },
       { label: "Render pricing", url: "https://render.com/pricing" },
       { label: "Vercel pricing", url: "https://vercel.com/pricing" },
+      {
+        label: "Vercel Mumbai (bom1) rates",
+        url: "https://vercel.com/docs/pricing/regional-pricing/bom1",
+      },
+      {
+        label: "Vercel Flat Rate CDN",
+        url: "https://vercel.com/docs/pricing/flat-rate-cdn",
+      },
       { label: "Fly.io pricing", url: "https://fly.io/docs/about/pricing/" },
       {
         label: "DigitalOcean Droplets",
