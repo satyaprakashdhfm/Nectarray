@@ -13,6 +13,7 @@ import { PageHead, Section, Stat } from "@/components/admin/Business";
 import { NewProjectForm, ProjectsTable } from "@/components/admin/Projects";
 import { SERVICES, TAB_SERVICES, rupees } from "@/lib/business";
 import { loadMoney, totals } from "@/lib/business-data";
+import { loadProjectLinks } from "@/lib/project-data";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +50,7 @@ export default async function ServicePage({
   const t = totals(money, recorded);
   const projectIds = t.projects.map((p) => p.id);
 
-  const [payments, keywords, posts, campaigns] = await Promise.all([
+  const [payments, keywords, posts, campaigns, links] = await Promise.all([
     projectIds.length
       ? db
           .select()
@@ -69,6 +70,7 @@ export default async function ServicePage({
       .select({ leads: adCampaigns.leads, status: adCampaigns.status })
       .from(adCampaigns)
       .where(eq(adCampaigns.service, service.id)),
+    loadProjectLinks(projectIds),
   ]);
 
   const leads = campaigns.reduce((n, c) => n + c.leads, 0);
@@ -95,6 +97,7 @@ export default async function ServicePage({
           projects={t.projects}
           payments={payments}
           paidByProject={money.paidByProject}
+          links={links}
           showService={recorded.length > 1}
         />
       </Section>

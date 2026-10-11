@@ -1,6 +1,6 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ExternalLink, FolderOpen } from "lucide-react";
 import {
   addPayment,
   createProject,
@@ -28,6 +28,7 @@ import {
   serviceLabel,
 } from "@/lib/business";
 import type { clientPayments, clientProjects } from "@/lib/db/schema";
+import type { LinkRow } from "@/lib/project-details";
 
 type Project = typeof clientProjects.$inferSelect;
 type Payment = typeof clientPayments.$inferSelect;
@@ -95,11 +96,14 @@ export function ProjectsTable({
   projects,
   payments,
   paidByProject,
+  links = new Map(),
   showService = false,
 }: {
   projects: Project[];
   payments: Payment[];
   paidByProject: Map<string, number>;
+  /** Each project's deployment links (lib/project-data loadProjectLinks). */
+  links?: Map<string, LinkRow[]>;
   showService?: boolean;
 }) {
   if (projects.length === 0) {
@@ -147,6 +151,31 @@ export function ProjectsTable({
                     {p.title}
                   </Link>
                   <span className="block">{p.client}</span>
+                  <ul className="mt-1.5 flex max-w-xs flex-wrap gap-1.5">
+                    {(links.get(p.id) ?? []).map((l) => (
+                      <li key={l.id}>
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={l.url}
+                          className="bg-brand-wash text-brand-deep hover:border-brand inline-flex items-center gap-1 rounded-md border border-transparent px-2 py-0.5 text-[0.75rem] font-semibold"
+                        >
+                          {l.label || l.url.replace(/^https?:\/\//, "")}
+                          <ExternalLink className="size-3" aria-hidden />
+                        </a>
+                      </li>
+                    ))}
+                    <li>
+                      <Link
+                        href={`${ADMIN}/projects/${p.id}#drive`}
+                        className="border-line text-ink-soft hover:border-brand hover:text-brand-deep inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[0.75rem] font-semibold"
+                      >
+                        <FolderOpen className="size-3" aria-hidden />
+                        Drive
+                      </Link>
+                    </li>
+                  </ul>
                   {p.note && (
                     <span className="text-ink-faint mt-1 block max-w-xs text-[0.75rem]">
                       {p.note}

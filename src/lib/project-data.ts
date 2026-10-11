@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { clientProjects, projectDetails } from "@/lib/db/schema";
 import { AccessError, requireAdmin } from "@/lib/auth/access";
@@ -9,6 +9,7 @@ import {
   cleanSheets,
   currentMonth,
   dashboardFor,
+  type LinkRow,
   type ProjectSheets,
 } from "@/lib/project-details";
 import { open } from "@/lib/vault";
@@ -67,4 +68,38 @@ export async function loadProjectSheets(
     })),
     access: sheets.access.map((a) => ({ ...a, password: open(a.password) })),
   };
+}
+
+/**
+ * The deployment links of many projects at once (live site, admin portal,
+ * repository...), for the projects lists. Links with no address are left
+ * out; a project never saved has none.
+ */
+export async function loadProjectLinks(
+  projectIds: string[],
+): Promise<Map<string, LinkRow[]>> {
+  const links = new Map<string, LinkRow[]>();
+  if (projectIds.length === 0) return links;
+  let rows;
+  try {
+    rows = await db
+      .select({
+        projectId: projectDetails.projectId,
+        links: projectDetails.links,
+      })
+      .from(projectDetails)
+      .where(inArray(projectDetails.projectId, projectIds));
+  } catch (error) {
+    // A database the migration has not reached yet.
+    const code =
+      (error as { code?: string }).code ??
+      (error as { cause?: { code?: string } }).cause?.code;
+    if (code === "42P01") return links;
+    throw error;
+  }
+  for (const row of rows) {
+    const live = cleanSheets({ links: row.links }).links.filter((l) => l.url);
+    if (live.length) links.set(row.projectId, live);
+  }
+  return links;
 }

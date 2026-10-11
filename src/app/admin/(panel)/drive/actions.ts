@@ -23,7 +23,7 @@ async function run<T>(
   if (!drive.isId(projectId)) return { ok: false, error: "No such project." };
   try {
     const value = await work();
-    revalidatePath("/admin/drive", "layout");
+    revalidatePath("/admin/projects", "layout");
     return { ok: true, value };
   } catch (error) {
     console.error("[drive]", error);

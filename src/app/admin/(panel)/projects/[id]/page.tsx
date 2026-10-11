@@ -1,13 +1,17 @@
-import { ADMIN } from "@/lib/admin-path";
+import { ADMIN, DRIVE_VIEW_COOKIE } from "@/lib/admin-path";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
 import { ChevronLeft, FileText, HardDrive } from "lucide-react";
 import { db } from "@/lib/db";
 import { clientProjects, quotations } from "@/lib/db/schema";
 import { StatusPill } from "@/components/admin/Business";
+import { DriveBrowser, NotConnected } from "@/components/admin/DriveBrowser";
 import { ProjectWorkspace } from "@/components/admin/ProjectWorkspace";
 import { num, rupees, serviceLabel } from "@/lib/business";
+import { isId, loadFolder } from "@/lib/drive";
+import { driveReady } from "@/lib/drive-storage";
 import { loadProjectSheets } from "@/lib/project-data";
 import { currentMonth } from "@/lib/project-details";
 import { points } from "@/lib/quote-html";
@@ -25,14 +29,17 @@ const day = (value: string) =>
 
 /**
  * One client project: the quotation it was agreed on, where it stands, its
- * deployment links, and the handover sheet that goes to the client.
+ * deployment links, the handover sheet that goes to the client, and its
+ * Drive, open at a folder (`?folder=`) or at the top.
  */
 export default async function AdminProjectPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ folder?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, { folder }] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const [project] = await db
     .select()
@@ -40,7 +47,8 @@ export default async function AdminProjectPage({
     .where(eq(clientProjects.id, id));
   if (!project) notFound();
 
-  const [quotes, sheets] = await Promise.all([
+  const folderId = isId(folder) ? folder : null;
+  const [quotes, sheets, contents, jar] = await Promise.all([
     db
       .select()
       .from(quotations)
@@ -48,7 +56,12 @@ export default async function AdminProjectPage({
       .limit(1)
       .catch(() => []),
     loadProjectSheets(id),
+    loadFolder(id, folderId),
+    cookies(),
   ]);
+  // A folder that is not in this project's Drive opens the top instead.
+  const drive = contents ?? (await loadFolder(id, null));
+  const view = jar.get(DRIVE_VIEW_COOKIE)?.value === "list" ? "list" : "grid";
   const quote = quotes[0];
   const agreed = quote ? cleanBody(quote.body) : null;
   const tab = serviceTab(project.service);
@@ -68,7 +81,7 @@ export default async function AdminProjectPage({
         </h1>
         <StatusPill status={project.status} />
         <Link
-          href={`${ADMIN}/drive/${project.id}`}
+          href="#drive"
           className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
         >
           <HardDrive className="size-3.5" aria-hidden />
@@ -164,6 +177,28 @@ export default async function AdminProjectPage({
         vaultReady={vaultReady()}
         thisMonth={currentMonth()}
       />
+
+      <section id="drive" className="mt-8 scroll-mt-24">
+        <h2 className="text-ink text-[1.25rem] font-semibold">Drive</h2>
+        <p className="text-ink-faint mt-0.5 text-[0.8125rem]">
+          This project&apos;s folders and files. Only admins can open them.
+        </p>
+        {!driveReady() && <NotConnected />}
+        {drive && (
+          <DriveBrowser
+            projectId={project.id}
+            folderId={contents ? folderId : null}
+            path={[{ id: null, name: "Drive" }, ...drive.path]}
+            folders={drive.folders.map((f) => ({ id: f.id, name: f.name }))}
+            files={drive.files.map((f) => ({
+              ...f,
+              createdAt: f.createdAt.toISOString(),
+            }))}
+            storage={driveReady()}
+            initialView={view}
+          />
+        )}
+      </section>
     </>
   );
 }

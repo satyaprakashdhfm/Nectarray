@@ -88,10 +88,11 @@ export function DriveBrowser({
   const picker = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
 
+  // The Drive lives on its project's page.
   const here = (id: string | null) =>
     id
-      ? `${ADMIN}/drive/${projectId}?folder=${id}`
-      : `${ADMIN}/drive/${projectId}`;
+      ? `${ADMIN}/projects/${projectId}?folder=${id}#drive`
+      : `${ADMIN}/projects/${projectId}#drive`;
   const fileHref = useCallback(
     (id: string, download = false) =>
       `${ADMIN}/drive/${projectId}/file/${id}${download ? "?download=1" : ""}`,

@@ -5,6 +5,7 @@ import { PageHead, Section, Stat, td, th } from "@/components/admin/Business";
 import { NewProjectForm, ProjectsTable } from "@/components/admin/Projects";
 import { PROJECT_SERVICES, rupees } from "@/lib/business";
 import { lastMonths, loadMoney, totals } from "@/lib/business-data";
+import { loadProjectLinks } from "@/lib/project-data";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function DevelopmentPage() {
     db.select().from(clientPayments).orderBy(desc(clientPayments.receivedOn)),
   ]);
   const t = totals(money, IDS);
+  const links = await loadProjectLinks(t.projects.map((p) => p.id));
   const months = lastMonths(
     money.receipts.filter((r) => r.service !== "academy"),
     12,
@@ -52,6 +54,7 @@ export default async function DevelopmentPage() {
           projects={t.projects}
           payments={payments}
           paidByProject={money.paidByProject}
+          links={links}
           showService
         />
       </Section>

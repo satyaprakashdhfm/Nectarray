@@ -15,7 +15,6 @@ import {
   FileText,
   FolderKanban,
   GraduationCap,
-  HardDrive,
   Inbox,
   IndianRupee,
   Layers,
@@ -45,7 +44,6 @@ const TOP: Tab[] = [
   { href: `${ADMIN}/development`, label: "All projects", icon: Layers },
   { href: `${ADMIN}/quotes`, label: "Quotations", icon: FileText },
   { href: `${ADMIN}/integrations`, label: "Integrations", icon: Plug },
-  { href: `${ADMIN}/drive`, label: "Drive", icon: HardDrive },
   { href: `${ADMIN}/tasks`, label: "Tasks & timeline", icon: ListChecks },
   { href: `${ADMIN}/workspace`, label: "Workspace", icon: SquareTerminal },
 ];
