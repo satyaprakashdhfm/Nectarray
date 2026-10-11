@@ -54,6 +54,12 @@ const Project = z.object({
         z.object({
           serviceId: z.string(),
           serviceName: z.string(),
+          domains: z
+            .object({
+              customDomains: z.array(z.object({ domain: z.string() })),
+              serviceDomains: z.array(z.object({ domain: z.string() })),
+            })
+            .nullish(),
           latestDeployment: z
             .object({
               status: z.string(),
@@ -86,6 +92,7 @@ const PROJECT_FIELDS = `
       serviceInstances { edges { node {
         serviceId
         serviceName
+        domains { customDomains { domain } serviceDomains { domain } }
         latestDeployment { status createdAt statusUpdatedAt meta }
       } } }
     } } }
@@ -133,6 +140,9 @@ export function fromRailway(projects: RailwayProject[]): HostProject[] {
         const deploy = instance.latestDeployment;
         if (!deploy) return [];
         const meta = deploy.meta as { commitMessage?: unknown } | null;
+        const domain =
+          instance.domains?.customDomains[0]?.domain ??
+          instance.domains?.serviceDomains[0]?.domain;
         return [
           {
             key: `railway:${instance.serviceId}:${env.id}`,
@@ -147,6 +157,7 @@ export function fromRailway(projects: RailwayProject[]): HostProject[] {
                 ? firstLine(meta.commitMessage)
                 : null,
             href: `https://railway.com/project/${project.id}/service/${instance.serviceId}?environmentId=${env.id}`,
+            site: domain ? `https://${domain}` : null,
           },
         ];
       }),

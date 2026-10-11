@@ -26,6 +26,8 @@ export type ServiceDeploy = {
   commit: string | null;
   /** The service or deployment on the host's dashboard. */
   href: string;
+  /** The public website it serves (its custom domain first), if it has one. */
+  site: string | null;
 };
 
 /** A project as one host knows it. */

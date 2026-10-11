@@ -56,6 +56,24 @@ const Deployment = z.object({
 
 const Deployments = z.object({ deployments: z.array(Deployment) });
 
+/** Just what the board needs of a project: the domains its production serves. */
+const Projects = z.object({
+  projects: z.array(
+    z.object({
+      id: z.string(),
+      alias: z
+        .array(
+          z.object({
+            domain: z.string(),
+            target: z.string().nullish(),
+            redirect: z.string().nullish(),
+          }),
+        )
+        .nullish(),
+    }),
+  ),
+});
+
 export type VercelDeployment = z.infer<typeof Deployment>;
 type Scope = { teamId: string; slug: string } | null;
 
@@ -77,6 +95,7 @@ async function get(token: string, path: string): Promise<unknown> {
 export function fromVercel(
   deployments: VercelDeployment[],
   slug: string | null,
+  sites: Map<string, string> = new Map(),
 ): HostProject[] {
   const latest = new Map<string, VercelDeployment>();
   for (const d of deployments) {
@@ -107,6 +126,7 @@ export function fromVercel(
             (slug
               ? `https://vercel.com/${slug}/${d.name}`
               : `https://vercel.com/dashboard`),
+          site: sites.get(project) ?? null,
         },
       ],
     };
@@ -114,6 +134,37 @@ export function fromVercel(
 }
 
 let teams: { token: string; scopes: Scope[]; at: number } | null = null;
+
+/**
+ * Each project's public address: a custom production domain if it has one,
+ * else its .vercel.app one (never a branch or a redirect). Domains rarely
+ * change, so they are kept for ten minutes per team.
+ */
+const siteCache = new Map<string, { at: number; sites: Map<string, string> }>();
+
+async function productionSites(
+  token: string,
+  scope: Scope,
+): Promise<Map<string, string>> {
+  const key = `${token.slice(-8)}:${scope?.teamId ?? "me"}`;
+  const kept = siteCache.get(key);
+  if (kept && Date.now() - kept.at < TEAMS_TTL_MS) return kept.sites;
+  const query = new URLSearchParams({ limit: "100" });
+  if (scope) query.set("teamId", scope.teamId);
+  const { projects } = Projects.parse(
+    await get(token, `/v10/projects?${query}`),
+  );
+  const sites = new Map<string, string>();
+  for (const p of projects) {
+    const live = (p.alias ?? []).filter(
+      (a) => !a.redirect && (a.target ?? "PRODUCTION") === "PRODUCTION",
+    );
+    const best = live.find((a) => !a.domain.endsWith(".vercel.app")) ?? live[0];
+    if (best) sites.set(p.id, `https://${best.domain}`);
+  }
+  siteCache.set(key, { at: Date.now(), sites });
+  return sites;
+}
 
 /** Every team the token reaches; just the personal account when it has none. */
 async function scopes(token: string): Promise<Scope[]> {
@@ -136,10 +187,17 @@ export async function readVercel(token: string): Promise<HostProject[]> {
         limit: String(LIMIT),
       });
       if (scope) query.set("teamId", scope.teamId);
-      const { deployments } = Deployments.parse(
-        await get(token, `/v6/deployments?${query}`),
-      );
-      return fromVercel(deployments, scope?.slug ?? null);
+      const [{ deployments }, sites] = await Promise.all([
+        get(token, `/v6/deployments?${query}`).then((b) =>
+          Deployments.parse(b),
+        ),
+        // The board still works if the domains cannot be read.
+        productionSites(token, scope).catch((error) => {
+          console.error("[deploys] Could not read Vercel domains:", error);
+          return new Map<string, string>();
+        }),
+      ]);
+      return fromVercel(deployments, scope?.slug ?? null, sites);
     }),
   );
   return all.flat();
