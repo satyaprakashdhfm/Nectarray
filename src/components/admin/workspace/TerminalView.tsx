@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, MessageSquareText } from "lucide-react";
 import type { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
+import { lastReply } from "./last-reply";
 import { filesIn, openRunner } from "./runner";
 
 /*
@@ -69,8 +70,11 @@ export function TerminalView({
   const fitPreview = useRef<() => void>(() => {});
   const onFileRef = useRef(onFile);
   const copyRef = useRef<() => void>(() => {});
+  const copyReplyRef = useRef<() => void>(() => {});
   const [selected, setSelected] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"selection" | "reply" | "none" | null>(
+    null,
+  );
 
   useEffect(() => {
     onFileRef.current = onFile;
@@ -141,14 +145,36 @@ export function TerminalView({
         });
       }
       term.open(inner.current);
+      const flash = (what: "selection" | "reply" | "none") => {
+        setCopied(what);
+        setTimeout(() => setCopied(null), 1800);
+      };
       copyRef.current = () => {
         const text = cleanCopy(term.getSelection());
         if (!text) return;
         void writeClipboard(text).then(() => {
           term.clearSelection();
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
+          flash("selection");
         });
+      };
+      /*
+       * Claude Code redraws its screen as it works, which can wipe a
+       * selection mid-drag; this copies its last answer without dragging.
+       * Wrapped rows are joined back into the lines they were.
+       */
+      copyReplyRef.current = () => {
+        const buffer = term.buffer.active;
+        const lines: string[] = [];
+        for (let i = 0; i < buffer.length; i++) {
+          const line = buffer.getLine(i);
+          if (!line) continue;
+          const text = line.translateToString(true);
+          if (line.isWrapped && lines.length) lines[lines.length - 1] += text;
+          else lines.push(text);
+        }
+        const reply = lastReply(lines);
+        if (!reply) return flash("none");
+        void writeClipboard(reply).then(() => flash("reply"));
       };
       const selection = preview
         ? null
@@ -228,7 +254,14 @@ export function TerminalView({
       const allowDrop = (e: DragEvent) => {
         if (e.dataTransfer?.types.includes("Files")) e.preventDefault();
       };
+      // Right-click copies the selection, as in Windows Terminal.
+      const rightClick = (e: MouseEvent) => {
+        if (!term.hasSelection()) return;
+        e.preventDefault();
+        copyRef.current();
+      };
       if (!preview) {
+        box.addEventListener("contextmenu", rightClick);
         box.addEventListener("mousedown", focus);
         box.addEventListener("paste", takeFiles, true);
         box.addEventListener("dragover", allowDrop);
@@ -237,6 +270,7 @@ export function TerminalView({
 
       cleanup = () => {
         observer.disconnect();
+        box.removeEventListener("contextmenu", rightClick);
         box.removeEventListener("mousedown", focus);
         box.removeEventListener("paste", takeFiles, true);
         box.removeEventListener("dragover", allowDrop);
@@ -277,29 +311,60 @@ export function TerminalView({
       }
       aria-hidden={preview || undefined}
     >
-      {!preview && (selected || copied) && (
-        <button
-          type="button"
-          // Keep the selection: the press must not reach the terminal.
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onClick={() => copyRef.current()}
-          className="bg-night-soft border-night-line absolute top-2 right-3 z-10 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.75rem] font-semibold text-white/85 shadow-sm transition-colors hover:text-white"
-        >
-          {copied ? (
-            <Check className="text-leaf size-3.5" aria-hidden />
-          ) : (
-            <Copy className="size-3.5" aria-hidden />
+      {!preview && (
+        <div className="absolute top-2 right-3 z-10 flex items-center gap-1.5">
+          {(selected || copied === "selection") && (
+            <CopyButton
+              onClick={() => copyRef.current()}
+              done={copied === "selection"}
+              label="Copy"
+              doneLabel="Copied"
+              icon={<Copy className="size-3.5" aria-hidden />}
+            />
           )}
-          {copied ? "Copied" : "Copy"}
-        </button>
+          <CopyButton
+            onClick={() => copyReplyRef.current()}
+            done={copied === "reply"}
+            label={copied === "none" ? "No reply yet" : "Copy last reply"}
+            doneLabel="Reply copied"
+            icon={<MessageSquareText className="size-3.5" aria-hidden />}
+          />
+        </div>
       )}
       <div
         ref={inner}
         className={preview ? "absolute top-0 left-0 origin-top-left" : "h-full"}
       />
     </div>
+  );
+}
+
+function CopyButton({
+  onClick,
+  done,
+  label,
+  doneLabel,
+  icon,
+}: {
+  onClick: () => void;
+  done: boolean;
+  label: string;
+  doneLabel: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      // Keep the selection: the press must not reach the terminal.
+      onMouseDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onClick={onClick}
+      className="bg-night-soft border-night-line inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.75rem] font-semibold text-white/85 shadow-sm transition-colors hover:text-white"
+    >
+      {done ? <Check className="text-leaf size-3.5" aria-hidden /> : icon}
+      {done ? doneLabel : label}
+    </button>
   );
 }
