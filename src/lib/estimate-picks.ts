@@ -13,14 +13,20 @@
 const KEY = "nectarray-estimate";
 
 export type SavedPick = { on: boolean; option: string; quantity: string };
-export type SavedHire = { on: boolean; people: string; monthly: string };
+export type SavedMember = {
+  id: string;
+  role: string;
+  on: boolean;
+  people: string;
+  monthly: string;
+};
 
 type Store = {
   /** Choices made on the sheets since the Estimate tab last opened. */
   log: { option: string; on: boolean }[];
   estimate?: {
     picks: Record<string, SavedPick>;
-    hires: Record<string, SavedHire>;
+    team?: SavedMember[];
   };
 };
 

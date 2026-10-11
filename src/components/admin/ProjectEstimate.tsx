@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { FX_INR_PER_USD } from "@/lib/price-book";
 import {
   estimateTotals,
@@ -14,13 +14,20 @@ import { clearEstimate, saveEstimate, readChoices } from "@/lib/estimate-picks";
 import { resetSavedChoices, useSavedState } from "@/lib/use-saved-state";
 import { TEAM_RATES_CHECKED, TEAM_ROLES } from "@/lib/team-rates";
 import { box, Field, NumberInput } from "@/components/admin/CostEstimator";
+import { Dropdown } from "@/components/admin/Dropdown";
 import { cn } from "@/lib/utils";
 
 /** Ticked from the start: what nearly every site needs. */
 const STARTER = new Set(["domain", "hosting", "database"]);
 
 type Pick = { on: boolean; option: string; quantity: string };
-type Hire = { on: boolean; people: string; monthly: string };
+type Member = {
+  id: string;
+  role: string;
+  on: boolean;
+  people: string;
+  monthly: string;
+};
 
 const amount = (text: string) => {
   const n = Number(text);
@@ -30,7 +37,8 @@ const amount = (text: string) => {
 /**
  * Tick what a project needs, choose a provider for each and say how many:
  * the total comes out as the first payment, then what recurs each month
- * and each year. The team below adds people at Indian market salaries.
+ * and each year. Developers below adds the people, with Indian market
+ * salaries shown as a guide and each figure left to fill in.
  */
 export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
   const [currency, setCurrency] = useSavedState<Currency>(
@@ -38,7 +46,8 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
     "inr",
   );
   const [picks, setPicks] = useState(() => startingPicks(items));
-  const [hires, setHires] = useState(startingHires);
+  const [team, setTeam] = useState(startingTeam);
+  const [newRole, setNewRole] = useState("");
   const [loaded, setLoaded] = useState(false);
 
   /*
@@ -64,13 +73,13 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- browser-only state, read once on mount
     setPicks(next);
-    if (estimate) setHires({ ...startingHires(), ...estimate.hires });
+    if (Array.isArray(estimate?.team)) setTeam(estimate.team);
     setLoaded(true);
   }, [items]);
 
   useEffect(() => {
-    if (loaded) saveEstimate({ picks, hires });
-  }, [loaded, picks, hires]);
+    if (loaded) saveEstimate({ picks, team });
+  }, [loaded, picks, team]);
 
   const startOver = () => {
     if (!window.confirm("Clear every choice on every sheet and the estimate?"))
@@ -96,18 +105,19 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
     };
     return pick.on ? [{ id: item.id, line }] : [];
   });
-  const teamLines = TEAM_ROLES.flatMap((role) => {
-    const hire = hires[role.id];
-    if (!hire.on) return [];
-    const line: EstimateLine = {
-      billing: "monthly",
-      quantity: amount(hire.people),
-      price: priceIn({ inr: amount(hire.monthly) }, currency),
-    };
-    return [line];
-  });
+  const teamLines = team.flatMap((member): EstimateLine[] =>
+    member.on
+      ? [
+          {
+            billing: "monthly",
+            quantity: amount(member.people),
+            price: priceIn({ inr: amount(member.monthly) }, currency),
+          },
+        ]
+      : [],
+  );
   const services = estimateTotals(serviceLines.map((l) => l.line));
-  const team = estimateTotals(teamLines);
+  const people = estimateTotals(teamLines);
   const all = estimateTotals([
     ...serviceLines.map((l) => l.line),
     ...teamLines,
@@ -115,8 +125,17 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
 
   const setPick = (id: string, change: Partial<Pick>) =>
     setPicks((p) => ({ ...p, [id]: { ...p[id], ...change } }));
-  const setHire = (id: string, change: Partial<Hire>) =>
-    setHires((h) => ({ ...h, [id]: { ...h[id], ...change } }));
+  const setMember = (id: string, change: Partial<Member>) =>
+    setTeam((list) => list.map((m) => (m.id === id ? { ...m, ...change } : m)));
+  const addRole = () => {
+    const role = newRole.trim();
+    if (!role) return;
+    setTeam((list) => [
+      ...list,
+      { id: crypto.randomUUID(), role, on: true, people: "1", monthly: "" },
+    ]);
+    setNewRole("");
+  };
 
   return (
     <div className="mt-5">
@@ -219,24 +238,22 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
                             label="Provider"
                             className="col-span-2 sm:col-span-1"
                           >
-                            <select
+                            <Dropdown
                               value={pick.option}
                               disabled={!pick.on}
-                              onChange={(e) =>
-                                setPick(item.id, { option: e.target.value })
+                              aria-label={`${item.label} provider`}
+                              onChange={(option) =>
+                                setPick(item.id, { option })
                               }
-                              className={box}
-                            >
-                              {item.options.map((o) => (
-                                <option key={o.id} value={o.id}>
-                                  {o.label}: {formatMoney(o.price, currency)}{" "}
-                                  {item.per}
-                                  {o.first
+                              options={item.options.map((o) => ({
+                                value: o.id,
+                                label: `${o.label}: ${formatMoney(o.price, currency)} ${item.per}${
+                                  o.first
                                     ? ` (first ${formatMoney(o.first, currency)})`
-                                    : ""}
-                                </option>
-                              ))}
-                            </select>
+                                    : ""
+                                }`,
+                              }))}
+                            />
                           </Field>
                           <Field label={`How many ${item.unit}`}>
                             <NumberInput
@@ -266,83 +283,123 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
             </section>
           ))}
 
-          <section aria-labelledby="team">
-            <h2 id="team" className="text-ink text-[1rem] font-semibold">
-              Team
+          <section aria-labelledby="developers">
+            <h2 id="developers" className="text-ink text-[1rem] font-semibold">
+              Developers
             </h2>
             <p className="text-ink-faint mt-1 max-w-[70ch] text-[0.8125rem]">
-              Average monthly CTC in India for each role (before tax, not
-              take-home). Change the monthly figure for the person you have in
-              mind. Checked {TEAM_RATES_CHECKED}.
+              Enter what each person costs a month (CTC, before tax). The Indian
+              market average is shown as a guide, checked {TEAM_RATES_CHECKED}.
+              Add any role the project needs.
             </p>
             <ul className="mt-3 space-y-3">
-              {TEAM_ROLES.map((role) => {
-                const hire = hires[role.id];
+              {team.map((member) => {
+                const market = TEAM_ROLES.find((r) => r.id === member.id);
                 const cost =
-                  amount(hire.people) *
-                  priceIn({ inr: amount(hire.monthly) }, currency);
+                  amount(member.people) *
+                  priceIn({ inr: amount(member.monthly) }, currency);
                 return (
                   <li
-                    key={role.id}
+                    key={member.id}
                     className={cn(
                       "border-line bg-surface rounded-xl border p-4 transition-colors",
-                      hire.on && "border-brand",
+                      member.on && "border-brand",
                     )}
                   >
-                    <label className="flex cursor-pointer items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={hire.on}
-                        onChange={(e) =>
-                          setHire(role.id, { on: e.target.checked })
-                        }
-                        className="accent-brand mt-0.5 size-4 shrink-0"
-                      />
-                      <span className="min-w-0">
-                        <span className="text-ink block text-[0.9375rem] font-semibold">
-                          {role.role}
+                    <div className="flex items-start gap-3">
+                      <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={member.on}
+                          onChange={(e) =>
+                            setMember(member.id, { on: e.target.checked })
+                          }
+                          className="accent-brand mt-0.5 size-4 shrink-0"
+                        />
+                        <span className="min-w-0">
+                          <span className="text-ink block text-[0.9375rem] font-semibold">
+                            {member.role}
+                          </span>
+                          {market && (
+                            <span className="text-ink-faint mt-0.5 block text-[0.75rem]">
+                              Market average ₹
+                              {market.monthly.toLocaleString("en-IN")} a month,
+                              usually ₹{market.low.toLocaleString("en-IN")} to ₹
+                              {market.high.toLocaleString("en-IN")}.{" "}
+                              {market.basis}{" "}
+                              <a
+                                href={market.source.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-brand-deep inline-flex items-center gap-0.5 font-semibold"
+                              >
+                                {market.source.label}
+                                <ExternalLink className="size-3" aria-hidden />
+                              </a>
+                            </span>
+                          )}
                         </span>
-                        <span className="text-ink-faint mt-0.5 block text-[0.75rem]">
-                          Usually ₹{role.low.toLocaleString("en-IN")} to ₹
-                          {role.high.toLocaleString("en-IN")} a month.{" "}
-                          {role.basis}{" "}
-                          <a
-                            href={role.source.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-brand-deep inline-flex items-center gap-0.5 font-semibold"
-                          >
-                            {role.source.label}
-                            <ExternalLink className="size-3" aria-hidden />
-                          </a>
-                        </span>
-                      </span>
-                    </label>
+                      </label>
+                      {market ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMember(member.id, {
+                              monthly: String(market.monthly),
+                              on: true,
+                            })
+                          }
+                          className="text-brand-deep hover:bg-brand-wash shrink-0 rounded-md px-2 py-1 text-[0.75rem] font-semibold"
+                        >
+                          Use average
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setTeam((list) =>
+                              list.filter((m) => m.id !== member.id),
+                            )
+                          }
+                          aria-label={`Remove ${member.role}`}
+                          className="text-ink-faint hover:text-danger shrink-0 rounded-md p-1"
+                        >
+                          <Trash2 className="size-4" aria-hidden />
+                        </button>
+                      )}
+                    </div>
                     <div
                       className={cn(
                         "mt-3 grid grid-cols-2 items-end gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(6rem,1fr)_minmax(8rem,1fr)]",
-                        !hire.on && "opacity-50",
+                        !member.on && "opacity-50",
                       )}
                     >
                       <Field
-                        label="Monthly CTC (₹)"
+                        label="Monthly cost (₹)"
                         className="col-span-2 sm:col-span-1"
                       >
                         <NumberInput
-                          value={hire.monthly}
-                          onChange={(monthly) => setHire(role.id, { monthly })}
+                          value={member.monthly}
+                          onChange={(monthly) =>
+                            setMember(member.id, {
+                              monthly,
+                              ...(amount(monthly) > 0 ? { on: true } : {}),
+                            })
+                          }
                         />
                       </Field>
                       <Field label="People">
                         <NumberInput
-                          value={hire.people}
-                          onChange={(people) => setHire(role.id, { people })}
+                          value={member.people}
+                          onChange={(people) =>
+                            setMember(member.id, { people })
+                          }
                         />
                       </Field>
                       <div className="bg-brand-wash rounded-lg px-3 py-1.5">
                         <p className="text-ink-faint text-[0.75rem]">A month</p>
                         <p className="text-brand-deep text-[1.0625rem] leading-tight font-semibold tabular-nums">
-                          {money(hire.on ? cost : 0)}
+                          {money(member.on ? cost : 0)}
                         </p>
                       </div>
                     </div>
@@ -350,6 +407,31 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
                 );
               })}
             </ul>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                addRole();
+              }}
+              className="mt-3 flex flex-wrap items-end gap-2"
+            >
+              <Field label="Add a role" className="min-w-[14rem] flex-1">
+                <input
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                  maxLength={80}
+                  placeholder="e.g. Mobile app developer"
+                  className={box}
+                />
+              </Field>
+              <button
+                type="submit"
+                disabled={!newRole.trim()}
+                className="bg-brand-solid text-cta-fg inline-flex h-10 items-center gap-1.5 rounded-lg px-4 text-[0.875rem] font-semibold disabled:opacity-50"
+              >
+                <Plus className="size-4" aria-hidden />
+                Add role
+              </button>
+            </form>
           </section>
         </div>
 
@@ -374,8 +456,8 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
               <Sum
                 label="Every month"
                 hint={
-                  team.monthly > 0
-                    ? `${money(services.monthly)} services + ${money(team.monthly)} team`
+                  people.monthly > 0
+                    ? `${money(services.monthly)} services + ${money(people.monthly)} developers`
                     : undefined
                 }
                 value={money(all.monthly)}
@@ -393,7 +475,7 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
             </dl>
             {serviceLines.length + teamLines.length === 0 && (
               <p className="text-ink-faint mt-3 text-[0.75rem]">
-                Tick a service or a role to start the estimate.
+                Tick a service or a developer to start the estimate.
               </p>
             )}
             <p className="text-ink-faint mt-3 text-[0.75rem]">
@@ -453,11 +535,12 @@ function startingPicks(items: EstimateItem[]): Record<string, Pick> {
   );
 }
 
-function startingHires(): Record<string, Hire> {
-  return Object.fromEntries(
-    TEAM_ROLES.map((r) => [
-      r.id,
-      { on: false, people: "1", monthly: String(r.monthly) },
-    ]),
-  );
+function startingTeam(): Member[] {
+  return TEAM_ROLES.map((r) => ({
+    id: r.id,
+    role: r.role,
+    on: false,
+    people: "1",
+    monthly: "",
+  }));
 }
