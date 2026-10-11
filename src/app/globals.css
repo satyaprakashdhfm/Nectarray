@@ -14,8 +14,8 @@
 @theme {
   /* Type ------------------------------------------------------------------ */
   --font-sans:
-    var(--font-schibsted), ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
+    var(--font-schibsted), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
   --font-serif:
     var(--font-source-serif), ui-serif, Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
@@ -93,6 +93,9 @@
 -------------------------------------------------------------------------- */
 
 [data-ui-theme="dark"] {
+  /* Native controls (a select's open list, scrollbars, date pickers) are
+     drawn by the browser, which only knows the page is dark from this. */
+  color-scheme: dark;
   /*
    * Neutral, not navy. The first pass reused the marketing site's --color-night
    * (#0b1720), which is a deliberately blue ground built to sit under a
@@ -377,6 +380,71 @@ body {
 ::selection {
   background-color: var(--color-brand);
   color: #fff;
+}
+
+/*
+ * Dropdown lists. Options inherit the select's text colour, so in a dark
+ * theme they could come out light-on-light in a list the browser drew
+ * light. They take the theme's own surface and ink, and where the browser
+ * lets the list be styled (Chrome and Edge's customizable select) the row
+ * under the pointer or the keyboard is tinted brand blue, so it is always
+ * clear which one a click will pick.
+ */
+select option,
+select optgroup {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
+
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+
+  /* The new rendering lays the button out as a box; keep its text
+     centred in the fixed-height fields the app uses. */
+  select {
+    align-items: center;
+  }
+
+  ::picker(select) {
+    margin-block: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.5rem;
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: 0 12px 32px rgb(14 27 38 / 0.18);
+  }
+
+  select option {
+    padding: 0.4rem 0.625rem;
+    border-radius: 0.375rem;
+    background-color: transparent;
+  }
+
+  select option:hover,
+  select option:focus-visible {
+    background-color: var(--color-brand);
+    color: #fff;
+    outline: none;
+  }
+
+  select option:checked {
+    font-weight: 600;
+  }
+
+  select optgroup {
+    background-color: transparent;
+    color: var(--color-ink-faint);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  select optgroup option {
+    font-size: 0.875rem;
+  }
 }
 
 /*
