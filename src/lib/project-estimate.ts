@@ -39,9 +39,13 @@ export type EstimateItem = {
 export const ARTICLE_WORDS = 1000;
 export const BRIEF_WORDS = 300;
 
+/** Prices added up, kept in rupees when they all are. */
 const sum = (...parts: (Money | null)[]): Money | null => {
   if (parts.some((p) => !p)) return null;
-  return { usd: parts.reduce((n, p) => n + inCurrency(p!, "usd"), 0) };
+  const money = parts as Money[];
+  if (money.every((p) => "inr" in p))
+    return { inr: money.reduce((n, p) => n + inCurrency(p, "inr"), 0) };
+  return { usd: money.reduce((n, p) => n + inCurrency(p, "usd"), 0) };
 };
 
 /** Read a table's cells by column label, row by row. */
@@ -120,35 +124,16 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
       per: "a year",
       billing: "yearly",
       defaultQuantity: 1,
-      note: "First year at the best offer, then renewal each year. Privacy and ICANN fees included.",
-      options: [
-        ...options(
-          rows("domains", "registrars"),
-          (r) => ({
-            label: `${r.text("Registrar")} ${r.text("TLD")}`,
-            first: sum(
-              r.money("Best 1st year"),
-              r.money("Privacy / year"),
-              r.money("ICANN fee / year"),
-            ),
-            price: sum(
-              r.money("Renewal / year"),
-              r.money("Privacy / year"),
-              r.money("ICANN fee / year"),
-            ),
-          }),
-          "registrars",
-        ),
-        ...options(
-          rows("domains", "india"),
-          (r) => ({
-            label: `${r.text("Registrar")} ${r.text("TLD")}`,
-            first: r.money("1st year"),
-            price: r.money("Renewal"),
-          }),
-          "india",
-        ),
-      ],
+      note: "First year at the best offer, then renewal each year (ICANN fee included, privacy not). A ₹1 first year usually needs a 3-year purchase, so years 2 and 3 are paid up front.",
+      options: options(
+        rows("domains", "registrars"),
+        (r) => ({
+          label: `${r.text("Registrar")} ${r.text("TLD")}`,
+          first: sum(r.money("Best 1st year"), r.money("ICANN fee / year")),
+          price: sum(r.money("Renewal / year"), r.money("ICANN fee / year")),
+        }),
+        "registrars",
+      ),
     },
     {
       id: "hosting",
