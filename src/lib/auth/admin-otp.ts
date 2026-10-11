@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
-import { and, count, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, count, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { adminCodes } from "@/lib/db/schema";
 import { company } from "@/lib/content";
@@ -127,7 +127,19 @@ export async function checkAdminCode(
       error: "That code has expired. Send a new one.",
       spent: true,
     };
-  if (row.attempts >= MAX_ATTEMPTS)
+  /*
+   * Count the try before comparing, in one conditional update, so guesses
+   * sent at the same moment cannot share a read of the counter and get past
+   * the limit together.
+   */
+  const [tried] = await db
+    .update(adminCodes)
+    .set({ attempts: sql`${adminCodes.attempts} + 1` })
+    .where(
+      and(eq(adminCodes.id, row.id), lt(adminCodes.attempts, MAX_ATTEMPTS)),
+    )
+    .returning({ attempts: adminCodes.attempts });
+  if (!tried)
     return {
       ok: false,
       error: "Too many wrong tries. Send a new code.",
@@ -137,11 +149,7 @@ export async function checkAdminCode(
   const expected = Buffer.from(row.codeHash, "hex");
   const given = digest(sessionHash, clean);
   if (expected.length !== given.length || !timingSafeEqual(expected, given)) {
-    await db
-      .update(adminCodes)
-      .set({ attempts: row.attempts + 1 })
-      .where(eq(adminCodes.id, row.id));
-    const left = MAX_ATTEMPTS - row.attempts - 1;
+    const left = MAX_ATTEMPTS - tried.attempts;
     return left > 0
       ? {
           ok: false,
@@ -154,10 +162,18 @@ export async function checkAdminCode(
         };
   }
 
-  await db
+  // A code works once, even if two correct tries arrive together.
+  const [used] = await db
     .update(adminCodes)
     .set({ usedAt: new Date() })
-    .where(eq(adminCodes.id, row.id));
+    .where(and(eq(adminCodes.id, row.id), isNull(adminCodes.usedAt)))
+    .returning({ id: adminCodes.id });
+  if (!used)
+    return {
+      ok: false,
+      error: "That code has already been used. Send a new one.",
+      spent: true,
+    };
   return { ok: true };
 }
 
