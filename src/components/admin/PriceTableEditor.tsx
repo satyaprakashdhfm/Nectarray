@@ -9,6 +9,7 @@ import {
 } from "@/app/admin/(panel)/integrations/actions";
 import type { Cell, Column, PriceRow, PriceTable } from "@/lib/price-book";
 import { cn } from "@/lib/utils";
+import { Dropdown } from "@/components/admin/Dropdown";
 
 type Currency = "usd" | "inr";
 
@@ -261,31 +262,31 @@ function CellInput({
         ? CONFIDENCE
         : [value, ...CONFIDENCE];
     return (
-      <select
+      <Dropdown
         value={value}
         aria-label={label}
-        onChange={(e) => onChange({ input: e.target.value })}
-        className={cn(box, "w-full min-w-[7rem]")}
-      >
-        <option value="">None</option>
-        {options.map((o) => (
-          <option key={o}>{o}</option>
-        ))}
-      </select>
+        onChange={(v) => onChange({ input: v })}
+        options={[
+          { value: "", label: "None" },
+          ...options.map((o) => ({ value: o, label: o })),
+        ]}
+        className="min-w-[7rem]"
+      />
     );
   }
   if (column.kind === "money")
     return (
       <div className="flex min-w-[8.5rem] gap-1">
-        <select
+        <Dropdown
           value={currency}
           aria-label={`${label}, currency`}
-          onChange={(e) => onChange({ currency: e.target.value as Currency })}
-          className={cn(box, "w-12 shrink-0 px-1")}
-        >
-          <option value="usd">$</option>
-          <option value="inr">₹</option>
-        </select>
+          onChange={(v) => onChange({ currency: v as Currency })}
+          options={[
+            { value: "usd", label: "$" },
+            { value: "inr", label: "₹" },
+          ]}
+          className="w-14 shrink-0 gap-1 px-2"
+        />
         <input
           value={value}
           inputMode="decimal"

@@ -2,6 +2,7 @@
 
 import { useSavedState } from "@/lib/use-saved-state";
 import { logChoice } from "@/lib/estimate-picks";
+import { Dropdown } from "@/components/admin/Dropdown";
 import type { PriceTable } from "@/lib/price-book";
 import {
   pricedRows,
@@ -187,17 +188,14 @@ function ImageCost({
       <div className={row}>
         <ModelSelect models={models} value={model.id} onChange={setModelId} />
         <Field label="Size or quality" className="lg:col-span-2">
-          <select
-            value={chosen.index}
-            onChange={(e) => setSetting(Number(e.target.value))}
-            className={box}
-          >
-            {options.map((o) => (
-              <option key={o.index} value={o.index}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <Dropdown
+            value={String(chosen.index)}
+            onChange={(v) => setSetting(Number(v))}
+            options={options.map((o) => ({
+              value: String(o.index),
+              label: o.label,
+            }))}
+          />
         </Field>
         <Field label="Images">
           <NumberInput value={images} onChange={setImages} />
@@ -245,17 +243,14 @@ function VideoCost({
       <div className={row}>
         <ModelSelect models={models} value={model.id} onChange={setModelId} />
         <Field label="Resolution">
-          <select
-            value={chosen.index}
-            onChange={(e) => setResolution(Number(e.target.value))}
-            className={box}
-          >
-            {options.map((o) => (
-              <option key={o.index} value={o.index}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <Dropdown
+            value={String(chosen.index)}
+            onChange={(v) => setResolution(Number(v))}
+            options={options.map((o) => ({
+              value: String(o.index),
+              label: o.label,
+            }))}
+          />
         </Field>
         <Field label="Seconds each">
           <NumberInput value={seconds} onChange={setSeconds} />
@@ -327,23 +322,19 @@ function ModelSelect({
   const providers = [...new Set(models.map((m) => m.provider))];
   return (
     <Field label="Model" className="col-span-2 lg:col-span-1">
-      <select
+      <Dropdown
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={box}
-      >
-        {providers.map((provider) => (
-          <optgroup key={provider} label={provider || "Other"}>
-            {models
-              .filter((m) => m.provider === provider)
-              .map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-          </optgroup>
-        ))}
-      </select>
+        onChange={onChange}
+        options={providers.flatMap((provider) =>
+          models
+            .filter((m) => m.provider === provider)
+            .map((m) => ({
+              value: m.id,
+              label: m.name,
+              group: provider || "Other",
+            })),
+        )}
+      />
     </Field>
   );
 }

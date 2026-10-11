@@ -21,6 +21,7 @@ import {
 } from "@/lib/price-book";
 import { CostEstimator } from "@/components/admin/CostEstimator";
 import { logChoice } from "@/lib/estimate-picks";
+import { Dropdown } from "@/components/admin/Dropdown";
 import { resetSavedChoices, useSavedState } from "@/lib/use-saved-state";
 import { TableEditor } from "@/components/admin/PriceTableEditor";
 import {
@@ -586,21 +587,18 @@ function FacetSelect({
   return (
     <label className="text-ink-faint flex items-center gap-1.5 text-[0.75rem] font-semibold">
       {label}
-      <select
+      <Dropdown
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
+        options={[
+          { value: "", label: "All" },
+          ...values.map((v) => ({ value: v, label: v })),
+        ]}
         className={cn(
-          "border-line bg-surface focus:border-brand rounded-md border px-2 py-1 text-[0.8125rem] font-medium outline-none",
+          "h-8 w-auto min-w-[6rem] rounded-md px-2 text-[0.8125rem] font-medium",
           value ? "text-brand-deep" : "text-ink",
         )}
-      >
-        <option value="">All</option>
-        {values.map((v) => (
-          <option key={v} value={v}>
-            {v}
-          </option>
-        ))}
-      </select>
+      />
     </label>
   );
 }

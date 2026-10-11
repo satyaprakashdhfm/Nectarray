@@ -19,6 +19,7 @@ import {
 } from "@/lib/quotes";
 import { sectionsFor, type QuoteSectionDef } from "@/lib/quote-template";
 import { cn } from "@/lib/utils";
+import { Dropdown } from "@/components/admin/Dropdown";
 
 /**
  * The standard price list: one plain row per item, name, a line of
@@ -196,23 +197,21 @@ export function StandardPrices({
                           <span className="text-ink-faint mb-1 block text-[0.6875rem] font-semibold lg:sr-only">
                             Starts as
                           </span>
-                          <select
+                          <Dropdown
                             value={line.billing}
-                            onChange={(e) => {
-                              const billing = e.target.value as Billing;
+                            aria-label={`How ${line.name || "this row"} starts`}
+                            onChange={(v) => {
+                              const billing = v as Billing;
                               update(line.id, {
                                 billing,
                                 price: line.rates?.[billing] ?? 0,
                               });
                             }}
-                            className={cn(field, "py-2")}
-                          >
-                            {BILLINGS.map((b) => (
-                              <option key={b.id} value={b.id}>
-                                {b.label}
-                              </option>
-                            ))}
-                          </select>
+                            options={BILLINGS.map((b) => ({
+                              value: b.id,
+                              label: b.label,
+                            }))}
+                          />
                         </label>
                       </div>
                       {del("hidden lg:grid")}
