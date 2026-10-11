@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { FX_INR_PER_USD } from "@/lib/price-book";
 import {
@@ -10,6 +10,8 @@ import {
   type EstimateLine,
 } from "@/lib/project-estimate";
 import { formatMoney, type Currency } from "@/lib/price-money";
+import { clearEstimate, saveEstimate, readChoices } from "@/lib/estimate-picks";
+import { resetSavedChoices, useSavedState } from "@/lib/use-saved-state";
 import { TEAM_RATES_CHECKED, TEAM_ROLES } from "@/lib/team-rates";
 import { box, Field, NumberInput } from "@/components/admin/CostEstimator";
 import { cn } from "@/lib/utils";
@@ -31,27 +33,52 @@ const amount = (text: string) => {
  * and each year. The team below adds people at Indian market salaries.
  */
 export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
-  const [currency, setCurrency] = useState<Currency>("inr");
-  const [picks, setPicks] = useState<Record<string, Pick>>(() =>
-    Object.fromEntries(
-      items.map((item) => [
-        item.id,
-        {
-          on: STARTER.has(item.id),
-          option: item.options[0].id,
-          quantity: String(item.defaultQuantity),
-        },
-      ]),
-    ),
+  const [currency, setCurrency] = useSavedState<Currency>(
+    "estimate:currency",
+    "inr",
   );
-  const [hires, setHires] = useState<Record<string, Hire>>(() =>
-    Object.fromEntries(
-      TEAM_ROLES.map((r) => [
-        r.id,
-        { on: false, people: "1", monthly: String(r.monthly) },
-      ]),
-    ),
-  );
+  const [picks, setPicks] = useState(() => startingPicks(items));
+  const [hires, setHires] = useState(startingHires);
+  const [loaded, setLoaded] = useState(false);
+
+  /*
+   * Pick up where this browser left off, then apply what was chosen on the
+   * sheets since: a ticked row or a chosen model selects that provider and
+   * ticks the service; an unticked row drops it again. Read after the first
+   * render, because the saved state lives only in the browser.
+   */
+  useEffect(() => {
+    const { log, estimate } = readChoices();
+    const next = startingPicks(items);
+    for (const item of items) {
+      const saved = estimate?.picks[item.id];
+      if (saved && item.options.some((o) => o.id === saved.option))
+        next[item.id] = saved;
+    }
+    for (const { option, on } of log) {
+      const item = items.find((i) => i.options.some((o) => o.id === option));
+      if (!item) continue;
+      if (on) next[item.id] = { ...next[item.id], on: true, option };
+      else if (next[item.id].option === option)
+        next[item.id] = { ...next[item.id], on: false };
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- browser-only state, read once on mount
+    setPicks(next);
+    if (estimate) setHires({ ...startingHires(), ...estimate.hires });
+    setLoaded(true);
+  }, [items]);
+
+  useEffect(() => {
+    if (loaded) saveEstimate({ picks, hires });
+  }, [loaded, picks, hires]);
+
+  const startOver = () => {
+    if (!window.confirm("Clear every choice on every sheet and the estimate?"))
+      return;
+    resetSavedChoices();
+    clearEstimate();
+    window.location.reload();
+  };
 
   const money = (value: number) =>
     formatMoney(currency === "usd" ? { usd: value } : { inr: value }, currency);
@@ -122,9 +149,16 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
           ))}
         </div>
         <p className="text-ink-faint text-[0.75rem]">
-          $1 = ₹{FX_INR_PER_USD}. Prices come from the other sheets, edits
-          included.
+          $1 = ₹{FX_INR_PER_USD}. What you tick or choose on the other sheets is
+          picked here already; change it below.
         </p>
+        <button
+          type="button"
+          onClick={startOver}
+          className="border-line text-ink-soft hover:text-ink hover:border-brand ml-auto rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+        >
+          Reset all
+        </button>
       </div>
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -403,5 +437,27 @@ function Sum({
       </div>
       {hint && <p className="text-ink-faint mt-0.5 text-[0.75rem]">{hint}</p>}
     </div>
+  );
+}
+
+function startingPicks(items: EstimateItem[]): Record<string, Pick> {
+  return Object.fromEntries(
+    items.map((item) => [
+      item.id,
+      {
+        on: STARTER.has(item.id),
+        option: item.options[0].id,
+        quantity: String(item.defaultQuantity),
+      },
+    ]),
+  );
+}
+
+function startingHires(): Record<string, Hire> {
+  return Object.fromEntries(
+    TEAM_ROLES.map((r) => [
+      r.id,
+      { on: false, people: "1", monthly: String(r.monthly) },
+    ]),
   );
 }

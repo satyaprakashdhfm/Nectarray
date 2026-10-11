@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useSavedState } from "@/lib/use-saved-state";
+import { logChoice } from "@/lib/estimate-picks";
 import type { PriceTable } from "@/lib/price-book";
 import {
   pricedRows,
@@ -39,7 +40,10 @@ export function CostEstimator({
       ["video", "Video"],
     ] as const
   ).filter(([mode]) => tables[mode]);
-  const [mode, setMode] = useState<Mode>(modes[0]?.[0] ?? "text");
+  const [mode, setMode] = useSavedState<Mode>(
+    "estimator:mode",
+    modes[0]?.[0] ?? "text",
+  );
   if (modes.length === 0) return null;
 
   return (
@@ -104,10 +108,13 @@ function TextCost({
   const models = pricedRows(table, ["Input / 1M", "Output / 1M"]).filter((m) =>
     m.prices.every(Boolean),
   );
-  const [model, setModelId] = useChosen(models);
-  const [wordsIn, setWordsIn] = useState("1000");
-  const [wordsOut, setWordsOut] = useState("500");
-  const [requests, setRequests] = useState("1");
+  const [model, setModelId] = useChosen(models, table.id);
+  const [wordsIn, setWordsIn] = useSavedState("estimator:text:wordsIn", "1000");
+  const [wordsOut, setWordsOut] = useSavedState(
+    "estimator:text:wordsOut",
+    "500",
+  );
+  const [requests, setRequests] = useSavedState("estimator:text:requests", "1");
   const [input, output] = model?.prices ?? [];
   if (!model || !input || !output) return <Empty />;
 
@@ -164,9 +171,9 @@ function ImageCost({
     ["Standard image", "Top setting"],
     ["Standard means", "Top means"],
   );
-  const [model, setModelId] = useChosen(models);
-  const [setting, setSetting] = useState(0);
-  const [images, setImages] = useState("10");
+  const [model, setModelId] = useChosen(models, table.id);
+  const [setting, setSetting] = useSavedState("estimator:image:setting", 0);
+  const [images, setImages] = useSavedState("estimator:image:count", "10");
   if (!model) return <Empty />;
 
   const options = choices(model, ["Standard", "Top"]);
@@ -217,10 +224,13 @@ function VideoCost({
   currency: Currency;
 }) {
   const models = pricedRows(table, ["720p / second", "1080p / second"]);
-  const [model, setModelId] = useChosen(models);
-  const [resolution, setResolution] = useState(0);
-  const [seconds, setSeconds] = useState("8");
-  const [videos, setVideos] = useState("1");
+  const [model, setModelId] = useChosen(models, table.id);
+  const [resolution, setResolution] = useSavedState(
+    "estimator:video:resolution",
+    0,
+  );
+  const [seconds, setSeconds] = useSavedState("estimator:video:seconds", "8");
+  const [videos, setVideos] = useSavedState("estimator:video:count", "1");
   if (!model) return <Empty />;
 
   const options = choices(model, ["720p", "1080p"]);
@@ -266,9 +276,17 @@ function VideoCost({
 }
 
 /** The chosen model, falling back to the first if it has since been deleted. */
-function useChosen(models: PricedRow[]) {
-  const [id, setId] = useState(models[0]?.id ?? "");
-  return [models.find((m) => m.id === id) ?? models[0], setId] as const;
+function useChosen(models: PricedRow[], table: string) {
+  const [id, setId] = useSavedState(
+    `estimator:model:${table}`,
+    models[0]?.id ?? "",
+  );
+  const choose = (next: string) => {
+    // The Estimate tab opens with this model chosen.
+    logChoice(`${table}/${next}`, true);
+    setId(next);
+  };
+  return [models.find((m) => m.id === id) ?? models[0], choose] as const;
 }
 
 /** A model's priced settings, named by its label column when it has one. */

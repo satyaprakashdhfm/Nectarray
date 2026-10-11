@@ -20,6 +20,8 @@ import {
   type Sheet,
 } from "@/lib/price-book";
 import { CostEstimator } from "@/components/admin/CostEstimator";
+import { logChoice } from "@/lib/estimate-picks";
+import { resetSavedChoices, useSavedState } from "@/lib/use-saved-state";
 import { TableEditor } from "@/components/admin/PriceTableEditor";
 import {
   formatMoney,
@@ -36,7 +38,7 @@ import { cn } from "@/lib/utils";
  * set side by side.
  */
 export function PriceSheet({ sheet }: { sheet: Sheet }) {
-  const [currency, setCurrency] = useState<Currency>("usd");
+  const [currency, setCurrency] = useSavedState<Currency>("currency", "usd");
   const [query, setQuery] = useState("");
   const table = (id: string) =>
     sheet.slug === "ai-models"
@@ -102,6 +104,22 @@ export function PriceSheet({ sheet }: { sheet: Sheet }) {
           $1 = ₹{FX_INR_PER_USD}. Each price is converted from the currency it
           was quoted in.
         </p>
+        <button
+          type="button"
+          onClick={() => {
+            if (
+              !window.confirm(
+                "Clear every choice on every sheet and the estimate?",
+              )
+            )
+              return;
+            resetSavedChoices();
+            window.location.reload();
+          }}
+          className="border-line text-ink-soft hover:text-ink hover:border-brand ml-auto rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
+        >
+          Reset all
+        </button>
       </div>
 
       <CostEstimator tables={modelPrices} currency={currency} />
@@ -168,7 +186,10 @@ function PriceGrid({
 }) {
   const [sort, setSort] = useState<Sort>(null);
   const [facets, setFacets] = useState<Record<number, string>>({});
-  const [picked, setPicked] = useState<string[]>([]);
+  const [picked, setPicked] = useSavedState<string[]>(
+    `picked:${sheet}/${table.id}`,
+    [],
+  );
   const [editing, setEditing] = useState(false);
 
   const facetColumns = table.columns
@@ -211,10 +232,13 @@ function PriceGrid({
           : { column, descending: true },
     );
 
-  const togglePick = (id: string) =>
+  const togglePick = (id: string) => {
+    // The Estimate tab opens with ticked rows already chosen.
+    logChoice(`${table.id}/${id}`, !picked.includes(id));
     setPicked((list) =>
       list.includes(id) ? list.filter((i) => i !== id) : [...list, id],
     );
+  };
   // Ticks on rows that an edit has since removed simply drop out.
   const pickedRows = picked
     .map((id) => table.rows.find((r) => r.id === id))
