@@ -2030,7 +2030,7 @@ const WORKBOOK: WorkbookSheet[] = [
   {
     slug: "domains",
     title: "Domains",
-    lede: "BigRock, GoDaddy and Hostinger for .com and .in: first year, renewal, and what three or five years really cost.",
+    lede: "BigRock, GoDaddy, Hostinger, Cloudflare and Spaceship for .com and .in: first year, renewal, and what three or five years really cost.",
     tables: [
       {
         id: "registrars",
@@ -2137,6 +2137,48 @@ const WORKBOOK: WorkbookSheet[] = [
             usd(47.95),
             "From a May 2026 snapshot; transfer price not listed. Lower confidence.",
           ],
+          [
+            "Cloudflare",
+            ".com",
+            null,
+            usd(10.46),
+            usd(10.46),
+            usd(10.46),
+            usd(10.46),
+            usd(0),
+            usd(0),
+            usd(31.38),
+            usd(52.3),
+            "At cost, no markup: the same price every year, ICANN fee included, privacy free. The domain's DNS must stay on Cloudflare. Does not sell .in.",
+          ],
+          [
+            "Spaceship",
+            ".com",
+            usd(2.9),
+            usd(9.08),
+            usd(2.9),
+            usd(10.18),
+            usd(9.68),
+            usd(0),
+            usd(0),
+            usd(23.26),
+            usd(43.62),
+            "Promo COMPROS: first year only, one per customer. Prices include the ICANN fee; privacy free.",
+          ],
+          [
+            "Spaceship",
+            ".in",
+            usd(5.03),
+            usd(5.97),
+            usd(5.03),
+            usd(5.97),
+            null,
+            usd(0),
+            usd(0),
+            usd(16.97),
+            usd(28.91),
+            "From third-party listings (Spaceship's site blocks reading); transfer price not listed. Lower confidence.",
+          ],
         ],
       },
       {
@@ -2171,8 +2213,21 @@ const WORKBOOK: WorkbookSheet[] = [
     ],
     checks: [
       "Domains: USD prices are DomainOffer's US listings (GoDaddy note: may differ by country). India-site INR offers are shown separately on the Domains sheet.",
+      "Cloudflare and Spaceship (added 11 Oct 2026): Cloudflare .com from cfdomainpricing.com (updated 10 Oct 2026); Spaceship from aggregator listings. Confirm at checkout.",
     ],
     sources: [
+      {
+        label: "Cloudflare Registrar prices",
+        url: "https://cfdomainpricing.com/",
+      },
+      {
+        label: "Spaceship .com",
+        url: "https://tldes.com/registrars/spaceship/com",
+      },
+      {
+        label: "Spaceship .in",
+        url: "https://namebeta.com/registrars/spaceship.com",
+      },
       {
         label: "BigRock .com / .in",
         url: "https://domainoffer.net/tld/com/bigrock",
