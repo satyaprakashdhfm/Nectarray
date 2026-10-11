@@ -383,19 +383,14 @@ body {
 }
 
 /*
- * Dropdown lists. Options inherit the select's text colour, so in a dark
- * theme they could come out light-on-light in a list the browser drew
- * light. They take the theme's own surface and ink, and where the browser
- * lets the list be styled (Chrome and Edge's customizable select) the row
- * under the pointer or the keyboard is tinted brand blue, so it is always
- * clear which one a click will pick.
+ * Dropdown lists. Where the browser draws the open list itself (Chrome on
+ * Windows, Safari, Firefox) it is left alone: an author background on
+ * options stops Windows painting its blue highlight, which left the
+ * hovered row white text on white. The dark theme sets color-scheme, so
+ * that list comes out dark there. Where the list can be styled (the
+ * customizable select) it takes the theme's surface and ink, and the row
+ * under the pointer or the keyboard turns brand blue.
  */
-select option,
-select optgroup {
-  background-color: var(--color-surface);
-  color: var(--color-ink);
-}
-
 @supports (appearance: base-select) {
   select,
   ::picker(select) {
