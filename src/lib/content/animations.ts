@@ -150,6 +150,14 @@ export const ANIMATIONS: AnimationEntry[] = [
     with: ["SiteParts.tsx"],
   },
   {
+    id: "bengaluru-property-site",
+    category: "legal",
+    name: "Property verification home page over real Bengaluru maps",
+    note: "A home page for a property-checking app, over live satellite imagery of Bengaluru. An old-map view of the city turns into satellite imagery and the camera glides past Cubbon Park, the lakes and Koramangala down to one real plot in HSR Layout, which is outlined in orange while the street dims; a panel beside it lists the five things a check covers (title, encumbrances, records, approvals, boundaries), without claiming anything about the plot. Then the camera pulls up fast and the city breaks into a grid of other Bengaluru neighbourhoods, and stays wide for good, drifting slowly with a neighbourhood outlined now and then. Last, a cream glass panel rises with a working search (a locality lights up its square on the map, a service points to its card, and it can post to your own search page instead) and three service cards. The header, search and cards are real HTML. Imagery is Esri's World Imagery, credited in the corner.",
+    file: "BengaluruPropertySite.tsx",
+    page: "/showcase/bengaluru-property",
+  },
+  {
     id: "deeds-original-site",
     category: "legal",
     name: "Deeds & Co. template 1: the live site, with its film",

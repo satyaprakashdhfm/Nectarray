@@ -6,6 +6,7 @@ import { AgencyMarqueeMagnetic } from "./heroes/AgencyMarqueeMagnetic";
 import { AgencyRollingWords } from "./heroes/AgencyRollingWords";
 import { AiOrbitNetwork } from "./heroes/AiOrbitNetwork";
 import { AiTypingPrompt } from "./heroes/AiTypingPrompt";
+import { BengaluruPropertySite } from "./heroes/BengaluruPropertySite";
 import { ClinicCareSite } from "./heroes/ClinicCareSite";
 import { CommerceCitySite } from "./heroes/CommerceCitySite";
 import { DeedsOfficeSite } from "./heroes/DeedsOfficeSite";
@@ -102,4 +103,5 @@ export const HEROES: Record<string, ComponentType> = {
   "law-office-scroll-site": LawOfficeScrollSite,
   "law-firm-scroll-site": LawFirmScrollSite,
   "law-property-verification": LawPropertyVerification,
+  "bengaluru-property-site": BengaluruPropertySite,
 };
