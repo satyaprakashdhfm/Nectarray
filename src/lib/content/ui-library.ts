@@ -351,6 +351,105 @@ export const UI_COMPONENTS: UiComponent[] = [
   </div>
 </section>`,
   },
+  {
+    id: "hero-search-cards",
+    category: "heroes",
+    name: "Search first, three tilted cards below",
+    note: "Legal, tax and compliance services with many offerings: people search, or pick one of three doors. The layout of zolvit.com's home page.",
+    html: `<section class="relative isolate overflow-hidden bg-gradient-to-b from-zinc-950 via-(--p-dark) to-(--p) text-white">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 hidden lg:block">
+    <span class="absolute top-[26%] left-[17%] size-14 rotate-45 rounded-xl border border-white/15 bg-white/5"></span>
+    <span class="absolute top-[24%] right-[17%] size-14 rotate-45 rounded-xl border border-white/15 bg-white/5"></span>
+    <span class="absolute top-[44%] left-[19%] size-20 rotate-[30deg] skew-x-[-20deg] rounded-xl border border-white/15 bg-white/5"></span>
+    <span class="absolute top-[42%] right-[19%] size-20 rotate-[-30deg] skew-x-[20deg] rounded-xl border border-white/15 bg-white/5"></span>
+    <span class="absolute top-[60%] left-[27%] size-20 rotate-[30deg] skew-x-[-20deg] rounded-xl border border-white/15 bg-white/5"></span>
+    <span class="absolute top-[58%] right-[27%] size-20 rotate-[-30deg] skew-x-[20deg] rounded-xl border border-white/15 bg-white/5"></span>
+  </div>
+
+  <header class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 py-4">
+    <a href="#" class="flex items-center gap-2 text-xl font-bold tracking-tight">
+      <span class="grid size-8 place-items-center rounded-lg bg-(--t) text-base font-black text-(--t-on)">S</span>
+      Sahaj<span class="font-medium text-white/70">filings</span>
+    </a>
+    <nav class="hidden items-center gap-6 text-sm text-white/90 xl:flex">
+      <a href="#" class="rounded-md bg-(--t) px-3 py-1.5 font-semibold text-(--t-on) hover:bg-(--t-light)">Talk to an expert</a>
+      <a href="#" class="flex items-center gap-1 hover:text-white">Start a business <svg viewBox="0 0 20 20" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 8 5 5 5-5" /></svg></a>
+      <a href="#" class="flex items-center gap-1 hover:text-white">Tax and GST <svg viewBox="0 0 20 20" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 8 5 5 5-5" /></svg></a>
+      <a href="#" class="flex items-center gap-1 hover:text-white">Trademarks <svg viewBox="0 0 20 20" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 8 5 5 5-5" /></svg></a>
+      <a href="#" class="flex items-center gap-1 hover:text-white">Lawyers <svg viewBox="0 0 20 20" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 8 5 5 5-5" /></svg></a>
+      <a href="#" class="flex items-center gap-1 hover:text-white">Documents <svg viewBox="0 0 20 20" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 8 5 5 5-5" /></svg></a>
+    </nav>
+    <div class="flex items-center gap-4">
+      <a href="#" class="rounded-md border border-white/60 px-4 py-1.5 text-sm font-medium hover:bg-white hover:text-zinc-900">Log in</a>
+      <button type="button" aria-label="Menu" class="text-white"><svg viewBox="0 0 24 24" class="size-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-4xl px-5 pt-10 text-center md:pt-14">
+    <div class="inline-flex flex-wrap items-center justify-center gap-3">
+      <div class="flex -space-x-2">
+        <span class="grid size-8 place-items-center rounded-full bg-white text-xs font-bold text-zinc-900 ring-2 ring-(--p-dark)">G</span>
+        <img src="https://picsum.photos/seed/review-a/64/64" alt="" class="size-8 rounded-full object-cover ring-2 ring-(--p-dark)" />
+        <img src="https://picsum.photos/seed/review-b/64/64" alt="" class="size-8 rounded-full object-cover ring-2 ring-(--p-dark)" />
+        <img src="https://picsum.photos/seed/review-c/64/64" alt="" class="size-8 rounded-full object-cover ring-2 ring-(--p-dark)" />
+      </div>
+      <div class="flex text-(--t)" aria-hidden="true">
+        <svg viewBox="0 0 20 20" class="size-5" fill="currentColor"><path d="m10 1.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" /></svg>
+        <svg viewBox="0 0 20 20" class="size-5" fill="currentColor"><path d="m10 1.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" /></svg>
+        <svg viewBox="0 0 20 20" class="size-5" fill="currentColor"><path d="m10 1.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" /></svg>
+        <svg viewBox="0 0 20 20" class="size-5" fill="currentColor"><path d="m10 1.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" /></svg>
+        <svg viewBox="0 0 20 20" class="size-5"><path d="m10 1.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" fill="none" stroke="currentColor" stroke-width="1.4" /><path d="M10 1.5v13.4l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" fill="currentColor" /></svg>
+      </div>
+      <p class="text-base"><span class="font-semibold">4.6/5</span> <span class="text-white/80">(18,000+ Google reviews)</span></p>
+    </div>
+
+    <h1 class="mt-8 text-4xl leading-[1.1] font-semibold tracking-tight text-balance md:text-6xl">Start your business with confidence. Stay compliant without the chase.</h1>
+    <p class="mx-auto mt-6 max-w-[52ch] text-base leading-loose text-white/85 md:text-lg">Registrations, GST and trademarks, <span class="rounded-full bg-(--s) px-3 py-1 font-semibold whitespace-nowrap text-(--s-on)">tracked online</span> and filed by chartered accountants and lawyers.</p>
+
+    <form role="search" class="mx-auto mt-10 flex max-w-3xl items-center rounded-full border border-white/40 bg-white/10 p-1.5 pl-6 backdrop-blur focus-within:border-white">
+      <label for="hsc-q" class="sr-only">Search our services</label>
+      <input id="hsc-q" type="search" placeholder="What do you need help with?" class="min-w-0 flex-1 bg-transparent py-2.5 text-base text-white placeholder:text-white/60 focus:outline-none" />
+      <button type="submit" aria-label="Search" class="grid size-11 shrink-0 place-items-center rounded-full bg-zinc-950 text-white hover:bg-(--t) hover:text-(--t-on)"><svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg></button>
+    </form>
+    <div class="mt-5 flex flex-wrap justify-center gap-3 text-sm">
+      <a href="#" class="rounded-md border border-white/40 px-4 py-1.5 hover:bg-white hover:text-zinc-900">Trademark registration</a>
+      <a href="#" class="rounded-md border border-white/40 px-4 py-1.5 hover:bg-white hover:text-zinc-900">GST registration</a>
+      <a href="#" class="rounded-md border border-white/40 px-4 py-1.5 hover:bg-white hover:text-zinc-900">Private limited company</a>
+      <a href="#" class="rounded-md border border-white/40 px-4 py-1.5 hover:bg-white hover:text-zinc-900">Talk to a lawyer</a>
+    </div>
+  </div>
+
+  <div class="relative mx-auto mt-14 grid max-w-6xl gap-5 px-5 pb-24 md:mt-20 md:grid-cols-3 md:gap-0 md:pb-0">
+    <a href="#" class="group block rounded-2xl border-4 border-(--p) bg-zinc-50 p-6 text-zinc-900 shadow-2xl md:mt-16 md:h-80 md:-rotate-6 md:rounded-b-none md:p-7 hover:-translate-y-1">
+      <h2 class="flex items-center gap-2 text-2xl font-bold tracking-tight">Start your business <svg viewBox="0 0 12 12" class="size-3" fill="currentColor"><path d="M3 1.5v9l7-4.5z" /></svg></h2>
+      <p class="mt-3 leading-relaxed text-zinc-600">Register a company, LLP or partnership with a CA doing the paperwork and filing it for you.</p>
+      <div class="mt-6 flex items-end gap-3">
+        <div class="h-20 w-28 rounded-md border-2 border-dashed border-zinc-300 bg-white p-2"><div class="h-1.5 w-12 rounded bg-zinc-300"></div><div class="mt-1.5 h-1.5 w-16 rounded bg-zinc-200"></div><div class="mx-auto mt-3 size-6 rounded-full bg-(--t-light) ring-2 ring-(--t)"></div></div>
+        <div class="h-16 w-12 rounded-md bg-(--p-light) p-1.5"><div class="h-1 w-6 rounded bg-(--p)"></div><div class="mt-1 h-1 w-8 rounded bg-(--p)/50"></div></div>
+      </div>
+    </a>
+    <a href="#" class="group relative z-10 block rounded-2xl border-4 border-(--p) bg-white p-6 text-zinc-900 shadow-2xl md:h-80 md:rounded-b-none md:p-7 hover:-translate-y-1">
+      <h2 class="flex items-center gap-2 text-2xl font-bold tracking-tight">Run it smoothly <svg viewBox="0 0 12 12" class="size-3" fill="currentColor"><path d="M3 1.5v9l7-4.5z" /></svg></h2>
+      <p class="mt-3 leading-relaxed text-zinc-600">GST returns, TDS and annual filings on time, with reminders before every due date.</p>
+      <div class="mt-6 flex items-end gap-3">
+        <div class="relative h-16 w-24"><div class="absolute inset-0 translate-x-3 -translate-y-2 rounded-md border border-zinc-300 bg-white"></div><div class="absolute inset-0 rounded-md border border-zinc-300 bg-white p-2 text-[10px] font-semibold text-zinc-400">GSTR-3B</div></div>
+        <div class="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 p-3 shadow-sm"><p class="text-sm font-semibold text-zinc-700">Filing status</p><p class="text-xs text-zinc-400">3 of 4 steps done</p><div class="mt-2 h-1.5 rounded-full bg-zinc-200"><div class="h-full w-3/4 rounded-full bg-(--s)"></div></div></div>
+      </div>
+    </a>
+    <a href="#" class="group block rounded-2xl border-4 border-(--p) bg-zinc-50 p-6 text-zinc-900 shadow-2xl md:mt-16 md:h-80 md:rotate-6 md:rounded-b-none md:p-7 hover:-translate-y-1">
+      <h2 class="flex items-center gap-2 text-2xl font-bold tracking-tight">Protect your brand <svg viewBox="0 0 12 12" class="size-3" fill="currentColor"><path d="M3 1.5v9l7-4.5z" /></svg></h2>
+      <p class="mt-3 leading-relaxed text-zinc-600">Trademark search and filing, contracts and notices, drafted and checked by lawyers.</p>
+      <div class="mt-6 rounded-lg border border-zinc-200 bg-white p-3 shadow-sm">
+        <p class="text-sm font-semibold text-zinc-700">Name available</p>
+        <div class="mt-2 flex items-center gap-2"><div class="h-1.5 flex-1 rounded-full bg-zinc-200"><div class="h-full w-4/5 rounded-full bg-(--s)"></div></div><span class="text-xs font-semibold text-(--s-dark)">High</span></div>
+      </div>
+    </a>
+    <div aria-hidden="true" class="pointer-events-none absolute -bottom-28 left-1/2 z-20 hidden h-56 w-[160%] -translate-x-1/2 rounded-[100%] bg-zinc-950 md:block"></div>
+  </div>
+
+  <a href="#" class="absolute top-1/2 right-0 hidden -translate-y-1/2 rounded-l-xl bg-(--t-light) px-2 py-4 text-sm font-semibold text-(--t-dark) [writing-mode:vertical-rl] rotate-180 md:block">Refer a friend</a>
+</section>`,
+  },
 
   // -------------------------------------------------------------------------
   //  Feature sections
