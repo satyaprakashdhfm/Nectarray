@@ -310,6 +310,27 @@ async function setupClaude(force = false) {
     );
     if (!r.ok) failed.push(pkg);
   }
+  /*
+   * Standing rules for every cloud session, the same as on the admin's PC
+   * (~/.claude/CLAUDE.md). Added to the end of that file when missing, so
+   * anything already in it stays.
+   */
+  if (config.rules?.length) {
+    const file = path.join(os.homedir(), ".claude", "CLAUDE.md");
+    let current = "";
+    try {
+      current = readFileSync(file, "utf8");
+    } catch {}
+    const missing = config.rules.filter((rule) => !current.includes(rule));
+    if (missing.length) {
+      mkdirSync(path.dirname(file), { recursive: true });
+      const head = current.trimEnd();
+      writeFileSync(
+        file,
+        `${head}${head ? "\n\n" : ""}${missing.join("\n\n")}\n`,
+      );
+    }
+  }
 
   if (failed.length === 0) {
     mkdirSync(path.dirname(SETUP_STAMP), { recursive: true });

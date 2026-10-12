@@ -8,5 +8,8 @@
     "vercel@claude-plugins-official"
   ],
   "skills": ["Leonxlnx/taste-skill"],
+  "rules": [
+    "Use a skill only when I call it by name (for example `/humanizer`). Never load or follow a skill on your own, even when a task looks like a match."
+  ],
   "image": "bun is in the image since this version, for the vercel plugin"
 }
