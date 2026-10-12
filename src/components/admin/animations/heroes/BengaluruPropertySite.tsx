@@ -12,9 +12,11 @@ import { motion, useReducedMotion } from "motion/react";
  * panel beside it lists the five things a check covers. Then the camera
  * pulls up fast: the city breaks into square tiles that turn into other
  * Bengaluru neighbourhoods, and it stays wide on that grid for good, with
- * slow drift and a neighbourhood outlined now and then. Last, a cream glass
- * panel rises with a search that works (localities light up their tile on
- * the map; services point to their card) and three service cards.
+ * slow drift and a neighbourhood outlined now and then. Last, the page's
+ * own first screen arrives over it: a glassy orange header, a headline, a
+ * glass search that works (localities light up their square on the map;
+ * services point to their card), quick links, three service cards fanned
+ * out with a dark curve cutting across them, and reviews under the curve.
  *
  * The imagery is live map tiles from Esri's World Imagery, so it is real and
  * sharp at any size; the credit line in the corner is part of their terms.
@@ -172,7 +174,7 @@ const LANDMARKS: { name: string; at: [number, number] }[] = [
 
 /** One grid square is one zoom-18 tile: about 140 m across. */
 const CELL = 512;
-const GX = 7;
+const GX = 10;
 const GY = 5;
 
 /** Named neighbourhoods placed near the middle of the grid, for search. */
@@ -275,7 +277,7 @@ function anchors(W: number, H: number) {
   const wide = W >= 768;
   return {
     plot: { x: wide ? W * 0.34 : W * 0.5, y: wide ? H * 0.55 : H * 0.3 },
-    rest: { x: W * 0.5, y: wide ? H * 0.31 : H * 0.24 },
+    rest: { x: wide ? W * 0.82 : W * 0.5, y: wide ? H * 0.42 : H * 0.5 },
   };
 }
 
@@ -475,6 +477,169 @@ const SEARCH_ICON = (
   </>
 );
 
+/**
+ * The proof under the curve. Placeholders: put the firm's own review,
+ * rating and wording here before it goes live.
+ */
+const PROOF = {
+  quote:
+    "We had the khata and EC checked before paying the advance. Clear answers, in plain English, within the week.",
+  by: "a home buyer in Whitefield",
+  link: "#reviews",
+  rating: "4.8",
+  count: "From our clients on Google",
+  badgeTop: "Property checks",
+  badge: "By practising advocates",
+  badgeYear: "Bengaluru",
+};
+
+/** The fan: left card tipped back, middle one upright and in front. */
+const CARD_TILT = [
+  "@3xl:mt-16 @3xl:-rotate-6 @3xl:origin-bottom-right",
+  "relative z-10",
+  "@3xl:mt-16 @3xl:rotate-6 @3xl:origin-bottom-left",
+];
+
+/** A small picture in each card, mostly hidden by the curve. */
+const CARD_ART = [
+  <span key="records" className="flex gap-2">
+    {["EC", "Khata", "RTC"].map((d) => (
+      <span
+        key={d}
+        className="flex h-16 w-14 flex-col justify-between rounded-md border border-zinc-200 bg-white p-1.5 text-[0.625rem] font-semibold text-zinc-500 shadow-sm"
+      >
+        <span className="h-1 w-8 rounded bg-zinc-200" />
+        {d}
+      </span>
+    ))}
+  </span>,
+  <span
+    key="verification"
+    className="block rounded-xl border border-zinc-200 bg-white p-3 shadow-sm"
+  >
+    {["Title chain", "Encumbrances", "Approvals"].map((d) => (
+      <span
+        key={d}
+        className="flex items-center gap-2 py-0.5 text-xs text-zinc-600"
+      >
+        <span className="grid size-4 place-items-center rounded-full bg-(--p-light) text-(--p-dark)">
+          <Icon className="size-2.5">
+            <path d="m5 12 5 5 9-10" />
+          </Icon>
+        </span>
+        {d}
+      </span>
+    ))}
+  </span>,
+  <span
+    key="legal"
+    className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 shadow-sm"
+  >
+    <span className="grid size-9 place-items-center rounded-full bg-(--p) text-xs font-semibold text-(--p-on)">
+      Adv
+    </span>
+    <span className="text-xs leading-snug text-zinc-600">
+      An advocate on your file,
+      <br />
+      from first record to registration
+    </span>
+  </span>,
+];
+
+const STAR =
+  "m10 1.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z";
+
+function Stars({ className = "" }: { className?: string }) {
+  return (
+    <span className={`flex gap-0.5 text-[#f6b93b] ${className}`} aria-hidden>
+      {[0, 1, 2, 3].map((k) => (
+        <svg key={k} viewBox="0 0 20 20" className="size-4" fill="currentColor">
+          <path d={STAR} />
+        </svg>
+      ))}
+      <svg viewBox="0 0 20 20" className="size-4">
+        <path d={STAR} fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path
+          d="M10 1.5v13.4l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z"
+          fill="currentColor"
+        />
+      </svg>
+    </span>
+  );
+}
+
+/** A laurel branch, drawn leaf by leaf round an arc. */
+function Laurel({ flip = false }: { flip?: boolean }) {
+  // Rounded, so the server and the browser write the same numbers.
+  const round = (n: number) => Math.round(n * 10) / 10;
+  const at = (deg: number, out = 0) => {
+    const a = (deg * Math.PI) / 180;
+    return {
+      x: round(52 + Math.cos(a) * (40 + out)),
+      y: round(52 + Math.sin(a) * (44 + out)),
+    };
+  };
+  const stem = Array.from({ length: 30 }, (_, k) => at(104 + k * 5));
+  // A pair of leaves at each step, one either side of the stem, leaning
+  // towards the tip at the top.
+  const leaves = Array.from({ length: 8 }, (_, k) => 112 + k * 18).flatMap(
+    (deg) =>
+      [-1, 1].map((side) => ({
+        ...at(deg, side * 5),
+        r: Math.round(deg + 90 - side * 32),
+      })),
+  );
+  return (
+    <svg
+      viewBox="0 0 60 104"
+      className={`h-24 w-14 shrink-0 text-white ${flip ? "-scale-x-100" : ""}`}
+      aria-hidden
+    >
+      <polyline
+        points={stem.map((p) => `${p.x},${p.y}`).join(" ")}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      {leaves.map((l, k) => (
+        <ellipse
+          key={k}
+          cx={l.x}
+          cy={l.y}
+          rx="7"
+          ry="2.6"
+          fill="currentColor"
+          transform={`rotate(${l.r} ${l.x} ${l.y})`}
+        />
+      ))}
+    </svg>
+  );
+}
+
+function GoogleG() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-9" aria-hidden>
+      <path
+        fill="#FFC107"
+        d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.5z"
+      />
+      <path
+        fill="#FF3D00"
+        d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"
+      />
+      <path
+        fill="#1976D2"
+        d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.5z"
+      />
+    </svg>
+  );
+}
+
 // ---------------------------------------------------------------------------
 //  The component
 // ---------------------------------------------------------------------------
@@ -489,10 +654,9 @@ export function BengaluruPropertySite({
   searchAction?: string;
   onSearch?: (query: string) => void;
 }) {
-  const sectionRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const clockRef = useRef(0);
   const pinRef = useRef<number | "selected" | null>(null);
@@ -566,7 +730,7 @@ export function BengaluruPropertySite({
   };
 
   useEffect(() => {
-    const section = sectionRef.current;
+    const section = stageRef.current;
     const cnv = canvasRef.current;
     const ctx = cnv?.getContext("2d");
     if (!section || !cnv || !ctx) return;
@@ -645,7 +809,7 @@ export function BengaluruPropertySite({
      * this one image: drawing hundreds of separate images every frame makes
      * the GPU upload each of them again, which brought it to a crawl.
      */
-    const A = 256;
+    const A = 192;
     const atlas = document.createElement("canvas");
     let atlasCtx: CanvasRenderingContext2D | null = null;
     const painted = new Set<number>();
@@ -882,7 +1046,12 @@ export function BengaluruPropertySite({
       const home = cellRect(v, 0, 0);
       outline(home, settle, 2);
       const pin = pinRef.current;
-      if (t > T.grid + 0.3 && (pin === null || pin === "selected")) {
+      // Phones have words over the middle of the map, so just the outline there.
+      if (
+        W >= 768 &&
+        t > T.grid + 0.3 &&
+        (pin === null || pin === "selected")
+      ) {
         ctx.globalAlpha = clamp((t - T.grid - 0.3) / 0.5);
         label(`${SELECTED_NAME} · selected plot`, home.x + 6, home.y + 6, true);
         ctx.globalAlpha = 1;
@@ -901,7 +1070,15 @@ export function BengaluruPropertySite({
         const c = named[(k * 7) % named.length];
         const r = cellRect(v, c.i, c.j);
         const a = clamp(phase / 0.5) * (1 - clamp((phase - 2.4) / 0.7));
-        if (a > 0 && r.x > 0 && r.x + r.w < W && r.y > 60 && r.y + r.h < H) {
+        // Only where no words sit over the map, and not on phones.
+        const clear =
+          W >= 768 &&
+          (r.x > W * 0.72 || r.x + r.w < W * 0.28) &&
+          r.x > 0 &&
+          r.x + r.w < W &&
+          r.y > 90 &&
+          r.y + r.h < H * 0.66;
+        if (a > 0 && clear) {
           outline(r, a * 0.85);
           ctx.globalAlpha = a;
           label(c.name ?? "", r.x + 6, r.y + 6);
@@ -917,11 +1094,9 @@ export function BengaluruPropertySite({
       if (pin === null) return { x: 0, y: 0 };
       const s = 2 ** (v.z - 19);
       const c = pin === "selected" ? { i: 0, j: 0 } : CELLS[pin];
-      const panel = panelRef.current?.getBoundingClientRect();
-      const home = section.getBoundingClientRect();
-      const top = 80;
-      const bottom = panel ? panel.top - home.top : H * 0.55;
-      const want = { x: W / 2, y: (top + Math.max(top + 40, bottom)) / 2 };
+      // Into the clearing right of the words; phones have none, so stay.
+      if (W < 768) return { x: 0, y: 0 };
+      const want = anchors(W, H).rest;
       const [cx, cy] = toScreen(
         v,
         PLOT_C[0] + c.i * CELL,
@@ -970,7 +1145,7 @@ export function BengaluruPropertySite({
         const target = panTarget(view);
         pan.x += (target.x - pan.x) * 0.06;
         pan.y += (target.y - pan.y) * 0.06;
-        view.x += pan.x + drift * 0.22 * CELL * Math.min(1, W / 900);
+        view.x += pan.x + drift * 0.15 * CELL * Math.min(1, W / 900);
         view.y += pan.y + drift * 0.06 * CELL;
       }
       if (t >= T.grid) drawHeldGrid(view);
@@ -1011,6 +1186,25 @@ export function BengaluruPropertySite({
       edge.addColorStop(1, "rgba(20,14,10,0.55)");
       ctx.fillStyle = edge;
       ctx.fillRect(0, 0, W, H);
+
+      // Darker behind the headline and search once they arrive.
+      const veil = smooth(clamp((t - T.panel + 0.3) / 1.2));
+      if (veil > 0) {
+        ctx.fillStyle = `rgba(18,12,8,${0.3 * veil})`;
+        ctx.fillRect(0, 0, W, H);
+        const middle = ctx.createRadialGradient(
+          W / 2,
+          H * 0.36,
+          0,
+          W / 2,
+          H * 0.36,
+          Math.max(W * 0.42, 260),
+        );
+        middle.addColorStop(0, `rgba(18,12,8,${0.5 * veil})`);
+        middle.addColorStop(1, "rgba(18,12,8,0)");
+        ctx.fillStyle = middle;
+        ctx.fillRect(0, 0, W, H);
+      }
 
       drawMarks(t, view);
     };
@@ -1085,161 +1279,160 @@ export function BengaluruPropertySite({
   const listId = "blr-search-options";
 
   return (
-    <section
-      ref={sectionRef}
-      className="@container relative isolate flex min-h-[54rem] flex-col overflow-hidden bg-[#1b1612] text-zinc-900 @3xl:min-h-[48rem]"
-    >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 -z-10 size-full"
-        aria-hidden
-      />
-
-      <motion.header
-        className="relative z-20 mx-3 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/50 bg-[#fdf8f1]/85 px-3.5 py-2.5 shadow-[0_10px_40px_-14px_rgba(30,18,8,0.55)] backdrop-blur-md @3xl:mx-8 @3xl:mt-5 @3xl:px-6"
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+    <section className="@container relative isolate overflow-hidden bg-[#120e0b] text-zinc-900">
+      <div
+        ref={stageRef}
+        className="relative isolate flex min-h-[max(46rem,100svh)] flex-col overflow-hidden"
       >
-        <a
-          href="#"
-          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900"
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 -z-10 size-full"
+          aria-hidden
+        />
+
+        <motion.header
+          className="relative z-30 mx-3 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/25 bg-(--p)/80 px-3.5 py-2.5 text-white shadow-[0_12px_40px_-14px_rgba(20,10,4,0.7)] backdrop-blur-md @3xl:mx-8 @3xl:mt-5 @3xl:px-6"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="grid size-8 place-items-center rounded-lg bg-(--p) text-(--p-on)">
-            <Icon className="size-[1.1rem]">
-              <path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5M10 21v-6h4v6" />
-            </Icon>
-          </span>
-          {brand}
-        </a>
-        <nav className="hidden items-center gap-7 text-sm font-medium text-zinc-600 @3xl:flex">
           <a
             href="#"
-            className="relative text-zinc-900 after:absolute after:inset-x-0 after:-bottom-1.5 after:h-0.5 after:rounded-full after:bg-(--p)"
+            className="flex items-center gap-2 text-lg font-semibold tracking-tight"
           >
-            Home
+            <Icon className="size-6">
+              <path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5M10 21v-6h4v6" />
+            </Icon>
+            {brand}
           </a>
-          <a href="#services" className="hover:text-zinc-900">
-            Services
-          </a>
-          <a href="#packages" className="hover:text-zinc-900">
-            Packages
-          </a>
-          <a href="#premium" className="hover:text-zinc-900">
-            Premium
-          </a>
-        </nav>
-        <div className="flex items-center gap-2 @3xl:gap-3">
-          <button
-            type="button"
-            aria-label="Search"
-            onClick={() => {
-              skip();
-              window.setTimeout(
-                () => inputRef.current?.focus(),
-                panelUp ? 0 : 900,
-              );
-            }}
-            className="grid size-9 place-items-center rounded-full text-zinc-700 hover:bg-zinc-900/5"
-          >
-            <Icon className="size-[1.15rem]">{SEARCH_ICON}</Icon>
-          </button>
-          <a
-            href="#login"
-            className="hidden rounded-xl border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-900 @md:inline-block"
-          >
-            Login
-          </a>
-          <a
-            href="#get-started"
-            className="rounded-xl bg-(--p) px-4 py-2 text-sm font-semibold text-(--p-on) hover:bg-(--p-dark) hover:text-white"
-          >
-            Get Started
-          </a>
-        </div>
-      </motion.header>
-
-      {/* The five things a check covers, beside the plot. */}
-      <motion.aside
-        ref={infoRef}
-        className="absolute top-[47%] right-4 left-4 z-10 rounded-2xl border border-white/60 bg-[#fdf8f1]/90 p-4 shadow-[0_20px_60px_-20px_rgba(20,12,6,0.7)] backdrop-blur-md @3xl:top-[24%] @3xl:right-auto @3xl:left-[57%] @3xl:w-[22rem] @3xl:p-5"
-        initial={false}
-        animate={{ opacity: infoOn ? 1 : 0, y: infoOn ? 0 : 14 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        aria-hidden={!infoOn}
-      >
-        <p className="text-[0.6875rem] font-semibold tracking-[0.16em] text-(--p-dark) uppercase">
-          Selected plot
-        </p>
-        <p className="mt-1 font-semibold text-zinc-900">
-          HSR Layout, Bengaluru
-        </p>
-        <p className="text-xs text-zinc-500">
-          What a check of this plot covers
-        </p>
-        <ul className="mt-3 divide-y divide-zinc-900/10 border-t border-zinc-900/10">
-          {CHECKS.map((c, i) => (
-            <motion.li
-              key={c.name}
-              className="flex items-center justify-between gap-3 py-2"
-              initial={false}
-              animate={{ opacity: i < items ? 1 : 0, x: i < items ? 0 : 8 }}
-              transition={{ duration: 0.4 }}
+          <nav className="hidden items-center gap-8 text-[0.9375rem] font-medium text-white/85 @3xl:flex">
+            <a
+              href="#"
+              className="relative text-white after:absolute after:inset-x-0 after:-bottom-1.5 after:h-0.5 after:rounded-full after:bg-white"
             >
-              <span>
-                <span className="block text-[0.8125rem] font-medium text-zinc-900">
-                  {c.name}
-                </span>
-                <span className="block text-[0.6875rem] text-zinc-500">
-                  {c.note}
-                </span>
-              </span>
-              <span className="flex shrink-0 items-center gap-1.5 text-[0.6875rem] font-medium text-zinc-500">
-                <span className="size-1.5 rounded-full bg-(--p)" />
-                In the check
-              </span>
-            </motion.li>
-          ))}
-        </ul>
-      </motion.aside>
+              Home
+            </a>
+            <a href="#services" className="hover:text-white">
+              Services
+            </a>
+            <a href="#packages" className="hover:text-white">
+              Packages
+            </a>
+            <a href="#premium" className="hover:text-white">
+              Premium
+            </a>
+          </nav>
+          <div className="flex items-center gap-2 @3xl:gap-3">
+            <button
+              type="button"
+              aria-label="Search"
+              onClick={() => {
+                skip();
+                window.setTimeout(
+                  () => inputRef.current?.focus(),
+                  panelUp ? 0 : 1200,
+                );
+              }}
+              className="grid size-9 place-items-center rounded-full text-white hover:bg-white/15"
+            >
+              <Icon className="size-[1.15rem]">{SEARCH_ICON}</Icon>
+            </button>
+            <a
+              href="#login"
+              className="hidden rounded-xl border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 @md:inline-block"
+            >
+              Login
+            </a>
+            <a
+              href="#get-started"
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-(--p-dark) shadow-sm hover:bg-(--p-light)"
+            >
+              Get Started
+            </a>
+          </div>
+        </motion.header>
 
-      {/* The glass panel that rises once the grid holds. */}
-      <motion.div
-        className="absolute inset-x-0 bottom-0 z-10 px-3 pb-5 @3xl:px-8 @3xl:pb-7"
-        initial={false}
-        animate={{ y: panelUp ? "0%" : "115%" }}
-        transition={
-          panelUp
-            ? { type: "spring", stiffness: 60, damping: 17, mass: 1.1 }
-            : { duration: 0 }
-        }
-        inert={!panelUp}
-      >
-        <div
-          ref={panelRef}
-          className="mx-auto max-w-5xl rounded-[1.75rem] border border-white/60 bg-[#fdf8f1]/75 p-4 shadow-[0_-12px_70px_-24px_rgba(20,12,6,0.75)] backdrop-blur-lg @3xl:p-7"
+        {/* The five things a check covers, beside the plot. */}
+        <motion.aside
+          ref={infoRef}
+          className="absolute top-[47%] right-4 left-4 z-10 rounded-2xl border border-white/60 bg-[#fdf8f1]/90 p-4 shadow-[0_20px_60px_-20px_rgba(20,12,6,0.7)] backdrop-blur-md @3xl:top-[24%] @3xl:right-auto @3xl:left-[57%] @3xl:w-[22rem] @3xl:p-5"
+          initial={false}
+          animate={{ opacity: infoOn ? 1 : 0, y: infoOn ? 0 : 14 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          aria-hidden={!infoOn}
         >
-          <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-(--p-dark) uppercase @3xl:text-xs">
-            Property intelligence. Records. Legal clarity.
+          <p className="text-[0.6875rem] font-semibold tracking-[0.16em] text-(--p-dark) uppercase">
+            Selected plot
           </p>
-          <h1 className="mt-1.5 text-xl leading-tight font-semibold tracking-tight text-zinc-900 @md:text-2xl @3xl:text-[2.1rem]">
-            Know a Bengaluru property before you sign
+          <p className="mt-1 font-semibold text-zinc-900">
+            HSR Layout, Bengaluru
+          </p>
+          <p className="text-xs text-zinc-500">
+            What a check of this plot covers
+          </p>
+          <ul className="mt-3 divide-y divide-zinc-900/10 border-t border-zinc-900/10">
+            {CHECKS.map((c, i) => (
+              <motion.li
+                key={c.name}
+                className="flex items-center justify-between gap-3 py-2"
+                initial={false}
+                animate={{ opacity: i < items ? 1 : 0, x: i < items ? 0 : 8 }}
+                transition={{ duration: 0.4 }}
+              >
+                <span>
+                  <span className="block text-[0.8125rem] font-medium text-zinc-900">
+                    {c.name}
+                  </span>
+                  <span className="block text-[0.6875rem] text-zinc-500">
+                    {c.note}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-1.5 text-[0.6875rem] font-medium text-zinc-500">
+                  <span className="size-1.5 rounded-full bg-(--p)" />
+                  In the check
+                </span>
+              </motion.li>
+            ))}
+          </ul>
+        </motion.aside>
+
+        {/* The page's own first screen, once the grid holds. */}
+        <motion.div
+          className="relative z-20 mx-auto flex w-full max-w-4xl flex-col items-center px-4 pt-9 text-center @3xl:pt-12"
+          initial={false}
+          animate={{ opacity: panelUp ? 1 : 0, y: panelUp ? 0 : 28 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          inert={!panelUp}
+        >
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.16em] text-white/90 uppercase backdrop-blur-md">
+            <Icon className="size-3.5">
+              <path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M2 10l10-6 10 6z" />
+            </Icon>
+            Backed by our law firm
+          </span>
+          <h1 className="mt-5 text-[2rem] leading-[1.08] font-semibold tracking-tight text-balance text-white @md:text-5xl @5xl:text-[3.6rem]">
+            Know every Bengaluru property.{" "}
+            <span className="text-(--s)">Before you sign.</span>
           </h1>
+          <p className="mt-5 max-w-[48ch] text-[0.9375rem] leading-loose text-white/85 @3xl:text-lg">
+            Property intelligence. Records.{" "}
+            <span className="rounded-full bg-(--p) px-2.5 py-0.5 font-semibold whitespace-nowrap text-(--p-on)">
+              Legal clarity
+            </span>{" "}
+            from people who read every document.
+          </p>
 
           <form
             role="search"
             action={searchAction}
             method="get"
             onSubmit={submit}
-            className="relative mt-4"
+            className="relative mt-7 w-full max-w-3xl text-left"
           >
             <label htmlFor="blr-search" className="sr-only">
               Search a property, survey number or location
             </label>
-            <div className="flex items-center rounded-2xl border border-zinc-900/10 bg-white/90 p-1.5 pl-4 shadow-sm focus-within:border-(--p) focus-within:ring-4 focus-within:ring-(--p)/15">
-              <Icon className="size-5 shrink-0 text-zinc-400">
-                {SEARCH_ICON}
-              </Icon>
+            <div className="flex items-center rounded-full border border-white/35 bg-white/10 p-1.5 pl-5 shadow-[0_14px_44px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md focus-within:border-white/80 focus-within:bg-white/15">
               <input
                 ref={inputRef}
                 id="blr-search"
@@ -1275,20 +1468,21 @@ export function BengaluruPropertySite({
                 }}
                 placeholder="Search a property, survey number or location…"
                 style={{ outline: "none" }}
-                className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-[0.9375rem] text-zinc-900 outline-none placeholder:text-zinc-400 [&::-webkit-search-cancel-button]:hidden"
+                className="min-w-0 flex-1 bg-transparent py-2.5 text-[0.9375rem] text-white placeholder:text-white/65 [&::-webkit-search-cancel-button]:hidden"
               />
               <button
                 type="submit"
-                className="rounded-xl bg-(--p) px-4 py-2.5 text-sm font-semibold text-(--p-on) hover:bg-(--p-dark) hover:text-white @3xl:px-6"
+                aria-label="Search"
+                className="grid size-11 shrink-0 place-items-center rounded-full bg-(--p) text-(--p-on) hover:bg-(--p-dark) hover:text-white"
               >
-                Search
+                <Icon className="size-5">{SEARCH_ICON}</Icon>
               </button>
             </div>
             {open && suggestions.length > 0 && (
               <ul
                 id={listId}
                 role="listbox"
-                className="absolute inset-x-0 top-full z-30 mt-2 max-h-64 overflow-auto rounded-2xl border border-zinc-900/10 bg-white p-1.5 shadow-2xl"
+                className="absolute inset-x-0 top-full z-40 mt-2 max-h-64 overflow-auto rounded-2xl border border-zinc-900/10 bg-white p-1.5 shadow-2xl"
               >
                 {suggestions.map((s, i) => (
                   <li
@@ -1316,14 +1510,13 @@ export function BengaluruPropertySite({
               </ul>
             )}
           </form>
-          <div className="mt-2.5 hidden flex-wrap items-center gap-2 text-[0.8125rem] @3xl:flex">
-            <span className="text-zinc-500">Popular:</span>
+          <div className="mt-4 flex flex-wrap justify-center gap-2 text-[0.8125rem]">
             {POPULAR.map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => pickPopular(p)}
-                className="rounded-full border border-zinc-900/10 bg-white/70 px-3 py-1 text-zinc-700 hover:border-(--p) hover:text-zinc-900"
+                className="rounded-lg border border-white/35 bg-white/5 px-3 py-1 text-white/90 backdrop-blur-sm hover:bg-white hover:text-zinc-900"
               >
                 {p}
               </button>
@@ -1331,53 +1524,124 @@ export function BengaluruPropertySite({
           </div>
           <p
             aria-live="polite"
-            className="mt-2 min-h-[1.25rem] text-[0.8125rem] text-zinc-600"
+            className="mt-3 min-h-[1.25rem] max-w-2xl text-[0.8125rem] text-white/80"
           >
             {message}
           </p>
+        </motion.div>
 
-          <div
-            id="services"
-            className="mt-2 grid gap-2.5 @3xl:grid-cols-3 @3xl:gap-4"
-          >
-            {SERVICES.map((s) => (
-              <a
+        {/* Three services, fanned, the curve cutting across their feet. */}
+        <div id="services" className="relative z-10 mt-auto">
+          <div className="mx-auto grid max-w-6xl gap-3 px-4 pt-6 pb-10 @3xl:grid-cols-3 @3xl:gap-0 @3xl:px-10 @3xl:pt-4 @3xl:pb-0">
+            {SERVICES.map((s, i) => (
+              <motion.a
                 key={s.id}
                 href={s.href}
-                className={`group flex items-start gap-3 rounded-2xl border bg-white/70 px-3 py-2.5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-(--p) hover:shadow-lg @3xl:flex-col @3xl:items-stretch @3xl:p-5 ${service === s.id ? "border-(--p) shadow-lg ring-4 ring-(--p)/25" : "border-zinc-900/10"}`}
+                initial={false}
+                animate={{
+                  opacity: panelUp ? 1 : 0,
+                  y: panelUp ? 0 : 160,
+                }}
+                transition={
+                  panelUp
+                    ? {
+                        type: "spring",
+                        stiffness: 70,
+                        damping: 16,
+                        delay: 0.35 + i * 0.12,
+                      }
+                    : { duration: 0 }
+                }
+                inert={!panelUp}
+                className={`group block rounded-2xl border bg-[#fdf8f1]/92 p-5 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.75)] backdrop-blur-md transition-[border-color,box-shadow] @3xl:h-72 @3xl:rounded-b-none @3xl:p-7 ${CARD_TILT[i]} ${service === s.id ? "border-(--p) ring-4 ring-(--p)/40" : "border-white/70 hover:border-(--p)"}`}
               >
-                <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-(--p-light) text-(--p-dark) @3xl:size-10">
-                  <Icon>{s.icon}</Icon>
+                <span className="flex items-center gap-2 text-xl font-semibold tracking-tight text-zinc-900 @3xl:text-2xl">
+                  {s.title}
+                  <svg
+                    viewBox="0 0 12 12"
+                    className="size-3 shrink-0 text-(--p) transition-transform group-hover:translate-x-1"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d="M3 1.5v9l7-4.5z" />
+                  </svg>
                 </span>
-                <span>
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 @3xl:text-base">
-                    {s.title}
-                    <span className="text-(--p) transition-transform group-hover:translate-x-0.5">
-                      →
-                    </span>
-                  </span>
-                  <span className="mt-0.5 block text-xs leading-snug text-zinc-600 @3xl:mt-1 @3xl:text-[0.8125rem] @3xl:leading-relaxed">
-                    {s.body}
-                  </span>
+                <span className="mt-2 block text-sm leading-relaxed text-zinc-600 @3xl:text-[0.9375rem]">
+                  {s.body}
                 </span>
-              </a>
+                <span className="mt-5 hidden @3xl:block">{CARD_ART[i]}</span>
+              </motion.a>
             ))}
           </div>
         </div>
-      </motion.div>
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-32 left-1/2 z-20 hidden h-60 w-[170%] -translate-x-1/2 rounded-[100%] bg-[#120e0b] @3xl:block"
+          initial={false}
+          animate={{ opacity: panelUp ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: panelUp ? 0.3 : 0 }}
+        />
 
-      {intro && (
-        <button
-          type="button"
-          onClick={skip}
-          className="absolute right-4 bottom-4 z-20 rounded-full border border-white/30 bg-zinc-950/40 px-3.5 py-1.5 text-xs font-semibold text-white/85 backdrop-blur-sm hover:bg-zinc-950/60 hover:text-white @3xl:right-8"
-        >
-          Skip intro
-        </button>
-      )}
-      <p className="pointer-events-none absolute bottom-0.5 left-3 z-20 text-[0.5625rem] text-white/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)] @3xl:left-8">
-        Powered by Esri · Imagery: Esri, Maxar, Earthstar Geographics
-      </p>
+        {intro && (
+          <button
+            type="button"
+            onClick={skip}
+            className="absolute right-4 bottom-4 z-30 rounded-full border border-white/30 bg-zinc-950/40 px-3.5 py-1.5 text-xs font-semibold text-white/85 backdrop-blur-sm hover:bg-zinc-950/60 hover:text-white @3xl:right-8"
+          >
+            Skip intro
+          </button>
+        )}
+        <p className="pointer-events-none absolute bottom-0.5 left-3 z-30 text-[0.5625rem] text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)] @3xl:left-8">
+          Powered by Esri · Imagery: Esri, Maxar, Earthstar Geographics
+        </p>
+      </div>
+
+      {/* What clients say, under the curve. */}
+      <div className="relative z-10 px-6 pt-4 pb-14 text-white @3xl:pt-0">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 text-center @3xl:grid-cols-3 @3xl:text-left">
+          <figure>
+            <blockquote className="text-[0.9375rem] leading-relaxed text-white/90">
+              &ldquo;{PROOF.quote}&rdquo;
+            </blockquote>
+            <figcaption className="mt-3 text-sm text-white/70">
+              Review by{" "}
+              <a
+                href={PROOF.link}
+                className="font-semibold text-white underline underline-offset-4 hover:text-(--s)"
+              >
+                {PROOF.by}
+              </a>
+            </figcaption>
+          </figure>
+          <div className="flex items-center justify-center gap-2">
+            <Laurel />
+            <div className="text-center">
+              <Stars className="justify-center" />
+              <p className="mt-1.5 text-[0.6875rem] tracking-wide text-white/70">
+                {PROOF.badgeTop}
+              </p>
+              <p className="mt-1 text-sm leading-tight font-semibold tracking-wide uppercase">
+                {PROOF.badge}
+              </p>
+              <p className="mt-1 text-xs text-white/70">{PROOF.badgeYear}</p>
+            </div>
+            <Laurel flip />
+          </div>
+          <div className="flex items-center justify-center gap-4 @3xl:justify-end">
+            <span className="grid size-16 place-items-center rounded-full bg-white shadow-lg">
+              <GoogleG />
+            </span>
+            <div className="text-left">
+              <p className="text-sm font-semibold">Google Reviews</p>
+              <div className="mt-1 flex items-center gap-2">
+                <Stars />
+                <span className="text-sm font-semibold">{PROOF.rating}/5</span>
+              </div>
+              <p className="mt-1 text-xs text-white/70">{PROOF.count}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
