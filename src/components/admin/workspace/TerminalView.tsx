@@ -39,19 +39,43 @@ function screenLines(term: XTerm): string[] {
   return lines.map((line) => line.trimEnd());
 }
 
-async function writeClipboard(text: string) {
+/** Puts text on the clipboard; false if the browser would not allow it. */
+async function writeClipboard(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
+    return true;
   } catch {
     // No clipboard permission (some in-app browsers): the old way.
+    const focused = document.activeElement as HTMLElement | null;
     const area = document.createElement("textarea");
     area.value = text;
     area.style.position = "fixed";
     area.style.opacity = "0";
     document.body.append(area);
     area.select();
-    document.execCommand("copy");
+    let done = false;
+    try {
+      done = document.execCommand("copy");
+    } catch {}
     area.remove();
+    focused?.focus({ preventScroll: true });
+    return done;
+  }
+}
+
+/**
+ * The text of an OSC 52 clipboard request ("c;<base64>"), or null for a
+ * query ("?") or anything malformed. Base64 of UTF-8, so accents and emoji
+ * come through.
+ */
+function osc52Text(data: string): string | null {
+  const payload = data.slice(data.indexOf(";") + 1);
+  if (!payload || payload === "?") return null;
+  try {
+    const bytes = Uint8Array.from(atob(payload), (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return null;
   }
 }
 
@@ -97,6 +121,8 @@ export function TerminalView({
   >(null);
   /** The text view's contents while it is open. */
   const [text, setText] = useState<string | null>(null);
+  /** What Claude Code copied, when the browser refused it without a click. */
+  const [pending, setPending] = useState<string | null>(null);
   const textArea = useRef<HTMLTextAreaElement>(null);
 
   const flash = (what: "selection" | "reply" | "none" | "all") => {
@@ -210,6 +236,30 @@ export function TerminalView({
        * as a still page, selected and copied like any other text.
        */
       openTextRef.current = () => setText(screenLines(term).join("\n"));
+      /*
+       * Claude Code copies what you select in it by sending the text to the
+       * terminal as an OSC 52 clipboard request ("sent N chars via OSC 52").
+       * A desktop terminal puts it on the clipboard; xterm ignores it unless
+       * told, so the copy went nowhere. Done here, it lands on this
+       * computer's clipboard. If the browser wants a click first, a button
+       * holding the text appears instead. Requests in the replayed history
+       * when the terminal opens are old copies, and are skipped.
+       */
+      let replaying = true;
+      const clipboard = preview
+        ? null
+        : term.parser.registerOscHandler(52, (data) => {
+            const copied = replaying ? null : osc52Text(data);
+            if (copied)
+              void writeClipboard(copied).then((ok) => {
+                if (ok) {
+                  setPending(null);
+                  flash("selection");
+                } else setPending(copied);
+                term.focus();
+              });
+            return true;
+          });
       const selection = preview
         ? null
         : term.onSelectionChange(() => setSelected(term.hasSelection()));
@@ -257,7 +307,11 @@ export function TerminalView({
       };
       ws.onmessage = (event) => {
         const m = JSON.parse(String(event.data));
-        if (m.t === "out") term.write(m.data);
+        // The first output is the replayed history; live output follows it.
+        if (m.t === "out")
+          term.write(m.data, () => {
+            replaying = false;
+          });
         if (m.t === "exit")
           term.write(
             m.asleep
@@ -316,6 +370,7 @@ export function TerminalView({
         box.removeEventListener("drop", takeFiles);
         input?.dispose();
         selection?.dispose();
+        clipboard?.dispose();
         ws.close();
         term.dispose();
         termRef.current = null;
@@ -398,6 +453,21 @@ export function TerminalView({
       )}
       {!preview && text === null && (
         <div className="absolute top-2 right-3 z-10 flex items-center gap-1.5">
+          {pending !== null && copied !== "selection" && (
+            <CopyButton
+              onClick={() =>
+                void writeClipboard(pending).then((ok) => {
+                  if (!ok) return;
+                  setPending(null);
+                  flash("selection");
+                })
+              }
+              done={false}
+              label={`Copy what you selected (${pending.length} chars)`}
+              doneLabel=""
+              icon={<Copy className="text-brand size-3.5" aria-hidden />}
+            />
+          )}
           {(selected || copied === "selection") && (
             <CopyButton
               onClick={() => copyRef.current()}

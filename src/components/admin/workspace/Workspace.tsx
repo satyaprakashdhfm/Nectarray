@@ -19,6 +19,7 @@ import {
   Lock,
   LogIn,
   Maximize2,
+  Mic,
   Minimize2,
   Play,
   Plus,
@@ -48,6 +49,7 @@ import {
   type SessionStatus,
 } from "./runner";
 import { TerminalView } from "./TerminalView";
+import { useVoice } from "./useVoice";
 
 /* -------------------------------------------------------------------------- */
 /* State from the runner                                                      */
@@ -154,10 +156,11 @@ const PASS_THROUGH: Record<string, string> = {
 };
 
 const PREFS = "nectarray-workspace";
-type Prefs = { alerts: boolean; on: boolean };
+type Prefs = { autoSend: boolean; alerts: boolean; on: boolean };
 
 function readPrefs(): Prefs {
   const fallback: Prefs = {
+    autoSend: false,
     alerts: false,
     on: false,
   };
@@ -490,6 +493,8 @@ function WorkspaceApp() {
                   setSessionId(null);
                   setMaximized(false);
                 }}
+                prefs={prefs}
+                setPrefs={setPrefs}
                 send={send}
                 onFile={(file) => addFile(focused.id, file)}
               />
@@ -991,6 +996,8 @@ function MainTerminal({
   maximized,
   onMaximize,
   onMinimize,
+  prefs,
+  setPrefs,
   send,
   onFile,
 }: {
@@ -1003,6 +1010,8 @@ function MainTerminal({
   maximized: boolean;
   onMaximize: (on: boolean) => void;
   onMinimize: () => void;
+  prefs: Prefs;
+  setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
   onFile: (file: File) => void;
 }) {
@@ -1187,6 +1196,9 @@ function MainTerminal({
         <PromptBar
           key={session.id}
           sessionId={session.id}
+          project={session.project}
+          prefs={prefs}
+          setPrefs={setPrefs}
           send={send}
           onFile={onFile}
         />
@@ -1823,21 +1835,32 @@ function ConnectRepo({ send }: { send: (m: object) => void }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Typing and pasting                                                         */
+/* Typing, pasting and voice                                                  */
 /* -------------------------------------------------------------------------- */
 
 /**
  * A message box under the open terminal, for what is awkward to type into
  * the terminal itself: the sign-in code, a long prompt, a phone keyboard.
- * Send types the box into the session and presses Enter; an empty Send just
- * presses Enter. Upload adds files from the computer to the prompt.
+ * Or tap Talk and speak: the words land in the box to check first, unless
+ * "Send speech right away" is on. (Claude Code's own /voice cannot work
+ * here: it records from the machine it runs on, the cloud server, which
+ * has no microphone; Talk records in this browser.) Send types the box into
+ * the session and presses Enter; an empty Send just presses Enter. Upload
+ * adds files from the computer to the prompt.
  */
 function PromptBar({
   sessionId,
+  project,
+  prefs,
+  setPrefs,
   send,
   onFile,
 }: {
   sessionId: string;
+  /** The repo, which helps the speech engine with its names. */
+  project: string;
+  prefs: Prefs;
+  setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
   onFile: (file: File) => void;
 }) {
@@ -1852,11 +1875,20 @@ function PromptBar({
   const press = (sequence: string) =>
     send({ t: "type", id: sessionId, text: sequence, enter: false });
 
+  const voice = useVoice({
+    hint: project,
+    onText: (heard) => {
+      if (prefs.autoSend) submit(text ? `${text} ${heard}` : heard);
+      else setText((t) => (t ? `${t} ${heard}` : heard));
+    },
+  });
+
+  const clock = `${Math.floor(voice.seconds / 60)}:${String(voice.seconds % 60).padStart(2, "0")}`;
   const darkField =
     "border-night-line bg-night rounded-lg border px-3 py-2 text-[0.8125rem] text-white placeholder:text-white/40 focus:border-brand focus:outline-none";
 
   return (
-    <div className="border-night-line border-t px-3 py-2.5">
+    <div className="border-night-line space-y-2 border-t px-3 py-2.5">
       <form
         className="flex items-center gap-2"
         onSubmit={(e) => {
@@ -1864,6 +1896,49 @@ function PromptBar({
           submit(text);
         }}
       >
+        {voice.supported && (
+          <button
+            type="button"
+            onClick={voice.toggle}
+            disabled={voice.writing}
+            aria-pressed={voice.listening}
+            aria-label={
+              voice.listening ? "Stop and turn it into text" : "Start talking"
+            }
+            title={
+              voice.listening
+                ? "Tap to stop and turn it into text"
+                : "Tap to talk, tap again when you are done"
+            }
+            className={cn(
+              "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold tabular-nums transition-[background-color,transform] select-none active:scale-[0.98] disabled:opacity-70",
+              voice.listening
+                ? "bg-amber text-night"
+                : "bg-white/10 text-white hover:bg-white/15",
+            )}
+          >
+            {voice.writing ? (
+              <Loader2
+                className="size-4 motion-safe:animate-spin"
+                aria-hidden
+              />
+            ) : voice.listening ? (
+              <Square
+                className="size-3.5 fill-current motion-safe:animate-pulse"
+                aria-hidden
+              />
+            ) : (
+              <Mic className="size-4" aria-hidden />
+            )}
+            <span className="hidden sm:inline">
+              {voice.listening
+                ? `Stop ${clock}`
+                : voice.writing
+                  ? "Writing"
+                  : "Talk"}
+            </span>
+          </button>
+        )}
         <button
           type="button"
           onClick={() => picker.current?.click()}
@@ -1893,10 +1968,11 @@ function PromptBar({
             e.preventDefault();
             files.forEach(onFile);
           }}
+          readOnly={voice.listening || voice.writing}
           onKeyDown={(e) => {
             // With nothing typed, arrows, Esc and Tab drive the terminal:
             // picking an option in Claude Code works from here too.
-            if (text) return;
+            if (text || voice.listening) return;
             const key = e.key === "Tab" && e.shiftKey ? "ShiftTab" : e.key;
             const sequence = PASS_THROUGH[key];
             if (!sequence) return;
@@ -1904,7 +1980,13 @@ function PromptBar({
             press(sequence);
           }}
           className={cn(darkField, "min-w-0 flex-1")}
-          placeholder="Type or paste text or a file"
+          placeholder={
+            voice.listening
+              ? "Listening. Tap Stop when you are done"
+              : voice.writing
+                ? "Turning your words into text…"
+                : "Type, paste text or a file, or tap Talk and speak"
+          }
           aria-label="Message for the terminal"
         />
         <button
@@ -1915,6 +1997,28 @@ function PromptBar({
           <span className="hidden sm:inline">Send</span>
         </button>
       </form>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.75rem]">
+        {voice.error ? (
+          <p className="text-danger">{voice.error}</p>
+        ) : !voice.supported ? (
+          <p className="text-white/45">
+            This browser cannot record from the microphone.
+          </p>
+        ) : null}
+        {voice.supported && (
+          <label className="flex items-center gap-1.5 text-white/60">
+            <input
+              type="checkbox"
+              checked={prefs.autoSend}
+              onChange={(e) =>
+                setPrefs((p) => ({ ...p, autoSend: e.target.checked }))
+              }
+              className="accent-brand"
+            />
+            Send speech to Claude right away
+          </label>
+        )}
+      </div>
     </div>
   );
 }
