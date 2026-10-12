@@ -54,8 +54,11 @@ export async function loadProjectSheets(
     if (code === "42P01") return EMPTY_SHEETS;
     throw error;
   }
-  // Never saved: start from the usual services, ready to edit.
-  const sheets = row ? cleanSheets(row) : STARTER_SHEETS;
+  // Never saved: start from the usual services, ready to edit. The .env is
+  // opened before it is cleaned: sealed, it is longer than the limit.
+  const sheets = row
+    ? cleanSheets({ ...row, env: open(row.env) })
+    : STARTER_SHEETS;
   const month = currentMonth();
   return {
     ...sheets,

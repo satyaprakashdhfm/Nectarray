@@ -1,6 +1,6 @@
 /**
- * The working file for a client project: status notes, deployment links and
- * the three handover sheets. Shared by the page (client) and the actions
+ * The working file for a client project: status notes, deployment links,
+ * its environment variables and the three handover sheets. Shared by the page (client) and the actions
  * and Excel download (server).
  */
 
@@ -59,6 +59,8 @@ export type ProjectSheets = {
   paid: PaidRow[];
   recurring: RecurringRow[];
   access: AccessRow[];
+  /** The project's .env file as typed, one KEY=value a line. */
+  env: string;
   /** Months whose bill is done; they fold up above the open month. */
   closedMonths: string[];
 };
@@ -69,6 +71,7 @@ export const EMPTY_SHEETS: ProjectSheets = {
   paid: [],
   recurring: [],
   access: [],
+  env: "",
   closedMonths: [],
 };
 
@@ -272,6 +275,7 @@ export function cleanSheets(input: unknown): ProjectSheets {
         note: str(o.note, 500),
       };
     }),
+    env: str(x.env, 20000).replace(/\r\n?/g, "\n"),
     closedMonths: [
       ...new Set(
         rows(x.closedMonths)
@@ -280,6 +284,14 @@ export function cleanSheets(input: unknown): ProjectSheets {
       ),
     ].sort(),
   };
+}
+
+/** The names set in a .env file, in order: comments and blank lines skipped. */
+export function envKeys(env: string): string[] {
+  return env
+    .split("\n")
+    .map((line) => /^\s*(?:export\s+)?([A-Za-z_][\w.-]*)\s*=/.exec(line)?.[1])
+    .filter((key): key is string => Boolean(key));
 }
 
 /* The monthly bill: every payment is put on a month's bill by hand. */

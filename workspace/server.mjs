@@ -77,20 +77,25 @@ const SECRET = randomBytes(24).toString("hex");
  * HMAC-SHA256 under WORKSPACE_SECRET, made by the website's workspaceAccess
  * action after it has checked the caller. Good for one minute, which is long
  * enough to open a socket; the socket then stays open on its own.
+ *
+ * Returns who it was signed for (their email), or null if it is not valid.
  */
-function validPass(pass) {
-  if (!PASS_SECRET || typeof pass !== "string") return false;
+function passUser(pass) {
+  if (!PASS_SECRET || typeof pass !== "string") return null;
   const [payload, signature] = pass.split(".");
-  if (!payload || !signature) return false;
+  if (!payload || !signature) return null;
   const expected = createHmac("sha256", PASS_SECRET).update(payload).digest();
   const given = Buffer.from(signature, "base64url");
   if (given.length !== expected.length || !timingSafeEqual(given, expected))
-    return false;
+    return null;
   try {
-    const { exp } = JSON.parse(Buffer.from(payload, "base64url").toString());
-    return typeof exp === "number" && exp > Date.now();
+    const { sub, exp } = JSON.parse(
+      Buffer.from(payload, "base64url").toString(),
+    );
+    if (typeof exp !== "number" || exp <= Date.now()) return null;
+    return typeof sub === "string" && sub ? sub.toLowerCase() : "admin";
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -855,9 +860,41 @@ function checkSleep() {
   }
 }
 
+/*
+ * Repo locks. In the cloud several admins share this runner, and two of them
+ * driving Claude Code in the same repo at once would trip over each other's
+ * edits and pushes. So a repo someone has a session running in is theirs:
+ * for everyone else it is locked (they can watch, not type, start, resume,
+ * stop or remove) until those sessions close or fall asleep. The sign-in
+ * session is shared and never locks. On this PC user is always null, so
+ * nothing is locked; work done locally reaches the others by push and pull.
+ */
+
+/** Who else holds `project`: the owner of a session running in it, or null. */
+function lockedFor(project, user) {
+  if (!user) return null;
+  for (const s of sessions.values())
+    if (
+      s.pty &&
+      s.kind !== "login" &&
+      s.project === project &&
+      s.owner &&
+      s.owner !== user
+    )
+      return s.owner;
+  return null;
+}
+
+/** Whether `user` may type into, stop, resume, rename or remove `s`. */
+const mayDrive = (s, user) => s.kind === "login" || !lockedFor(s.project, user);
+
+const lockedMessage = (project, owner) =>
+  `${owner} is working in ${project} right now, so it is locked for you. It unlocks when their sessions there close or fall asleep.`;
+
 /**
  * Starts Claude Code in a terminal. `resume` brings back an ended session's
- * conversation instead of starting a new one.
+ * conversation instead of starting a new one. `owner` is who started it, for
+ * the repo locks (null on this PC).
  */
 function startSession({
   project,
@@ -866,6 +903,7 @@ function startSession({
   mode,
   kind = "claude",
   resume,
+  owner = null,
 }) {
   const id = resume?.id ?? randomUUID().slice(0, 8);
   const proj =
@@ -920,6 +958,7 @@ function startSession({
     prompts: 0,
   };
   Object.assign(s, {
+    owner: kind === "login" ? null : owner,
     status: shell ? "idle" : "starting",
     activity: shell
       ? "Terminal: type commands, such as git push"
@@ -1213,12 +1252,15 @@ server.on("upgrade", (req, socket, head) => {
    * The site's origin, always. Then: with WORKSPACE_SECRET set (always, in
    * the cloud), a valid pass from the website; without it (this PC only), a
    * request addressed to localhost.
+   *
+   * The pass also says who is connecting, which is what the repo locks go
+   * by. On this PC there is no pass and no one to share with: user is null
+   * and nothing is ever locked.
    */
+  const user = PASS_SECRET ? passUser(url.searchParams.get("pass")) : null;
   const allowed =
     ORIGINS.has(origin) &&
-    (PASS_SECRET
-      ? validPass(url.searchParams.get("pass"))
-      : HOSTS.has(req.headers.host ?? ""));
+    (PASS_SECRET ? user !== null : HOSTS.has(req.headers.host ?? ""));
   if (!allowed) {
     socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
     socket.destroy();
@@ -1226,20 +1268,21 @@ server.on("upgrade", (req, socket, head) => {
   }
   wss.handleUpgrade(req, socket, head, (ws) => {
     lastSeen = Date.now();
-    if (url.pathname === "/control") openControl(ws);
+    if (url.pathname === "/control") openControl(ws, user);
     else if (url.pathname.startsWith("/term/"))
-      openTerminal(ws, url.pathname.slice(6));
+      openTerminal(ws, url.pathname.slice(6), user);
     else ws.close(1008, "Unknown path");
   });
 });
 
-function openControl(ws) {
+function openControl(ws, user) {
   controls.add(ws);
   const reply = (message) =>
     ws.readyState === 1 && ws.send(JSON.stringify(message));
   reply({
     t: "hello",
     cloud: CLOUD,
+    me: user,
     github: githubInfo,
     root: ROOT,
     claude: info,
@@ -1255,19 +1298,41 @@ function openControl(ws) {
       return;
     }
     const s = m.id ? sessions.get(m.id) : null;
+    // Someone else's repo: say so instead of acting on it.
+    const SESSION_COMMANDS = ["type", "stop", "resume", "remove", "rename"];
+    if (s && SESSION_COMMANDS.includes(m.t) && !mayDrive(s, user)) {
+      reply({
+        t: "error",
+        message: lockedMessage(s.project, lockedFor(s.project, user)),
+      });
+      return;
+    }
     switch (m.t) {
       case "start": {
         m.kind = m.kind === "shell" ? "shell" : "claude";
         const proj = projects.find((p) => p.name === m.project);
         const go = () => {
-          const result = startSession(m);
+          // Checked again here: someone may have taken it during a clone.
+          const holder = lockedFor(m.project, user);
+          if (holder) {
+            reply({ t: "error", message: lockedMessage(m.project, holder) });
+            return;
+          }
+          const result = startSession({
+            project: m.project,
+            title: m.title,
+            worktree: m.worktree,
+            mode: m.mode,
+            kind: m.kind,
+            owner: user,
+          });
           reply(
             result.error
               ? { t: "error", message: result.error }
               : { t: "started", id: result.id },
           );
         };
-        if (!proj || proj.cloned) {
+        if (!proj || proj.cloned || lockedFor(m.project, user)) {
           go();
           break;
         }
@@ -1300,7 +1365,7 @@ function openControl(ws) {
         break;
       }
       case "type":
-        // Voice and the Send button: text into the prompt, then Enter if asked.
+        // The Send button: text into the prompt, then Enter if asked.
         if (s?.pty) {
           s.lastActive = Date.now();
           if (m.text) s.pty.write(String(m.text));
@@ -1320,6 +1385,7 @@ function openControl(ws) {
             resume: s,
             mode: s.mode,
             kind: s.kind,
+            owner: user,
           });
           if (result.error) reply({ t: "error", message: result.error });
         }
@@ -1341,9 +1407,10 @@ function openControl(ws) {
         readGitHub().then(readProjects);
         break;
       case "shutdown":
-        // Stop: every session closes. In the cloud, the quiet that follows
-        // lets Railway put the service to sleep until the next Start.
-        closeAll("Stopped with the workspace");
+        // Stop: every session of yours closes (anyone else's keeps running).
+        // In the cloud, the quiet that follows lets Railway put the service
+        // to sleep until the next Start.
+        closeAll("Stopped with the workspace", user);
         broadcast({ t: "stopped" });
         break;
       case "clone":
@@ -1385,9 +1452,11 @@ function openControl(ws) {
       }
       case "upload": {
         if (s?.pty) s.lastActive = Date.now();
-        const result = s?.pty
-          ? saveUpload(s, m)
-          : { error: "That session is not running." };
+        const result = !s?.pty
+          ? { error: "That session is not running." }
+          : !mayDrive(s, user)
+            ? { error: lockedMessage(s.project, lockedFor(s.project, user)) }
+            : saveUpload(s, m);
         reply(
           result.error
             ? { t: "error", message: result.error }
@@ -1458,9 +1527,10 @@ function saveUpload(s, m) {
   return { name };
 }
 
-function closeAll(reason) {
+/** Closes every running session, or only those `user` may drive. */
+function closeAll(reason, user = null) {
   for (const s of sessions.values())
-    if (s.pty) {
+    if (s.pty && mayDrive(s, user)) {
       s.asleep = true;
       s.stopping = true;
       s.stopReason = reason;
@@ -1484,7 +1554,7 @@ function checkIdle() {
   }
 }
 
-function openTerminal(ws, id) {
+function openTerminal(ws, id, user) {
   const s = sessions.get(id);
   if (!s) return ws.close(1008, "No such session");
   s.viewers.add(ws);
@@ -1498,7 +1568,8 @@ function openTerminal(ws, id) {
     } catch {
       return;
     }
-    if (!s.pty) return;
+    // Someone else's repo can be watched: keys and resizes are ignored.
+    if (!s.pty || !mayDrive(s, user)) return;
     if (m.t === "in" && typeof m.data === "string") {
       s.lastActive = Date.now();
       s.pty.write(m.data);

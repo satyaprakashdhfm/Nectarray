@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, MessageSquareText } from "lucide-react";
+import { Check, Copy, MessageSquareText, TextSelect, X } from "lucide-react";
 import type { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { lastReply } from "./last-reply";
@@ -19,6 +19,25 @@ const cleanCopy = (text: string) =>
     .map((line) => line.replace(/^(\s*)[│┃▌▎▏|] ?(?!.*[│┃|])/, "$1").trimEnd())
     .join("\n")
     .trim();
+
+/**
+ * The terminal's whole text, scrollback included, one string per line as it
+ * was written: wrapped rows are joined back, trailing padding and blank
+ * lines at the end go.
+ */
+function screenLines(term: XTerm): string[] {
+  const buffer = term.buffer.active;
+  const lines: string[] = [];
+  for (let i = 0; i < buffer.length; i++) {
+    const line = buffer.getLine(i);
+    if (!line) continue;
+    const text = line.translateToString(true);
+    if (line.isWrapped && lines.length) lines[lines.length - 1] += text;
+    else lines.push(text);
+  }
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  return lines.map((line) => line.trimEnd());
+}
 
 async function writeClipboard(text: string) {
   try {
@@ -71,10 +90,29 @@ export function TerminalView({
   const onFileRef = useRef(onFile);
   const copyRef = useRef<() => void>(() => {});
   const copyReplyRef = useRef<() => void>(() => {});
+  const openTextRef = useRef<() => void>(() => {});
   const [selected, setSelected] = useState(false);
-  const [copied, setCopied] = useState<"selection" | "reply" | "none" | null>(
-    null,
-  );
+  const [copied, setCopied] = useState<
+    "selection" | "reply" | "none" | "all" | null
+  >(null);
+  /** The text view's contents while it is open. */
+  const [text, setText] = useState<string | null>(null);
+  const textArea = useRef<HTMLTextAreaElement>(null);
+
+  const flash = (what: "selection" | "reply" | "none" | "all") => {
+    setCopied(what);
+    setTimeout(() => setCopied(null), 1800);
+  };
+
+  // The text view opens at the bottom, where the latest answer is.
+  useEffect(() => {
+    const area = textArea.current;
+    if (text === null || !area) return;
+    area.scrollTop = area.scrollHeight;
+    area.focus({ preventScroll: true });
+    // Only when it opens, not on every change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text === null]);
 
   useEffect(() => {
     onFileRef.current = onFile;
@@ -106,6 +144,9 @@ export function TerminalView({
         lineHeight: 1.15,
         scrollback: preview ? 200 : 5000,
         allowProposedApi: true,
+        // While Claude Code has the mouse, Shift+drag (Option+drag on a
+        // Mac) still selects text.
+        macOptionClickForcesSelection: true,
         ...(preview ? { cols, rows } : {}),
         theme: {
           background: token("--color-night", "#0b1720"),
@@ -145,10 +186,6 @@ export function TerminalView({
         });
       }
       term.open(inner.current);
-      const flash = (what: "selection" | "reply" | "none") => {
-        setCopied(what);
-        setTimeout(() => setCopied(null), 1800);
-      };
       copyRef.current = () => {
         const text = cleanCopy(term.getSelection());
         if (!text) return;
@@ -160,22 +197,19 @@ export function TerminalView({
       /*
        * Claude Code redraws its screen as it works, which can wipe a
        * selection mid-drag; this copies its last answer without dragging.
-       * Wrapped rows are joined back into the lines they were.
        */
       copyReplyRef.current = () => {
-        const buffer = term.buffer.active;
-        const lines: string[] = [];
-        for (let i = 0; i < buffer.length; i++) {
-          const line = buffer.getLine(i);
-          if (!line) continue;
-          const text = line.translateToString(true);
-          if (line.isWrapped && lines.length) lines[lines.length - 1] += text;
-          else lines.push(text);
-        }
-        const reply = lastReply(lines);
+        const reply = lastReply(screenLines(term));
         if (!reply) return flash("none");
         void writeClipboard(reply).then(() => flash("reply"));
       };
+      /*
+       * Dragging in the terminal often selects nothing: Claude Code takes
+       * the mouse for itself (only Shift+drag selects then), and phones
+       * cannot select in it at all. The text view is the terminal's text
+       * as a still page, selected and copied like any other text.
+       */
+      openTextRef.current = () => setText(screenLines(term).join("\n"));
       const selection = preview
         ? null
         : term.onSelectionChange(() => setSelected(term.hasSelection()));
@@ -238,8 +272,12 @@ export function TerminalView({
       const box = host.current;
       observer.observe(box);
       // A click anywhere in the main terminal gives it the keyboard, so
-      // arrows, Esc and Tab go to Claude Code rather than the page.
-      const focus = () => term.focus();
+      // arrows, Esc and Tab go to Claude Code rather than the page. Not in
+      // the text view, whose selection (and Ctrl+C) must stay its own.
+      const focus = (e: MouseEvent) => {
+        if ((e.target as Element).closest?.("[data-text-view]")) return;
+        term.focus();
+      };
       // Files can't travel as typed text: a pasted or dropped file is
       // handed up, uploaded, and its path lands in the prompt instead.
       const takeFiles = (e: ClipboardEvent | DragEvent) => {
@@ -256,6 +294,7 @@ export function TerminalView({
       };
       // Right-click copies the selection, as in Windows Terminal.
       const rightClick = (e: MouseEvent) => {
+        if ((e.target as Element).closest?.("[data-text-view]")) return;
         if (!term.hasSelection()) return;
         e.preventDefault();
         copyRef.current();
@@ -311,7 +350,53 @@ export function TerminalView({
       }
       aria-hidden={preview || undefined}
     >
-      {!preview && (
+      {!preview && text !== null && (
+        <div
+          data-text-view
+          className="bg-night absolute inset-0 z-20 flex flex-col"
+        >
+          <div className="border-night-line flex flex-wrap items-center gap-2 border-b px-3 py-2">
+            <p className="min-w-0 flex-1 text-[0.75rem] text-white/60">
+              The terminal as text: select any part and copy it (Ctrl+C, or
+              long-press on a phone).
+            </p>
+            <CopyButton
+              onClick={() =>
+                void writeClipboard(cleanCopy(text)).then(() => flash("all"))
+              }
+              done={copied === "all"}
+              label="Copy all"
+              doneLabel="Copied"
+              icon={<Copy className="size-3.5" aria-hidden />}
+            />
+            <CopyButton
+              onClick={() => {
+                setText(null);
+                termRef.current?.focus();
+              }}
+              done={false}
+              label="Back to terminal"
+              doneLabel=""
+              icon={<X className="size-3.5" aria-hidden />}
+            />
+          </div>
+          <textarea
+            ref={textArea}
+            value={text}
+            readOnly
+            spellCheck={false}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setText(null);
+                termRef.current?.focus();
+              }
+            }}
+            aria-label="Terminal text"
+            className="bg-night min-h-0 flex-1 resize-none p-3 font-mono text-[0.8125rem] leading-snug whitespace-pre text-[#e6edf2] outline-none selection:bg-[#1fa5de55]"
+          />
+        </div>
+      )}
+      {!preview && text === null && (
         <div className="absolute top-2 right-3 z-10 flex items-center gap-1.5">
           {(selected || copied === "selection") && (
             <CopyButton
@@ -328,6 +413,13 @@ export function TerminalView({
             label={copied === "none" ? "No reply yet" : "Copy last reply"}
             doneLabel="Reply copied"
             icon={<MessageSquareText className="size-3.5" aria-hidden />}
+          />
+          <CopyButton
+            onClick={() => openTextRef.current()}
+            done={false}
+            label="Select text"
+            doneLabel=""
+            icon={<TextSelect className="size-3.5" aria-hidden />}
           />
         </div>
       )}

@@ -7,7 +7,8 @@ import {
 } from "crypto";
 
 /**
- * Encryption for the client passwords kept on a project's Passwords sheet.
+ * Encryption for the client passwords kept on a project's Passwords sheet,
+ * and for its .env file.
  *
  * AES-256-GCM with a key made from PROJECT_VAULT_KEY. Without that variable
  * the passwords are stored as typed, and the page says so. If the variable

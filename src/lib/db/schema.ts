@@ -704,6 +704,8 @@ export const projectDetails = pgTable("project_details", {
   paid: jsonb().notNull().default([]),
   recurring: jsonb().notNull().default([]),
   access: jsonb().notNull().default([]),
+  /** The project's .env file, sealed like the passwords (see vault.ts). */
+  env: text().notNull().default(""),
   /** Months whose bill is done ("2026-10"), folded up on the page. */
   closedMonths: jsonb("closed_months").notNull().default([]),
   updatedAt: now(),

@@ -16,9 +16,9 @@ import {
   KeyRound,
   LayoutGrid,
   Loader2,
+  Lock,
   LogIn,
   Maximize2,
-  Mic,
   Minimize2,
   Play,
   Plus,
@@ -48,7 +48,6 @@ import {
   type SessionStatus,
 } from "./runner";
 import { TerminalView } from "./TerminalView";
-import { useVoice } from "./useVoice";
 
 /* -------------------------------------------------------------------------- */
 /* State from the runner                                                      */
@@ -65,6 +64,8 @@ type Phase = "stopped" | "starting" | "connected" | "unset" | "expired";
 type State = {
   phase: Phase;
   cloud: boolean;
+  /** Who this page is signed in as, in the cloud; null on this PC. */
+  me: string | null;
   github: GitHubInfo;
   root: string;
   claude: ClaudeInfo | null;
@@ -77,6 +78,7 @@ type Action = RunnerMessage | { t: "phase"; phase: Phase };
 const INITIAL: State = {
   phase: "stopped",
   cloud: false,
+  me: null,
   github: { connected: false },
   root: "",
   claude: null,
@@ -90,6 +92,7 @@ function reduce(state: State, action: Action): State {
       return {
         phase: "connected",
         cloud: action.cloud,
+        me: action.me ?? null,
         github: action.github,
         root: action.root,
         claude: action.claude,
@@ -139,23 +142,6 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "default", label: "Ask before every step" },
 ];
 
-/**
- * Keys as the terminal sends them: for picking options in Claude Code (the
- * arrows, Enter, Esc), switching its mode (Shift+Tab) or stopping a command
- * (Ctrl+C), from a phone or without clicking into the terminal first.
- */
-const KEYS: [label: string, sequence: string, name: string][] = [
-  ["↑", "\x1b[A", "Up arrow"],
-  ["↓", "\x1b[B", "Down arrow"],
-  ["←", "\x1b[D", "Left arrow"],
-  ["→", "\x1b[C", "Right arrow"],
-  ["Enter", "\r", "Enter"],
-  ["Esc", "\x1b", "Escape"],
-  ["Tab", "\t", "Tab"],
-  ["⇧Tab", "\x1b[Z", "Shift+Tab: switch Claude's mode"],
-  ["Ctrl+C", "\x03", "Ctrl+C: stop what is running"],
-];
-
 /** Keys the empty message box hands straight to the terminal. */
 const PASS_THROUGH: Record<string, string> = {
   ArrowUp: "\x1b[A",
@@ -168,11 +154,10 @@ const PASS_THROUGH: Record<string, string> = {
 };
 
 const PREFS = "nectarray-workspace";
-type Prefs = { autoSend: boolean; alerts: boolean; on: boolean };
+type Prefs = { alerts: boolean; on: boolean };
 
 function readPrefs(): Prefs {
   const fallback: Prefs = {
-    autoSend: false,
     alerts: false,
     on: false,
   };
@@ -221,6 +206,29 @@ const sessionName = (s: Session) =>
     : s.kind === "shell"
       ? "Terminal"
       : "New session");
+
+/** A person as a lock names them: their email up to the @. */
+const who = (email: string) => email.split("@")[0];
+
+/**
+ * Who else is working in a repo: the owner of a session running in it. In
+ * the cloud, a repo one admin is working in is locked for the others (they
+ * can watch, not type) until that admin's sessions there close or fall
+ * asleep. `me` is null on this PC, where nothing is ever locked.
+ */
+function lockedBy(project: string, sessions: Session[], me: string | null) {
+  if (!me) return null;
+  return (
+    sessions.find(
+      (s) =>
+        s.live &&
+        s.kind !== "login" &&
+        s.project === project &&
+        s.owner &&
+        s.owner !== me,
+    )?.owner ?? null
+  );
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -386,7 +394,10 @@ function WorkspaceApp() {
 
   const start = () => setPrefs((p) => ({ ...p, on: true }));
   const stop = () => {
-    const live = sessions.filter((s) => s.live).length;
+    // Stop closes your own sessions; anyone else's keep running.
+    const live = sessions.filter(
+      (s) => s.live && (!state.me || !s.owner || s.owner === state.me),
+    ).length;
     if (
       live > 0 &&
       !confirm(
@@ -468,14 +479,17 @@ function WorkspaceApp() {
               <MainTerminal
                 key={focused.id}
                 session={focused}
+                lock={
+                  focused.kind === "login"
+                    ? null
+                    : lockedBy(focused.project, sessions, state.me)
+                }
                 maximized={maximized}
                 onMaximize={setMaximized}
                 onMinimize={() => {
                   setSessionId(null);
                   setMaximized(false);
                 }}
-                prefs={prefs}
-                setPrefs={setPrefs}
                 send={send}
                 onFile={(file) => addFile(focused.id, file)}
               />
@@ -494,6 +508,11 @@ function WorkspaceApp() {
                   <li key={s.id}>
                     <Tile
                       session={s}
+                      lock={
+                        s.kind === "login"
+                          ? null
+                          : lockedBy(s.project, sessions, state.me)
+                      }
                       now={now}
                       onOpen={() => {
                         setSessionId(s.id);
@@ -513,7 +532,12 @@ function WorkspaceApp() {
         title="New session"
         onClose={() => setDrawer(null)}
       >
-        <NewSession projects={state.projects} sessions={sessions} send={send} />
+        <NewSession
+          projects={state.projects}
+          sessions={sessions}
+          me={state.me}
+          send={send}
+        />
       </Drawer>
       <Drawer
         open={drawer === "setup"}
@@ -887,13 +911,29 @@ function StatusPill({ status }: { status: SessionStatus }) {
   );
 }
 
+/** A lock's label: who is working in the repo. */
+function LockBadge({ owner }: { owner: string }) {
+  return (
+    <span
+      title={`${owner} is working in this repo. It unlocks when their sessions close or fall asleep.`}
+      className="bg-amber/20 text-amber inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold whitespace-nowrap"
+    >
+      <Lock className="size-3" aria-hidden />
+      {who(owner)}
+    </span>
+  );
+}
+
 /** One session as a small live terminal window. Click to open it. */
 function Tile({
   session: s,
+  lock,
   now,
   onOpen,
 }: {
   session: Session;
+  /** Someone else working in this repo, if anyone. */
+  lock: string | null;
   now: number;
   onOpen: () => void;
 }) {
@@ -917,6 +957,7 @@ function Tile({
           <span className="font-semibold text-white">{s.project}</span>
           <span className="text-white/45"> {sessionName(s)}</span>
         </p>
+        {lock && <LockBadge owner={lock} />}
         <StatusPill status={s.status} />
       </div>
       <TerminalView
@@ -946,34 +987,37 @@ function Tile({
 /** The opened session: large, typed into, maximizable. */
 function MainTerminal({
   session,
+  lock,
   maximized,
   onMaximize,
   onMinimize,
-  prefs,
-  setPrefs,
   send,
   onFile,
 }: {
   session: Session;
+  /**
+   * Someone else working in this repo: the session can be watched, not
+   * typed into, stopped, resumed or removed.
+   */
+  lock: string | null;
   maximized: boolean;
   onMaximize: (on: boolean) => void;
   onMinimize: () => void;
-  prefs: Prefs;
-  setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
   onFile: (file: File) => void;
 }) {
   /*
    * Opening a sleeping session wakes it: Claude Code comes back on the same
    * conversation. Only once per opening, so one that falls asleep again
-   * while open stays asleep until Resume.
+   * while open stays asleep until Resume. Not while someone else has the repo.
    */
   const woke = useRef(false);
   useEffect(() => {
-    if (woke.current || session.live || session.status !== "asleep") return;
+    if (woke.current || lock || session.live || session.status !== "asleep")
+      return;
     woke.current = true;
     send({ t: "resume", id: session.id });
-  }, [session.id, session.live, session.status, send]);
+  }, [session.id, session.live, session.status, lock, send]);
 
   // Maximized, the page behind stays put.
   useEffect(() => {
@@ -1019,7 +1063,9 @@ function MainTerminal({
           </p>
         </div>
         <div className="flex items-center gap-0.5">
-          {session.live ? (
+          {lock ? (
+            <LockBadge owner={lock} />
+          ) : session.live ? (
             <button
               type="button"
               onClick={() => {
@@ -1100,25 +1146,47 @@ function MainTerminal({
         </div>
       )}
 
-      <div
-        className={
-          maximized ? "min-h-0 flex-1" : "h-[min(66dvh,46rem)] min-h-[20rem]"
-        }
-      >
-        <TerminalView
-          key={`${session.id}-${session.startedAt}-${session.live}`}
-          id={session.id}
-          onFile={session.live ? onFile : undefined}
-        />
-      </div>
+      {lock && (
+        <div className="border-night-line bg-amber/10 flex items-center gap-2 border-b px-3 py-2.5 text-[0.8125rem] text-white/85">
+          <Lock className="text-amber size-4 shrink-0" aria-hidden />
+          <p className="min-w-0 flex-1">
+            <span className="font-semibold">{lock}</span> is working in{" "}
+            {session.project} right now, so it is locked for you: you can watch,
+            not type. It unlocks when their sessions here close or fall asleep.
+          </p>
+        </div>
+      )}
 
-      {session.live && (
+      {lock ? (
+        // Drawn at the owner's size and scaled, so watching never resizes
+        // their terminal.
+        <div className="max-h-[min(66dvh,46rem)] overflow-y-auto">
+          <TerminalView
+            key={`${session.id}-${session.startedAt}-${session.live}-watch`}
+            id={session.id}
+            preview
+            cols={session.cols ?? 120}
+            rows={session.rows ?? 32}
+          />
+        </div>
+      ) : (
+        <div
+          className={
+            maximized ? "min-h-0 flex-1" : "h-[min(66dvh,46rem)] min-h-[20rem]"
+          }
+        >
+          <TerminalView
+            key={`${session.id}-${session.startedAt}-${session.live}`}
+            id={session.id}
+            onFile={session.live ? onFile : undefined}
+          />
+        </div>
+      )}
+
+      {session.live && !lock && (
         <PromptBar
           key={session.id}
           sessionId={session.id}
-          project={session.project}
-          prefs={prefs}
-          setPrefs={setPrefs}
           send={send}
           onFile={onFile}
         />
@@ -1189,10 +1257,12 @@ function Drawer({
 function NewSession({
   projects,
   sessions,
+  me,
   send,
 }: {
   projects: Project[];
   sessions: Session[];
+  me: string | null;
   send: (m: object) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -1209,6 +1279,7 @@ function NewSession({
     null;
   const busy =
     !!project && sessions.some((s) => s.project === project.name && s.live);
+  const lock = project ? lockedBy(project.name, sessions, me) : null;
   // A second session in the same repo gets its own copy unless told otherwise.
   const copy = ownCopy ?? busy;
   const shown = projects.filter((p) =>
@@ -1220,7 +1291,7 @@ function NewSession({
       className="space-y-5"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!project) return;
+        if (!project || lock) return;
         send({
           t: "start",
           project: project.name,
@@ -1254,6 +1325,7 @@ function NewSession({
             const live = sessions.filter(
               (s) => s.project === p.name && s.live,
             ).length;
+            const holder = lockedBy(p.name, sessions, me);
             return (
               <li key={p.name}>
                 <button
@@ -1279,10 +1351,23 @@ function NewSession({
                       {!p.cloned && ", fetched from GitHub on first use"}
                     </span>
                   </span>
-                  {live > 0 && (
-                    <span className="text-[0.6875rem] font-bold">
-                      {live} open
+                  {holder ? (
+                    <span
+                      title={`${holder} is working in this repo`}
+                      className={cn(
+                        "inline-flex items-center gap-1 text-[0.6875rem] font-bold",
+                        !active && "text-amber-deep",
+                      )}
+                    >
+                      <Lock className="size-3" aria-hidden />
+                      {who(holder)}
                     </span>
+                  ) : (
+                    live > 0 && (
+                      <span className="text-[0.6875rem] font-bold">
+                        {live} open
+                      </span>
+                    )
                   )}
                 </button>
               </li>
@@ -1389,18 +1474,36 @@ function NewSession({
         </>
       )}
 
+      {lock && (
+        <p className="border-amber/30 bg-amber-wash text-amber-deep flex gap-2 rounded-lg border px-3 py-2.5 text-[0.8125rem]">
+          <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            <span className="font-semibold">{lock}</span> is working in{" "}
+            {project?.name} right now, so it is locked. It unlocks when their
+            sessions there close or fall asleep. Working on this PC instead is
+            fine: push, and they pull.
+          </span>
+        </p>
+      )}
+
       <button
         type="submit"
-        disabled={!project}
+        disabled={!project || !!lock}
         className={cn(
           primaryButton,
           "inline-flex w-full items-center justify-center gap-1.5 py-2.5 disabled:opacity-50",
         )}
       >
-        <Play className="size-3.5" aria-hidden />
-        {project
-          ? `Start ${kind === "claude" ? "Claude Code" : "a terminal"} in ${project.name}`
-          : "Pick a repo"}
+        {lock ? (
+          <Lock className="size-3.5" aria-hidden />
+        ) : (
+          <Play className="size-3.5" aria-hidden />
+        )}
+        {!project
+          ? "Pick a repo"
+          : lock
+            ? `Locked: ${who(lock)} is working in ${project.name}`
+            : `Start ${kind === "claude" ? "Claude Code" : "a terminal"} in ${project.name}`}
       </button>
     </form>
   );
@@ -1720,29 +1823,21 @@ function ConnectRepo({ send }: { send: (m: object) => void }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Typing, pasting and voice                                                  */
+/* Typing and pasting                                                         */
 /* -------------------------------------------------------------------------- */
 
 /**
- * A message box under the open terminal: type or paste (the sign-in code, a
- * long prompt, anything awkward on a phone), or tap the mic and talk. Spoken
- * words land in the box to check first, unless "Send speech right away" is
- * on. Send types the box into the session and presses Enter; an empty Send
- * just presses Enter.
+ * A message box under the open terminal, for what is awkward to type into
+ * the terminal itself: the sign-in code, a long prompt, a phone keyboard.
+ * Send types the box into the session and presses Enter; an empty Send just
+ * presses Enter. Upload adds files from the computer to the prompt.
  */
 function PromptBar({
   sessionId,
-  project,
-  prefs,
-  setPrefs,
   send,
   onFile,
 }: {
   sessionId: string;
-  /** The repo, which helps the speech engine with its names. */
-  project: string;
-  prefs: Prefs;
-  setPrefs: (update: (p: Prefs) => Prefs) => void;
   send: (m: object) => void;
   onFile: (file: File) => void;
 }) {
@@ -1757,20 +1852,11 @@ function PromptBar({
   const press = (sequence: string) =>
     send({ t: "type", id: sessionId, text: sequence, enter: false });
 
-  const voice = useVoice({
-    hint: project,
-    onText: (heard) => {
-      if (prefs.autoSend) submit(text ? `${text} ${heard}` : heard);
-      else setText((t) => (t ? `${t} ${heard}` : heard));
-    },
-  });
-
-  const clock = `${Math.floor(voice.seconds / 60)}:${String(voice.seconds % 60).padStart(2, "0")}`;
   const darkField =
     "border-night-line bg-night rounded-lg border px-3 py-2 text-[0.8125rem] text-white placeholder:text-white/40 focus:border-brand focus:outline-none";
 
   return (
-    <div className="border-night-line space-y-2 border-t px-3 py-2.5">
+    <div className="border-night-line border-t px-3 py-2.5">
       <form
         className="flex items-center gap-2"
         onSubmit={(e) => {
@@ -1778,49 +1864,6 @@ function PromptBar({
           submit(text);
         }}
       >
-        {voice.supported && (
-          <button
-            type="button"
-            onClick={voice.toggle}
-            disabled={voice.writing}
-            aria-pressed={voice.listening}
-            aria-label={
-              voice.listening ? "Stop and turn it into text" : "Start talking"
-            }
-            title={
-              voice.listening
-                ? "Tap to stop and turn it into text"
-                : "Tap to talk, tap again when you are done"
-            }
-            className={cn(
-              "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold tabular-nums transition-[background-color,transform] select-none active:scale-[0.98] disabled:opacity-70",
-              voice.listening
-                ? "bg-amber text-night"
-                : "bg-white/10 text-white hover:bg-white/15",
-            )}
-          >
-            {voice.writing ? (
-              <Loader2
-                className="size-4 motion-safe:animate-spin"
-                aria-hidden
-              />
-            ) : voice.listening ? (
-              <Square
-                className="size-3.5 fill-current motion-safe:animate-pulse"
-                aria-hidden
-              />
-            ) : (
-              <Mic className="size-4" aria-hidden />
-            )}
-            <span className="hidden sm:inline">
-              {voice.listening
-                ? `Stop ${clock}`
-                : voice.writing
-                  ? "Writing"
-                  : "Talk"}
-            </span>
-          </button>
-        )}
         <button
           type="button"
           onClick={() => picker.current?.click()}
@@ -1850,11 +1893,10 @@ function PromptBar({
             e.preventDefault();
             files.forEach(onFile);
           }}
-          readOnly={voice.listening || voice.writing}
           onKeyDown={(e) => {
             // With nothing typed, arrows, Esc and Tab drive the terminal:
             // picking an option in Claude Code works from here too.
-            if (text || voice.listening) return;
+            if (text) return;
             const key = e.key === "Tab" && e.shiftKey ? "ShiftTab" : e.key;
             const sequence = PASS_THROUGH[key];
             if (!sequence) return;
@@ -1862,13 +1904,7 @@ function PromptBar({
             press(sequence);
           }}
           className={cn(darkField, "min-w-0 flex-1")}
-          placeholder={
-            voice.listening
-              ? "Listening. Tap Stop when you are done"
-              : voice.writing
-                ? "Turning your words into text…"
-                : "Type, paste text or a file, or tap Talk and speak"
-          }
+          placeholder="Type or paste text or a file"
           aria-label="Message for the terminal"
         />
         <button
@@ -1879,46 +1915,6 @@ function PromptBar({
           <span className="hidden sm:inline">Send</span>
         </button>
       </form>
-      <div
-        className="flex flex-wrap items-center gap-1"
-        role="group"
-        aria-label="Keys"
-      >
-        {KEYS.map(([label, sequence, name]) => (
-          <button
-            key={label}
-            type="button"
-            onClick={() => press(sequence)}
-            className="min-w-10 rounded-md border border-white/15 bg-white/5 px-2 py-1.5 font-mono text-[0.75rem] text-white/80 transition-[background-color,transform] hover:bg-white/15 hover:text-white active:scale-[0.96] sm:min-w-9 sm:py-1"
-            aria-label={name}
-            title={name}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.75rem]">
-        {voice.error ? (
-          <p className="text-danger">{voice.error}</p>
-        ) : !voice.supported ? (
-          <p className="text-white/45">
-            This browser cannot record from the microphone.
-          </p>
-        ) : null}
-        {voice.supported && (
-          <label className="flex items-center gap-1.5 text-white/60">
-            <input
-              type="checkbox"
-              checked={prefs.autoSend}
-              onChange={(e) =>
-                setPrefs((p) => ({ ...p, autoSend: e.target.checked }))
-              }
-              className="accent-brand"
-            />
-            Send speech to Claude right away
-          </label>
-        )}
-      </div>
     </div>
   );
 }

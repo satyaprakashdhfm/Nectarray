@@ -24,6 +24,13 @@ directory `workspace/`), with a volume at `/data`.
 - **Cards**: Claude Code's hooks (`hook.mjs`) report each step back, which is
   how a card shows Working, Needs you or Done. They send only the tool name,
   file name or command, and the prompt; never file contents.
+- **Repo locks**: the runner knows which admin each socket belongs to (from
+  the pass). While one admin has a session running in a repo, that repo is
+  locked for every other admin: they see who has it and can watch the
+  terminal, but cannot type, start, resume, stop or remove sessions there.
+  It unlocks when the owner's sessions close or fall asleep (5 minutes
+  idle). Stop closes only your own sessions. Work on a PC is never locked;
+  push it and the others pull.
 
 ### Variables
 

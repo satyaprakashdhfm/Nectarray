@@ -12,6 +12,7 @@ import {
 import {
   Check,
   ChevronRight,
+  Copy,
   Download,
   RotateCcw,
   ExternalLink,
@@ -33,6 +34,7 @@ import {
   FREQUENCIES,
   addMonths,
   dashboardFor,
+  envKeys,
   monthLabel,
   paidInMonth,
   type AccessRow,
@@ -142,8 +144,8 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"];
 
 /**
- * The working file of one project: status, deployment links and the three
- * handover sheets, saved together. Two Excel files come out of it: the
+ * The working file of one project: status, deployment links, the .env file
+ * and the three handover sheets, saved together. Two Excel files come out of it: the
  * month's bill for the client (Amounts paid), and the full sheet with the
  * passwords and running costs.
  */
@@ -319,6 +321,12 @@ export function ProjectWorkspace({
         </section>
       </div>
 
+      <EnvFile
+        value={s.env}
+        onChange={(env) => setS({ ...s, env })}
+        vaultReady={vaultReady}
+      />
+
       <section className="card overflow-hidden p-0">
         <header className="border-line flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-5">
           <div>
@@ -485,6 +493,146 @@ export function ProjectWorkspace({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * The project's .env file, typed or pasted as it is: one KEY=value a line.
+ * Hidden until asked for, like the passwords, with only the names showing;
+ * copied or downloaded as a .env file in one click.
+ */
+function EnvFile({
+  value,
+  onChange,
+  vaultReady,
+}: {
+  value: string;
+  onChange: (env: string) => void;
+  vaultReady: boolean;
+}) {
+  const [show, setShow] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const keys = envKeys(value);
+  const locked = value.startsWith("(locked:");
+
+  async function copy() {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+
+  function download() {
+    const file = new Blob([value.endsWith("\n") ? value : `${value}\n`], {
+      type: "text/plain",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(file);
+    link.download = ".env";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  return (
+    <section className="card p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-ink text-[1.0625rem] font-semibold">
+            Environment variables
+          </h2>
+          <p className="text-ink-faint mt-0.5 text-[0.75rem]">
+            The .env file, one <code className="font-mono">KEY=value</code> a
+            line.{" "}
+            {keys.length
+              ? `${keys.length} ${keys.length === 1 ? "variable" : "variables"}.`
+              : "None yet."}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setShow((v) => !v)}
+            className={cn(quietButton, "inline-flex items-center gap-1.5 py-2")}
+          >
+            {show ? (
+              <EyeOff className="size-3.5" aria-hidden />
+            ) : (
+              <Eye className="size-3.5" aria-hidden />
+            )}
+            {show ? "Hide values" : value ? "Show and edit" : "Add variables"}
+          </button>
+          {value && !locked && (
+            <>
+              <button
+                type="button"
+                onClick={copy}
+                className={cn(
+                  quietButton,
+                  "inline-flex items-center gap-1.5 py-2",
+                )}
+              >
+                {copied ? (
+                  <Check className="text-leaf-deep size-3.5" aria-hidden />
+                ) : (
+                  <Copy className="size-3.5" aria-hidden />
+                )}
+                {copied ? "Copied" : "Copy"}
+              </button>
+              <button
+                type="button"
+                onClick={download}
+                className={cn(
+                  quietButton,
+                  "inline-flex items-center gap-1.5 py-2",
+                )}
+              >
+                <Download className="size-3.5" aria-hidden />
+                .env
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {!vaultReady && (
+        <p className="bg-amber-wash text-amber-deep mt-3 flex gap-2 rounded-lg px-3 py-2 text-[0.75rem]">
+          <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          Saved without encryption until PROJECT_VAULT_KEY is added to the
+          site&apos;s variables in Railway.
+        </p>
+      )}
+
+      {show ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          readOnly={locked}
+          rows={Math.min(Math.max(value.split("\n").length + 1, 6), 24)}
+          spellCheck={false}
+          autoComplete="off"
+          aria-label="Environment variables"
+          placeholder={
+            "DATABASE_URL=postgres://user:password@host:5432/db\nNEXT_PUBLIC_SITE_URL=https://example.com\nRAZORPAY_KEY_ID=rzp_live_..."
+          }
+          className={cn(
+            field,
+            "mt-3 resize-y py-2 font-mono text-[0.8125rem] leading-relaxed",
+          )}
+        />
+      ) : (
+        keys.length > 0 && (
+          <ul className="mt-3 flex flex-wrap gap-1.5">
+            {keys.map((key, i) => (
+              <li
+                key={`${key}-${i}`}
+                className="bg-mist text-ink-soft rounded-md px-2 py-1 font-mono text-[0.75rem]"
+              >
+                {key}=<span className="text-ink-faint">••••</span>
+              </li>
+            ))}
+          </ul>
+        )
+      )}
+    </section>
   );
 }
 

@@ -48,9 +48,8 @@ const nextConfig: NextConfig = {
         /*
          * Every response: HTTPS only from the first visit on, no guessing at
          * content types, no framing by other sites (clickjacking), only the
-         * origin sent to other sites as a Referer, and no camera or location.
-         * The microphone stays available to our own pages, for the admin
-         * Workspace's voice input.
+         * origin sent to other sites as a Referer, and no camera, location
+         * or microphone.
          */
         source: "/:path*",
         headers: [
@@ -63,7 +62,7 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",
-            value: "camera=(), geolocation=(), microphone=(self)",
+            value: "camera=(), geolocation=(), microphone=()",
           },
         ],
       },

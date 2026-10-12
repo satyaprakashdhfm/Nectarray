@@ -10,19 +10,19 @@ import { pruneProjectFiles } from "@/lib/project-files";
 import { seal } from "@/lib/vault";
 
 /**
- * Saves a project's working file: status note, deployment links and the
- * three handover sheets. Passwords are encrypted on the way in when
- * PROJECT_VAULT_KEY is set, and documents no payment points to any more
- * are removed.
+ * Saves a project's working file: status note, deployment links, the .env
+ * file and the three handover sheets. Passwords and the .env are encrypted
+ * on the way in when PROJECT_VAULT_KEY is set, and documents no payment
+ * points to any more are removed.
  */
 export async function saveProjectSheets(projectId: string, input: unknown) {
   await requireAdmin();
   if (!/^[0-9a-f-]{36}$/i.test(projectId)) throw new Error("Missing project.");
   const sheets = cleanSheets(input);
 
-  // A password shown as locked was not readable; keep what is stored.
+  // A password (or .env) shown as locked was not readable; keep what is stored.
   const [before] = await db
-    .select({ access: projectDetails.access })
+    .select({ access: projectDetails.access, env: projectDetails.env })
     .from(projectDetails)
     .where(eq(projectDetails.projectId, projectId));
   const stored = new Map(
@@ -44,6 +44,9 @@ export async function saveProjectSheets(projectId: string, input: unknown) {
     paid: sheets.paid,
     recurring: sheets.recurring,
     access,
+    env: sheets.env.startsWith("(locked:")
+      ? (before?.env ?? "")
+      : seal(sheets.env),
     closedMonths: sheets.closedMonths,
     updatedAt: new Date(),
   };

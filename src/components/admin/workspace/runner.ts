@@ -48,6 +48,11 @@ export type Session = {
   /** The terminal's size, so a small preview draws it the same shape. */
   cols?: number;
   rows?: number;
+  /**
+   * In the cloud, the admin (email) who started or last resumed it. While it
+   * runs, its repo is locked for every other admin. Null on this PC.
+   */
+  owner?: string | null;
 };
 
 /** The GitHub token, as the page sees it: never the token itself. */
@@ -89,6 +94,8 @@ export type RunnerMessage =
   | {
       t: "hello";
       cloud: boolean;
+      /** Who this socket's pass was signed for; null on this PC. */
+      me?: string | null;
       github: GitHubInfo;
       root: string;
       claude: ClaudeInfo;
