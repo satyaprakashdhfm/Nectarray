@@ -10,18 +10,19 @@ export const metadata: Metadata = {
 
 /**
  * The Bengaluru property template on a page of its own, full screen, to open
- * from the Animations tab or send to a client. Its palette is a soft orange
- * with peach and charcoal (paletteVars of #d9733b, #f3c9a8 and #2b3440,
- * written out because the palette module is for the browser).
+ * from the Animations tab or send to a client. Its orange is the website's
+ * own, #e8641b, with white on it as the site has it; peach and charcoal
+ * beside it (paletteVars of #e8641b, #f6c9a6 and #2b3440, written out
+ * because the palette module is for the browser).
  */
 const PALETTE = {
-  "--p": "#d9733b",
-  "--p-light": "#faebe4",
-  "--p-dark": "#724229",
-  "--p-on": "#111418",
-  "--s": "#f3c9a8",
-  "--s-light": "#fdf7f3",
-  "--s-dark": "#7f6d5f",
+  "--p": "#e8641b",
+  "--p-light": "#fce9df",
+  "--p-dark": "#7a3a19",
+  "--p-on": "#ffffff",
+  "--s": "#f6c9a6",
+  "--s-light": "#fef7f3",
+  "--s-dark": "#816d5e",
   "--s-on": "#111418",
   "--t": "#2b3440",
   "--t-light": "#e1e3e4",

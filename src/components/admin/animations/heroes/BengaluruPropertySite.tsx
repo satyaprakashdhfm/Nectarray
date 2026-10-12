@@ -54,11 +54,16 @@ function tile(layer: Layer, z: number, x: number, y: number): Tile {
   if (!t) {
     const img = new Image();
     const entry: Tile = { img, ready: false };
-    img.decoding = "async";
-    img.onload = () => {
-      entry.ready = true;
-    };
     img.src = `${LAYERS[layer]}/${z}/${y}/${x}`;
+    // Decoded off the main thread before it is drawn: drawing a picture
+    // that is not decoded yet stops the frame while it decodes, which is
+    // the little catch the motion had.
+    img.decode().then(
+      () => {
+        entry.ready = true;
+      },
+      () => {},
+    );
     cache.set(key, entry);
     t = entry;
   }
@@ -89,8 +94,10 @@ function tilesFor(view: View, W: number, H: number, area?: Rect) {
 
 function prefetch(layer: Layer, view: View, W: number, H: number) {
   const { tz, x0, y0, x1, y1 } = tilesFor(view, W, H);
+  const asked: Tile[] = [];
   for (let x = x0; x <= x1; x++)
-    for (let y = y0; y <= y1; y++) tile(layer, tz, x, y);
+    for (let y = y0; y <= y1; y++) asked.push(tile(layer, tz, x, y));
+  return asked;
 }
 
 /**
@@ -177,7 +184,7 @@ const CELL = 512;
 const GX = 10;
 const GY = 5;
 
-/** Named neighbourhoods placed near the middle of the grid, for search. */
+/** Bengaluru neighbourhoods: every square of the grid is one of these. */
 const PLACES: { name: string; lat: number; lon: number }[] = [
   { name: "Koramangala", lat: 12.9352, lon: 77.6245 },
   { name: "Indiranagar", lat: 12.9719, lon: 77.6412 },
@@ -201,6 +208,30 @@ const PLACES: { name: string; lat: number; lon: number }[] = [
   { name: "Bannerghatta Road", lat: 12.888, lon: 77.597 },
   { name: "Sarjapur Road", lat: 12.9105, lon: 77.6862 },
   { name: "Devanahalli", lat: 13.2437, lon: 77.712 },
+  { name: "Vijayanagar", lat: 12.9719, lon: 77.535 },
+  { name: "Basaveshwaranagar", lat: 12.9933, lon: 77.54 },
+  { name: "RT Nagar", lat: 13.0213, lon: 77.5946 },
+  { name: "Kalyan Nagar", lat: 13.028, lon: 77.64 },
+  { name: "Banaswadi", lat: 13.0104, lon: 77.648 },
+  { name: "KR Puram", lat: 13.007, lon: 77.695 },
+  { name: "Mahadevapura", lat: 12.9916, lon: 77.7056 },
+  { name: "Brookefield", lat: 12.9667, lon: 77.7178 },
+  { name: "Varthur", lat: 12.9406, lon: 77.7477 },
+  { name: "Kudlu", lat: 12.891, lon: 77.638 },
+  { name: "Begur", lat: 12.877, lon: 77.625 },
+  { name: "Hulimavu", lat: 12.879, lon: 77.602 },
+  { name: "Uttarahalli", lat: 12.9063, lon: 77.5446 },
+  { name: "RR Nagar", lat: 12.9274, lon: 77.5155 },
+  { name: "Nagarbhavi", lat: 12.96, lon: 77.51 },
+  { name: "Yeshwanthpur", lat: 13.028, lon: 77.54 },
+  { name: "Jalahalli", lat: 13.045, lon: 77.548 },
+  { name: "Thanisandra", lat: 13.056, lon: 77.634 },
+  { name: "Jakkur", lat: 13.078, lon: 77.607 },
+  { name: "Sahakar Nagar", lat: 13.062, lon: 77.587 },
+  { name: "Domlur", lat: 12.961, lon: 77.6387 },
+  { name: "Ulsoor", lat: 12.981, lon: 77.621 },
+  { name: "Richmond Town", lat: 12.96, lon: 77.6 },
+  { name: "Wilson Garden", lat: 12.948, lon: 77.597 },
 ];
 
 function seeded(seed: number) {
@@ -214,38 +245,58 @@ function seeded(seed: number) {
   };
 }
 
-type Cell = { i: number; j: number; tx: number; ty: number; name?: string };
+type Spot = { name: string; tx: number; ty: number };
+type Cell = Spot & { i: number; j: number; fixed: boolean };
+
+/** A zoom-18 tile in a neighbourhood, off its centre by up to ~650 m. */
+function spotIn(
+  r: () => number,
+  place: (typeof PLACES)[number],
+  jitter = 0.012,
+) {
+  const [x, y] = world(
+    place.lat + (r() - 0.5) * jitter,
+    place.lon + (r() - 0.5) * jitter,
+  );
+  return {
+    name: place.name,
+    tx: Math.floor(x / CELL),
+    ty: Math.floor(y / CELL),
+  };
+}
 
 /**
- * Every square of the grid but the middle one, each a zoom-18 tile from
- * somewhere else in Bengaluru: the named places nearest the middle, so they
- * are on screen, and random spots across the city for the rest.
+ * Every square of the grid but the middle one, each a zoom-18 tile from a
+ * Bengaluru neighbourhood. Each place has one fixed square of its own, at
+ * its centre, scattered through the grid (that is the one a search finds);
+ * the rest are spots around the places, and change while the grid holds.
  */
 const CELLS: Cell[] = (() => {
   const r = seeded(560102);
-  const spots: Cell[] = [];
+  const spots: { i: number; j: number }[] = [];
   for (let i = -GX; i <= GX; i++)
-    for (let j = -GY; j <= GY; j++)
-      if (i || j) spots.push({ i, j, tx: 0, ty: 0 });
-  spots.sort((a, b) => Math.hypot(a.i, a.j * 1.4) - Math.hypot(b.i, b.j * 1.4));
-  let named = 0;
-  spots.forEach((c, k) => {
-    let lat: number;
-    let lon: number;
-    if (k % 2 === 1 && named < PLACES.length) {
-      const p = PLACES[named++];
-      c.name = p.name;
-      lat = p.lat;
-      lon = p.lon;
-    } else {
-      lat = 12.86 + r() * 0.2;
-      lon = 77.52 + r() * 0.22;
-    }
-    const [x, y] = world(lat, lon);
-    c.tx = Math.floor(x / CELL);
-    c.ty = Math.floor(y / CELL);
-  });
-  return spots;
+    for (let j = -GY; j <= GY; j++) if (i || j) spots.push({ i, j });
+  for (let k = spots.length - 1; k > 0; k--) {
+    const m = Math.floor(r() * (k + 1));
+    [spots[k], spots[m]] = [spots[m], spots[k]];
+  }
+  return spots.map((p, k) =>
+    k < PLACES.length
+      ? { ...p, ...spotIn(r, PLACES[k], 0), fixed: true }
+      : {
+          ...p,
+          ...spotIn(r, PLACES[Math.floor(r() * PLACES.length)]),
+          fixed: false,
+        },
+  );
+})();
+
+/** Where changing squares go next. */
+const POOL: Spot[] = (() => {
+  const r = seeded(560034);
+  return Array.from({ length: 160 }, () =>
+    spotIn(r, PLACES[Math.floor(r() * PLACES.length)]),
+  );
 })();
 const SELECTED_NAME = "HSR Layout";
 
@@ -434,7 +485,7 @@ function suggest(query: string): Suggestion[] {
   if (SELECTED_NAME.toLowerCase().includes(q))
     out.push({ kind: "place", label: SELECTED_NAME, cell: "selected" });
   CELLS.forEach((c, i) => {
-    if (c.name?.toLowerCase().includes(q))
+    if (c.fixed && c.name.toLowerCase().includes(q))
       out.push({ kind: "place", label: c.name, cell: i });
   });
   for (const s of SERVICES) {
@@ -549,9 +600,15 @@ const CARD_ART = [
 const STAR =
   "m10 1.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z";
 
-function Stars({ className = "" }: { className?: string }) {
+function Stars({
+  className = "",
+  tone = "text-[#f6b93b]",
+}: {
+  className?: string;
+  tone?: string;
+}) {
   return (
-    <span className={`flex gap-0.5 text-[#f6b93b] ${className}`} aria-hidden>
+    <span className={`flex gap-0.5 ${tone} ${className}`} aria-hidden>
       {[0, 1, 2, 3].map((k) => (
         <svg key={k} viewBox="0 0 20 20" className="size-4" fill="currentColor">
           <path d={STAR} />
@@ -666,6 +723,7 @@ export function BengaluruPropertySite({
   const [infoOn, setInfoOn] = useState(false);
   const [panelUp, setPanelUp] = useState(false);
   const [intro, setIntro] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -738,7 +796,9 @@ export function BengaluruPropertySite({
     let W = 0;
     let H = 0;
     let dpr = 1;
-    let accent = "#d9733b";
+    let accent = "#e8641b";
+    // This mount's own squares: the ones that change are changed here.
+    const cells = CELLS.map((c) => ({ ...c }));
     const readColours = () => {
       accent =
         getComputedStyle(section).getPropertyValue("--p").trim() || accent;
@@ -823,7 +883,7 @@ export function BengaluruPropertySite({
         atlasCtx.fillRect(0, 0, atlas.width, atlas.height);
       }
       const a = atlasCtx;
-      CELLS.forEach((c, k) => {
+      cells.forEach((c, k) => {
         if (painted.has(k)) return;
         const img = tile("imagery", 18, c.tx, c.ty);
         if (!img.ready) return;
@@ -848,6 +908,17 @@ export function BengaluruPropertySite({
         if (ready) painted.add(-1);
       }
     };
+
+    // Three outlines taking turns, and squares changing to other places.
+    const SLOT = 4.2;
+    const slots = [0, 1, 2].map((k) => ({
+      cell: -1,
+      start: T.grid + 0.6 + k * 1.4,
+    }));
+    const swaps = new Map<number, { to: Spot; start: number }>();
+    let nextSwap = T.grid + 1.2;
+    let poolAt = 0;
+    let poolAsked = false;
 
     /** Everything that moves with the camera. */
     const drawScene = (t: number, v: View) => {
@@ -892,7 +963,7 @@ export function BengaluruPropertySite({
           GY,
           Math.floor((v.y + H / 2 / s - PLOT_C[1] + CELL / 2) / CELL),
         );
-        for (const c of CELLS) {
+        for (const c of cells) {
           if (c.i < left || c.i > right || c.j < top || c.j > bottom) continue;
           const p = swapAt(c.i, c.j, g);
           if (p <= 0) continue;
@@ -924,6 +995,8 @@ export function BengaluruPropertySite({
         }
       }
     };
+
+    let infoBox: { left: number; top: number } | null = null;
 
     /** The overlays drawn once per frame, on top of the scene. */
     const drawMarks = (t: number, v: View) => {
@@ -998,8 +1071,13 @@ export function BengaluruPropertySite({
       const link = clamp((t - T.info) / 0.5) * (1 - clamp((t - T.out) / 0.4));
       const info = infoRef.current;
       if (link > 0 && info) {
-        const box = info.getBoundingClientRect();
-        const home = section.getBoundingClientRect();
+        if (!infoBox || frames % 12 === 0) {
+          const b = info.getBoundingClientRect();
+          const h = section.getBoundingClientRect();
+          infoBox = { left: b.left - h.left, top: b.top - h.top };
+        }
+        const box = infoBox;
+        const home = { left: 0, top: 0 };
         const wide = W >= 768;
         const [px, py] = toScreen(v, PLOT[1][0], (PLOT[1][1] + PLOT[2][1]) / 2);
         const [bx, by] = toScreen(v, (PLOT[2][0] + PLOT[3][0]) / 2, PLOT[2][1]);
@@ -1057,31 +1135,59 @@ export function BengaluruPropertySite({
         ctx.globalAlpha = 1;
       }
 
-      // A neighbourhood outlined now and then, or the one searched for.
+      // The square searched for stays outlined.
       if (pin !== null && pin !== "selected") {
-        const c = CELLS[pin];
+        const c = cells[pin];
         const r = cellRect(v, c.i, c.j);
         outline(r, 1, 2);
-        label(c.name ?? "", r.x + 6, r.y + 6, true);
-      } else if (t > T.grid + 1) {
-        const named = CELLS.filter((c) => c.name);
-        const k = Math.floor((t - T.grid - 1) / 3.2);
-        const phase = (t - T.grid - 1) % 3.2;
-        const c = named[(k * 7) % named.length];
+        label(c.name, r.x + 6, r.y + 6, true);
+      }
+
+      // Three neighbourhoods outlined at a time, each for a few seconds,
+      // then somewhere else: only where no words sit over the map.
+      if (t < T.grid + 0.5) return;
+      const wide = W >= 768;
+      const clear = (r: Rect) =>
+        r.x > 4 &&
+        r.x + r.w < W - 4 &&
+        r.y > 86 &&
+        r.y + r.h < H * (wide ? 0.68 : 0.62) &&
+        (!wide || r.x > W * 0.7 || r.x + r.w < W * 0.3);
+      const near = (a: number, b: number) =>
+        b >= 0 &&
+        Math.abs(cells[a].i - cells[b].i) <= 1 &&
+        Math.abs(cells[a].j - cells[b].j) <= 1;
+      for (const slot of slots) {
+        if (t < slot.start) continue;
+        if (slot.cell < 0 || t - slot.start > SLOT) {
+          const taken = slots.map((o) => (o === slot ? -1 : o.cell));
+          if (typeof pin === "number") taken.push(pin);
+          const options: number[] = [];
+          cells.forEach((c, k) => {
+            // Not beside the selected plot, whose label is there.
+            const besideHome = Math.abs(c.i) <= 1 && Math.abs(c.j) <= 1;
+            if (
+              besideHome ||
+              swaps.has(k) ||
+              taken.some((o) => o === k || near(k, o))
+            )
+              return;
+            if (clear(cellRect(v, c.i, c.j))) options.push(k);
+          });
+          slot.cell = options.length
+            ? options[Math.floor(Math.random() * options.length)]
+            : -1;
+          slot.start = t;
+          if (slot.cell < 0) continue;
+        }
+        const c = cells[slot.cell];
         const r = cellRect(v, c.i, c.j);
-        const a = clamp(phase / 0.5) * (1 - clamp((phase - 2.4) / 0.7));
-        // Only where no words sit over the map, and not on phones.
-        const clear =
-          W >= 768 &&
-          (r.x > W * 0.72 || r.x + r.w < W * 0.28) &&
-          r.x > 0 &&
-          r.x + r.w < W &&
-          r.y > 90 &&
-          r.y + r.h < H * 0.66;
-        if (a > 0 && clear) {
-          outline(r, a * 0.85);
+        const p = t - slot.start;
+        const a = clamp(p / 0.5) * (1 - clamp((p - (SLOT - 0.7)) / 0.7));
+        outline(r, a * 0.9);
+        if (wide) {
           ctx.globalAlpha = a;
-          label(c.name ?? "", r.x + 6, r.y + 6);
+          label(c.name, r.x + 6, r.y + 6);
           ctx.globalAlpha = 1;
         }
       }
@@ -1093,7 +1199,7 @@ export function BengaluruPropertySite({
       const pin = pinRef.current;
       if (pin === null) return { x: 0, y: 0 };
       const s = 2 ** (v.z - 19);
-      const c = pin === "selected" ? { i: 0, j: 0 } : CELLS[pin];
+      const c = pin === "selected" ? { i: 0, j: 0 } : cells[pin];
       // Into the clearing right of the words; phones have none, so stay.
       if (W < 768) return { x: 0, y: 0 };
       const want = anchors(W, H).rest;
@@ -1114,7 +1220,7 @@ export function BengaluruPropertySite({
     };
 
     /** The whole grid, drawn from the atlas, with its gutters. */
-    const drawHeldGrid = (v: View) => {
+    const drawHeldGrid = (t: number, v: View) => {
       const s = 2 ** (v.z - 19);
       const cell = CELL * s;
       const [x, y] = toScreen(
@@ -1125,6 +1231,42 @@ export function BengaluruPropertySite({
       const cw = (2 * GX + 1) * cell;
       const ch = (2 * GY + 1) * cell;
       if (atlasCtx) ctx.drawImage(atlas, x, y, cw, ch);
+
+      // Now and then a square fades into another part of the city.
+      if (!reduce && atlasCtx && t > nextSwap && painted.size > cells.length) {
+        nextSwap = t + 0.75;
+        const next = POOL[poolAt % POOL.length];
+        if (tile("imagery", 18, next.tx, next.ty).ready) {
+          poolAt++;
+          const busy = new Set(slots.map((o) => o.cell));
+          const options: number[] = [];
+          cells.forEach((c, k) => {
+            if (c.fixed || swaps.has(k) || busy.has(k) || k === pinRef.current)
+              return;
+            const r = cellRect(v, c.i, c.j);
+            if (r.x > -r.w && r.x < W && r.y > -r.h && r.y < H) options.push(k);
+          });
+          if (options.length)
+            swaps.set(options[Math.floor(Math.random() * options.length)], {
+              to: next,
+              start: t,
+            });
+        } else poolAt++;
+      }
+      for (const [k, swap] of swaps) {
+        const c = cells[k];
+        const img = tile("imagery", 18, swap.to.tx, swap.to.ty);
+        const p = smooth(clamp((t - swap.start) / 1.4));
+        const r = cellRect(v, c.i, c.j);
+        ctx.globalAlpha = p;
+        ctx.drawImage(img.img, r.x, r.y, r.w + 0.5, r.h + 0.5);
+        ctx.globalAlpha = 1;
+        if (p >= 1 && atlasCtx) {
+          atlasCtx.drawImage(img.img, (c.i + GX) * A, (c.j + GY) * A, A, A);
+          Object.assign(c, swap.to);
+          swaps.delete(k);
+        }
+      }
       const gap = Math.max(1.5, cell * 0.04);
       ctx.fillStyle = "#16120f";
       for (let i = 0; i <= 2 * GX + 1; i++)
@@ -1148,13 +1290,13 @@ export function BengaluruPropertySite({
         view.x += pan.x + drift * 0.15 * CELL * Math.min(1, W / 900);
         view.y += pan.y + drift * 0.06 * CELL;
       }
-      if (t >= T.grid) drawHeldGrid(view);
+      if (t >= T.grid) drawHeldGrid(t, view);
       else drawScene(t, view);
       // A zoom blur: the frame again, a little nearer and farther, faint.
       if (cam.blur > 0.05) {
         ctx.globalAlpha = 0.18;
-        for (let i = 1; i <= 3; i++) {
-          const k = (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.05 * cam.blur;
+        for (let i = 1; i <= 2; i++) {
+          const k = (i % 2 ? 1 : -1) * 0.06 * cam.blur;
           drawScene(t, { ...view, z: view.z + k });
         }
         ctx.globalAlpha = 1;
@@ -1224,18 +1366,21 @@ export function BengaluruPropertySite({
 
     // Ask for the whole flight's tiles up front, the first view first.
     if (reduce) clockRef.current = T.grid;
+    const flight = new Set<Tile>();
     for (let t = clockRef.current; t <= T.out; t += 0.2) {
       const c = cameraAt(t, W, H);
-      if (t < 3.2) prefetch("streets", c, W, H);
-      prefetch("imagery", c, W, H);
+      if (t < 3.2) prefetch("streets", c, W, H).forEach((x) => flight.add(x));
+      prefetch("imagery", c, W, H).forEach((x) => flight.add(x));
     }
+    const flightTiles = [...flight];
     const first = cameraAt(clockRef.current, W, H);
     const { tz, x0, y0, x1, y1 } = tilesFor(first, W, H);
     const opening: Tile[] = [];
     for (let x = x0; x <= x1; x++)
       for (let y = y0; y <= y1; y++)
         opening.push(tile(reduce ? "imagery" : "streets", tz, x, y));
-    const mounted = performance.now();
+    // Set by the first frame.
+    let mounted = 0;
     let gridAsked = false;
 
     let visible = true;
@@ -1245,24 +1390,45 @@ export function BengaluruPropertySite({
     io.observe(section);
 
     let raf = 0;
-    let last = performance.now();
+    let last = 0;
     let frames = 0;
+    let steady = 1 / 60;
+    let begun = false;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      const dt = Math.min(0.25, (now - last) / 1000);
+      // An even clock: one slow frame is spread over the next few rather
+      // than jumping the picture forward all at once.
+      if (!mounted) mounted = last = now;
+      const raw = Math.min(0.1, (now - last) / 1000);
+      steady += (raw - steady) * 0.25;
       last = now;
       if (!visible || document.hidden) return;
       if (++frames % 30 === 0) readColours();
-      // Wait for the opening view (or three seconds) before starting.
-      const started =
-        opening.every((o) => o.ready) || now - mounted > 3000 || reduce;
-      if (started) clockRef.current += dt;
+      // Start once the opening view and nearly all of the flight's imagery
+      // are in, so the camera never waits on a tile (five seconds at most).
+      if (!begun) {
+        const ready = flightTiles.filter((x) => x.ready).length;
+        begun =
+          reduce ||
+          now - mounted > 5000 ||
+          (opening.every((o) => o.ready) && ready >= flightTiles.length * 0.9);
+        if (begun) {
+          setLoading(false);
+          last = now;
+          steady = 1 / 60;
+        }
+      }
+      if (begun) clockRef.current += steady;
       const t = clockRef.current;
       if (!gridAsked && t > T.info) {
         gridAsked = true;
-        for (const c of CELLS) tile("imagery", 18, c.tx, c.ty);
+        for (const c of cells) tile("imagery", 18, c.tx, c.ty);
       }
-      if (gridAsked && painted.size <= CELLS.length && frames % 10 === 0)
+      if (!poolAsked && t > T.out) {
+        poolAsked = true;
+        for (const p of POOL) tile("imagery", 18, p.tx, p.ty);
+      }
+      if (gridAsked && painted.size <= cells.length && frames % 10 === 0)
         fillAtlas();
       report(t);
       frame(t);
@@ -1291,7 +1457,7 @@ export function BengaluruPropertySite({
         />
 
         <motion.header
-          className="relative z-30 mx-3 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/25 bg-(--p)/80 px-3.5 py-2.5 text-white shadow-[0_12px_40px_-14px_rgba(20,10,4,0.7)] backdrop-blur-md @3xl:mx-8 @3xl:mt-5 @3xl:px-6"
+          className="relative z-30 mx-3 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/25 bg-(--p)/95 px-3.5 py-2.5 text-white shadow-[0_12px_40px_-14px_rgba(20,10,4,0.7)] backdrop-blur-md @3xl:mx-8 @3xl:mt-5 @3xl:px-6"
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
@@ -1576,11 +1742,21 @@ export function BengaluruPropertySite({
         </div>
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute -bottom-32 left-1/2 z-20 hidden h-60 w-[170%] -translate-x-1/2 rounded-[100%] bg-[#120e0b] @3xl:block"
+          className="pointer-events-none absolute -bottom-32 left-1/2 z-20 hidden h-60 w-[170%] -translate-x-1/2 rounded-[100%] bg-(--p) @3xl:block"
           initial={false}
           animate={{ opacity: panelUp ? 1 : 0 }}
           transition={{ duration: 0.8, delay: panelUp ? 0.3 : 0 }}
         />
+
+        <motion.p
+          className="pointer-events-none absolute top-1/2 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25 bg-zinc-950/45 px-4 py-2 text-xs font-medium tracking-wide text-white/85 backdrop-blur-md"
+          initial={false}
+          animate={{ opacity: loading ? 1 : 0 }}
+          transition={{ duration: 0.5 }}
+          aria-hidden={!loading}
+        >
+          Loading the map of Bengaluru…
+        </motion.p>
 
         {intro && (
           <button
@@ -1597,17 +1773,17 @@ export function BengaluruPropertySite({
       </div>
 
       {/* What clients say, under the curve. */}
-      <div className="relative z-10 px-6 pt-4 pb-14 text-white @3xl:pt-0">
+      <div className="relative z-10 bg-(--p) px-6 pt-8 pb-14 text-white @3xl:pt-0">
         <div className="mx-auto grid max-w-6xl items-center gap-10 text-center @3xl:grid-cols-3 @3xl:text-left">
           <figure>
             <blockquote className="text-[0.9375rem] leading-relaxed text-white/90">
               &ldquo;{PROOF.quote}&rdquo;
             </blockquote>
-            <figcaption className="mt-3 text-sm text-white/70">
+            <figcaption className="mt-3 text-sm text-white/85">
               Review by{" "}
               <a
                 href={PROOF.link}
-                className="font-semibold text-white underline underline-offset-4 hover:text-(--s)"
+                className="font-semibold text-white underline underline-offset-4 hover:text-white/80"
               >
                 {PROOF.by}
               </a>
@@ -1616,14 +1792,14 @@ export function BengaluruPropertySite({
           <div className="flex items-center justify-center gap-2">
             <Laurel />
             <div className="text-center">
-              <Stars className="justify-center" />
-              <p className="mt-1.5 text-[0.6875rem] tracking-wide text-white/70">
+              <Stars tone="text-white" className="justify-center" />
+              <p className="mt-1.5 text-[0.6875rem] tracking-wide text-white/85">
                 {PROOF.badgeTop}
               </p>
               <p className="mt-1 text-sm leading-tight font-semibold tracking-wide uppercase">
                 {PROOF.badge}
               </p>
-              <p className="mt-1 text-xs text-white/70">{PROOF.badgeYear}</p>
+              <p className="mt-1 text-xs text-white/85">{PROOF.badgeYear}</p>
             </div>
             <Laurel flip />
           </div>
@@ -1634,10 +1810,10 @@ export function BengaluruPropertySite({
             <div className="text-left">
               <p className="text-sm font-semibold">Google Reviews</p>
               <div className="mt-1 flex items-center gap-2">
-                <Stars />
+                <Stars tone="text-white" />
                 <span className="text-sm font-semibold">{PROOF.rating}/5</span>
               </div>
-              <p className="mt-1 text-xs text-white/70">{PROOF.count}</p>
+              <p className="mt-1 text-xs text-white/85">{PROOF.count}</p>
             </div>
           </div>
         </div>
