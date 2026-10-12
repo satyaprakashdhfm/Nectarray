@@ -67,6 +67,12 @@ export const ANIMATION_CATEGORIES: AnimationCategory[] = [
     blurb: "Show the thing thinking: typing, streaming, tools being called.",
   },
   {
+    id: "geo",
+    label: "Space and geospatial",
+    blurb:
+      "Satellites, maps and sensors: the planet itself as the hero, watched, measured and flagged as it changes.",
+  },
+  {
     id: "ecommerce",
     label: "E-commerce and fashion",
     blurb: "The product is the hero: reveals, swatches and rotating picks.",
@@ -111,6 +117,14 @@ export const ANIMATION_CATEGORIES: AnimationCategory[] = [
 ];
 
 export const ANIMATIONS: AnimationEntry[] = [
+  {
+    id: "geo-change-detection",
+    category: "geo",
+    name: "Satellite change detection: from one harbour to the whole planet",
+    note: "A satellite intelligence hero drawn live on a canvas, with no photos and no video. A pass over an icy harbour: green boxes lock onto the ships one by one and a drop line types out one ship's telemetry (ID, length, beam, heading, class). Then the camera pulls back fast with a zoom blur until the harbour is one tile in a wall of the planet (desert, coast, atolls, mountains, cities, fields, ice) where changes keep being flagged, and dives back in, every 14 seconds. The headline's UN goes out of focus while the ships are found. Sound is off until the visitor turns it on, and is made in the browser: a drone, ticks as the telemetry types, a chirp per lock and a whoosh on each zoom. Defence, satellite imagery, maps, logistics and insurance.",
+    file: "GeoChangeDetection.tsx",
+    page: "/showcase/undetected",
+  },
   {
     id: "clinic-care-site",
     category: "health",

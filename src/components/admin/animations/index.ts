@@ -17,6 +17,7 @@ import { EcommerceMaskReveal } from "./heroes/EcommerceMaskReveal";
 import { EducationCountUp } from "./heroes/EducationCountUp";
 import { EducationLearningPath } from "./heroes/EducationLearningPath";
 import { FintechCardFan } from "./heroes/FintechCardFan";
+import { GeoChangeDetection } from "./heroes/GeoChangeDetection";
 import { FintechLiveChart } from "./heroes/FintechLiveChart";
 import { HealthBreathing } from "./heroes/HealthBreathing";
 import { HealthHeartbeat } from "./heroes/HealthHeartbeat";
@@ -78,6 +79,7 @@ export const HEROES: Record<string, ComponentType> = {
   "saas-spotlight-grid": SaasSpotlightGrid,
   "ai-typing-prompt": AiTypingPrompt,
   "ai-orbit-network": AiOrbitNetwork,
+  "geo-change-detection": GeoChangeDetection,
   "ecommerce-mask-reveal": EcommerceMaskReveal,
   "ecommerce-colour-picker": EcommerceColourPicker,
   "agency-rolling-words": AgencyRollingWords,
