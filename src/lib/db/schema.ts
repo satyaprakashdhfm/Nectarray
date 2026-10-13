@@ -821,6 +821,28 @@ export const clientPayments = pgTable(
 );
 
 /**
+ * The company's money, typed in on the Assets page: money put in ("in") and
+ * money spent that is on no project's bill ("out"), each with its reason.
+ * The bills themselves are not copied here; the page reads them off
+ * project_details and takes them away from the balance (lib/assets.ts).
+ */
+export const assetEntries = pgTable(
+  "asset_entries",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** in · out */
+    kind: text().notNull(),
+    amount: numeric().notNull(),
+    on: date().notNull(),
+    reason: text().notNull(),
+    /** The admin who typed it. */
+    addedBy: text("added_by"),
+    createdAt: now(),
+  },
+  (table) => [index("asset_entries_on_idx").on(table.on)],
+);
+
+/**
  * A search term a service's pages should rank for.
  *
  * `position` is typed in until Search Console is connected; after that the

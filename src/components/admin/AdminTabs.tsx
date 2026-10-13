@@ -31,6 +31,7 @@ import {
   Sparkles,
   SquareTerminal,
   Users,
+  Wallet,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -40,6 +41,7 @@ type Group = Tab & { children: Tab[]; owns: string[] };
 
 const TOP: Tab[] = [
   { href: `${ADMIN}`, label: "Revenue", icon: IndianRupee },
+  { href: `${ADMIN}/assets`, label: "Assets", icon: Wallet },
   { href: `${ADMIN}/seo`, label: "SEO", icon: Search },
   { href: `${ADMIN}/analytics`, label: "Analytics", icon: ChartLine },
   { href: `${ADMIN}/ads`, label: "Ads", icon: Megaphone },
