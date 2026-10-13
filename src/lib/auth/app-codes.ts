@@ -97,3 +97,46 @@ export function validAppReturn(value: string | null): value is string {
     /^exps?:\/\/[\w.:-]+\/--\/[\w/-]*$/.test(value)
   );
 }
+
+/*
+ * Opening the panel inside the app.
+ *
+ * The app shows the panel in a web view, which has its own cookie jar and
+ * no panel session. Google refuses to sign in inside a web view, so the app
+ * asks for a panel code with its bearer token instead (api/app/panel) and
+ * opens the panel through it. The code is signed like the sign-in code,
+ * names only the user, and lives one minute. It gives a panel session that
+ * still owes the emailed code, exactly as Google on the website does.
+ */
+
+const PANEL_LIFETIME_MS = 60 * 1000;
+
+type PanelClaims = { u: string; p: 1; e: number };
+
+export function mintPanelCode(userId: string): string {
+  const body = Buffer.from(
+    JSON.stringify({
+      u: userId,
+      p: 1,
+      e: Date.now() + PANEL_LIFETIME_MS,
+    } satisfies PanelClaims),
+  ).toString("base64url");
+  return `${body}.${sign(`panel.${body}`)}`;
+}
+
+/** The user a panel code stands for, if it is genuine and still live. */
+export function redeemPanelCode(code: string): string | null {
+  const [body, signature] = code.split(".");
+  if (!body || !signature || !sameSecret(signature, sign(`panel.${body}`)))
+    return null;
+  try {
+    const claims = JSON.parse(
+      Buffer.from(body, "base64url").toString(),
+    ) as PanelClaims;
+    if (claims.p !== 1 || typeof claims.e !== "number") return null;
+    if (claims.e < Date.now() || typeof claims.u !== "string") return null;
+    return claims.u;
+  } catch {
+    return null;
+  }
+}

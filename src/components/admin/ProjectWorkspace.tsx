@@ -35,7 +35,9 @@ import {
   addMonths,
   dashboardFor,
   envKeys,
+  isCompany,
   monthLabel,
+  owedByCompany,
   paidInMonth,
   type AccessRow,
   type LinkRow,
@@ -62,28 +64,56 @@ type Col<T> = {
 /** Over this, the upload is refused before it is sent (the server agrees). */
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 
+/** The names already typed under "Paid by", offered as the field is filled. */
+const PAID_BY_NAMES = "paid-by-names";
+
 const paidCols = (projectId: string): Col<PaidRow>[] => [
   {
     key: "item",
     text: "Item",
     kind: "text",
-    w: "minmax(10rem,1.4fr)",
+    w: "minmax(9rem,1.4fr)",
     placeholder: "Domain for 1 year",
   },
   {
     key: "vendor",
     text: "Paid to",
     kind: "text",
-    w: "minmax(7rem,1fr)",
+    w: "minmax(6rem,1fr)",
     placeholder: "GoDaddy",
   },
-  { key: "amount", text: "Amount", kind: "money", w: "8rem" },
-  { key: "note", text: "Note", kind: "text", w: "minmax(8rem,1.4fr)" },
+  { key: "amount", text: "Amount", kind: "money", w: "7rem" },
+  {
+    key: "paidBy",
+    text: "Paid by",
+    kind: "custom",
+    w: "minmax(6.5rem,0.9fr)",
+    render: (row, patch) => (
+      <input
+        value={row.paidBy}
+        onChange={(e) => patch({ paidBy: e.target.value })}
+        list={PAID_BY_NAMES}
+        placeholder="Company"
+        autoComplete="off"
+        aria-label="Paid by"
+        title="Blank for the company's own account, or the person who paid"
+        className={cn(field, "py-2")}
+      />
+    ),
+  },
+  {
+    key: "repaid",
+    text: "Status",
+    kind: "custom",
+    w: "8.5rem",
+    render: (row, patch) => <RepaidCell row={row} onChange={patch} />,
+  },
+  { key: "note", text: "Note", kind: "text", w: "minmax(6rem,1.2fr)" },
   {
     key: "fileId",
     text: "Document",
     kind: "custom",
-    w: "minmax(7.5rem,0.9fr)",
+    w: "minmax(6.5rem,0.8fr)",
     render: (row, patch) => (
       <DocumentCell projectId={projectId} row={row} onChange={patch} />
     ),
@@ -854,13 +884,54 @@ function PaidMonths({
         note: "",
         fileId: "",
         fileName: "",
+        paidBy: "",
+        repaid: false,
       })}
       addText="Add expense"
     />
   );
 
+  const owed = owedByCompany(rows);
+  const names = [
+    ...new Map(
+      rows
+        .filter((r) => !isCompany(r.paidBy))
+        .map((r) => [r.paidBy.trim().toLowerCase(), r.paidBy.trim()]),
+    ).values(),
+  ];
+
   return (
     <div>
+      <datalist id={PAID_BY_NAMES}>
+        <option value="Company" />
+        {names.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
+
+      {owed.length > 0 && (
+        <div className="border-line bg-amber-wash border-b px-4 py-2.5 sm:px-5">
+          <p className="text-amber-deep text-[0.8125rem] font-semibold">
+            The company still has to pay back
+          </p>
+          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {owed.map((p) => (
+              <li
+                key={p.name}
+                className="text-ink text-[0.8125rem] tabular-nums"
+              >
+                <span className="font-semibold">{p.name}</span>{" "}
+                {rupees.format(p.total)}
+                <span className="text-ink-faint">
+                  {" "}
+                  ({p.count} {p.count === 1 ? "payment" : "payments"})
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {closed.length > 0 && (
         <ul className="divide-line border-line divide-y border-b">
           {closed.map((month) => {
@@ -1000,6 +1071,42 @@ function BillLink({
       <Download className="size-3.5" aria-hidden />
       Download bill
     </a>
+  );
+}
+
+/**
+ * Whether the company has settled a payment. Paid from the company's own
+ * account there is nothing to settle; paid by a person, it is owed to them
+ * until it is marked paid back.
+ */
+function RepaidCell({
+  row,
+  onChange,
+}: {
+  row: PaidRow;
+  onChange: (change: Pick<PaidRow, "repaid">) => void;
+}) {
+  if (isCompany(row.paidBy))
+    return (
+      <p className="text-ink-faint inline-flex items-center gap-1.5 py-2 text-[0.8125rem]">
+        <Check className="size-3.5" aria-hidden />
+        Company paid
+      </p>
+    );
+  return (
+    <select
+      value={row.repaid ? "repaid" : "owed"}
+      onChange={(e) => onChange({ repaid: e.target.value === "repaid" })}
+      aria-label={`Has the company paid ${row.paidBy.trim()} back?`}
+      className={cn(
+        field,
+        "py-2 font-semibold",
+        row.repaid ? "text-leaf-deep" : "text-amber-deep",
+      )}
+    >
+      <option value="owed">To pay back</option>
+      <option value="repaid">Paid back</option>
+    </select>
   );
 }
 

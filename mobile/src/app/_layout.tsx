@@ -11,13 +11,14 @@ import { useColorScheme } from 'react-native';
 
 import { Colors, Fonts } from '@/constants/theme';
 import { AuthProvider } from '@/lib/auth';
+import { useSavedScheme } from '@/lib/theme';
 import { useUpdateCheck } from '@/lib/updates';
 
 SplashScreen.preventAutoHideAsync();
 
 /**
- * The tabs, with the account screen able to open over any of them, and the
- * signed-in state shared by both.
+ * The tabs, with the account screen able to open over any of them, the
+ * admin panel, and the signed-in state shared by all of them.
  */
 export default function RootLayout() {
   const dark = useColorScheme() === 'dark';
@@ -28,7 +29,9 @@ export default function RootLayout() {
     SchibstedGrotesk_600SemiBold,
     SchibstedGrotesk_700Bold,
   });
-  const ready = fontsLoaded || fontError != null;
+  // Light or dark as last chosen, before the splash screen lifts.
+  const schemeReady = useSavedScheme();
+  const ready = (fontsLoaded || fontError != null) && schemeReady;
   useUpdateCheck();
 
   useEffect(() => {
@@ -64,6 +67,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="account" options={{ title: 'Account', presentation: 'modal' }} />
           <Stack.Screen name="auth" options={{ headerShown: false, animation: 'none' }} />
+          <Stack.Screen name="panel" options={{ headerShown: false }} />
         </Stack>
       </AuthProvider>
     </ThemeProvider>

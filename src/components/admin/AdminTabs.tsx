@@ -1,7 +1,7 @@
 "use client";
 import { ADMIN } from "@/lib/admin-path";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import {
   ListChecks,
   LockOpen,
   Megaphone,
+  Menu,
   NotebookPen,
   Palette,
   Plug,
@@ -30,6 +31,7 @@ import {
   Sparkles,
   SquareTerminal,
   Users,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -127,8 +129,9 @@ const GROUPS: Group[] = [
 
 /**
  * The panel's navigation: a sticky sidebar on desktop, where each service
- * and the Academy open and close like dropdowns, and horizontal strips on a
- * phone, where a sidebar would take half the screen.
+ * and the Academy open and close like dropdowns. On a phone the menu button
+ * in the header (AdminMenu) holds every page, and a strip above the page
+ * holds the pages of the section you are in.
  *
  * A client component because the selected tab is worked out from the path
  * and the groups remember whether they were opened or closed.
@@ -157,21 +160,15 @@ export function AdminTabs() {
 
   return (
     <nav aria-label="Admin">
-      <div className="mb-6 space-y-3 xl:hidden">
-        <Strip
-          tabs={[...TOP, ...GROUPS]}
-          isActive={(tab) =>
-            "children" in tab ? groupActive(tab as Group) : tabActive(tab)
-          }
-        />
-        {current && (
+      {current && (
+        <div className="mb-6 xl:hidden">
           <Strip
             tabs={current.children}
             isActive={tabActive}
             label={current.label}
           />
-        )}
-      </div>
+        </div>
+      )}
 
       <ul className="hidden space-y-0.5 xl:block">
         {TOP.map((tab) => (
@@ -275,5 +272,111 @@ function Strip({
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Every page of the panel behind one button, for screens without the
+ * sidebar: a phone, a tablet, the panel inside the app. It slides over the
+ * page from the left and closes on a choice, on the backdrop, or on Escape.
+ */
+export function AdminMenu() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  // A link was followed: the new page shows without the menu over it.
+  const [at, setAt] = useState(pathname);
+  if (at !== pathname) {
+    setAt(pathname);
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [open]);
+
+  const active = (tab: Tab) =>
+    tab.href === `${ADMIN}` ||
+    tab.href === `${ADMIN}/development` ||
+    tab.href === `${ADMIN}/web`
+      ? pathname === tab.href
+      : pathname.startsWith(tab.href);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-expanded={open}
+        aria-controls="admin-menu"
+        aria-label="Menu"
+        className="-ml-1.5 inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-white/75 transition-colors hover:bg-white/10 hover:text-white active:scale-[0.96] xl:hidden"
+      >
+        <Menu className="size-5" strokeWidth={1.9} aria-hidden />
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-[60] xl:hidden">
+          <button
+            type="button"
+            aria-label="Close the menu"
+            tabIndex={-1}
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-black/45"
+          />
+          <nav
+            id="admin-menu"
+            aria-label="Admin"
+            className="bg-mist border-line absolute inset-y-0 left-0 flex w-[min(19rem,86vw)] flex-col border-r shadow-2xl"
+          >
+            <div className="border-line flex h-14 shrink-0 items-center justify-between border-b px-4">
+              <span className="text-ink text-[0.9375rem] font-semibold">
+                Admin
+              </span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close the menu"
+                className="text-ink-soft hover:bg-surface hover:text-ink grid size-9 place-items-center rounded-lg"
+              >
+                <X className="size-5" strokeWidth={1.9} aria-hidden />
+              </button>
+            </div>
+            <ul className="flex-1 space-y-0.5 overflow-y-auto overscroll-contain p-3 pb-8">
+              {TOP.map((tab) => (
+                <li key={tab.href}>
+                  <SideLink tab={tab} active={active(tab)} />
+                </li>
+              ))}
+              {GROUPS.map((group) => (
+                <li key={group.label} className="pt-3">
+                  <p className="text-ink-faint flex items-center gap-2.5 px-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.08em] uppercase">
+                    <group.icon
+                      className="size-3.5"
+                      strokeWidth={1.9}
+                      aria-hidden
+                    />
+                    {group.label}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {group.children.map((tab) => (
+                      <li key={tab.href}>
+                        <SideLink tab={tab} active={active(tab)} />
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      )}
+    </>
   );
 }

@@ -60,6 +60,15 @@ The person icon on Home (and "Student sign in" on Academy) opens the Account scr
 - **Admin** checks the address against the same rules as the website's `/admin`: `ADMIN_EMAILS` on Railway or the user's admin role. It checks at sign-in, again when the code is swapped, and again every time the app starts. An account that isn't allowed gets no session, and the app says which Google account was refused.
 - Tokens are kept in the phone's encrypted storage. Sign out deletes the session on the server too.
 
+## The admin panel in the app
+
+Once signed in as admin, the shield button on Home (or **Open the admin panel** on Account) opens the website's whole panel inside the app, already signed in; Google is not asked again. The app trades its admin token for a one-minute link (`/api/app/panel` on the website), which gives the in-app panel its own session. The panel still asks for the emailed code, as on the website, once every 5 hours; when that runs out the app fetches a new link and comes back to the same page.
+
+- **Close** in the panel's header goes back to the app. Android's back button goes back a page in the panel first.
+- Bills download and receipts attach as they do in a browser. Links outside the panel open in the phone's browser.
+- The sun and moon on Home switch the app between light and dark; the panel's own sun and moon switch both, and the app remembers the choice.
+- Signing out of Admin on the Account screen also ends the panel session inside the app.
+
 Sign-in does **not** work inside Expo Go. Expo Go cannot receive `nectarray://` links, and the live site refuses to send codes anywhere else. To test sign-in, install the APK from the GitHub release.
 
 ## Checks

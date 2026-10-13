@@ -20,6 +20,7 @@ import {
 import { Radius, Space } from '@/constants/theme';
 import { siteUrl, useContent } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useScheme } from '@/lib/theme';
 import { practiceHref } from '@/lib/links';
 
 export default function HomeScreen() {
@@ -27,6 +28,7 @@ export default function HomeScreen() {
   const c = usePalette();
   const auth = useAuth();
   const signedIn = Boolean(auth.student || auth.admin);
+  const { scheme, toggle } = useScheme();
 
   if (content.status === 'loading') return <LoadingPage />;
   if (content.status === 'error') return <ErrorPage {...content} />;
@@ -39,6 +41,30 @@ export default function HomeScreen() {
         <Txt variant="heading" style={{ flex: 1 }}>
           {company.name}
         </Txt>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={scheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          onPress={toggle}
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.account,
+            { backgroundColor: c.surface, borderColor: c.line, transform: [{ scale: pressed ? 0.94 : 1 }] },
+          ]}>
+          <Icon name={scheme === 'dark' ? 'sun' : 'moon'} color={c.inkSoft} size={20} />
+        </Pressable>
+        {auth.admin ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open the admin panel"
+            onPress={() => router.push('/panel')}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.account,
+              { backgroundColor: c.brandWash, borderColor: c.brandDeep, transform: [{ scale: pressed ? 0.94 : 1 }] },
+            ]}>
+            <Icon name="admin" color={c.brandDeep} size={20} />
+          </Pressable>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={signedIn ? 'Account, signed in' : 'Sign in'}

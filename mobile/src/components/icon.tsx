@@ -41,6 +41,10 @@ const ICONS: Record<string, { android: AndroidSymbol; ios: SFSymbol }> = {
   error: { android: 'error', ios: 'exclamationmark.circle' },
   person: { android: 'person', ios: 'person' },
   send: { android: 'send', ios: 'paperplane' },
+  sun: { android: 'light_mode', ios: 'sun.max' },
+  moon: { android: 'dark_mode', ios: 'moon' },
+  admin: { android: 'admin_panel_settings', ios: 'lock.shield' },
+  refresh: { android: 'refresh', ios: 'arrow.clockwise' },
 };
 
 export function Icon({ name, size = 22, color }: { name: string; size?: number; color: string }) {

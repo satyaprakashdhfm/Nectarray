@@ -1,10 +1,11 @@
 import { ADMIN, SIDEBAR_COOKIE } from "@/lib/admin-path";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/layout/Logo";
-import { AdminTabs } from "@/components/admin/AdminTabs";
+import { AdminMenu, AdminTabs } from "@/components/admin/AdminTabs";
+import { AppClose } from "@/components/admin/AppClose";
 import {
   SidebarFrame,
   SidebarProvider,
@@ -57,6 +58,10 @@ export default async function AdminPanelLayout({
   if (!gate.verified) redirect(`${ADMIN}/verify`);
   const user = gate.user;
   const sidebarOpen = (await cookies()).get(SIDEBAR_COOKIE)?.value !== "closed";
+  // The Android app opens the panel in a web view that names itself here.
+  const inApp = /NectArrayApp\//.test(
+    (await headers()).get("user-agent") ?? "",
+  );
 
   return (
     <SidebarProvider initialOpen={sidebarOpen}>
@@ -64,26 +69,33 @@ export default async function AdminPanelLayout({
         <ThemeScript />
         <ThemeCleanup />
         <header className="border-night-line bg-night sticky top-0 z-50 border-b">
-          <div className="shell flex h-[72px] items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
+          <div className="shell flex h-[72px] items-center justify-between gap-3 sm:gap-6">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
               <SidebarToggle />
+              <AdminMenu />
               <Logo markClassName="size-9" wordClassName="text-[1.25rem]" />
-              <span className="bg-amber/15 text-amber rounded-full px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+              <span className="bg-amber/15 text-amber hidden rounded-full px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase min-[400px]:inline">
                 Admin
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-2.5 sm:gap-4">
               <span className="hidden text-[0.875rem] text-white/50 lg:inline">
                 {user.email}
               </span>
-              <Link
-                href="/"
-                className="hidden text-[0.875rem] text-white/60 transition-colors hover:text-white sm:inline"
-              >
-                Main site
-              </Link>
+              {!inApp && (
+                <Link
+                  href="/"
+                  className="hidden text-[0.875rem] text-white/60 transition-colors hover:text-white sm:inline"
+                >
+                  Main site
+                </Link>
+              )}
               <ThemeToggle />
-              <SignOutButton realm="admin" redirectTo={`${ADMIN}/login`} />
+              {inApp ? (
+                <AppClose />
+              ) : (
+                <SignOutButton realm="admin" redirectTo={`${ADMIN}/login`} />
+              )}
             </div>
           </div>
         </header>

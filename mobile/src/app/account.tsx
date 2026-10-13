@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -149,7 +150,14 @@ function RealmCard({
               Signed in. Your details will show once the phone is back online.
             </Txt>
           )}
-          {open.path ? (
+          {realm === "admin" ? (
+            // The panel opens inside the app, already signed in.
+            <Button
+              label={open.label}
+              icon="admin"
+              onPress={() => router.push("/panel")}
+            />
+          ) : open.path ? (
             <Button
               label={open.label}
               icon="external"

@@ -40,10 +40,21 @@ export function ThemeCleanup() {
  */
 const listeners = new Set<() => void>();
 
+/**
+ * Inside the Android app the app owns the theme: its sun and moon set the
+ * attribute and fire this event, and this toggle tells the app in return
+ * (window.ReactNativeWebView), so the two never disagree.
+ */
+export const THEME_EVENT = "nectarray-ui-theme";
+
+type AppBridge = { ReactNativeWebView?: { postMessage: (m: string) => void } };
+
 function subscribe(onChange: () => void) {
   listeners.add(onChange);
+  window.addEventListener(THEME_EVENT, onChange);
   return () => {
     listeners.delete(onChange);
+    window.removeEventListener(THEME_EVENT, onChange);
   };
 }
 
@@ -71,6 +82,9 @@ export function ThemeToggle() {
       // this visit, it just will not be remembered.
     }
     listeners.forEach((notify) => notify());
+    (window as Window & AppBridge).ReactNativeWebView?.postMessage(
+      JSON.stringify({ type: "theme", theme: next }),
+    );
   }, []);
 
   const isLight = theme === "light";

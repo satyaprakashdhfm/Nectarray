@@ -342,3 +342,18 @@ export async function endSession(
 export async function sweepExpired(): Promise<void> {
   await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
 }
+
+/** Marks the panel sessions made for the app's web view (api/app/panel). */
+export const APP_PANEL_AGENT = "NectArray app panel";
+
+/**
+ * Ends the panel sessions the app's web view holds for this user, so
+ * signing out of the app's admin side closes the panel inside it too.
+ */
+export async function endAppPanelSessions(userId: string): Promise<void> {
+  await db
+    .delete(sessions)
+    .where(
+      and(eq(sessions.userId, userId), eq(sessions.userAgent, APP_PANEL_AGENT)),
+    );
+}

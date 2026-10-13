@@ -16,6 +16,13 @@ export type PaidRow = {
   /** The receipt or invoice kept with it (project_files), or "" for none. */
   fileId: string;
   fileName: string;
+  /**
+   * Who paid it: "" when the company paid from its own account, otherwise
+   * the person who paid out of pocket. For us only; never on the Excel files.
+   */
+  paidBy: string;
+  /** For a payment a person made: whether the company has paid them back. */
+  repaid: boolean;
 };
 export type RecurringRow = {
   id: string;
@@ -247,6 +254,8 @@ export function cleanSheets(input: unknown): ProjectSheets {
           : day(o.date).slice(0, 7),
         note: str(o.note, 500),
         ...file(o),
+        paidBy: isCompany(str(o.paidBy, 80)) ? "" : str(o.paidBy, 80).trim(),
+        repaid: o.repaid === true,
       };
     }),
     recurring: rows(x.recurring).map((r, i) => {
@@ -338,6 +347,31 @@ export function addMonths(month: string, n: number): string {
 /** The payments on a month's bill, in the order they were added. */
 export function paidInMonth(rows: PaidRow[], month: string): PaidRow[] {
   return rows.filter((r) => r.month === month);
+}
+
+/** Whether "Paid by" means the company itself: left blank or typed as such. */
+export const isCompany = (paidBy: string) => /^\s*(company)?\s*$/i.test(paidBy);
+
+/**
+ * What the company still has to pay back, person by person: the payments
+ * people made themselves that are not yet marked paid back. Most owed first.
+ */
+export function owedByCompany(
+  rows: PaidRow[],
+): { name: string; count: number; total: number }[] {
+  const people = new Map<
+    string,
+    { name: string; count: number; total: number }
+  >();
+  for (const r of rows) {
+    if (isCompany(r.paidBy) || r.repaid) continue;
+    const name = r.paidBy.trim();
+    // "Ravi" and "ravi " are the same person.
+    const key = name.toLowerCase();
+    const p = people.get(key) ?? { name, count: 0, total: 0 };
+    people.set(key, { ...p, count: p.count + 1, total: p.total + r.amount });
+  }
+  return [...people.values()].sort((a, b) => b.total - a.total);
 }
 
 /** Every month with a payment on it, newest first, and what it came to. */
