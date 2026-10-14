@@ -23,7 +23,7 @@ export default async function AdminIntegrationsPage({
   const { sheet: slug } = await searchParams;
   const tabs = [
     ...SHEETS.map((s) => ({ slug: s.slug, title: s.title })),
-    { slug: PROVIDERS, title: "Our providers" },
+    { slug: PROVIDERS, title: "Third-party providers" },
     { slug: ESTIMATE, title: "Estimate" },
   ];
 

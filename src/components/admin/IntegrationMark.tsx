@@ -1,9 +1,19 @@
 import {
   siFirebase,
+  siGithub,
+  siGoogleads,
+  siGoogleanalytics,
+  siGooglegemini,
   siGooglemaps,
+  siGooglesearchconsole,
+  siGoogletagmanager,
+  siMeta,
   siPhonepe,
+  siRailway,
   siRazorpay,
   siResend,
+  siSupabase,
+  siVercel,
   siWhatsapp,
 } from "simple-icons";
 import { cn } from "@/lib/utils";
@@ -16,6 +26,16 @@ const MARKS: Record<string, { path: string }> = {
   resend: siResend,
   "google-maps": siGooglemaps,
   "firebase-auth": siFirebase,
+  gemini: siGooglegemini,
+  "google-analytics": siGoogleanalytics,
+  "search-console": siGooglesearchconsole,
+  "tag-manager": siGoogletagmanager,
+  "google-ads": siGoogleads,
+  "meta-ads": siMeta,
+  railway: siRailway,
+  vercel: siVercel,
+  supabase: siSupabase,
+  github: siGithub,
 };
 
 /**

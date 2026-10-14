@@ -52,6 +52,9 @@ export const CATEGORIES = [
   { id: "messaging", label: "Messages and email" },
   { id: "maps", label: "Maps and location" },
   { id: "signin", label: "Sign-in" },
+  { id: "ai", label: "AI" },
+  { id: "analytics", label: "Analytics and ads" },
+  { id: "hosting", label: "Hosting, data and code" },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]["id"];
@@ -1309,6 +1312,802 @@ export const INTEGRATIONS: Integration[] = [
       { label: "Pricing", url: "https://firebase.google.com/pricing" },
       { label: "Docs", url: "https://firebase.google.com/docs/auth" },
     ],
+    checked: CHECKED,
+  },
+  {
+    slug: "payu",
+    name: "PayU",
+    category: "payments",
+    tagline: "Payment gateway with links, subscriptions and payouts",
+    overview:
+      "One of India's oldest payment gateways: cards, UPI, netbanking, wallets, EMI and pay-later behind one checkout, priced pay-as-you-go with no setup or yearly fee.",
+    useFor: [
+      "Taking payments on a website or app",
+      "Card and cardless EMI for higher-priced products",
+      "Payment links sent on WhatsApp, SMS or email",
+      "Recurring payments and payouts",
+    ],
+    products: [
+      {
+        name: "Checkout",
+        what: "Hosted or embedded payment page for every Indian payment method.",
+        via: "Web and mobile SDKs, REST API",
+      },
+      {
+        name: "Payment Links",
+        what: "A link for an amount, with no website needed.",
+        via: "Dashboard or REST API",
+      },
+      {
+        name: "Recurring payments",
+        what: "Subscriptions on cards, UPI Autopay and e-mandates.",
+        via: "REST API and webhooks",
+      },
+      {
+        name: "Payouts",
+        what: "Sends money to bank accounts and UPI ids: refunds, vendor payments.",
+        via: "REST API",
+      },
+      {
+        name: "Webhooks",
+        what: "Server notifications for payment, refund and settlement events.",
+        via: "Webhook",
+      },
+    ],
+    pricing: [
+      {
+        item: "Domestic cards, netbanking, wallets, pay-later",
+        price: "2%",
+        basis: "Per payment, plus 18% GST on the fee",
+        confidence: "official",
+      },
+      {
+        item: "Amex, Diners, EMI, international cards",
+        price: "3%",
+        basis: "Per payment",
+        confidence: "official",
+      },
+      {
+        item: "UPI",
+        price: "By business type and volume",
+        basis: "Not published",
+        confidence: "quote",
+      },
+      {
+        item: "Setup, onboarding, yearly fee",
+        price: "₹0",
+        basis: "",
+        confidence: "official",
+      },
+      {
+        item: "Same-day or priority settlement",
+        price: "Small extra fee",
+        basis: "Standard settlement is T+2",
+        confidence: "official",
+      },
+    ],
+    pricingNote:
+      "₹1,000 collected by card costs about ₹23.60 with GST. High-volume businesses get custom rates.",
+    setup: [
+      "Sign up with the client's business PAN, GST (if registered) and current account.",
+      "Finish KYC with business and address proof, and a website or app showing refund, terms, privacy and contact pages.",
+      "Build against the test keys, then switch to live keys after activation.",
+      "Set the webhook URL before going live.",
+    ],
+    technical: [
+      {
+        label: "Auth",
+        value: "Merchant key and salt; requests signed with a SHA-512 hash",
+      },
+      { label: "Sandbox", value: "Separate test environment and keys" },
+      { label: "Webhooks", value: "Verify the hash on every one" },
+      {
+        label: "SDKs",
+        value:
+          "Android, iOS, React Native, Flutter; plugins for WooCommerce, Shopify",
+      },
+    ],
+    watchOuts: [
+      "Confirm each payment on the server with the hash or the verify API, never from the browser alone.",
+      "UPI pricing is not public: get it in writing before quoting the client.",
+    ],
+    links: [
+      { label: "Pricing", url: "https://payu.in/pricing/" },
+      { label: "Docs", url: "https://docs.payu.in/" },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "gemini",
+    name: "Google Gemini API",
+    category: "ai",
+    tagline: "Google's AI models for chat, writing, reading files and speech",
+    overview:
+      "The AI behind this site's enquiry answers, project reviews, admin Agent and voice typing. Billed per million tokens read and written; Flash models are the low-cost workhorses.",
+    useFor: [
+      "Chat assistants and agents that call tools",
+      "Writing, summarising and answering from a document",
+      "Reading images, PDFs and audio",
+      "Structured answers (JSON) for forms and checks",
+    ],
+    products: [
+      {
+        name: "Text and tool calling",
+        what: "Answers and multi-step agents that read and change records through tools.",
+        via: "REST API, AI SDK (@ai-sdk/google)",
+      },
+      {
+        name: "Files and audio",
+        what: "Reads PDFs, images and recordings in the same request.",
+        via: "REST API",
+      },
+      {
+        name: "Structured output",
+        what: "Answers that follow a JSON schema.",
+        via: "REST API",
+      },
+    ],
+    pricing: [
+      {
+        item: "Gemini 3.6 / 3.7 / 3.8 Flash",
+        price: "$0.75 in, $3.75 out",
+        basis: "Per 1M tokens; doubles on 1 Jan 2027 ($1.50 / $7.50)",
+        confidence: "official",
+      },
+      {
+        item: "Gemini 3.1 Flash-Lite",
+        price: "$0.25 in, $1.50 out",
+        basis: "Per 1M tokens; the cheapest current model",
+        confidence: "official",
+      },
+      {
+        item: "Batch requests",
+        price: "About half price",
+        basis: "Answers within 24 hours",
+        confidence: "official",
+      },
+      {
+        item: "Free tier (AI Studio)",
+        price: "$0",
+        basis:
+          "Low rate limits; free-tier prompts may be used to improve Google's products",
+        confidence: "official",
+      },
+    ],
+    pricingNote:
+      "A typical admin Agent answer is a few thousand tokens: well under ₹1. Thinking tokens bill as output. See the AI models sheet for every model.",
+    setup: [
+      "Create a key in Google AI Studio on the company's Google account.",
+      "Turn on billing for the project before launch, so the paid terms (no use of your data for training) apply.",
+      "Set GOOGLE_GENERATIVE_AI_API_KEY on the server; never in the browser.",
+    ],
+    technical: [
+      { label: "Auth", value: "API key in a server variable" },
+      {
+        label: "SDK",
+        value: "Vercel AI SDK (@ai-sdk/google), or Google's own",
+      },
+      {
+        label: "Limits",
+        value: "Requests and tokens per minute by usage tier",
+      },
+    ],
+    watchOuts: [
+      "Model names change often: keep the model in a variable (GEMINI_MODEL, AGENT_MODEL).",
+      "On the free tier prompts can be reviewed by Google; use a billed key for client data.",
+    ],
+    links: [
+      {
+        label: "Pricing",
+        url: "https://ai.google.dev/gemini-api/docs/pricing",
+      },
+      { label: "Docs", url: "https://ai.google.dev/gemini-api/docs" },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "groq",
+    name: "Groq",
+    category: "ai",
+    tagline: "Very fast speech to text (Whisper) and open AI models",
+    overview:
+      "Runs open models on its own chips, so answers and transcripts come back in well under a second. This site uses its Whisper model for voice typing in the Workspace and the admin Agent when GROQ_API_KEY is set.",
+    useFor: [
+      "Voice typing and transcribing recordings",
+      "Fast, cheap chat on open models",
+    ],
+    products: [
+      {
+        name: "Speech to text",
+        what: "Whisper large-v3 and large-v3-turbo, from flac, mp3, m4a, ogg, wav or webm.",
+        via: "REST API (OpenAI-compatible), AI SDK (@ai-sdk/groq)",
+      },
+      {
+        name: "Chat models",
+        what: "Open models such as Llama and Qwen at high speed.",
+        via: "REST API (OpenAI-compatible)",
+      },
+    ],
+    pricing: [
+      {
+        item: "whisper-large-v3-turbo",
+        price: "$0.04",
+        basis: "Per hour of audio; at least 10 seconds billed per request",
+        confidence: "official",
+      },
+      {
+        item: "whisper-large-v3",
+        price: "$0.111",
+        basis: "Per hour of audio; more accurate, slower",
+        confidence: "official",
+      },
+      {
+        item: "Free tier",
+        price: "$0",
+        basis: "Rate-limited; files up to 25 MB (100 MB on the paid tier)",
+        confidence: "official",
+      },
+    ],
+    pricingNote:
+      "An hour of voice typing with turbo costs about ₹4. Chat model prices are per 1M tokens on Groq's pricing page.",
+    setup: [
+      "Create a key in the Groq console.",
+      "Set GROQ_API_KEY on the server; without it the site falls back to Gemini for speech.",
+    ],
+    technical: [
+      { label: "Auth", value: "API key (Bearer)" },
+      {
+        label: "Audio",
+        value: "Up to 25 MB free, 100 MB paid; 16 kHz mono WAV is smallest",
+      },
+    ],
+    watchOuts: [
+      "Every request bills at least 10 seconds, so very short clips cost more than they seem.",
+    ],
+    links: [
+      { label: "Pricing", url: "https://groq.com/pricing" },
+      {
+        label: "Speech to text docs",
+        url: "https://console.groq.com/docs/speech-to-text",
+      },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "google-analytics",
+    name: "Google Analytics 4",
+    category: "analytics",
+    tagline: "Who visits the site, from where, and what they do",
+    overview:
+      "Counts visitors, visits, sources, pages and enquiries. The admin Analytics tab reads it live through the Data API with a service account.",
+    useFor: [
+      "Visitors and traffic sources per service",
+      "Which pages lead to enquiries",
+      "Measuring ad campaigns",
+    ],
+    products: [
+      {
+        name: "Tag (gtag.js)",
+        what: "The script on every page that sends visits and events.",
+        via: "Script tag or Tag Manager",
+      },
+      {
+        name: "Data API",
+        what: "Reads reports into our own dashboard.",
+        via: "REST API with a service account",
+      },
+      {
+        name: "Realtime API",
+        what: "Who is on the site right now.",
+        via: "REST API",
+      },
+    ],
+    pricing: [
+      {
+        item: "Google Analytics 4",
+        price: "Free",
+        basis: "Data API has daily token quotas per property",
+        confidence: "official",
+      },
+      {
+        item: "Google Analytics 360",
+        price: "About $50,000 a year",
+        basis: "For very large sites; sold through Google and partners",
+        confidence: "reported",
+      },
+    ],
+    pricingNote:
+      "Free for a business our size; 360 only matters at millions of visits a month.",
+    setup: [
+      "Create a GA4 property and web stream; put the measurement id in the site.",
+      "Add the service account's email as a Viewer on the property.",
+      "Set GA4_PROPERTY_ID and GOOGLE_SERVICE_ACCOUNT_JSON on the server.",
+    ],
+    technical: [
+      { label: "Auth", value: "Service account (JSON key), read-only scope" },
+      {
+        label: "Delay",
+        value: "Reports settle over 24 to 48 hours; realtime is separate",
+      },
+    ],
+    watchOuts: [
+      "Ask for cookie consent where the law needs it; ad blockers hide some visits.",
+    ],
+    links: [
+      {
+        label: "Data API",
+        url: "https://developers.google.com/analytics/devguides/reporting/data/v1",
+      },
+      {
+        label: "Analytics 360",
+        url: "https://marketingplatform.google.com/about/analytics-360/",
+      },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "search-console",
+    name: "Google Search Console",
+    category: "analytics",
+    tagline: "How the site shows up in Google search",
+    overview:
+      "Clicks, impressions and position for every page and search term, and whether pages are indexed. The admin SEO tab reads it through the API.",
+    useFor: [
+      "Tracking keyword rankings",
+      "Finding pages Google has not indexed",
+      "Submitting the sitemap",
+    ],
+    products: [
+      {
+        name: "Search Analytics API",
+        what: "Clicks, impressions, CTR and position by page and query.",
+        via: "REST API with a service account",
+      },
+      {
+        name: "URL Inspection API",
+        what: "Whether a page is indexed, and why not.",
+        via: "REST API",
+      },
+    ],
+    pricing: [
+      {
+        item: "Search Console and its API",
+        price: "Free",
+        basis: "Query quotas per site and per project",
+        confidence: "official",
+      },
+    ],
+    pricingNote: "Free.",
+    setup: [
+      "Verify the domain (DNS record) in Search Console.",
+      "Add the service account's email as a user on the property.",
+      "Set SEARCH_CONSOLE_SITE_URL and GOOGLE_SERVICE_ACCOUNT_JSON.",
+    ],
+    technical: [
+      { label: "Auth", value: "Service account, read-only scope" },
+      { label: "Delay", value: "Data is about 2 to 3 days behind" },
+    ],
+    watchOuts: ["Shows Google only; Bing has its own Webmaster Tools."],
+    links: [
+      { label: "API", url: "https://developers.google.com/webmaster-tools" },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "tag-manager",
+    name: "Google Tag Manager",
+    category: "analytics",
+    tagline: "One container for every tracking tag",
+    overview:
+      "Adds and changes tracking tags (Analytics, Ads, Meta pixel) from a dashboard instead of the site's code.",
+    useFor: [
+      "Ad conversion tracking without a deploy",
+      "Keeping marketing tags in one place",
+    ],
+    products: [
+      {
+        name: "Web container",
+        what: "One script on the site that loads every tag set up in the dashboard.",
+        via: "Script tag",
+      },
+    ],
+    pricing: [
+      {
+        item: "Tag Manager",
+        price: "Free",
+        basis: "",
+        confidence: "official",
+      },
+      {
+        item: "Tag Manager 360",
+        price: "Quote",
+        basis: "Part of the Google Marketing Platform enterprise suite",
+        confidence: "quote",
+      },
+    ],
+    pricingNote: "Free.",
+    setup: [
+      "Create a container for the domain.",
+      "Turn on the container id in the site (it is wired but off here: tagManagerEnabled).",
+    ],
+    technical: [{ label: "Load", value: "One async script plus a dataLayer" }],
+    watchOuts: [
+      "Anyone with publish access can add scripts to the live site: keep publishers few.",
+    ],
+    links: [{ label: "Tag Manager", url: "https://tagmanager.google.com/" }],
+    checked: CHECKED,
+  },
+  {
+    slug: "google-ads",
+    name: "Google Ads API",
+    category: "analytics",
+    tagline: "Campaign spend, clicks and conversions from Google Ads",
+    overview:
+      "Reads (and can manage) Google Ads campaigns, for the admin Ads tab's spend and results. Not called yet: the variables are listed under Ads.",
+    useFor: ["Ad spend and leads per campaign in our dashboard"],
+    products: [
+      {
+        name: "Google Ads API",
+        what: "Reports and campaign management.",
+        via: "REST / gRPC with OAuth and a developer token",
+      },
+    ],
+    pricing: [
+      {
+        item: "API access",
+        price: "Free",
+        basis: "Basic access allows 15,000 operations a day",
+        confidence: "official",
+      },
+      {
+        item: "The ads themselves",
+        price: "Your ad budget",
+        basis: "Billed by Google Ads per click or view",
+        confidence: "official",
+      },
+    ],
+    pricingNote: "The API costs nothing; the spend is the campaigns' budget.",
+    setup: [
+      "Apply for a developer token from a Google Ads manager account.",
+      "Create OAuth credentials and get a refresh token for the ads account.",
+      "Set GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CUSTOMER_ID and GOOGLE_ADS_REFRESH_TOKEN.",
+    ],
+    technical: [
+      { label: "Auth", value: "OAuth 2 refresh token plus developer token" },
+      {
+        label: "Approval",
+        value: "Test access first; basic access after Google's review",
+      },
+    ],
+    watchOuts: ["Token approval can take a few days; apply early."],
+    links: [
+      {
+        label: "Docs",
+        url: "https://developers.google.com/google-ads/api/docs/start",
+      },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "meta-ads",
+    name: "Meta Marketing API",
+    category: "analytics",
+    tagline: "Facebook and Instagram ad spend and leads",
+    overview:
+      "Reads Facebook and Instagram campaign results for the admin Ads tab. Not called yet: the variables are listed under Ads.",
+    useFor: ["Ad spend and leads from Facebook and Instagram in our dashboard"],
+    products: [
+      {
+        name: "Insights API",
+        what: "Spend, reach, clicks and leads per campaign.",
+        via: "Graph API with a system-user token",
+      },
+      {
+        name: "Conversions API",
+        what: "Sends enquiries from the server, so ad results survive ad blockers.",
+        via: "Graph API",
+      },
+    ],
+    pricing: [
+      {
+        item: "API access",
+        price: "Free",
+        basis: "Rate limits grow with ad spend",
+        confidence: "official",
+      },
+      {
+        item: "The ads themselves",
+        price: "Your ad budget",
+        basis: "Billed by Meta",
+        confidence: "official",
+      },
+    ],
+    pricingNote: "The API costs nothing; the spend is the campaigns' budget.",
+    setup: [
+      "Create a Meta app and a system user in Business Manager.",
+      "Give the system user the ad account; generate a long-lived token.",
+      "Set META_ADS_ACCESS_TOKEN and META_AD_ACCOUNT_ID.",
+    ],
+    technical: [{ label: "Auth", value: "System-user access token" }],
+    watchOuts: ["Business verification may be needed for standard access."],
+    links: [
+      {
+        label: "Docs",
+        url: "https://developers.facebook.com/docs/marketing-apis",
+      },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "railway",
+    name: "Railway",
+    category: "hosting",
+    tagline: "Runs this website, its database, file storage and workers",
+    overview:
+      "Hosts the site, Postgres, the Drive's storage bucket, the code judge and the Workspace. Billed per second for what each service uses, on top of a small monthly plan that includes the same amount of usage.",
+    useFor: [
+      "Hosting a web app and its database together",
+      "File storage for uploads (Buckets)",
+      "Background workers and scheduled jobs",
+    ],
+    products: [
+      {
+        name: "Services",
+        what: "Apps from GitHub or Docker, deployed on every push.",
+        via: "Dashboard, CLI, GraphQL API",
+      },
+      {
+        name: "Databases",
+        what: "Postgres, MySQL, Redis on a volume.",
+        via: "Template",
+      },
+      {
+        name: "Buckets",
+        what: "S3-compatible file storage with free downloads.",
+        via: "S3 API",
+      },
+    ],
+    pricing: [
+      {
+        item: "Hobby plan",
+        price: "$5 a month",
+        basis: "Includes $5 of usage",
+        confidence: "official",
+      },
+      {
+        item: "Pro plan",
+        price: "$20 a month",
+        basis: "Includes $20 of usage; team seats",
+        confidence: "official",
+      },
+      {
+        item: "CPU",
+        price: "$20",
+        basis: "Per vCPU a month, billed by the minute",
+        confidence: "official",
+      },
+      {
+        item: "Memory",
+        price: "$10",
+        basis: "Per GB a month, billed by the minute",
+        confidence: "official",
+      },
+      {
+        item: "Volume storage",
+        price: "$0.15",
+        basis: "Per GB a month",
+        confidence: "official",
+      },
+      {
+        item: "Network egress",
+        price: "$0.05",
+        basis: "Per GB",
+        confidence: "official",
+      },
+      {
+        item: "Buckets",
+        price: "$0.015",
+        basis: "Per GB a month; downloads and API calls free",
+        confidence: "official",
+      },
+    ],
+    pricingNote:
+      "See the Deployment sheet for full plan limits and an always-on monthly example.",
+    setup: [
+      "Connect the GitHub repo; Railway builds and deploys each push to main.",
+      "Add the database and bucket from the project canvas; their variables are shared to the service.",
+      "Set RAILWAY_API_TOKEN for the admin deploy board.",
+    ],
+    technical: [
+      {
+        label: "Deploy",
+        value: "Git push, with a pre-deploy step (migrations here)",
+      },
+      { label: "API", value: "GraphQL with an account or project token" },
+    ],
+    watchOuts: [
+      "Uploads from a Railway service to a bucket count as egress; upload straight from the browser instead.",
+    ],
+    links: [
+      {
+        label: "Pricing",
+        url: "https://docs.railway.com/reference/pricing/plans",
+      },
+      {
+        label: "Buckets billing",
+        url: "https://docs.railway.com/storage-buckets/billing",
+      },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "vercel",
+    name: "Vercel",
+    category: "hosting",
+    tagline: "Hosting for Next.js front ends and showcase sites",
+    overview:
+      "Hosts front ends with a global CDN and preview links for every branch. The admin deploy board reads its deployments.",
+    useFor: ["Client marketing sites", "Preview links for each change"],
+    products: [
+      {
+        name: "Deployments",
+        what: "Every git push built and served on the CDN, with previews.",
+        via: "Git, CLI, REST API",
+      },
+      {
+        name: "Functions",
+        what: "Server code that runs per request.",
+        via: "Framework routes",
+      },
+    ],
+    pricing: [
+      {
+        item: "Hobby",
+        price: "$0",
+        basis: "Personal, non-commercial use only",
+        confidence: "official",
+      },
+      {
+        item: "Pro",
+        price: "$20 a month per seat",
+        basis: "Includes $20 of usage and 1 TB of traffic",
+        confidence: "official",
+      },
+      {
+        item: "Enterprise",
+        price: "Quote",
+        basis: "SSO, SLAs",
+        confidence: "quote",
+      },
+    ],
+    pricingNote:
+      "A client's commercial site needs Pro. Usage rates are on the Deployment sheet.",
+    setup: [
+      "Import the GitHub repo into a Vercel team.",
+      "Set VERCEL_API_TOKEN for the admin deploy board.",
+    ],
+    technical: [{ label: "API", value: "REST with a team token" }],
+    watchOuts: ["Hobby forbids commercial use; move client sites to Pro."],
+    links: [{ label: "Pricing", url: "https://vercel.com/pricing" }],
+    checked: CHECKED,
+  },
+  {
+    slug: "supabase",
+    name: "Supabase",
+    category: "hosting",
+    tagline: "Postgres with sign-in, file storage and APIs built in",
+    overview:
+      "A hosted Postgres database with sign-in, file storage, realtime and edge functions. This site moved its own data to Railway Postgres; Supabase stays an option for client projects.",
+    useFor: [
+      "A database plus sign-in for a client app, without running servers",
+      "Realtime features such as live updates",
+    ],
+    products: [
+      {
+        name: "Database",
+        what: "Postgres with auto-generated APIs.",
+        via: "SQL, REST, client SDKs",
+      },
+      { name: "Auth", what: "Email, phone and social sign-in.", via: "SDK" },
+      { name: "Storage", what: "Files with access rules.", via: "SDK, S3 API" },
+    ],
+    pricing: [
+      {
+        item: "Free",
+        price: "$0",
+        basis: "500 MB database; paused after a week idle",
+        confidence: "official",
+      },
+      {
+        item: "Pro",
+        price: "$25 a month",
+        basis: "8 GB database, 100 GB files, 100,000 monthly users",
+        confidence: "official",
+      },
+      {
+        item: "Team",
+        price: "$599 a month",
+        basis: "SOC 2, SSO, longer backups",
+        confidence: "official",
+      },
+    ],
+    pricingNote: "Add-ons and overage are on the Storage sheet.",
+    setup: [
+      "Create a project in the Mumbai region for Indian users.",
+      "Keep the service-role key on the server only.",
+    ],
+    technical: [
+      {
+        label: "Auth",
+        value:
+          "Anon key in the browser (with row-level security), service key on the server",
+      },
+    ],
+    watchOuts: ["Turn on row-level security on every table before going live."],
+    links: [{ label: "Pricing", url: "https://supabase.com/pricing" }],
+    checked: CHECKED,
+  },
+  {
+    slug: "github",
+    name: "GitHub",
+    category: "hosting",
+    tagline: "Code, reviews and automated builds",
+    overview:
+      "Holds every repo. Railway and Vercel deploy from it, and the admin Workspace opens repos through its API.",
+    useFor: ["Code and pull requests", "Automated tests and builds (Actions)"],
+    products: [
+      {
+        name: "Repositories",
+        what: "Unlimited public and private repos.",
+        via: "Git, web",
+      },
+      {
+        name: "Actions",
+        what: "Builds and tests on every push.",
+        via: "Workflow files",
+      },
+      {
+        name: "REST and GraphQL API",
+        what: "Repos, branches and pull requests from our tools.",
+        via: "Token",
+      },
+    ],
+    pricing: [
+      {
+        item: "Free",
+        price: "$0",
+        basis: "2,000 Actions minutes and 500 MB packages a month",
+        confidence: "official",
+      },
+      {
+        item: "Team",
+        price: "$4 per user a month",
+        basis: "3,000 Actions minutes, 2 GB packages; first-year price",
+        confidence: "official",
+      },
+      {
+        item: "Enterprise",
+        price: "$21 per user a month",
+        basis: "50,000 Actions minutes, 50 GB packages; first-year price",
+        confidence: "official",
+      },
+      {
+        item: "Codespaces",
+        price: "From $0.18 an hour",
+        basis: "Plus $0.07 per GB a month of storage",
+        confidence: "official",
+      },
+    ],
+    pricingNote: "Actions minutes are free on public repos.",
+    setup: [
+      "Keep client repos in the company's organisation.",
+      "Use fine-grained tokens limited to the repos a tool needs.",
+    ],
+    technical: [
+      { label: "API", value: "REST and GraphQL with a token or GitHub App" },
+    ],
+    watchOuts: ["Never commit .env files; rotate any key that was."],
+    links: [{ label: "Pricing", url: "https://github.com/pricing" }],
     checked: CHECKED,
   },
 ];

@@ -5,46 +5,48 @@ import type { Sheet } from "@/lib/price-book";
 export const PROVIDERS = "providers";
 
 /**
- * Every price from the provider pages (lib/integrations) as one sheet of
- * the price book, each row's name linking to its provider's full page.
+ * Every outside service the software connects to (lib/integrations), as
+ * one sheet of the price book with a table per kind: delivery, payments,
+ * messages, maps, sign-in, AI, analytics and hosting. Each row's name opens
+ * its provider's full page.
  */
 export function providersSheet(): Sheet {
-  const category = (id: string) =>
-    CATEGORIES.find((c) => c.id === id)?.label ?? id;
   return {
     slug: PROVIDERS,
-    title: "Our providers",
-    lede: `Every price from the ${INTEGRATIONS.length} provider pages in one table. A provider's name opens its full page: what it does, how to get access and how it connects.`,
-    tables: [
-      {
-        id: "providers",
-        title: "Provider prices",
-        compare: true,
-        nameColumns: [0, 2],
-        columns: [
-          { label: "Provider", kind: "text", facet: true },
-          { label: "Kind", kind: "text", facet: true },
-          { label: "Item", kind: "text" },
-          { label: "Price", kind: "text" },
-          { label: "Basis", kind: "long" },
-          { label: "Confidence", kind: "confidence", facet: true },
-        ],
-        rows: INTEGRATIONS.flatMap((i) =>
-          i.pricing.map((p, n) => ({
-            id: `${i.slug}-${n}`,
-            href: `${ADMIN}/integrations/${i.slug}`,
-            cells: [
-              i.name,
-              category(i.category),
-              p.item,
-              p.price,
-              p.basis,
-              CONFIDENCE_LABEL[p.confidence],
-            ],
-          })),
-        ),
-      },
-    ],
+    title: "Third-party providers",
+    lede: `The ${INTEGRATIONS.length} outside services we connect to, grouped by what they do, with every price from their websites. A provider's name opens its full page: what it does, how to get access and how it connects.`,
+    tables: CATEGORIES.flatMap((category) => {
+      const providers = INTEGRATIONS.filter((i) => i.category === category.id);
+      if (providers.length === 0) return [];
+      return [
+        {
+          id: `providers-${category.id}`,
+          title: `${category.label}: ${providers.map((p) => p.name).join(", ")}`,
+          compare: true,
+          nameColumns: [0, 1],
+          columns: [
+            { label: "Provider", kind: "text" as const, facet: true },
+            { label: "Item", kind: "text" as const },
+            { label: "Price", kind: "text" as const },
+            { label: "Basis", kind: "long" as const },
+            { label: "Confidence", kind: "confidence" as const, facet: true },
+          ],
+          rows: providers.flatMap((i) =>
+            i.pricing.map((p, n) => ({
+              id: `${i.slug}-${n}`,
+              href: `${ADMIN}/integrations/${i.slug}`,
+              cells: [
+                i.name,
+                p.item,
+                p.price,
+                p.basis,
+                CONFIDENCE_LABEL[p.confidence],
+              ],
+            })),
+          ),
+        },
+      ];
+    }),
     checks: [],
     sources: INTEGRATIONS.flatMap((i) =>
       i.links.slice(0, 1).map((l) => ({

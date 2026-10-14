@@ -24,7 +24,7 @@ import { logChoice } from "@/lib/estimate-picks";
 import { Dropdown } from "@/components/admin/Dropdown";
 import { resetSavedChoices, useSavedState } from "@/lib/use-saved-state";
 import { TableEditor } from "@/components/admin/PriceTableEditor";
-import { hasSuiteLogo, SuiteLogo } from "@/components/admin/SuiteLogo";
+import { BrandLogo, hasBrandLogo } from "@/components/admin/BrandLogo";
 import {
   formatMoney,
   inCurrency,
@@ -338,7 +338,7 @@ function PriceGrid({
                         )}
                       >
                         <span className="inline-flex items-center gap-1.5">
-                          <SuiteLogo name={column.label} />
+                          <BrandLogo name={column.label} />
                           {column.label}
                           {column.unit && (
                             <span className="text-ink-faint font-normal">
@@ -507,7 +507,7 @@ function Comparison({
                 >
                   <span className="flex items-start justify-between gap-2">
                     <span className="inline-flex items-center gap-1.5">
-                      <SuiteLogo name={nameOf(row.cells)} />
+                      <BrandLogo name={nameOf(row.cells)} />
                       {nameOf(row.cells)}
                     </span>
                     <button
@@ -630,24 +630,25 @@ function CellView({
   if (column.kind === "confidence" && typeof cell === "string")
     return <ConfidencePill value={cell} />;
   const text = formatCell(cell, column, currency);
-  // Google, Microsoft and Zoho names carry their small logo.
-  if (
-    !href &&
-    typeof cell === "string" &&
-    column.kind === "text" &&
-    hasSuiteLogo(cell)
-  )
-    return (
-      <span className="inline-flex items-center gap-1.5">
-        <SuiteLogo name={cell} />
-        {text}
-      </span>
-    );
+  // A company's name carries its small logo (BrandLogo).
+  const logo =
+    typeof cell === "string" && column.kind === "text" && hasBrandLogo(cell);
   if (href)
     return (
-      <Link href={href} className="text-brand-deep hover:underline">
+      <Link
+        href={href}
+        className="text-brand-deep inline-flex items-center gap-1.5 hover:underline"
+      >
+        {logo && <BrandLogo name={cell} />}
         {text}
       </Link>
+    );
+  if (logo)
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <BrandLogo name={cell} />
+        {text}
+      </span>
     );
   // A converted price says what it was quoted as, on hover.
   if (isMoney(cell) && !(currency in cell))
