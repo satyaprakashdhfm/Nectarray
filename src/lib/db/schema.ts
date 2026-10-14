@@ -843,6 +843,31 @@ export const assetEntries = pgTable(
 );
 
 /**
+ * One answer from the admin Agent: what was asked, what it said, what it
+ * changed, and what the model charged for it. The Agent page totals these
+ * into its spend (today, this month, all time).
+ */
+export const agentTurns = pgTable(
+  "agent_turns",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    question: text().notNull(),
+    answer: text().notNull(),
+    model: text().notNull(),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    /** In US dollars; null when the model's price is not known. */
+    costUsd: numeric("cost_usd"),
+    /** What it did: [{ label, href? }]. */
+    actions: jsonb().notNull().default([]),
+    ms: integer().notNull().default(0),
+    askedBy: text("asked_by"),
+    createdAt: now(),
+  },
+  (table) => [index("agent_turns_created_idx").on(table.createdAt)],
+);
+
+/**
  * A search term a service's pages should rank for.
  *
  * `position` is typed in until Search Console is connected; after that the

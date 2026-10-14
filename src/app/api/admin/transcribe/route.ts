@@ -31,6 +31,10 @@ const GEMINI_MODEL =
 const CONTEXT =
   "Spoken instructions to an AI coding assistant, in English with an Indian accent. Expect programming words, file and folder names, commands, git terms, framework and library names (Next.js, React, Tailwind, Railway, Supabase, Claude).";
 
+/** For the admin Agent, which runs the business rather than the code. */
+const BUSINESS =
+  "Spoken instructions to a business assistant, in English with an Indian accent, possibly mixed with Hindi or Telugu words. Expect client and project names, people's names, tasks, amounts in rupees (lakh, thousand) and dates.";
+
 /* Thirty a minute per admin: generous for talking, useless for abuse. */
 const recent = new Map<string, number[]>();
 function allowed(userId: string) {
@@ -58,11 +62,13 @@ export async function POST(request: Request) {
 
   let audio: File | null = null;
   let hint = "";
+  let business = false;
   try {
     const form = await request.formData();
     const value = form.get("audio");
     audio = value instanceof File ? value : null;
     hint = String(form.get("hint") ?? "").slice(0, 200);
+    business = form.get("purpose") === "business";
   } catch {
     return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
@@ -75,7 +81,11 @@ export async function POST(request: Request) {
     );
 
   const bytes = new Uint8Array(await audio.arrayBuffer());
-  const context = hint ? `${CONTEXT} Working in the repo: ${hint}.` : CONTEXT;
+  const context = business
+    ? BUSINESS
+    : hint
+      ? `${CONTEXT} Working in the repo: ${hint}.`
+      : CONTEXT;
 
   try {
     if (process.env.GROQ_API_KEY) {
@@ -103,7 +113,7 @@ export async function POST(request: Request) {
           content: [
             {
               type: "text",
-              text: `Transcribe this recording word for word. ${context} Write only what was said, as plain text: no quotes, no labels, no commentary, no translation. Keep file names and code terms as spoken. If nothing was said, return an empty answer.`,
+              text: `Transcribe this recording word for word. ${context} Write only what was said, as plain text: no quotes, no labels, no commentary, no translation. Keep names, file names and code terms as spoken. If nothing was said, return an empty answer.`,
             },
             {
               type: "file",

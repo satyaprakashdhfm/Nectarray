@@ -39,10 +39,13 @@ const MESSAGES: Record<string, string> = {
 
 export function useVoice({
   hint,
+  purpose = "code",
   onText,
 }: {
   /** The repo being worked on, to help the engine with its words. */
   hint?: string;
+  /** What is being said: instructions about code, or about the business. */
+  purpose?: "code" | "business";
   onText: (text: string) => void;
 }) {
   // Only knowable in the browser; the server renders it as unsupported.
@@ -58,11 +61,13 @@ export function useVoice({
   const busy = useRef(false);
   const onTextRef = useRef(onText);
   const hintRef = useRef(hint);
+  const purposeRef = useRef(purpose);
 
   useEffect(() => {
     onTextRef.current = onText;
     hintRef.current = hint;
-  }, [onText, hint]);
+    purposeRef.current = purpose;
+  }, [onText, hint, purpose]);
 
   const release = useCallback(() => {
     if (timer.current) clearInterval(timer.current);
@@ -81,6 +86,7 @@ export function useVoice({
       const form = new FormData();
       form.append("audio", wav, "speech.wav");
       if (hintRef.current) form.append("hint", hintRef.current);
+      form.append("purpose", purposeRef.current);
       const res = await fetch("/api/admin/transcribe", {
         method: "POST",
         body: form,

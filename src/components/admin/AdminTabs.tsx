@@ -24,6 +24,7 @@ import {
   LockOpen,
   Megaphone,
   Menu,
+  MessagesSquare,
   NotebookPen,
   Palette,
   Plug,
@@ -40,6 +41,7 @@ type Tab = { href: string; label: string; icon: LucideIcon };
 type Group = Tab & { children: Tab[]; owns: string[] };
 
 const TOP: Tab[] = [
+  { href: `${ADMIN}/agent`, label: "Agent", icon: MessagesSquare },
   { href: `${ADMIN}`, label: "Revenue", icon: IndianRupee },
   { href: `${ADMIN}/assets`, label: "Assets", icon: Wallet },
   { href: `${ADMIN}/seo`, label: "SEO", icon: Search },
