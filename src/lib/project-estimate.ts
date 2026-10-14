@@ -306,8 +306,62 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
         "no-mac",
       ),
     },
+    {
+      id: "workspace",
+      group: "Business workspace",
+      label: "Business email and office suite",
+      unit: "users",
+      per: "per user a month",
+      billing: "monthly",
+      defaultQuantity: 5,
+      note: "Google Workspace, Microsoft 365 or Zoho, at the yearly-commitment price, before 18% GST.",
+      options: options(
+        rows("business-workspace", "workspace-plans"),
+        (r) => ({
+          label: r.text("Plan"),
+          price: r.money("Yearly / user / month"),
+        }),
+        "workspace-plans",
+      ),
+    },
   ];
   return items.filter((item) => item.options.length > 0);
+}
+
+/** Someone who can be put on a project, from the Engineers sheet. */
+export type EstimateEngineer = {
+  /** "engineers/<row id>", the id a tick on the sheet logs. */
+  id: string;
+  name: string;
+  role: string;
+  /** "Our team" or "Market rate". */
+  kind: string;
+  /** Rupees a month; 0 when the sheet has no figure. */
+  monthly: number;
+  note: string;
+};
+
+export function estimateEngineers(sheets: Sheet[]): EstimateEngineer[] {
+  const table = sheets
+    .find((s) => s.slug === "engineers")
+    ?.tables.find((t) => t.id === "engineers");
+  return readRows(table).flatMap((r) => {
+    const name = r.text("Name");
+    if (!name) return [];
+    const money = r.money("Monthly cost");
+    return [
+      {
+        id: `engineers/${r.id}`,
+        name,
+        role: r.text("Role"),
+        kind: r.text("Kind"),
+        monthly: money ? Math.round(inCurrency(money, "inr")) : 0,
+        note: [r.text("Usual range"), r.text("Basis")]
+          .filter(Boolean)
+          .join(". "),
+      },
+    ];
+  });
 }
 
 /** One ticked line of an estimate, in the chosen currency. */

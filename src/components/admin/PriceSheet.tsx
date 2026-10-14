@@ -24,6 +24,7 @@ import { logChoice } from "@/lib/estimate-picks";
 import { Dropdown } from "@/components/admin/Dropdown";
 import { resetSavedChoices, useSavedState } from "@/lib/use-saved-state";
 import { TableEditor } from "@/components/admin/PriceTableEditor";
+import { hasSuiteLogo, SuiteLogo } from "@/components/admin/SuiteLogo";
 import {
   formatMoney,
   inCurrency,
@@ -336,7 +337,8 @@ function PriceGrid({
                           isNumeric(column) && "flex-row-reverse",
                         )}
                       >
-                        <span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <SuiteLogo name={column.label} />
                           {column.label}
                           {column.unit && (
                             <span className="text-ink-faint font-normal">
@@ -504,7 +506,10 @@ function Comparison({
                   className="border-line text-ink min-w-[11rem] border-b px-3 py-2 align-top font-semibold"
                 >
                   <span className="flex items-start justify-between gap-2">
-                    {nameOf(row.cells)}
+                    <span className="inline-flex items-center gap-1.5">
+                      <SuiteLogo name={nameOf(row.cells)} />
+                      {nameOf(row.cells)}
+                    </span>
                     <button
                       type="button"
                       onClick={() => onRemove(row.id)}
@@ -625,6 +630,19 @@ function CellView({
   if (column.kind === "confidence" && typeof cell === "string")
     return <ConfidencePill value={cell} />;
   const text = formatCell(cell, column, currency);
+  // Google, Microsoft and Zoho names carry their small logo.
+  if (
+    !href &&
+    typeof cell === "string" &&
+    column.kind === "text" &&
+    hasSuiteLogo(cell)
+  )
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <SuiteLogo name={cell} />
+        {text}
+      </span>
+    );
   if (href)
     return (
       <Link href={href} className="text-brand-deep hover:underline">

@@ -6,7 +6,7 @@ import { ProjectEstimate } from "@/components/admin/ProjectEstimate";
 import { CHECKED, SHEETS } from "@/lib/price-book";
 import { PROVIDERS } from "@/lib/price-book-providers";
 import { baseSheet, withEdits } from "@/lib/price-book-store";
-import { estimateItems } from "@/lib/project-estimate";
+import { estimateEngineers, estimateItems } from "@/lib/project-estimate";
 
 const ESTIMATE = "estimate";
 
@@ -36,9 +36,12 @@ export default async function AdminIntegrationsPage({
         <p className="text-ink-soft mt-4 max-w-3xl text-[0.875rem]">
           Tick what a project needs, choose a provider and say how many. The
           total shows what is paid to start, then every month and every year.
-          Add the team below to see the full running cost.
+          Add the engineers below to see the full running cost.
         </p>
-        <ProjectEstimate items={estimateItems(sheets)} />
+        <ProjectEstimate
+          items={estimateItems(sheets)}
+          engineers={estimateEngineers(sheets)}
+        />
       </>
     );
   }

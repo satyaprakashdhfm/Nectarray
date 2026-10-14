@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { FX_INR_PER_USD } from "@/lib/price-book";
 import {
   estimateTotals,
   priceIn,
+  type EstimateEngineer,
   type EstimateItem,
   type EstimateLine,
 } from "@/lib/project-estimate";
 import { formatMoney, type Currency } from "@/lib/price-money";
 import { clearEstimate, saveEstimate, readChoices } from "@/lib/estimate-picks";
 import { resetSavedChoices, useSavedState } from "@/lib/use-saved-state";
-import { TEAM_RATES_CHECKED, TEAM_ROLES } from "@/lib/team-rates";
 import { box, Field, NumberInput } from "@/components/admin/CostEstimator";
 import { Dropdown } from "@/components/admin/Dropdown";
 import { cn } from "@/lib/utils";
@@ -37,16 +37,23 @@ const amount = (text: string) => {
 /**
  * Tick what a project needs, choose a provider for each and say how many:
  * the total comes out as the first payment, then what recurs each month
- * and each year. Developers below adds the people, with Indian market
- * salaries shown as a guide and each figure left to fill in.
+ * and each year. Engineers below adds the people: chosen one by one from
+ * the Engineers sheet (our own people and market averages), each with
+ * their monthly cost filled in from there and open to change.
  */
-export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
+export function ProjectEstimate({
+  items,
+  engineers,
+}: {
+  items: EstimateItem[];
+  engineers: EstimateEngineer[];
+}) {
   const [currency, setCurrency] = useSavedState<Currency>(
     "estimate:currency",
     "inr",
   );
   const [picks, setPicks] = useState(() => startingPicks(items));
-  const [team, setTeam] = useState(startingTeam);
+  const [team, setTeam] = useState<Member[]>([]);
   const [newRole, setNewRole] = useState("");
   const [loaded, setLoaded] = useState(false);
 
@@ -71,11 +78,22 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
       else if (next[item.id].option === option)
         next[item.id] = { ...next[item.id], on: false };
     }
+    // Only the people chosen: older saves listed every role, unticked.
+    let people = Array.isArray(estimate?.team)
+      ? estimate.team.filter((m) => m.on || amount(m.monthly) > 0)
+      : [];
+    // Engineers ticked or unticked on the Engineers sheet.
+    for (const { option, on } of log) {
+      const engineer = engineers.find((e) => e.id === option);
+      if (!engineer) continue;
+      people = people.filter((m) => m.id !== option);
+      if (on) people.push(memberFor(engineer));
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- browser-only state, read once on mount
     setPicks(next);
-    if (Array.isArray(estimate?.team)) setTeam(estimate.team);
+    setTeam(people);
     setLoaded(true);
-  }, [items]);
+  }, [items, engineers]);
 
   useEffect(() => {
     if (loaded) saveEstimate({ picks, team });
@@ -127,6 +145,12 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
     setPicks((p) => ({ ...p, [id]: { ...p[id], ...change } }));
   const setMember = (id: string, change: Partial<Member>) =>
     setTeam((list) => list.map((m) => (m.id === id ? { ...m, ...change } : m)));
+  const addEngineer = (id: string) => {
+    const engineer = engineers.find((e) => e.id === id);
+    if (engineer && !team.some((m) => m.id === id))
+      setTeam((list) => [...list, memberFor(engineer)]);
+  };
+  const choosable = engineers.filter((e) => !team.some((m) => m.id === e.id));
   const addRole = () => {
     const role = newRole.trim();
     if (!role) return;
@@ -285,16 +309,32 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
 
           <section aria-labelledby="developers">
             <h2 id="developers" className="text-ink text-[1rem] font-semibold">
-              Developers
+              Engineers
             </h2>
             <p className="text-ink-faint mt-1 max-w-[70ch] text-[0.8125rem]">
-              Enter what each person costs a month (CTC, before tax). The Indian
-              market average is shown as a guide, checked {TEAM_RATES_CHECKED}.
-              Add any role the project needs.
+              Choose who works on this project. Their monthly cost (CTC, before
+              tax) comes from the Engineers sheet; change it here for this
+              project. Add our own people on that sheet with Edit.
             </p>
+            {choosable.length > 0 && (
+              <Field label="Add an engineer" className="mt-3 max-w-xl">
+                <Dropdown
+                  value=""
+                  aria-label="Add an engineer"
+                  onChange={addEngineer}
+                  options={[
+                    { value: "", label: "Choose an engineer or role…" },
+                    ...choosable.map((e) => ({
+                      value: e.id,
+                      label: optionLabel(e),
+                    })),
+                  ]}
+                />
+              </Field>
+            )}
             <ul className="mt-3 space-y-3">
               {team.map((member) => {
-                const market = TEAM_ROLES.find((r) => r.id === member.id);
+                const known = engineers.find((e) => e.id === member.id);
                 const cost =
                   amount(member.people) *
                   priceIn({ inr: amount(member.monthly) }, currency);
@@ -320,53 +360,25 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
                           <span className="text-ink block text-[0.9375rem] font-semibold">
                             {member.role}
                           </span>
-                          {market && (
+                          {known && (
                             <span className="text-ink-faint mt-0.5 block text-[0.75rem]">
-                              Market average ₹
-                              {market.monthly.toLocaleString("en-IN")} a month,
-                              usually ₹{market.low.toLocaleString("en-IN")} to ₹
-                              {market.high.toLocaleString("en-IN")}.{" "}
-                              {market.basis}{" "}
-                              <a
-                                href={market.source.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-brand-deep inline-flex items-center gap-0.5 font-semibold"
-                              >
-                                {market.source.label}
-                                <ExternalLink className="size-3" aria-hidden />
-                              </a>
+                              {details(known)}
                             </span>
                           )}
                         </span>
                       </label>
-                      {market ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMember(member.id, {
-                              monthly: String(market.monthly),
-                              on: true,
-                            })
-                          }
-                          className="text-brand-deep hover:bg-brand-wash shrink-0 rounded-md px-2 py-1 text-[0.75rem] font-semibold"
-                        >
-                          Use average
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setTeam((list) =>
-                              list.filter((m) => m.id !== member.id),
-                            )
-                          }
-                          aria-label={`Remove ${member.role}`}
-                          className="text-ink-faint hover:text-danger shrink-0 rounded-md p-1"
-                        >
-                          <Trash2 className="size-4" aria-hidden />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTeam((list) =>
+                            list.filter((m) => m.id !== member.id),
+                          )
+                        }
+                        aria-label={`Remove ${member.role}`}
+                        className="text-ink-faint hover:text-danger shrink-0 rounded-md p-1"
+                      >
+                        <Trash2 className="size-4" aria-hidden />
+                      </button>
                     </div>
                     <div
                       className={cn(
@@ -414,7 +426,10 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
               }}
               className="mt-3 flex flex-wrap items-end gap-2"
             >
-              <Field label="Add a role" className="min-w-[14rem] flex-1">
+              <Field
+                label="Or add a role not on the sheet"
+                className="min-w-[14rem] flex-1"
+              >
                 <input
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
@@ -457,7 +472,7 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
                 label="Every month"
                 hint={
                   people.monthly > 0
-                    ? `${money(services.monthly)} services + ${money(people.monthly)} developers`
+                    ? `${money(services.monthly)} services + ${money(people.monthly)} engineers`
                     : undefined
                 }
                 value={money(all.monthly)}
@@ -475,7 +490,7 @@ export function ProjectEstimate({ items }: { items: EstimateItem[] }) {
             </dl>
             {serviceLines.length + teamLines.length === 0 && (
               <p className="text-ink-faint mt-3 text-[0.75rem]">
-                Tick a service or a developer to start the estimate.
+                Tick a service or add an engineer to start the estimate.
               </p>
             )}
             <p className="text-ink-faint mt-3 text-[0.75rem]">
@@ -535,12 +550,29 @@ function startingPicks(items: EstimateItem[]): Record<string, Pick> {
   );
 }
 
-function startingTeam(): Member[] {
-  return TEAM_ROLES.map((r) => ({
-    id: r.id,
-    role: r.role,
-    on: false,
+function memberFor(engineer: EstimateEngineer): Member {
+  return {
+    id: engineer.id,
+    role: engineer.name,
+    on: true,
     people: "1",
-    monthly: "",
-  }));
+    monthly: engineer.monthly ? String(engineer.monthly) : "",
+  };
+}
+
+/** "Satya · Full-stack developer: ₹60,000 a month (Our team)". */
+function optionLabel(e: EstimateEngineer) {
+  const role = e.role && e.role !== e.name ? ` · ${e.role}` : "";
+  const cost = e.monthly
+    ? `: ₹${e.monthly.toLocaleString("en-IN")} a month`
+    : "";
+  return `${e.name}${role}${cost}${e.kind ? ` (${e.kind})` : ""}`;
+}
+
+/** The line under a chosen engineer: role, kind and what the sheet says. */
+function details(e: EstimateEngineer) {
+  const head = [e.role !== e.name && e.role, e.kind]
+    .filter(Boolean)
+    .join(" · ");
+  return [head, e.note].filter(Boolean).join(". ");
 }
