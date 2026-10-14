@@ -5,18 +5,29 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowUp, Check, Loader2, Mic, Square } from "lucide-react";
+import {
+  ArrowUp,
+  Check,
+  Loader2,
+  MessagesSquare,
+  Mic,
+  Square,
+  X,
+} from "lucide-react";
 import { useVoice } from "@/components/admin/workspace/useVoice";
 import { inr } from "@/lib/agent/cost";
 
 /**
- * The Agent's chat. Typed or spoken (the microphone sends the words through
+ * The Agent, as a chat bubble in the bottom-right corner of every admin
+ * page: tap it and the chat opens over the page (the whole screen on a
+ * phone). Typed or spoken (the microphone sends the words through
  * /api/admin/transcribe and puts them in the box to check before sending);
  * each answer comes from /api/admin/agent with what it changed, linked, and
  * a line with what that answer cost.
  *
  * The conversation is kept in this browser (localStorage) until New chat;
- * every answer and its cost is also saved on the server for the totals.
+ * every answer and its cost is also saved on the server, and the header
+ * shows what today's and this month's answers have cost.
  */
 
 type Usage = {
@@ -27,6 +38,12 @@ type Usage = {
   ms: number;
 };
 type Action = { label: string; href?: string };
+type Spend = {
+  todayUsd: number;
+  todayN: number;
+  monthUsd: number;
+  monthN: number;
+};
 type Message = {
   role: "user" | "assistant";
   content: string;
@@ -56,13 +73,62 @@ function load(): Message[] {
   }
 }
 
-export function AgentChat() {
+export function AgentWidget() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  return (
+    <>
+      {/* Kept mounted while closed, so a reply still lands if it is shut. */}
+      <div
+        role="dialog"
+        aria-label="Agent"
+        hidden={!open}
+        className="bg-surface border-line fixed inset-0 z-[70] flex flex-col overflow-hidden shadow-2xl sm:inset-auto sm:right-5 sm:bottom-5 sm:h-[min(40rem,calc(100dvh-6.5rem))] sm:w-[26rem] sm:rounded-2xl sm:border"
+      >
+        <Chat open={open} onClose={() => setOpen(false)} />
+      </div>
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open the Agent"
+          className="bg-ink text-cta-fg hover:bg-brand-deep fixed right-5 bottom-5 z-[55] grid size-14 place-items-center rounded-full shadow-xl transition-colors active:scale-[0.96]"
+        >
+          <MessagesSquare className="size-6" strokeWidth={1.9} aria-hidden />
+        </button>
+      )}
+    </>
+  );
+}
+
+function Chat({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [spend, setSpend] = useState<Spend | null>(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const box = useRef<HTMLTextAreaElement>(null);
-  const end = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+
+  const loadSpend = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/agent");
+      if (res.ok) setSpend((await res.json()) as Spend);
+    } catch {
+      // Offline: the header just leaves the spend out.
+    }
+  }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetched on opening
+    if (open) void loadSpend();
+  }, [open, loadSpend]);
 
   // Read after mounting: the server has no localStorage.
   useEffect(() => {
@@ -75,8 +141,8 @@ export function AgentChat() {
     } catch {
       // Private window or storage full: the chat still works, unsaved.
     }
-    end.current?.scrollIntoView({ block: "end" });
-  }, [messages]);
+    list.current?.scrollTo({ top: list.current.scrollHeight });
+  }, [messages, open]);
 
   const voice = useVoice({
     purpose: "business",
@@ -138,8 +204,9 @@ export function AgentChat() {
             },
           ]);
         }
-        // The spend at the top, and any page showing what changed.
-        router.refresh();
+        // The page behind may show what changed.
+        if (body.actions?.length) router.refresh();
+        void loadSpend();
       } catch {
         setMessages((m) => [
           ...m,
@@ -153,17 +220,22 @@ export function AgentChat() {
         setBusy(false);
       }
     },
-    [busy, messages, router],
+    [busy, messages, router, loadSpend],
   );
 
   const clock = `${Math.floor(voice.seconds / 60)}:${String(voice.seconds % 60).padStart(2, "0")}`;
 
   return (
-    <div className="card mt-6 flex min-h-[28rem] flex-col overflow-hidden">
-      <div className="border-line-soft flex items-center justify-between gap-3 border-b px-4 py-2.5">
-        <p className="text-ink-soft text-[0.8125rem]">
-          Tap the mic, speak, tap again. Check the words, then send.
-        </p>
+    <>
+      <div className="border-line-soft flex items-center gap-3 border-b px-4 py-2.5">
+        <div className="min-w-0 flex-1">
+          <p className="text-ink text-[0.9375rem] font-semibold">Agent</p>
+          <p className="text-ink-faint truncate text-[0.75rem]">
+            {spend
+              ? `Today ${inr(spend.todayUsd)} (${spend.todayN}) · This month ${inr(spend.monthUsd)} (${spend.monthN})`
+              : "Talk or type. Tap the mic, speak, tap again."}
+          </p>
+        </div>
         {messages.length > 0 && (
           <button
             type="button"
@@ -173,9 +245,20 @@ export function AgentChat() {
             New chat
           </button>
         )}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close the Agent"
+          className="text-ink-soft hover:bg-mist hover:text-ink grid size-9 shrink-0 place-items-center rounded-lg"
+        >
+          <X className="size-5" strokeWidth={1.9} aria-hidden />
+        </button>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div
+        ref={list}
+        className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4"
+      >
         {messages.length === 0 && (
           <div className="py-4">
             <p className="text-ink-soft text-[0.875rem]">Try asking:</p>
@@ -246,7 +329,6 @@ export function AgentChat() {
             Working on it…
           </p>
         )}
-        <div ref={end} />
       </div>
 
       <form
@@ -315,7 +397,7 @@ export function AgentChat() {
           </button>
         </div>
       </form>
-    </div>
+    </>
   );
 }
 

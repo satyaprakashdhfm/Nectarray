@@ -3,18 +3,21 @@ import { revalidatePath } from "next/cache";
 import { generateText, isStepCount } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agentTurns } from "@/lib/db/schema";
 import { AccessError, requireAdmin } from "@/lib/auth/access";
 import { agentTools, type AgentAction } from "@/lib/agent/tools";
 import { costOf } from "@/lib/agent/cost";
+import { num } from "@/lib/business";
 import { todayIST } from "@/lib/work";
 
 /**
  * The admin Agent: a message (typed or spoken) in, an answer out, with the
  * panel's records read and changed along the way through the tools in
  * lib/agent/tools.ts. Each answer is saved to agent_turns with its tokens
- * and cost, which the chat shows under the answer and the Agent page totals.
+ * and cost, which the chat shows under the answer; GET totals today's and
+ * this month's spend for the chat's header.
  *
  * Only for an admin all the way in. Gemini, on the key the site already
  * has; AGENT_MODEL picks another one.
@@ -53,6 +56,33 @@ How to work:
 - Never claim you did something unless the tool call succeeded. If a tool returns an error, say so plainly.
 - After a change, confirm it in one or two short lines, mentioning the end dates involved.
 - For numbers, call the tools and answer from what they return; never make figures up. Money is in Indian rupees: write ₹1,20,000 style. Keep answers short. Use a small markdown table when listing more than three tasks or projects. Do not show ids unless asked.`;
+}
+
+/** What the Agent's answers have cost today and this month (India time). */
+export async function GET() {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    const status = error instanceof AccessError ? error.status : 401;
+    return NextResponse.json({ error: "Not allowed." }, { status });
+  }
+  const ist = sql`(${agentTurns.createdAt} at time zone 'Asia/Kolkata')`;
+  const today = sql`${ist}::date = (now() at time zone 'Asia/Kolkata')::date`;
+  const month = sql`date_trunc('month', ${ist}) = date_trunc('month', now() at time zone 'Asia/Kolkata')`;
+  const [spend] = await db
+    .select({
+      todayN: sql<number>`count(*) filter (where ${today})::int`,
+      todayUsd: sql<string>`coalesce(sum(${agentTurns.costUsd}) filter (where ${today}), 0)`,
+      monthN: sql<number>`count(*) filter (where ${month})::int`,
+      monthUsd: sql<string>`coalesce(sum(${agentTurns.costUsd}) filter (where ${month}), 0)`,
+    })
+    .from(agentTurns);
+  return NextResponse.json({
+    todayN: spend.todayN,
+    todayUsd: num(spend.todayUsd),
+    monthN: spend.monthN,
+    monthUsd: num(spend.monthUsd),
+  });
 }
 
 export async function POST(request: Request) {

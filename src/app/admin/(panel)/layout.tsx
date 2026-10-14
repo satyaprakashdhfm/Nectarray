@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { Logo } from "@/components/layout/Logo";
 import { AdminMenu, AdminTabs } from "@/components/admin/AdminTabs";
 import { AppClose } from "@/components/admin/AppClose";
+import { AgentWidget } from "@/components/admin/AgentWidget";
 import {
   SidebarFrame,
   SidebarProvider,
@@ -107,6 +108,7 @@ export default async function AdminPanelLayout({
          * and can be hidden from the header for the full width.
          */}
         <SidebarFrame nav={<AdminTabs />}>{children}</SidebarFrame>
+        <AgentWidget />
       </div>
     </SidebarProvider>
   );
