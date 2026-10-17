@@ -28,6 +28,7 @@ import {
 import { setProjectStatus } from "@/app/admin/(panel)/business-actions";
 import { saveProjectSheets } from "@/app/admin/(panel)/project-actions";
 import { field, primaryButton, quietButton } from "@/components/admin/Business";
+import { ProjectNotes } from "@/components/admin/ProjectNotes";
 import { MoneyInput } from "@/components/admin/QuoteBuilder";
 import { PROJECT_STATUSES, rupees } from "@/lib/business";
 import {
@@ -174,8 +175,8 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"];
 
 /**
- * The working file of one project: status, deployment links, the .env file
- * and the three handover sheets, saved together. Two Excel files come out of it: the
+ * The working file of one project: status, deployment links, notes, the
+ * .env file and the three handover sheets, saved together. Two Excel files come out of it: the
  * month's bill for the client (Amounts paid), and the full sheet with the
  * passwords and running costs.
  */
@@ -197,6 +198,8 @@ export function ProjectWorkspace({
   const [saved, setSaved] = useState(() => JSON.stringify(initial));
   const dirty = JSON.stringify(s) !== saved;
   const [tab, setTab] = useState<Tab>("paid");
+  // Bumped by Undo, so the open note's editor reloads the saved text.
+  const [resets, setResets] = useState(0);
   const cols = useMemo(() => paidCols(projectId), [projectId]);
   const [show, setShow] = useState(false);
   const [pending, start] = useTransition();
@@ -350,6 +353,13 @@ export function ProjectWorkspace({
           </button>
         </section>
       </div>
+
+      <ProjectNotes
+        projectId={projectId}
+        notes={s.notes}
+        onChange={(notes) => setS({ ...s, notes })}
+        version={resets}
+      />
 
       <EnvFile
         value={s.env}
@@ -505,7 +515,10 @@ export function ProjectWorkspace({
           <div className="ml-auto flex gap-2">
             <button
               type="button"
-              onClick={() => setS(JSON.parse(saved) as ProjectSheets)}
+              onClick={() => {
+                setS(JSON.parse(saved) as ProjectSheets);
+                setResets((n) => n + 1);
+              }}
               disabled={pending}
               className={cn(quietButton, "py-2")}
             >

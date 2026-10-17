@@ -1,6 +1,6 @@
 /**
  * The working file for a client project: status notes, deployment links,
- * its environment variables and the three handover sheets. Shared by the page (client) and the actions
+ * its environment variables, its notes and the three handover sheets. Shared by the page (client) and the actions
  * and Excel download (server).
  */
 
@@ -60,6 +60,16 @@ export type AccessRow = {
   note: string;
 };
 
+/** A note kept with a project: a title and its formatted text. */
+export type NoteRow = {
+  id: string;
+  title: string;
+  /** The text as the editor writes it: headings, lists, links, tables. */
+  html: string;
+  /** When it was last changed, as an ISO time; "" if never. */
+  updated: string;
+};
+
 export type ProjectSheets = {
   statusNote: string;
   links: LinkRow[];
@@ -70,6 +80,8 @@ export type ProjectSheets = {
   env: string;
   /** Months whose bill is done; they fold up above the open month. */
   closedMonths: string[];
+  /** Notes, newest first. */
+  notes: NoteRow[];
 };
 
 export const EMPTY_SHEETS: ProjectSheets = {
@@ -80,6 +92,7 @@ export const EMPTY_SHEETS: ProjectSheets = {
   access: [],
   env: "",
   closedMonths: [],
+  notes: [],
 };
 
 const svc = (
@@ -292,7 +305,29 @@ export function cleanSheets(input: unknown): ProjectSheets {
           .filter(isMonth),
       ),
     ].sort(),
+    notes: rows(x.notes).map((r, i) => {
+      const o = obj(r);
+      const updated = str(o.updated, 40);
+      return {
+        id: id(o.id, i),
+        title: str(o.title, 200),
+        html: str(o.html, 400_000),
+        updated: Number.isNaN(Date.parse(updated)) ? "" : updated,
+      };
+    }),
   };
+}
+
+/**
+ * The stored documents a project's notes show or link to: pictures put in
+ * a note, and files attached to one. Kept when unused files are removed.
+ */
+export function noteFileIds(notes: NoteRow[]): string[] {
+  return notes.flatMap((n) =>
+    [...n.html.matchAll(/\/files\/([0-9a-f-]{36})/gi)]
+      .map((m) => m[1])
+      .filter(isFileId),
+  );
 }
 
 /** The names set in a .env file, in order: comments and blank lines skipped. */

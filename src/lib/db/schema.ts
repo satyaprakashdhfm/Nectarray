@@ -708,6 +708,8 @@ export const projectDetails = pgTable("project_details", {
   env: text().notNull().default(""),
   /** Months whose bill is done ("2026-10"), folded up on the page. */
   closedMonths: jsonb("closed_months").notNull().default([]),
+  /** Free-form notes, each a title and its formatted text as HTML. */
+  notes: jsonb().notNull().default([]),
   updatedAt: now(),
 });
 
