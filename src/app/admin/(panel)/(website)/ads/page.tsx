@@ -30,7 +30,7 @@ import {
   addCampaign,
   deleteCampaign,
   updateCampaign,
-} from "../business-actions";
+} from "../../business-actions";
 
 export const dynamic = "force-dynamic";
 

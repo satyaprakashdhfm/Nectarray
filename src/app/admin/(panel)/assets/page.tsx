@@ -1,4 +1,5 @@
 import { ADMIN } from "@/lib/admin-path";
+import { SectionTabs } from "@/components/admin/SectionTabs";
 import Link from "next/link";
 import {
   Empty,
@@ -36,6 +37,7 @@ export default async function AdminAssetsPage() {
 
   return (
     <>
+      <SectionTabs section="money" />
       <PageHead
         title="Assets"
         lede="The company's money. Add what comes in, and what is spent with a reason. Bills on each project's Amounts paid come off by themselves: the company's own at once, a person's once they are marked paid back."

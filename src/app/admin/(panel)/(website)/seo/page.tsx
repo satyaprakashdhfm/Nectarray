@@ -29,7 +29,7 @@ import {
   deleteKeyword,
   updateBlogPost,
   updateKeywordPosition,
-} from "../business-actions";
+} from "../../business-actions";
 
 export const dynamic = "force-dynamic";
 

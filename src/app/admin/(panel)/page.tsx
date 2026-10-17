@@ -1,4 +1,5 @@
 import { ADMIN } from "@/lib/admin-path";
+import { SectionTabs } from "@/components/admin/SectionTabs";
 import Link from "next/link";
 import {
   Empty,
@@ -57,6 +58,7 @@ export default async function AdminRevenuePage() {
 
   return (
     <>
+      <SectionTabs section="money" />
       <PageHead
         title="Revenue"
         lede="Money received across all four services. Record client payments on each service's tab and academy fees on the Students page."

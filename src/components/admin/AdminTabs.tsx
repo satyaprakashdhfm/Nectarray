@@ -8,12 +8,12 @@ import {
   Bot,
   Briefcase,
   CalendarDays,
-  ChartLine,
   ChevronDown,
   Code,
   Component,
   FileText,
   FolderKanban,
+  Globe,
   GraduationCap,
   Inbox,
   IndianRupee,
@@ -27,27 +27,39 @@ import {
   NotebookPen,
   Palette,
   Plug,
-  Search,
   Sparkles,
   SquareTerminal,
   Users,
-  Wallet,
   X,
   type LucideIcon,
 } from "lucide-react";
 
-type Tab = { href: string; label: string; icon: LucideIcon };
+type Tab = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  /** Other pages this tab stands for, so it shows as current on them. */
+  also?: string[];
+};
 type Group = Tab & { children: Tab[]; owns: string[] };
 
 const TOP: Tab[] = [
-  { href: `${ADMIN}`, label: "Revenue", icon: IndianRupee },
-  { href: `${ADMIN}/assets`, label: "Assets", icon: Wallet },
-  { href: `${ADMIN}/seo`, label: "SEO", icon: Search },
-  { href: `${ADMIN}/analytics`, label: "Analytics", icon: ChartLine },
-  { href: `${ADMIN}/ads`, label: "Ads", icon: Megaphone },
+  // Revenue and Assets, as tabs of one page.
+  {
+    href: `${ADMIN}`,
+    label: "Revenue & assets",
+    icon: IndianRupee,
+    also: [`${ADMIN}/assets`],
+  },
+  // Ads, Analytics and SEO for our own website, as tabs of one page.
+  {
+    href: `${ADMIN}/ads`,
+    label: "Our website",
+    icon: Globe,
+    also: [`${ADMIN}/analytics`, `${ADMIN}/seo`],
+  },
   { href: `${ADMIN}/development`, label: "All projects", icon: Layers },
   { href: `${ADMIN}/quotes`, label: "Quotations", icon: FileText },
-  { href: `${ADMIN}/integrations`, label: "Integrations", icon: Plug },
   { href: `${ADMIN}/tasks`, label: "Tasks & timeline", icon: ListChecks },
   { href: `${ADMIN}/workspace`, label: "Workspace", icon: SquareTerminal },
 ];
@@ -55,7 +67,8 @@ const TOP: Tab[] = [
 /**
  * Each service is its own group, holding its projects and the tools and
  * notes for doing that work: Marketing has the notes on Search Console, GA4,
- * ads and WhatsApp; Software has the website-building tabs. Then the
+ * ads and WhatsApp; Software has the website-building tabs and the
+ * integrations (what the services we build on cost). Then the
  * academy.
  */
 const GROUPS: Group[] = [
@@ -77,13 +90,18 @@ const GROUPS: Group[] = [
     href: `${ADMIN}/services/software`,
     label: "Software",
     icon: Code,
-    owns: [`${ADMIN}/services/software`, `${ADMIN}/web`],
+    owns: [
+      `${ADMIN}/services/software`,
+      `${ADMIN}/web`,
+      `${ADMIN}/integrations`,
+    ],
     children: [
       {
         href: `${ADMIN}/services/software`,
         label: "Projects",
         icon: FolderKanban,
       },
+      { href: `${ADMIN}/integrations`, label: "Integrations", icon: Plug },
       { href: `${ADMIN}/web`, label: "Learnings", icon: Lightbulb },
       { href: `${ADMIN}/web/colours`, label: "Colours", icon: Palette },
       { href: `${ADMIN}/web/elements`, label: "Elements", icon: Component },
@@ -148,13 +166,14 @@ export function AdminTabs() {
   const [chosen, setChosen] = useState<string | null | undefined>(undefined);
 
   const tabActive = (tab: Tab) =>
-    tab.href === `${ADMIN}`
+    tab.also?.some((path) => pathname.startsWith(path)) ||
+    (tab.href === `${ADMIN}`
       ? pathname === `${ADMIN}`
       : // All projects and Learnings own only their own page, not the
         // tabs beside them.
         tab.href === `${ADMIN}/development` || tab.href === `${ADMIN}/web`
         ? pathname === tab.href
-        : pathname.startsWith(tab.href);
+        : pathname.startsWith(tab.href));
   const groupActive = (group: Group) =>
     group.owns.some((path) => pathname.startsWith(path));
   const current = GROUPS.find(groupActive);
@@ -305,11 +324,12 @@ export function AdminMenu() {
   }, [open]);
 
   const active = (tab: Tab) =>
-    tab.href === `${ADMIN}` ||
+    tab.also?.some((path) => pathname.startsWith(path)) ||
+    (tab.href === `${ADMIN}` ||
     tab.href === `${ADMIN}/development` ||
     tab.href === `${ADMIN}/web`
       ? pathname === tab.href
-      : pathname.startsWith(tab.href);
+      : pathname.startsWith(tab.href));
 
   return (
     <>
