@@ -245,11 +245,14 @@ function CellInput({
   const box =
     "border-line bg-surface text-ink focus:border-brand rounded-md border px-2 py-1 text-[0.8125rem] outline-none";
 
-  if (column.kind === "long")
+  if (column.kind === "long" || column.kind === "points")
     return (
       <textarea
         value={value}
-        rows={2}
+        rows={column.kind === "points" ? 3 : 2}
+        placeholder={
+          column.kind === "points" ? "One point per line" : undefined
+        }
         maxLength={2000}
         aria-label={label}
         onChange={(e) => onChange({ input: e.target.value })}

@@ -11,11 +11,7 @@ import {
   type PriceTable,
   type Sheet,
 } from "@/lib/price-book";
-import {
-  PROVIDERS,
-  providersSheet,
-  withProviders,
-} from "@/lib/price-book-providers";
+import { PROVIDERS, providersSheet } from "@/lib/price-book-providers";
 
 /**
  * The price book as the team has edited it. The code holds every sheet as
@@ -29,8 +25,7 @@ const key = (sheet: string, table: string) => `${sheet}/${table}`;
 /** A sheet as the code has it, before edits. */
 export function baseSheet(slug: string | undefined): Sheet | undefined {
   if (slug === PROVIDERS) return providersSheet();
-  const sheet = sheetBySlug(slug);
-  return sheet && withProviders(sheet);
+  return sheetBySlug(slug);
 }
 
 const word = z.string().trim().max(200);
@@ -49,6 +44,7 @@ function cellSchema(kind: Column["kind"]): z.ZodType<Cell> {
     case "percent":
       return z.union([z.number().finite(), word, z.null()]);
     case "long":
+    case "points":
       return z.union([z.string().trim().max(2000), z.null()]);
     case "link":
       return z.union([

@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  ChevronRight,
   ExternalLink,
   Pencil,
   Search,
@@ -553,35 +554,53 @@ function PriceGrid({
         </p>
       )}
       {table.note && (
-        <p className="text-ink-faint mt-2 max-w-4xl text-[0.75rem]">
+        <p className="text-ink-faint mt-2 max-w-4xl text-[0.75rem] whitespace-pre-line">
           {table.note}
         </p>
       )}
       {table.faq && (
-        <div className="border-line bg-surface mt-3 max-w-5xl rounded-xl border p-4">
-          <h3 className="text-ink text-[0.9375rem] font-semibold">
+        // Closed until opened, and each question opens on its own.
+        <details className="group/faq border-line bg-surface mt-3 max-w-5xl rounded-xl border">
+          <summary className="text-ink flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
+            <ChevronRight
+              className="size-4 shrink-0 transition-transform group-open/faq:rotate-90"
+              aria-hidden
+            />
             Questions and answers
+            <span className="text-ink-faint text-[0.75rem] font-normal">
+              {table.faq.length}
+            </span>
+          </summary>
+          <div className="border-line border-t px-4 pt-2 pb-4">
             {table.faqSource && (
               <a
                 href={table.faqSource.url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-brand-deep ml-2 inline-flex items-center gap-1 text-[0.75rem] font-normal hover:underline"
+                className="text-brand-deep inline-flex items-center gap-1 text-[0.75rem] hover:underline"
               >
                 {table.faqSource.label}
                 <ExternalLink className="size-3 shrink-0" aria-hidden />
               </a>
             )}
-          </h3>
-          <dl className="mt-3 grid gap-x-8 gap-y-3 md:grid-cols-2">
-            {table.faq.map(({ q, a }) => (
-              <div key={q}>
-                <dt className="text-ink text-[0.8125rem] font-semibold">{q}</dt>
-                <dd className="text-ink-soft mt-0.5 text-[0.8125rem]">{a}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+            <div className="divide-line mt-2 divide-y">
+              {table.faq.map(({ q, a }) => (
+                <details key={q} className="group/q py-2">
+                  <summary className="text-ink flex cursor-pointer list-none items-start gap-2 text-[0.8125rem] font-semibold [&::-webkit-details-marker]:hidden">
+                    <ChevronRight
+                      className="mt-0.5 size-3.5 shrink-0 transition-transform group-open/q:rotate-90"
+                      aria-hidden
+                    />
+                    {q}
+                  </summary>
+                  <p className="text-ink-soft mt-1 pl-5.5 text-[0.8125rem]">
+                    {a}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </details>
       )}
     </section>
   );
@@ -688,7 +707,9 @@ function Comparison({
                         key={row.id}
                         className={cn(
                           "px-3 py-2 align-top",
-                          column.kind === "long" ? "text-ink-soft" : "text-ink",
+                          column.kind === "long" || column.kind === "points"
+                            ? "text-ink-soft"
+                            : "text-ink",
                           best && "text-leaf-deep font-semibold",
                         )}
                       >
@@ -768,6 +789,17 @@ function CellView({
     return <ConfidencePill value={cell} />;
   if (column.kind === "link" && typeof cell === "string")
     return <SiteLink url={cell} />;
+  if (column.kind === "points" && typeof cell === "string")
+    return (
+      <ul className="list-disc space-y-0.5 pl-4">
+        {cell
+          .split("\n")
+          .filter((line) => line.trim())
+          .map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+      </ul>
+    );
   const text = formatCell(cell, column, currency);
   // A company's name carries its small logo (BrandLogo).
   const logo =
@@ -842,6 +874,8 @@ function cellClass(column: Column) {
   switch (column.kind) {
     case "long":
       return "text-ink-soft min-w-[18rem] max-w-[28rem]";
+    case "points":
+      return "text-ink-soft min-w-[15rem] max-w-[20rem] text-[0.75rem]";
     case "text":
       return "text-ink min-w-[7rem]";
     case "confidence":

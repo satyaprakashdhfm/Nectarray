@@ -95,25 +95,33 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
     sheets.find((s) => s.slug === sheet)?.tables.find((t) => t.id === id);
   const rows = (sheet: string, id: string) => readRows(table(sheet, id));
 
-  const vm = (provider: string, id: string) =>
+  // One table for the three clouds, each row a cloud's item and service.
+  const cloudRows = rows("deployment", "clouds");
+  const monthly = (r: (typeof cloudRows)[number]) =>
+    r.text("Per") === "month" ? r.money("Price") : null;
+  const vms = options(
+    cloudRows,
+    (r) =>
+      r.text("Service") === "Virtual machine"
+        ? { label: `${r.text("Cloud")} ${r.text("Item")}`, price: monthly(r) }
+        : null,
+    "clouds",
+  );
+  const clouds = (service: string) =>
     options(
-      rows("deployment", id),
-      (r) => ({
-        label: `${provider} ${r.text("Instance")}`,
-        price: r.money("Per month"),
-      }),
-      id,
+      cloudRows.filter(
+        (r, i, all) =>
+          r.text("Service") === service &&
+          // A cloud's first row for the service: its base charge.
+          all.findIndex(
+            (o) =>
+              o.text("Cloud") === r.text("Cloud") &&
+              o.text("Service") === service,
+          ) === i,
+      ),
+      (r) => ({ label: r.text("Cloud"), price: monthly(r) }),
+      "clouds",
     );
-  const clouds = (service: string, prefix: string) => {
-    const row = rows("deployment", "clouds").find(
-      (r) => r.text("Service") === service,
-    );
-    if (!row) return [];
-    return (["AWS", "Google Cloud", "Azure"] as const).flatMap((cloud) => {
-      const price = row.money(cloud);
-      return price ? [{ id: `${prefix}/${cloud}`, label: cloud, price }] : [];
-    });
-  };
 
   const items: EstimateItem[] = [
     {
@@ -146,15 +154,16 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
       options: [
         ...options(
           rows("deployment", "hosting"),
-          (r) => ({
-            label: `${r.text("Platform")} ${r.text("Plan or size")}`,
-            price: r.money("Per month"),
-          }),
+          (r) =>
+            r.text("Per") === "month"
+              ? {
+                  label: `${r.text("Platform")} ${r.text("Plan or rate")}`,
+                  price: r.money("Price"),
+                }
+              : null,
           "hosting",
         ),
-        ...vm("AWS", "ec2"),
-        ...vm("Google Cloud", "gcp-vm"),
-        ...vm("Azure", "azure-vm"),
+        ...vms,
       ],
     },
     {
@@ -166,7 +175,7 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
       billing: "monthly",
       defaultQuantity: 1,
       note: "Base charge only; traffic is billed on top. Hosting platforms include one.",
-      options: clouds("Load balancer, base charge", "lb"),
+      options: clouds("Load balancer"),
     },
     {
       id: "database",
@@ -185,7 +194,7 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
           }),
           "supabase",
         ),
-        ...clouds("Managed Postgres, smallest", "postgres").map((o) => ({
+        ...clouds("Managed Postgres").map((o) => ({
           ...o,
           label: `${o.label} Postgres, smallest`,
         })),

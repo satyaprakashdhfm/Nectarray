@@ -11,14 +11,10 @@ export const PROVIDERS = "providers";
 type CategoryId = Integration["category"];
 
 /**
- * Kinds of provider shown on a workbook sheet of their own rather than on
- * Third-party providers: payments and delivery sit with the gateway and
- * courier comparisons they belong beside.
+ * Kinds of provider left off Third-party providers: payments and delivery
+ * are on the Payments & delivery sheet, one table each.
  */
-const ON_SHEET: Record<string, CategoryId[]> = {
-  "payments-delivery": ["payments", "delivery"],
-};
-const ELSEWHERE = new Set(Object.values(ON_SHEET).flat());
+const ELSEWHERE = new Set<CategoryId>(["payments", "delivery"]);
 
 /**
  * One table per kind of provider (lib/integrations), each provider once
@@ -76,16 +72,6 @@ export function providersSheet(): Sheet {
     tables: providerTables(categories),
     checks: [],
     sources: [],
-  };
-}
-
-/** A workbook sheet with the providers that belong on it added at the end. */
-export function withProviders(sheet: Sheet): Sheet {
-  const categories = ON_SHEET[sheet.slug];
-  if (!categories) return sheet;
-  return {
-    ...sheet,
-    tables: [...sheet.tables, ...providerTables(categories)],
   };
 }
 
