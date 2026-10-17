@@ -187,12 +187,15 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
       defaultQuantity: 1,
       options: [
         ...options(
-          rows("storage", "supabase"),
-          (r) => ({
-            label: `Supabase ${r.text("Plan")}`,
-            price: r.money("Per month"),
-          }),
-          "supabase",
+          rows("storage", "storage"),
+          (r) =>
+            r.text("Kind") === "Database plan"
+              ? {
+                  label: `${r.text("Provider")} ${r.text("Item")}`,
+                  price: r.money("Price"),
+                }
+              : null,
+          "storage",
         ),
         ...clouds("Managed Postgres").map((o) => ({
           ...o,
@@ -209,12 +212,15 @@ export function estimateItems(sheets: Sheet[]): EstimateItem[] {
       billing: "monthly",
       defaultQuantity: 50,
       options: options(
-        rows("storage", "files"),
-        (r) => ({
-          label: r.text("Service"),
-          price: r.money("Storage / GB-month"),
-        }),
-        "files",
+        rows("storage", "storage"),
+        (r) =>
+          r.text("Kind") === "File storage"
+            ? {
+                label: `${r.text("Provider")} ${r.text("Item")}`,
+                price: r.money("Price"),
+              }
+            : null,
+        "storage",
       ),
     },
     {

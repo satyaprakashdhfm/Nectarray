@@ -4,7 +4,7 @@ import { PageHead } from "@/components/admin/Business";
 import { PriceSheet } from "@/components/admin/PriceSheet";
 import { ProjectEstimate } from "@/components/admin/ProjectEstimate";
 import { CHECKED, SHEETS } from "@/lib/price-book";
-import { PROVIDERS } from "@/lib/price-book-providers";
+import { COMMUNICATIONS, PROVIDERS } from "@/lib/price-book-providers";
 import { baseSheet, withEdits } from "@/lib/price-book-store";
 import { estimateEngineers, estimateItems } from "@/lib/project-estimate";
 
@@ -23,6 +23,7 @@ export default async function AdminIntegrationsPage({
   const { sheet: slug } = await searchParams;
   const tabs = [
     ...SHEETS.map((s) => ({ slug: s.slug, title: s.title })),
+    { slug: COMMUNICATIONS, title: "Communications" },
     { slug: PROVIDERS, title: "Third-party providers" },
     { slug: ESTIMATE, title: "Estimate" },
   ];

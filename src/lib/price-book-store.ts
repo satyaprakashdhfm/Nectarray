@@ -11,7 +11,12 @@ import {
   type PriceTable,
   type Sheet,
 } from "@/lib/price-book";
-import { PROVIDERS, providersSheet } from "@/lib/price-book-providers";
+import {
+  COMMUNICATIONS,
+  communicationsSheet,
+  PROVIDERS,
+  providersSheet,
+} from "@/lib/price-book-providers";
 
 /**
  * The price book as the team has edited it. The code holds every sheet as
@@ -25,6 +30,7 @@ const key = (sheet: string, table: string) => `${sheet}/${table}`;
 /** A sheet as the code has it, before edits. */
 export function baseSheet(slug: string | undefined): Sheet | undefined {
   if (slug === PROVIDERS) return providersSheet();
+  if (slug === COMMUNICATIONS) return communicationsSheet();
   return sheetBySlug(slug);
 }
 

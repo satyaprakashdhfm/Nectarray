@@ -7,14 +7,21 @@ import {
 import type { PriceTable, Sheet } from "@/lib/price-book";
 
 export const PROVIDERS = "providers";
+export const COMMUNICATIONS = "communications";
 
 type CategoryId = Integration["category"];
 
 /**
  * Kinds of provider left off Third-party providers: payments and delivery
- * are on the Payments & delivery sheet, one table each.
+ * are on the Payments & delivery sheet, one table each, and SMS, WhatsApp
+ * and email on Communications.
  */
-const ELSEWHERE = new Set<CategoryId>(["payments", "delivery"]);
+const ELSEWHERE = new Set<CategoryId>([
+  "payments",
+  "delivery",
+  "sms",
+  "messaging",
+]);
 
 /**
  * One table per kind of provider (lib/integrations), each provider once
@@ -68,12 +75,176 @@ export function providersSheet(): Sheet {
   return {
     slug: PROVIDERS,
     title: "Third-party providers",
-    lede: "The outside services we connect to for messages, maps, sign-in and analytics, grouped by what they do, with every price and a link to the provider's own pricing page. Payment gateways and couriers are on Payments & delivery; AI, hosting and storage have their own sheets.",
+    lede: "The outside services we connect to for maps, sign-in and analytics, grouped by what they do, with every price and a link to the provider's own pricing page. Messages are on Communications, payment gateways and couriers on Payments & delivery; AI, hosting and storage have their own sheets.",
     tables: providerTables(categories),
     checks: [],
     sources: [],
   };
 }
+
+/**
+ * Everything a client's app uses to reach people: email (mailboxes on the
+ * domain and the service that sends the app's own mail), WhatsApp, and SMS
+ * with its DLT registration.
+ */
+export function communicationsSheet(): Sheet {
+  return {
+    slug: COMMUNICATIONS,
+    title: "Communications",
+    lede: "What it costs to reach people: email mailboxes on the client's domain and the SMTP service that sends the app's own mail, WhatsApp messages and template tools, and SMS and OTP with DLT registration. Each provider once, with every price beside it. 18% GST on top unless stated.",
+    tables: [EMAIL, WHATSAPP, ...providerTables(["sms"])],
+    checks: [
+      "ZeptoMail's price per credit is from third-party listings ($2.50 per 10,000 emails); Zoho's page shows it in the buyer's currency at checkout.",
+      "AiSensy's plan prices are from its own help pages (from 1 July 2025). Its price per WhatsApp message includes a markup on Meta's rate that sources disagree on; check the current rate card.",
+    ],
+    sources: [],
+  };
+}
+
+type Line = [string, string, string, string, string, string];
+
+/** Provider, item, price, basis, confidence, pricing page. */
+function communicationsTable(
+  id: string,
+  title: string,
+  note: string,
+  lines: Line[],
+): PriceTable {
+  return {
+    id,
+    title,
+    note,
+    compare: true,
+    nameColumns: [0, 1],
+    groupBy: 0,
+    columns: [
+      { label: "Provider", kind: "text", facet: true },
+      { label: "Item", kind: "text" },
+      { label: "Price", kind: "text" },
+      { label: "Basis", kind: "long" },
+      { label: "Confidence", kind: "confidence", facet: true },
+      { label: "Pricing page", kind: "link" },
+    ],
+    rows: lines.map((cells, n) => ({ id: `${id}-${n}`, cells })),
+  };
+}
+
+/** A provider's own prices from lib/integrations, as table lines. */
+function linesOf(slug: string): Line[] {
+  const i = INTEGRATIONS.find((x) => x.slug === slug)!;
+  return i.pricing.map((p) => [
+    i.name,
+    p.item,
+    p.price,
+    p.basis,
+    CONFIDENCE_LABEL[p.confidence],
+    i.links[0]?.url ?? "",
+  ]);
+}
+
+const ZOHO_MAIL = "https://www.zoho.com/in/mail/zohomail-pricing.html";
+const ZEPTO = "https://www.zoho.com/zeptomail/pricing.html";
+
+const EMAIL = communicationsTable(
+  "communications-email",
+  "Email: mailboxes on the domain, and SMTP for the app's own mail",
+  "Two different costs. Mailboxes (Zoho Mail) are per person who reads and writes mail on the client's domain. SMTP (ZeptoMail or Resend) is for mail the app sends by itself: sign-up, password reset, order and invoice emails. Most client projects need both. Full suites with mail are on Business workspace.",
+  [
+    [
+      "Zoho Mail",
+      "Free",
+      "₹0",
+      "Up to 5 users on one domain, 5 GB each, browser and app only (no IMAP, POP or Outlook).",
+      "Official",
+      ZOHO_MAIL,
+    ],
+    [
+      "Zoho Mail",
+      "Mail Lite (5 GB)",
+      "₹59 a user a month",
+      "Billed yearly. Email on the domain, calendar; data kept in India.",
+      "Secondary",
+      ZOHO_MAIL,
+    ],
+    [
+      "Zoho Mail",
+      "Mail Lite (10 GB)",
+      "₹75 a user a month",
+      "Billed yearly. As Lite 5 GB, with 10 GB.",
+      "Secondary",
+      ZOHO_MAIL,
+    ],
+    [
+      "Zoho Mail",
+      "Mail Premium",
+      "₹199 a user a month",
+      "Billed yearly. 50 GB, email security (eProtect), retention, 1 GB attachments.",
+      "Secondary",
+      ZOHO_MAIL,
+    ],
+    [
+      "Zoho ZeptoMail",
+      "SMTP and API sending",
+      "$2.50 per 10,000 emails",
+      "Pay as you go: one credit is 10,000 emails, valid 6 months. Transactional mail only, not newsletters.",
+      "Reported",
+      ZEPTO,
+    ],
+    [
+      "Zoho ZeptoMail",
+      "Free start",
+      "₹0",
+      "10,000 emails free with the first credit.",
+      "Official",
+      ZEPTO,
+    ],
+    ...linesOf("resend"),
+  ],
+);
+
+const AISENSY =
+  "https://wiki.aisensy.com/en/articles/11652273-pricing-update-effective-from-july-1";
+
+const WHATSAPP = communicationsTable(
+  "communications-whatsapp",
+  "WhatsApp: messages, and tools for templates and broadcasts",
+  "Meta charges for each delivered template message by its kind; replies inside 24 hours of a customer's message are free. Every template (order update, OTP, offer) is approved by Meta before use. Connecting straight to Meta's Cloud API has no monthly fee; a tool such as AiSensy adds a dashboard for templates, broadcasts, chatbots and agents, for a monthly fee and a markup per message.",
+  [
+    ...linesOf("whatsapp"),
+    [
+      "AiSensy",
+      "Basic plan",
+      "₹1,500 a month",
+      "Plus GST; about 10% off yearly. Owner plus 5 agents; templates, broadcasts and a shared inbox.",
+      "Reported",
+      AISENSY,
+    ],
+    [
+      "AiSensy",
+      "Pro plan",
+      "₹3,200 a month",
+      "Plus GST; about 10% off yearly. Adds more automation and analytics.",
+      "Reported",
+      AISENSY,
+    ],
+    [
+      "AiSensy",
+      "Extra agent",
+      "₹750 a month",
+      "Per agent above the 5 included.",
+      "Reported",
+      AISENSY,
+    ],
+    [
+      "AiSensy",
+      "Messages",
+      "Meta's rate plus a markup",
+      "Reported at about ₹0.88 to ₹1.09 per marketing message and ₹0.145 per utility or OTP message.",
+      "Quote only",
+      AISENSY,
+    ],
+  ],
+);
 
 // DLT registration, from Nesark's DLT guide and its Hindi question-and-
 // answer video, translated.
