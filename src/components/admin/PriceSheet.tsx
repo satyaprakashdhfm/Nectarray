@@ -557,6 +557,32 @@ function PriceGrid({
           {table.note}
         </p>
       )}
+      {table.faq && (
+        <div className="border-line bg-surface mt-3 max-w-5xl rounded-xl border p-4">
+          <h3 className="text-ink text-[0.9375rem] font-semibold">
+            Questions and answers
+            {table.faqSource && (
+              <a
+                href={table.faqSource.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-brand-deep ml-2 inline-flex items-center gap-1 text-[0.75rem] font-normal hover:underline"
+              >
+                {table.faqSource.label}
+                <ExternalLink className="size-3 shrink-0" aria-hidden />
+              </a>
+            )}
+          </h3>
+          <dl className="mt-3 grid gap-x-8 gap-y-3 md:grid-cols-2">
+            {table.faq.map(({ q, a }) => (
+              <div key={q}>
+                <dt className="text-ink text-[0.8125rem] font-semibold">{q}</dt>
+                <dd className="text-ink-soft mt-0.5 text-[0.8125rem]">{a}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
     </section>
   );
 }
@@ -740,6 +766,8 @@ function CellView({
   if (cell === null || cell === "") return null;
   if (column.kind === "confidence" && typeof cell === "string")
     return <ConfidencePill value={cell} />;
+  if (column.kind === "link" && typeof cell === "string")
+    return <SiteLink url={cell} />;
   const text = formatCell(cell, column, currency);
   // A company's name carries its small logo (BrandLogo).
   const logo =
@@ -765,6 +793,26 @@ function CellView({
   if (isMoney(cell) && !(currency in cell))
     return <span title={`Quoted as ${cellText(cell)}`}>{text}</span>;
   return <>{text}</>;
+}
+
+/** An outside page, named by its site: "msg91.com". */
+function SiteLink({ url }: { url: string }) {
+  let site = url;
+  try {
+    site = new URL(url).hostname.replace(/^www\./, "");
+  } catch {}
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      title={url}
+      className="text-brand-deep inline-flex items-center gap-1 whitespace-nowrap hover:underline"
+    >
+      {site}
+      <ExternalLink className="size-3 shrink-0" aria-hidden />
+    </a>
+  );
 }
 
 function ConfidencePill({ value }: { value: string }) {
@@ -798,6 +846,8 @@ function cellClass(column: Column) {
       return "text-ink min-w-[7rem]";
     case "confidence":
       return "";
+    case "link":
+      return "whitespace-nowrap";
     default:
       return "text-ink text-right whitespace-nowrap";
   }

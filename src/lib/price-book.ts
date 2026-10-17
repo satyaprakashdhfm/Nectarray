@@ -24,9 +24,11 @@ export type Column = {
   /**
    * text: short words; long: a sentence or more (wraps wide); money: a
    * price; number: a count or size (with `unit`); percent: a fraction
-   * shown as %; confidence: Official / Secondary / Low.
+   * shown as %; confidence: Official / Secondary / Low; link: an https
+   * address, shown as its site's name.
    */
-  kind: "text" | "long" | "money" | "number" | "percent" | "confidence";
+  kind:
+    "text" | "long" | "money" | "number" | "percent" | "confidence" | "link";
   unit?: string;
   /** Offer a filter of this column's values above the table. */
   facet?: boolean;
@@ -54,6 +56,9 @@ export type PriceTable = {
    * stacked beside it, rather than repeating the company on every row.
    */
   groupBy?: number;
+  /** Questions and answers shown under the table, and where they are from. */
+  faq?: { q: string; a: string }[];
+  faqSource?: { label: string; url: string };
   columns: Column[];
   rows: PriceRow[];
   /** Set when the team has changed this table from the workbook. */

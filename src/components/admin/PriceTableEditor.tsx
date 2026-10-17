@@ -300,14 +300,22 @@ function CellInput({
   return (
     <input
       value={value}
-      inputMode={column.kind === "text" ? undefined : "decimal"}
+      inputMode={
+        column.kind === "link"
+          ? "url"
+          : column.kind === "text"
+            ? undefined
+            : "decimal"
+      }
       maxLength={200}
       aria-label={label}
       onChange={(e) => onChange({ input: e.target.value })}
       className={cn(
         box,
         "w-full",
-        column.kind === "text" ? "min-w-[9rem]" : "min-w-[5.5rem] text-right",
+        column.kind === "text" || column.kind === "link"
+          ? "min-w-[9rem]"
+          : "min-w-[5.5rem] text-right",
       )}
     />
   );
