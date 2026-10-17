@@ -49,7 +49,8 @@ export type Integration = {
 export const CATEGORIES = [
   { id: "delivery", label: "Delivery and shipping" },
   { id: "payments", label: "Payments" },
-  { id: "messaging", label: "Messages and email" },
+  { id: "sms", label: "SMS and OTP" },
+  { id: "messaging", label: "WhatsApp and email" },
   { id: "maps", label: "Maps and location" },
   { id: "signin", label: "Sign-in" },
   { id: "ai", label: "AI" },
@@ -879,7 +880,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     slug: "msg91",
     name: "MSG91",
-    category: "messaging",
+    category: "sms",
     tagline: "SMS, OTP and voice for India, with DLT handled",
     overview:
       "An Indian messaging provider for transactional SMS and OTPs. Cheaper than Firebase for OTPs to Indian numbers, and it walks you through the TRAI DLT registration every sender needs.",
@@ -956,6 +957,211 @@ export const INTEGRATIONS: Integration[] = [
     links: [
       { label: "SMS pricing", url: "https://msg91.com/in/pricing/sms" },
       { label: "Docs", url: "https://docs.msg91.com/" },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "message-central",
+    name: "Message Central",
+    category: "sms",
+    tagline: "OTP by SMS for India, paid only when delivered, no DLT needed",
+    overview:
+      "An OTP service (VerifyNow) that sends and checks one-time codes by SMS. It sends from its own registered templates, so a client can start the same day without DLT registration, and it bills only OTPs the telecom operator confirms as delivered.",
+    useFor: [
+      "OTP sign-in when the client has no DLT registration yet",
+      "Phone number checks at sign-up or checkout",
+    ],
+    products: [
+      {
+        name: "VerifyNow",
+        what: "Sends an OTP, retries it and checks the code the user types.",
+        via: "REST API",
+      },
+      {
+        name: "WhatsApp OTP",
+        what: "The same OTP sent on WhatsApp instead of SMS.",
+        via: "REST API",
+      },
+    ],
+    pricing: [
+      {
+        item: "OTP SMS, India",
+        price: "From ₹0.30 each",
+        basis: "Pay as you go; only delivered OTPs are charged",
+        confidence: "official",
+      },
+      {
+        item: "Large volumes",
+        price: "Quote",
+        basis: "Lower rates on request for high volume",
+        confidence: "quote",
+      },
+      {
+        item: "Setup",
+        price: "₹0",
+        basis: "No setup fee; free test credit at sign-up",
+        confidence: "official",
+      },
+    ],
+    pricingNote:
+      "GST is not stated on the page; expect 18% on top. Prepaid wallet.",
+    setup: [
+      "Sign up and verify the business.",
+      "Top up the wallet and take the customer id and auth token.",
+      "Optional: register the client's own DLT sender id later for branded OTPs.",
+    ],
+    technical: [
+      { label: "Auth", value: "Customer id and auth token" },
+      { label: "Sandbox", value: "Free test credit at sign-up" },
+      { label: "Webhooks", value: "None needed; the API checks the code" },
+    ],
+    watchOuts: [
+      "OTPs come from Message Central's sender id, not the client's brand, unless the client registers their own DLT sender.",
+      "Only for OTPs; order alerts and reminders need a DLT provider such as MSG91.",
+    ],
+    links: [
+      {
+        label: "India pricing",
+        url: "https://www.messagecentral.com/product/verify-now/pricing/india",
+      },
+    ],
+    checked: CHECKED,
+  },
+  {
+    slug: "fast2sms",
+    name: "Fast2SMS",
+    category: "sms",
+    tagline: "Low-cost bulk and OTP SMS for India, from a ₹100 top-up",
+    overview:
+      "An Indian SMS provider for OTPs, alerts and bulk messages. The price per SMS falls as the top-up grows, and credit bought in bulk lasts longer.",
+    useFor: [
+      "OTP and alert SMS on a small budget",
+      "Bulk SMS to a client's customer list",
+    ],
+    products: [
+      {
+        name: "OTP SMS",
+        what: "Sends a code the app generates.",
+        via: "REST API",
+      },
+      {
+        name: "DLT SMS",
+        what: "Template SMS through the client's approved sender id.",
+        via: "REST API",
+      },
+      {
+        name: "Bulk SMS",
+        what: "Campaigns to a list, from the dashboard.",
+        via: "Dashboard",
+      },
+    ],
+    pricing: [
+      {
+        item: "Top-up ₹100 to ₹3,999",
+        price: "₹0.25 each",
+        basis: "Credit never expires",
+        confidence: "official",
+      },
+      {
+        item: "Top-up ₹4,000 to ₹13,999",
+        price: "₹0.21 to ₹0.19 each",
+        basis: "Credit valid 6 months",
+        confidence: "official",
+      },
+      {
+        item: "Top-up ₹14,000 to ₹1.3 lakh",
+        price: "₹0.17 to ₹0.15 each",
+        basis: "Credit valid 12 months",
+        confidence: "official",
+      },
+      {
+        item: "Top-up ₹1.3 lakh and above",
+        price: "₹0.13 to ₹0.11 each",
+        basis: "₹0.11 from ₹6 lakh; valid 12 to 24 months",
+        confidence: "official",
+      },
+    ],
+    pricingNote:
+      "₹50 free credit after sign-up. GST is not stated on the page; expect 18% on top.",
+    setup: [
+      "Sign up and complete KYC.",
+      "Register the sender id and templates on a DLT portal, then add the DLT ids to Fast2SMS.",
+      "Top up from ₹100 and take the API key.",
+    ],
+    technical: [
+      { label: "Auth", value: "API key in the request header" },
+      { label: "Sandbox", value: "No; ₹50 free credit to test" },
+      { label: "Webhooks", value: "Delivery reports" },
+    ],
+    watchOuts: [
+      "Its no-DLT 'Quick SMS' goes through an international route with manual approval; not for OTPs.",
+      "Same DLT rules as every Indian sender: text must match the approved template.",
+    ],
+    links: [{ label: "Pricing", url: "https://www.fast2sms.com/" }],
+    checked: CHECKED,
+  },
+  {
+    slug: "twilio",
+    name: "Twilio",
+    category: "sms",
+    tagline: "Global SMS and Verify, for clients with users abroad",
+    overview:
+      "A worldwide messaging platform. Far dearer than Indian providers for Indian numbers, so it fits only projects whose users are mostly outside India or that already run on Twilio.",
+    useFor: [
+      "OTPs and alerts to numbers outside India",
+      "One provider for SMS, voice and WhatsApp in many countries",
+    ],
+    products: [
+      {
+        name: "Verify",
+        what: "Sends and checks OTPs by SMS, WhatsApp, voice or email.",
+        via: "REST API and SDKs",
+      },
+      {
+        name: "Programmable SMS",
+        what: "Any SMS from the app.",
+        via: "REST API and SDKs",
+      },
+    ],
+    pricing: [
+      {
+        item: "SMS to India",
+        price: "$0.0832 each",
+        basis: "Per 160-character segment; failed messages $0.001",
+        confidence: "official",
+      },
+      {
+        item: "Verify",
+        price: "$0.05 each",
+        basis: "Per successful verification, plus the SMS fee above",
+        confidence: "official",
+      },
+    ],
+    pricingNote:
+      "An OTP to an Indian number through Verify comes to about $0.13 (₹12 or more), against ₹0.17 to ₹0.30 with an Indian provider.",
+    setup: [
+      "Create an account and upgrade from the trial.",
+      "Register the sender for India (DLT) through Twilio's support.",
+      "Take the account SID and auth token.",
+    ],
+    technical: [
+      { label: "Auth", value: "Account SID and auth token" },
+      { label: "Sandbox", value: "Trial account with test credit" },
+      { label: "Webhooks", value: "Message status callbacks" },
+    ],
+    watchOuts: [
+      "Billed in dollars on a card, so the rupee cost moves with the exchange rate.",
+      "Use an Indian provider for Indian numbers unless there is a reason not to.",
+    ],
+    links: [
+      {
+        label: "India SMS pricing",
+        url: "https://www.twilio.com/en-us/sms/pricing/in",
+      },
+      {
+        label: "Verify pricing",
+        url: "https://www.twilio.com/en-us/verify/pricing",
+      },
     ],
     checked: CHECKED,
   },

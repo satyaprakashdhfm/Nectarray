@@ -49,6 +49,11 @@ export type PriceTable = {
   compare: boolean;
   /** The columns that together name a row (for the comparison's headings). */
   nameColumns: number[];
+  /**
+   * Show one block per value of this column (a company), its rows (plans)
+   * stacked beside it, rather than repeating the company on every row.
+   */
+  groupBy?: number;
   columns: Column[];
   rows: PriceRow[];
   /** Set when the team has changed this table from the workbook. */
@@ -85,6 +90,7 @@ const WORKBOOK: WorkbookSheet[] = [
         note: "Tip: filter the Tier column to compare 'Cheap' vs 'Best' across providers. Batch APIs are ~50% cheaper at every major provider.",
         compare: true,
         nameColumns: [0],
+        groupBy: 1,
         columns: [
           { label: "Model", kind: "text" },
           { label: "Provider", kind: "text", facet: true },
@@ -430,6 +436,7 @@ const WORKBOOK: WorkbookSheet[] = [
         note: "Checked 10 Oct 2026 on each vendor's pricing page (not from the workbook). Standard is the setting most work uses; top is the biggest size or best quality the vendor prices. Prompt text and reference images can add a little. Google and OpenAI batch APIs are about half price.",
         compare: true,
         nameColumns: [0],
+        groupBy: 1,
         columns: [
           { label: "Model", kind: "text" },
           { label: "Provider", kind: "text", facet: true },
@@ -615,6 +622,7 @@ const WORKBOOK: WorkbookSheet[] = [
         note: "Checked 10 Oct 2026 on each vendor's pricing page (not from the workbook). An 8-second clip costs 8x the per-second price. Runway resells several makers' models at $0.01 a credit; those rows are Runway's prices.",
         compare: true,
         nameColumns: [0],
+        groupBy: 1,
         columns: [
           { label: "Model", kind: "text" },
           { label: "Provider", kind: "text", facet: true },
@@ -1630,6 +1638,7 @@ const WORKBOOK: WorkbookSheet[] = [
         note: "Prices are each platform's listed monthly rate for an always-on app. Usage-billed platforms (Railway, Vercel, Fly.io) charge less when idle.",
         compare: true,
         nameColumns: [0, 1],
+        groupBy: 0,
         columns: [
           { label: "Platform", kind: "text", facet: true },
           { label: "Plan or size", kind: "text" },
@@ -2130,6 +2139,7 @@ const WORKBOOK: WorkbookSheet[] = [
         note: "Indian registrars quote prices before 18% GST. Totals = best first year + renewals for the remaining years at the price the offer gives, privacy left out. Most ₹1 first years need a 3-year purchase, so years 2 and 3 are paid up front.",
         compare: true,
         nameColumns: [0, 1],
+        groupBy: 0,
         columns: [
           { label: "Registrar", kind: "text", facet: true },
           { label: "TLD", kind: "text", facet: true },
@@ -2318,6 +2328,7 @@ const WORKBOOK: WorkbookSheet[] = [
         title: "Payment gateway fees",
         compare: true,
         nameColumns: [0, 1],
+        groupBy: 0,
         columns: [
           { label: "Provider", kind: "text", facet: true },
           { label: "Method", kind: "text" },
@@ -2453,6 +2464,7 @@ const WORKBOOK: WorkbookSheet[] = [
         note: "Weight slabs, zone (local / metro / rest of India), COD fee and fuel surcharge change the final bill; get a rate card from the aggregator before budgeting.",
         compare: true,
         nameColumns: [0],
+        groupBy: 0,
         columns: [
           { label: "Provider", kind: "text" },
           { label: "Type", kind: "text", facet: true },
@@ -2894,6 +2906,7 @@ const WORKBOOK: WorkbookSheet[] = [
         note: "Yearly means a one-year commitment; Monthly is the flexible plan you can cancel any month. Filter Suite to see one company's plans.",
         compare: true,
         nameColumns: [0],
+        groupBy: 1,
         columns: [
           { label: "Plan", kind: "text" },
           { label: "Suite", kind: "text", facet: true },

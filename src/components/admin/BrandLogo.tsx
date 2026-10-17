@@ -62,6 +62,9 @@ const MARKS: [RegExp, Mark][] = [
   [/^msg91\b/i, { letter: "M", color: "#0b5cff" }],
   [/^ola\b/i, { letter: "O", color: "#2b7a3d" }],
   [/^groq\b/i, { letter: "G", color: "#f55036" }],
+  [/^message central\b/i, { letter: "M", color: "#1a73e8" }],
+  [/^fast2sms\b/i, { letter: "F", color: "#0d6efd" }],
+  [/^twilio\b/i, { letter: "T", color: "#f22f46" }],
 ];
 
 const markFor = (name: string) => MARKS.find(([re]) => re.test(name))?.[1];

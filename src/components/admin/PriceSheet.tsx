@@ -225,6 +225,26 @@ function PriceGrid({
     });
   }, [table, facets, query, sort]);
 
+  // A grouped table leads with its company column, one block per company,
+  // in the order the filtered and sorted rows first meet them.
+  const groupBy = table.groupBy;
+  const order =
+    groupBy === undefined
+      ? table.columns.map((_, i) => i)
+      : [
+          groupBy,
+          ...table.columns.map((_, i) => i).filter((i) => i !== groupBy),
+        ];
+  const groups = useMemo(() => {
+    if (groupBy === undefined) return null;
+    const byName = new Map<string, PriceRow[]>();
+    for (const row of visible) {
+      const name = cellText(row.cells[groupBy]);
+      byName.set(name, [...(byName.get(name) ?? []), row]);
+    }
+    return [...byName].map(([name, rows]) => ({ name, rows }));
+  }, [visible, groupBy]);
+
   const toggleSort = (column: number) =>
     setSort((s) =>
       s?.column !== column
@@ -312,7 +332,7 @@ function PriceGrid({
             <table className="w-full border-collapse text-left text-[0.8125rem]">
               <thead>
                 <tr className="bg-mist">
-                  {table.columns.map((column, index) => (
+                  {order.map((index) => (
                     <th
                       key={index}
                       scope="col"
@@ -325,8 +345,8 @@ function PriceGrid({
                       }
                       className={cn(
                         "border-line border-b px-3 py-2 align-bottom font-semibold",
-                        index === 0 && "bg-mist sticky left-0 z-[1]",
-                        isNumeric(column) && "text-right",
+                        index === order[0] && "bg-mist sticky left-0 z-[1]",
+                        isNumeric(table.columns[index]) && "text-right",
                       )}
                     >
                       <button
@@ -334,16 +354,16 @@ function PriceGrid({
                         onClick={() => toggleSort(index)}
                         className={cn(
                           "text-ink-soft hover:text-ink inline-flex items-center gap-1 text-left whitespace-nowrap",
-                          isNumeric(column) && "flex-row-reverse",
+                          isNumeric(table.columns[index]) && "flex-row-reverse",
                         )}
                       >
                         <span className="inline-flex items-center gap-1.5">
-                          <BrandLogo name={column.label} />
-                          {column.label}
-                          {column.unit && (
+                          <BrandLogo name={table.columns[index].label} />
+                          {table.columns[index].label}
+                          {table.columns[index].unit && (
                             <span className="text-ink-faint font-normal">
                               {" "}
-                              ({column.unit})
+                              ({table.columns[index].unit})
                             </span>
                           )}
                         </span>
@@ -362,59 +382,150 @@ function PriceGrid({
                 </tr>
               </thead>
               <tbody>
-                {visible.map((row) => {
-                  const { cells } = row;
-                  const isPicked = picked.includes(row.id);
-                  return (
-                    <tr
-                      key={row.id}
-                      className={cn(
-                        "group border-line-soft border-b last:border-b-0",
-                        isPicked && "bg-brand-wash/60",
-                      )}
-                    >
-                      {table.columns.map((column, col) => (
-                        <td
-                          key={col}
-                          className={cn(
-                            "px-3 py-2 align-top",
-                            col === 0 &&
-                              cn(
-                                "text-ink sticky left-0 z-[1] max-w-[16rem] min-w-[10rem] font-semibold",
-                                isPicked ? "bg-brand-wash" : "bg-surface",
-                              ),
-                            col !== 0 && cellClass(column),
-                          )}
-                        >
-                          {col === 0 && table.compare ? (
-                            <label className="flex cursor-pointer items-start gap-2">
-                              <input
-                                type="checkbox"
-                                checked={isPicked}
-                                onChange={() => togglePick(row.id)}
-                                aria-label={`Compare ${nameOf(cells)}`}
-                                className="accent-brand mt-0.5 size-3.5 shrink-0"
-                              />
+                {groups?.map(({ name, rows }) =>
+                  rows.map((row, r) => {
+                    const isPicked = picked.includes(row.id);
+                    return (
+                      <tr
+                        key={row.id}
+                        className={cn(
+                          r === 0
+                            ? "border-line border-t first:border-t-0"
+                            : "border-line-soft border-t",
+                          isPicked && "bg-brand-wash/60",
+                        )}
+                      >
+                        {r === 0 && (
+                          <th
+                            scope="rowgroup"
+                            rowSpan={rows.length}
+                            className="bg-surface text-ink sticky left-0 z-[1] max-w-[12rem] min-w-[9rem] px-3 py-2 text-left align-top font-semibold"
+                          >
+                            <CellView
+                              cell={name}
+                              column={table.columns[order[0]]}
+                              currency={currency}
+                              href={rows[0].href}
+                            />
+                            {rows.length > 1 && (
+                              <span className="text-ink-faint block text-[0.75rem] font-normal">
+                                {rows.length} {groupNoun(table)}
+                              </span>
+                            )}
+                          </th>
+                        )}
+                        {order.slice(1).map((col, c) => {
+                          // Repeats down a company's plans become one cell.
+                          const span = c === 0 ? 1 : runOf(rows, r, col);
+                          if (span === 0) return null;
+                          const column = table.columns[col];
+                          const cell = row.cells[col];
+                          const content = (
+                            <CellView
+                              cell={
+                                c === 0 && typeof cell === "string"
+                                  ? withoutCompany(cell, name)
+                                  : cell
+                              }
+                              column={column}
+                              currency={currency}
+                            />
+                          );
+                          return (
+                            <td
+                              key={col}
+                              rowSpan={span > 1 ? span : undefined}
+                              className={cn(
+                                "px-3 py-1.5 align-top",
+                                c === 0
+                                  ? "text-ink min-w-[8rem] font-semibold"
+                                  : cellClass(column),
+                              )}
+                            >
+                              {c === 0 && table.compare ? (
+                                <label className="flex cursor-pointer items-start gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isPicked}
+                                    onChange={() => togglePick(row.id)}
+                                    aria-label={`Compare ${nameOf(row.cells)}`}
+                                    className="accent-brand mt-0.5 size-3.5 shrink-0"
+                                  />
+                                  {content}
+                                </label>
+                              ) : column.kind === "long" ? (
+                                // Short in the grid; the whole text on hover
+                                // and in the comparison.
+                                <span
+                                  title={cellText(cell)}
+                                  className="line-clamp-2"
+                                >
+                                  {content}
+                                </span>
+                              ) : (
+                                content
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  }),
+                )}
+                {!groups &&
+                  visible.map((row) => {
+                    const { cells } = row;
+                    const isPicked = picked.includes(row.id);
+                    return (
+                      <tr
+                        key={row.id}
+                        className={cn(
+                          "group border-line-soft border-b last:border-b-0",
+                          isPicked && "bg-brand-wash/60",
+                        )}
+                      >
+                        {table.columns.map((column, col) => (
+                          <td
+                            key={col}
+                            className={cn(
+                              "px-3 py-2 align-top",
+                              col === 0 &&
+                                cn(
+                                  "text-ink sticky left-0 z-[1] max-w-[16rem] min-w-[10rem] font-semibold",
+                                  isPicked ? "bg-brand-wash" : "bg-surface",
+                                ),
+                              col !== 0 && cellClass(column),
+                            )}
+                          >
+                            {col === 0 && table.compare ? (
+                              <label className="flex cursor-pointer items-start gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={isPicked}
+                                  onChange={() => togglePick(row.id)}
+                                  aria-label={`Compare ${nameOf(cells)}`}
+                                  className="accent-brand mt-0.5 size-3.5 shrink-0"
+                                />
+                                <CellView
+                                  cell={cells[col]}
+                                  column={column}
+                                  currency={currency}
+                                  href={col === 0 ? row.href : undefined}
+                                />
+                              </label>
+                            ) : (
                               <CellView
                                 cell={cells[col]}
                                 column={column}
                                 currency={currency}
                                 href={col === 0 ? row.href : undefined}
                               />
-                            </label>
-                          ) : (
-                            <CellView
-                              cell={cells[col]}
-                              column={column}
-                              currency={currency}
-                              href={col === 0 ? row.href : undefined}
-                            />
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                 {visible.length === 0 && (
                   <tr>
                     <td
@@ -730,6 +841,45 @@ function lowestOf(column: Column, cells: Cell[]) {
   if (values.length < 2) return null;
   const min = Math.min(...values);
   return values.every((v) => v === min) ? null : min;
+}
+
+/**
+ * How many rows from `r` down share row r's value in `col`: 0 when the row
+ * above already shows it.
+ */
+function runOf(rows: PriceRow[], r: number, col: number) {
+  const same = (a: number, b: number) =>
+    JSON.stringify(rows[a].cells[col]) === JSON.stringify(rows[b].cells[col]);
+  if (r > 0 && same(r, r - 1)) return 0;
+  let end = r + 1;
+  while (end < rows.length && same(end, r)) end++;
+  return end - r;
+}
+
+/**
+ * A plan's name without the company it sits beside: "Zoho Workplace
+ * Standard" beside Zoho Workplace is "Standard", "Zoho Mail Lite" is
+ * "Mail Lite".
+ */
+function withoutCompany(name: string, company: string) {
+  if (name.startsWith(`${company} `)) return name.slice(company.length + 1);
+  const word = company.split(" ")[0];
+  if (name.startsWith(`${word} `) && name.length > word.length + 1)
+    return name.slice(word.length + 1);
+  return name;
+}
+
+/** "3 plans", "4 models": what a company's rows are, from the column name. */
+function groupNoun(table: PriceTable) {
+  const first = table.columns.find((_, i) => i !== table.groupBy);
+  const label = first?.label.toLowerCase() ?? "";
+  if (/model/.test(label)) return "models";
+  if (/plan/.test(label)) return "plans";
+  if (/item/.test(label)) return "items";
+  if (/type/.test(label)) return "services";
+  if (/method/.test(label)) return "methods";
+  if (/tld/.test(label)) return "domains";
+  return "rows";
 }
 
 function distinct(values: string[]) {

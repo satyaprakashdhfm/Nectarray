@@ -24,6 +24,7 @@ export function providersSheet(): Sheet {
           title: `${category.label}: ${providers.map((p) => p.name).join(", ")}`,
           compare: true,
           nameColumns: [0, 1],
+          groupBy: 0,
           columns: [
             { label: "Provider", kind: "text" as const, facet: true },
             { label: "Item", kind: "text" as const },
