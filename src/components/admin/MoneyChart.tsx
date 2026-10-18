@@ -15,7 +15,10 @@ export type ChartEvent = {
    */
   type: "revenue" | "cost" | "back" | "spend";
   amount: number;
-  /** For revenue: the service line, and who paid. */
+  /**
+   * For revenue: the service line, and the client who paid; none for a
+   * course fee or a payment on our own companies, which are not clients.
+   */
   line?: string;
   who?: string;
 };
@@ -42,7 +45,7 @@ const METRICS: { id: Metric; label: string; lede: string }[] = [
   {
     id: "clients",
     label: "Paying clients",
-    lede: "Different clients and students who paid in the period",
+    lede: "Different clients who paid in the period (students and our own companies aside)",
   },
 ];
 
@@ -153,7 +156,7 @@ export function MoneyChart({
             ? sum("revenue") + sum("back") - sum("cost") - sum("spend")
             : metric === "costs"
               ? sum("cost") + sum("spend") - sum("back")
-              : new Set(revenue.map((e) => e.who ?? "")).size;
+              : new Set(revenue.flatMap((e) => (e.who ? [e.who] : []))).size;
       const label =
         period === "year"
           ? key
@@ -180,7 +183,7 @@ export function MoneyChart({
                 (line === "all" || e.line === line) &&
                 buckets.some((b) => e.on.startsWith(b.key)),
             )
-            .map((e) => e.who ?? ""),
+            .flatMap((e) => (e.who ? [e.who] : [])),
         ).size
       : values.reduce((n, v) => n + v, 0);
   const ticks = [max, max - range / 3, max - (2 * range) / 3, min].map((v) =>

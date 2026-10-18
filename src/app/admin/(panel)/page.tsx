@@ -151,7 +151,11 @@ export default async function AdminRevenuePage({
       type: "revenue" as const,
       amount: r.amount,
       line: lineOf(r.service),
-      who: r.from,
+      // Counted as a client: a client's payment, our own companies aside.
+      who:
+        r.projectId && !isOwnCompany(r.from, r.what)
+          ? r.from.trim().toLowerCase()
+          : undefined,
     })),
     ...assets.movements.flatMap((m): ChartEvent[] =>
       m.source === "bill"
