@@ -22,15 +22,13 @@ const LEDE: Record<string, string> = {
     "Teaching a client's team at the academy: courses, KT sessions and handover training.",
   marketing:
     "Ads, SEO and content work for clients. How-to notes for every tool are under Marketing → Notes.",
-  software:
-    "Websites, web apps, stores and dashboards for clients — including Software + AI jobs.",
-  ai: "Chatbots, RAG and agents built for clients — including Software + AI jobs.",
+  software: "Websites, web apps, stores and dashboards for clients.",
+  ai: "Chatbots, RAG and agents built for clients.",
 };
 
 /**
  * One service's work: what it has earned, what is owed, and every project
- * from first conversation to delivered. Software + AI jobs show on both the
- * Software and the Agentic AI tab.
+ * from first conversation to delivered.
  */
 export default async function ServicePage({
   params,
@@ -42,7 +40,7 @@ export default async function ServicePage({
   const service =
     SERVICES.find((s) => s.id === id) ??
     (id === "training"
-      ? { id: "training", label: "Academy training", path: "/academy" }
+      ? { id: "training", label: "Academy", path: "/academy" }
       : undefined);
   if (!recorded || !service) notFound();
 

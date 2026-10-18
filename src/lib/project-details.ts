@@ -23,6 +23,13 @@ export type PaidRow = {
   paidBy: string;
   /** For a payment a person made: whether the company has paid them back. */
   repaid: boolean;
+  /** The day it was paid, by the company or the person; "" if not noted. */
+  paidOn: string;
+  /** The day the company paid the person back. */
+  repaidOn: string;
+  /** Whether the client has paid us back for it, and on which day. */
+  clientPaid: boolean;
+  clientPaidOn: string;
 };
 export type RecurringRow = {
   id: string;
@@ -70,6 +77,20 @@ export type NoteRow = {
   updated: string;
 };
 
+/**
+ * The month's cost message to the client, written out of Amounts paid.
+ * Only the greeting and the closing line are kept; the costs are read off
+ * the sheet each time.
+ */
+export type ClientMessage = {
+  /** "Hi Mama," */
+  greeting: string;
+  /** A line after the total, if any. */
+  closing: string;
+  /** Our own companies get no message. */
+  off: boolean;
+};
+
 export type ProjectSheets = {
   statusNote: string;
   links: LinkRow[];
@@ -82,6 +103,7 @@ export type ProjectSheets = {
   closedMonths: string[];
   /** Notes, newest first. */
   notes: NoteRow[];
+  message: ClientMessage;
 };
 
 export const EMPTY_SHEETS: ProjectSheets = {
@@ -93,6 +115,7 @@ export const EMPTY_SHEETS: ProjectSheets = {
   env: "",
   closedMonths: [],
   notes: [],
+  message: { greeting: "", closing: "", off: false },
 };
 
 const svc = (
@@ -269,6 +292,10 @@ export function cleanSheets(input: unknown): ProjectSheets {
         ...file(o),
         paidBy: isCompany(str(o.paidBy, 80)) ? "" : str(o.paidBy, 80).trim(),
         repaid: o.repaid === true,
+        paidOn: day(o.paidOn),
+        repaidOn: day(o.repaidOn),
+        clientPaid: o.clientPaid === true,
+        clientPaidOn: day(o.clientPaidOn),
       };
     }),
     recurring: rows(x.recurring).map((r, i) => {
@@ -315,7 +342,49 @@ export function cleanSheets(input: unknown): ProjectSheets {
         updated: Number.isNaN(Date.parse(updated)) ? "" : updated,
       };
     }),
+    message: {
+      greeting: str(obj(x.message).greeting, 200),
+      closing: str(obj(x.message).closing, 1000),
+      off: obj(x.message).off === true,
+    },
   };
+}
+
+/** "₹2,000" without the paise, the way the client message writes money. */
+const inr = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+/**
+ * A month's costs as the message sent to the client: a greeting, the line
+ * for the month, one line a cost and the total. Costs with the same name
+ * are added together.
+ */
+export function clientMessageText(
+  rows: PaidRow[],
+  month: string,
+  message: ClientMessage,
+): string {
+  const lines = new Map<string, number>();
+  for (const r of paidInMonth(rows, month)) {
+    if (r.amount <= 0) continue;
+    const name = r.item.trim() || r.vendor.trim() || "Other";
+    lines.set(name, (lines.get(name) ?? 0) + r.amount);
+  }
+  const total = [...lines.values()].reduce((n, v) => n + v, 0);
+  const [, m] = month.split("-");
+  const monthName = MONTH_NAMES[Number(m) - 1] ?? month;
+  return [
+    `${message.greeting.trim() || "Hi,"} the following expenses have been paid by us for ${monthName}.`,
+    "",
+    "Cost breakdown:",
+    ...[...lines].map(([name, amount]) => `- ${name}: ${inr.format(amount)}`),
+    "",
+    `Total amount: ${inr.format(total)}`,
+    ...(message.closing.trim() ? ["", message.closing.trim()] : []),
+  ].join("\n");
 }
 
 /**

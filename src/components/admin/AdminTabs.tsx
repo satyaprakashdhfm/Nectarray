@@ -44,7 +44,7 @@ type Tab = {
 type Group = Tab & { children: Tab[]; owns: string[] };
 
 const TOP: Tab[] = [
-  // Revenue and Assets, as tabs of one page.
+  // Revenue and assets, one dashboard.
   {
     href: `${ADMIN}`,
     label: "Revenue & assets",

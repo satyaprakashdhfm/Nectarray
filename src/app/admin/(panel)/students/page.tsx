@@ -1,5 +1,6 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import {
   createBatch,
   createEnrolment,
@@ -436,17 +437,31 @@ export default async function AdminStudentsPage() {
           </p>
         </div>
       ) : (
-        <div className="mt-6 space-y-8">
+        <div className="mt-6 space-y-3">
           {groups.map((group) => (
-            <section key={group.id}>
-              <h2 className="text-ink mb-3 text-[1.125rem] font-semibold">
-                {group.name}{" "}
-                <span className="text-ink-faint text-[0.875rem] font-normal">
-                  · {group.rows.length}{" "}
+            <details key={group.id} className="group">
+              <summary className="card flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+                <ChevronRight
+                  className="text-ink-faint size-4 transition-transform group-open:rotate-90"
+                  aria-hidden
+                />
+                <span className="text-ink text-[1.0625rem] font-semibold">
+                  {group.name}
+                </span>
+                <span className="text-ink-faint text-[0.875rem]">
+                  {group.rows.length}{" "}
                   {group.rows.length === 1 ? "student" : "students"}
                 </span>
-              </h2>
-              <div className="card overflow-x-auto">
+                <span className="text-ink ml-auto font-semibold tabular-nums">
+                  {rupees.format(
+                    group.rows.reduce(
+                      (n, r) => n + Number(r.enrolments?.[0]?.amount_paid ?? 0),
+                      0,
+                    ),
+                  )}
+                </span>
+              </summary>
+              <div className="card mt-2 overflow-x-auto">
                 <table className="w-full min-w-[68rem] text-left">
                   <thead>
                     <tr className="border-line-soft border-b">
@@ -471,7 +486,7 @@ export default async function AdminStudentsPage() {
                   <tbody>{group.rows.map(renderRow)}</tbody>
                 </table>
               </div>
-            </section>
+            </details>
           ))}
         </div>
       )}

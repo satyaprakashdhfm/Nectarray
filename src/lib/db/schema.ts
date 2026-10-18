@@ -710,6 +710,8 @@ export const projectDetails = pgTable("project_details", {
   closedMonths: jsonb("closed_months").notNull().default([]),
   /** Free-form notes, each a title and its formatted text as HTML. */
   notes: jsonb().notNull().default([]),
+  /** The monthly cost message to the client: greeting, closing, or off. */
+  message: jsonb().notNull().default({}),
   updatedAt: now(),
 });
 

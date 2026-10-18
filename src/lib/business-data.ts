@@ -8,7 +8,7 @@ import {
   enrolments,
   users,
 } from "@/lib/db/schema";
-import { REVENUE_LINES, num } from "@/lib/business";
+import { REVENUE_LINES, lineOf, num } from "@/lib/business";
 
 /**
  * Every rupee received, from every service, as one list.
@@ -147,7 +147,7 @@ export function lastMonths(receipts: Receipt[], count = 6) {
     const byService = REVENUE_LINES.map((s) => ({
       service: s.id as string,
       amount: receipts
-        .filter((r) => r.service === s.id && r.on.startsWith(key))
+        .filter((r) => lineOf(r.service) === s.id && r.on.startsWith(key))
         .reduce((t, r) => t + r.amount, 0),
     }));
     return {

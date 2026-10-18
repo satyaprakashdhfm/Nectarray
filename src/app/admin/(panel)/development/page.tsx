@@ -3,17 +3,17 @@ import { db } from "@/lib/db";
 import { clientPayments } from "@/lib/db/schema";
 import { PageHead, Section, Stat, td, th } from "@/components/admin/Business";
 import { NewProjectForm, ProjectsTable } from "@/components/admin/Projects";
-import { PROJECT_SERVICES, rupees } from "@/lib/business";
+import { PROJECT_SERVICES, TAB_SERVICES, lineOf, rupees } from "@/lib/business";
 import { lastMonths, loadMoney, totals } from "@/lib/business-data";
 import { loadProjectLinks } from "@/lib/project-data";
 
 export const dynamic = "force-dynamic";
 
-const IDS = PROJECT_SERVICES.map((s) => s.id);
+const IDS = PROJECT_SERVICES.flatMap((s) => TAB_SERVICES[s.id]);
 
 /**
  * Every client project in one place — marketing, software, agentic AI and
- * the jobs that are software and AI together — with what came in each month
+ * client training — with what came in each month
  * and in total. Each project also shows on its own service's tab; this is
  * the same record, not a copy.
  */
@@ -28,7 +28,9 @@ export default async function DevelopmentPage() {
     money.receipts.filter((r) => r.service !== "academy"),
     12,
   ).reverse();
-  const perService = PROJECT_SERVICES.map((s) => totals(money, [s.id]).all);
+  const perService = PROJECT_SERVICES.map(
+    (s) => totals(money, TAB_SERVICES[s.id]).all,
+  );
 
   return (
     <>
@@ -92,7 +94,8 @@ export default async function DevelopmentPage() {
                   </td>
                   {PROJECT_SERVICES.map((s) => {
                     const amount =
-                      m.byService.find((x) => x.service === s.id)?.amount ?? 0;
+                      m.byService.find((x) => x.service === lineOf(s.id))
+                        ?.amount ?? 0;
                     return (
                       <td key={s.id} className={td}>
                         {amount ? rupees.format(amount) : "—"}
@@ -109,7 +112,10 @@ export default async function DevelopmentPage() {
               <tr className="border-line border-t-2">
                 <td className={`${td} text-ink font-semibold`}>All time</td>
                 {perService.map((amount, i) => (
-                  <td key={IDS[i]} className={`${td} text-ink font-semibold`}>
+                  <td
+                    key={PROJECT_SERVICES[i].id}
+                    className={`${td} text-ink font-semibold`}
+                  >
                     {rupees.format(amount)}
                   </td>
                 ))}

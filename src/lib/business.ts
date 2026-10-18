@@ -15,36 +15,42 @@ export const SERVICES = [
 export type ServiceId = (typeof SERVICES)[number]["id"];
 
 /**
- * What a client project can be recorded under. The academy is not one — its
- * money is on enrolments. `software_ai` is a single job that is both a build
- * and an agent: it shows on the Software tab and the Agentic AI tab, and its
- * money is counted once, on its own line.
+ * What a client project can be recorded under. `training` is a client's
+ * team taught at the academy, so it is shown and counted as Academy.
  */
 export const PROJECT_SERVICES = [
   { id: "marketing", label: "Marketing" },
   { id: "software", label: "Software" },
   { id: "ai", label: "Agentic AI" },
-  { id: "software_ai", label: "Software + AI" },
-  /** Training a client's team at the academy. Not student fees. */
-  { id: "training", label: "Academy training" },
+  { id: "training", label: "Academy" },
 ] as const;
 
 /** Which recorded services each development tab shows. */
 export const TAB_SERVICES: Record<string, string[]> = {
   marketing: ["marketing"],
   software: ["software", "software_ai"],
-  ai: ["ai", "software_ai"],
+  ai: ["ai"],
   training: ["training"],
 };
 
-/** The lines revenue is split into: every project service, then the academy. */
+/**
+ * The four lines money is split into, and the recorded services each one
+ * takes in. "software_ai" is what Software projects were once saved as.
+ */
 export const REVENUE_LINES = [
-  ...PROJECT_SERVICES,
-  { id: "academy", label: "Academy" },
+  { id: "marketing", label: "Marketing", takes: ["marketing"] },
+  { id: "software", label: "Software", takes: ["software", "software_ai"] },
+  { id: "ai", label: "Agentic AI", takes: ["ai"] },
+  { id: "academy", label: "Academy", takes: ["academy", "training"] },
 ] as const;
 
+/** The revenue line a recorded service is counted on. */
+export const lineOf = (service: string) =>
+  REVENUE_LINES.find((l) => (l.takes as readonly string[]).includes(service))
+    ?.id ?? service;
+
 export const serviceLabel = (id: string) =>
-  REVENUE_LINES.find((s) => s.id === id)?.label ?? id;
+  REVENUE_LINES.find((s) => s.id === lineOf(id))?.label ?? id;
 
 export const isService = (id: string): id is ServiceId =>
   SERVICES.some((s) => s.id === id);

@@ -66,17 +66,21 @@ export async function loadAssets() {
   }));
 
   const owed = new Map<string, Owed>();
+  // Costs the clients have not paid us back for yet.
+  let clientsOwe = 0;
   for (const s of sheets) {
     const project = `${s.client} · ${s.title}`;
     for (const row of cleanSheets({ paid: s.paid }).paid) {
       if (row.amount <= 0) continue;
+      if (!row.clientPaid) clientsOwe += row.amount;
       const reason =
         [row.item, row.vendor].filter(Boolean).join(" · ") || "Bill";
       const company = isCompany(row.paidBy);
       if (company || row.repaid) {
         movements.push({
           key: `b-${s.projectId}-${row.id}`,
-          on: row.month,
+          // The day the money left: paid back, or paid; else the bill's month.
+          on: (company ? "" : row.repaidOn) || row.paidOn || row.month,
           kind: "out",
           amount: row.amount,
           reason,
@@ -101,8 +105,8 @@ export async function loadAssets() {
     }
   }
 
-  // Newest first. A bill has only its month, so it sits under that
-  // month's dated entries.
+  // Newest first. A bill with only its month sits under that month's
+  // dated entries.
   movements.sort((a, b) => b.on.localeCompare(a.on));
 
   const sum = (pick: (m: Movement) => boolean) =>
@@ -123,6 +127,7 @@ export async function loadAssets() {
       spent,
       balance,
       stillOwed,
+      clientsOwe,
       afterOwed: balance - stillOwed,
     },
   };

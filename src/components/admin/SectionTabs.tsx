@@ -3,30 +3,15 @@ import { ADMIN } from "@/lib/admin-path";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ChartLine,
-  IndianRupee,
-  Megaphone,
-  Search,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { ChartLine, Megaphone, Search, type LucideIcon } from "lucide-react";
 
 type Tab = { href: string; label: string; icon: LucideIcon };
 
 /**
- * Pages that share one sidebar entry, as tabs across the top: the money
- * (what came in, and what the company holds), and our own website (what
- * the ads cost and bring, who visits, how it does in search).
+ * Pages that share one sidebar entry, as tabs across the top: our own
+ * website (what the ads cost and bring, who visits, how it does in search).
  */
 const SECTIONS: Record<string, { label: string; tabs: Tab[] }> = {
-  money: {
-    label: "Revenue and assets",
-    tabs: [
-      { href: `${ADMIN}`, label: "Revenue", icon: IndianRupee },
-      { href: `${ADMIN}/assets`, label: "Assets", icon: Wallet },
-    ],
-  },
   website: {
     label: "Our website",
     tabs: [
@@ -37,18 +22,14 @@ const SECTIONS: Record<string, { label: string; tabs: Tab[] }> = {
   },
 };
 
-export function SectionTabs({ section }: { section: "money" | "website" }) {
+export function SectionTabs({ section }: { section: "website" }) {
   const pathname = usePathname();
   const { label, tabs } = SECTIONS[section];
   return (
     <nav aria-label={label} className="mb-6">
       <ul className="tab-bar">
         {tabs.map((tab) => {
-          // Revenue is the panel's home, so only its own address counts.
-          const active =
-            tab.href === `${ADMIN}`
-              ? pathname === tab.href
-              : pathname.startsWith(tab.href);
+          const active = pathname.startsWith(tab.href);
           return (
             <li key={tab.href}>
               <Link

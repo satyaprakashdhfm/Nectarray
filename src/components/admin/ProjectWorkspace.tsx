@@ -16,6 +16,7 @@ import {
   Download,
   RotateCcw,
   ExternalLink,
+  MessageCircle,
   Eye,
   EyeOff,
   FileText,
@@ -34,6 +35,7 @@ import { PROJECT_STATUSES, rupees } from "@/lib/business";
 import {
   FREQUENCIES,
   addMonths,
+  clientMessageText,
   dashboardFor,
   envKeys,
   isCompany,
@@ -41,12 +43,14 @@ import {
   owedByCompany,
   paidInMonth,
   type AccessRow,
+  type ClientMessage,
   type LinkRow,
   type PaidRow,
   type ProjectSheets,
   type RecurringRow,
 } from "@/lib/project-details";
 import { newId } from "@/lib/quotes";
+import { todayIST } from "@/lib/work";
 import { cn } from "@/lib/utils";
 
 const label = "text-ink-faint mb-1 block text-[0.6875rem] font-semibold";
@@ -71,7 +75,7 @@ const PAID_BY_NAMES = "paid-by-names";
 const paidCols = (projectId: string): Col<PaidRow>[] => [
   {
     key: "item",
-    text: "Item",
+    text: "Service",
     kind: "text",
     w: "minmax(9rem,1.4fr)",
     placeholder: "Domain for 1 year",
@@ -102,12 +106,20 @@ const paidCols = (projectId: string): Col<PaidRow>[] => [
       />
     ),
   },
+  { key: "paidOn", text: "Paid on", kind: "date", w: "9.5rem" },
   {
     key: "repaid",
-    text: "Status",
+    text: "Company paid back",
     kind: "custom",
-    w: "8.5rem",
+    w: "10rem",
     render: (row, patch) => <RepaidCell row={row} onChange={patch} />,
+  },
+  {
+    key: "clientPaid",
+    text: "Client paid us back",
+    kind: "custom",
+    w: "10rem",
+    render: (row, patch) => <ClientPaidCell row={row} onChange={patch} />,
   },
   { key: "note", text: "Note", kind: "text", w: "minmax(6rem,1.2fr)" },
   {
@@ -504,6 +516,13 @@ export function ProjectWorkspace({
         )}
       </section>
 
+      <ClientMessageBox
+        rows={s.paid}
+        thisMonth={thisMonth}
+        message={s.message}
+        onChange={(message) => setS({ ...s, message })}
+      />
+
       {(dirty || error) && (
         <div className="border-line bg-surface/95 sticky bottom-3 z-20 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur">
           <p className="text-amber-deep text-[0.8125rem]">Unsaved changes</p>
@@ -690,6 +709,7 @@ function SheetTable<T extends { id: string }>({
   blank,
   addText,
   showSecrets = false,
+  wide,
 }: {
   cols: Col<T>[];
   rows: T[];
@@ -697,6 +717,8 @@ function SheetTable<T extends { id: string }>({
   blank: () => T;
   addText: string;
   showSecrets?: boolean;
+  /** A minimum width for the desktop grid, which then scrolls sideways. */
+  wide?: string;
 }) {
   const grid = `${cols.map((c) => c.w).join(" ")} 2rem`;
   const set = (i: number, key: keyof T, value: unknown) =>
@@ -752,61 +774,65 @@ function SheetTable<T extends { id: string }>({
 
   return (
     <div className="px-4 py-3 sm:px-5">
-      {rows.length > 0 && (
-        <div
-          className="text-ink-faint mb-1.5 hidden gap-2 text-[0.6875rem] font-semibold lg:grid"
-          style={{ gridTemplateColumns: grid }}
-        >
-          {cols.map((c) => (
-            <span key={c.key}>{c.text}</span>
-          ))}
-        </div>
-      )}
-      <ul className="space-y-3 lg:space-y-2">
-        {rows.map((r, i) => (
-          <li
-            key={r.id}
-            className="border-line rounded-lg border p-3 lg:rounded-none lg:border-0 lg:p-0"
-          >
+      <div className={cn(wide && "lg:overflow-x-auto lg:pb-1")}>
+        <div className={wide}>
+          {rows.length > 0 && (
             <div
-              className="hidden items-center gap-2 lg:grid"
+              className="text-ink-faint mb-1.5 hidden gap-2 text-[0.6875rem] font-semibold lg:grid"
               style={{ gridTemplateColumns: grid }}
             >
               {cols.map((c) => (
-                <div key={c.key} className="min-w-0">
-                  {cell(r, i, c)}
-                </div>
+                <span key={c.key}>{c.text}</span>
               ))}
-              <RemoveButton
-                label="Remove row"
-                onClick={() => onChange(rows.filter((_, j) => j !== i))}
-              />
             </div>
-            <div className="grid grid-cols-2 gap-2.5 lg:hidden">
-              {cols.map((c, k) => {
-                // A custom cell holds its own buttons; a label around them
-                // would click the first one whenever its blank space is tapped.
-                const Wrap = c.render ? "div" : "label";
-                return (
-                  <Wrap
-                    key={c.key}
-                    className={cn("block min-w-0", k === 0 && "col-span-2")}
-                  >
-                    <span className={label}>{c.text}</span>
-                    {cell(r, i, c)}
-                  </Wrap>
-                );
-              })}
-              <div className="col-span-2 flex justify-end">
-                <RemoveButton
-                  label="Remove row"
-                  onClick={() => onChange(rows.filter((_, j) => j !== i))}
-                />
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+          )}
+          <ul className="space-y-3 lg:space-y-2">
+            {rows.map((r, i) => (
+              <li
+                key={r.id}
+                className="border-line rounded-lg border p-3 lg:rounded-none lg:border-0 lg:p-0"
+              >
+                <div
+                  className="hidden items-center gap-2 lg:grid"
+                  style={{ gridTemplateColumns: grid }}
+                >
+                  {cols.map((c) => (
+                    <div key={c.key} className="min-w-0">
+                      {cell(r, i, c)}
+                    </div>
+                  ))}
+                  <RemoveButton
+                    label="Remove row"
+                    onClick={() => onChange(rows.filter((_, j) => j !== i))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 lg:hidden">
+                  {cols.map((c, k) => {
+                    // A custom cell holds its own buttons; a label around them
+                    // would click the first one whenever its blank space is tapped.
+                    const Wrap = c.render ? "div" : "label";
+                    return (
+                      <Wrap
+                        key={c.key}
+                        className={cn("block min-w-0", k === 0 && "col-span-2")}
+                      >
+                        <span className={label}>{c.text}</span>
+                        {cell(r, i, c)}
+                      </Wrap>
+                    );
+                  })}
+                  <div className="col-span-2 flex justify-end">
+                    <RemoveButton
+                      label="Remove row"
+                      onClick={() => onChange(rows.filter((_, j) => j !== i))}
+                    />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
       {rows.length === 0 && (
         <p className="text-ink-faint py-4 text-center text-[0.8125rem]">
           Nothing here yet.
@@ -899,12 +925,20 @@ function PaidMonths({
         fileName: "",
         paidBy: "",
         repaid: false,
+        paidOn: "",
+        repaidOn: "",
+        clientPaid: false,
+        clientPaidOn: "",
       })}
       addText="Add expense"
+      wide="lg:min-w-[80rem]"
     />
   );
 
   const owed = owedByCompany(rows);
+  const clientOwes = rows
+    .filter((r) => !r.clientPaid)
+    .reduce((n, r) => n + r.amount, 0);
   const names = [
     ...new Map(
       rows
@@ -943,6 +977,16 @@ function PaidMonths({
             ))}
           </ul>
         </div>
+      )}
+
+      {clientOwes > 0 && (
+        <p className="border-line bg-mist/60 text-ink-soft border-b px-4 py-2 text-[0.8125rem] sm:px-5">
+          The client still has to pay us back{" "}
+          <span className="text-ink font-semibold tabular-nums">
+            {rupees.format(clientOwes)}
+          </span>{" "}
+          for these costs.
+        </p>
       )}
 
       {closed.length > 0 && (
@@ -1090,14 +1134,14 @@ function BillLink({
 /**
  * Whether the company has settled a payment. Paid from the company's own
  * account there is nothing to settle; paid by a person, it is owed to them
- * until it is marked paid back.
+ * until it is marked paid back, with the day it was.
  */
 function RepaidCell({
   row,
   onChange,
 }: {
   row: PaidRow;
-  onChange: (change: Pick<PaidRow, "repaid">) => void;
+  onChange: (change: Partial<PaidRow>) => void;
 }) {
   if (isCompany(row.paidBy))
     return (
@@ -1107,19 +1151,82 @@ function RepaidCell({
       </p>
     );
   return (
-    <select
-      value={row.repaid ? "repaid" : "owed"}
-      onChange={(e) => onChange({ repaid: e.target.value === "repaid" })}
-      aria-label={`Has the company paid ${row.paidBy.trim()} back?`}
-      className={cn(
-        field,
-        "py-2 font-semibold",
-        row.repaid ? "text-leaf-deep" : "text-amber-deep",
+    <StatusWithDate
+      done={row.repaid}
+      on={row.repaidOn}
+      yes="Paid back"
+      no="To pay back"
+      label={`Has the company paid ${row.paidBy.trim()} back?`}
+      onChange={(done, on) => onChange({ repaid: done, repaidOn: on })}
+    />
+  );
+}
+
+/** Whether the client has paid us back for a cost, and when. */
+function ClientPaidCell({
+  row,
+  onChange,
+}: {
+  row: PaidRow;
+  onChange: (change: Partial<PaidRow>) => void;
+}) {
+  return (
+    <StatusWithDate
+      done={row.clientPaid}
+      on={row.clientPaidOn}
+      yes="Client paid"
+      no="Client to pay"
+      label="Has the client paid us back?"
+      onChange={(done, on) => onChange({ clientPaid: done, clientPaidOn: on })}
+    />
+  );
+}
+
+/** A to-do or done choice, and once done, the day it was done. */
+function StatusWithDate({
+  done,
+  on,
+  yes,
+  no,
+  label: text,
+  onChange,
+}: {
+  done: boolean;
+  on: string;
+  yes: string;
+  no: string;
+  label: string;
+  onChange: (done: boolean, on: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <select
+        value={done ? "yes" : "no"}
+        onChange={(e) =>
+          e.target.value === "yes"
+            ? onChange(true, on || todayIST())
+            : onChange(false, "")
+        }
+        aria-label={text}
+        className={cn(
+          field,
+          "py-2 font-semibold",
+          done ? "text-leaf-deep" : "text-amber-deep",
+        )}
+      >
+        <option value="no">{no}</option>
+        <option value="yes">{yes}</option>
+      </select>
+      {done && (
+        <input
+          type="date"
+          value={on}
+          onChange={(e) => onChange(true, e.target.value)}
+          aria-label={`${yes} on`}
+          className={cn(field, "py-1.5 text-[0.75rem]")}
+        />
       )}
-    >
-      <option value="owed">To pay back</option>
-      <option value="repaid">Paid back</option>
-    </select>
+    </div>
   );
 }
 
@@ -1288,5 +1395,162 @@ function RemoveButton({
     >
       <Trash2 className="size-3.5" />
     </button>
+  );
+}
+
+/**
+ * The month's costs as a message for the client, ready to copy or send on
+ * WhatsApp. Written from Amounts paid each time; the text can be changed
+ * before sending, and the greeting and closing line are kept with the
+ * project.
+ */
+function ClientMessageBox({
+  rows,
+  thisMonth,
+  message,
+  onChange,
+}: {
+  rows: PaidRow[];
+  thisMonth: string;
+  message: ClientMessage;
+  onChange: (message: ClientMessage) => void;
+}) {
+  const months = [...new Set(rows.map((r) => r.month))].sort().reverse();
+  const [picked, setPicked] = useState<string | null>(null);
+  const month =
+    picked && months.includes(picked) ? picked : (months[0] ?? thisMonth);
+  const written = clientMessageText(rows, month, message);
+  // Changes typed into the text last until the costs or month change.
+  const [edit, setEdit] = useState<{ from: string; text: string } | null>(null);
+  const text = edit?.from === written ? edit.text : written;
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+
+  return (
+    <section className="card p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-ink text-[1.0625rem] font-semibold">
+            Message to the client
+          </h2>
+          <p className="text-ink-faint mt-0.5 text-[0.75rem]">
+            The month&apos;s costs from Amounts paid, written out to send at the
+            end of the month. Change the text before sending if needed.
+          </p>
+        </div>
+        <label className="text-ink-soft inline-flex items-center gap-2 text-[0.8125rem]">
+          <input
+            type="checkbox"
+            checked={message.off}
+            onChange={(e) => onChange({ ...message, off: e.target.checked })}
+          />
+          No message for this project
+        </label>
+      </div>
+
+      {message.off ? (
+        <p className="text-ink-faint mt-3 text-[0.8125rem]">
+          Off: our own company, or a client who is not sent the costs.
+        </p>
+      ) : (
+        <div className="mt-4 grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
+          <div className="space-y-3">
+            <label className="block">
+              <span className={label}>Month</span>
+              <select
+                value={month}
+                onChange={(e) => setPicked(e.target.value)}
+                className={cn(field, "py-2")}
+              >
+                {(months.length ? months : [thisMonth]).map((m) => (
+                  <option key={m} value={m}>
+                    {monthLabel(m)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className={label}>Greeting</span>
+              <input
+                value={message.greeting}
+                onChange={(e) =>
+                  onChange({ ...message, greeting: e.target.value })
+                }
+                placeholder="Hi Mama,"
+                className={cn(field, "py-2")}
+              />
+            </label>
+            <label className="block">
+              <span className={label}>Closing line (optional)</span>
+              <textarea
+                value={message.closing}
+                onChange={(e) =>
+                  onChange({ ...message, closing: e.target.value })
+                }
+                rows={3}
+                placeholder="From next month we will share the costs at the end of each month."
+                className={cn(field, "resize-y py-2")}
+              />
+            </label>
+          </div>
+          <div className="min-w-0">
+            <textarea
+              value={text}
+              onChange={(e) => setEdit({ from: written, text: e.target.value })}
+              rows={Math.min(Math.max(text.split("\n").length + 1, 8), 20)}
+              aria-label="Message to the client"
+              className={cn(field, "resize-y py-2 leading-relaxed")}
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={copy}
+                className={cn(
+                  quietButton,
+                  "inline-flex items-center gap-1.5 py-2",
+                )}
+              >
+                {copied ? (
+                  <Check className="text-leaf-deep size-3.5" aria-hidden />
+                ) : (
+                  <Copy className="size-3.5" aria-hidden />
+                )}
+                {copied ? "Copied" : "Copy"}
+              </button>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(text)}`}
+                target="_blank"
+                rel="noreferrer"
+                className={cn(
+                  primaryButton,
+                  "inline-flex items-center gap-1.5 py-2",
+                )}
+              >
+                <MessageCircle className="size-3.5" aria-hidden />
+                Send on WhatsApp
+              </a>
+              {edit?.from === written && (
+                <button
+                  type="button"
+                  onClick={() => setEdit(null)}
+                  className={cn(
+                    quietButton,
+                    "inline-flex items-center gap-1.5 py-2",
+                  )}
+                >
+                  <RotateCcw className="size-3.5" aria-hidden />
+                  Back to the costs
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

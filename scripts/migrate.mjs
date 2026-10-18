@@ -100,6 +100,9 @@ async function applySchema() {
    * generates ALTERs that assume they run exactly once; these do not.
    */
   const FIXUPS = [
+    // "Software + AI" is gone as a service; those projects are Software.
+    "UPDATE client_projects SET service = 'software' WHERE service = 'software_ai'",
+
     /*
      * Projects already delivered before delivered_on existed get a date the
      * Timeline can place them on: the due date if there was one, else the
@@ -482,21 +485,27 @@ async function patchSubjectsTable() {
      * Matched on the row rather than on position, so a reordered or
      * relabelled table still lands on the right one.
      */
-    const patched = body.replace(/^\|([^|\n]+)\|([^\n]*)\|\s*$/gm, (row, first, rest) => {
-      const name = first.toLowerCase();
-      if (/^\s*:?-+/.test(first)) return row; // The separator row.
+    const patched = body.replace(
+      /^\|([^|\n]+)\|([^\n]*)\|\s*$/gm,
+      (row, first, rest) => {
+        const name = first.toLowerCase();
+        if (/^\s*:?-+/.test(first)) return row; // The separator row.
 
-      const subject = subjects.find((s) =>
-        s.match.some((word) => name.includes(word)),
-      );
-      if (!subject) return row;
+        const subject = subjects.find((s) =>
+          s.match.some((word) => name.includes(word)),
+        );
+        if (!subject) return row;
 
-      const filled = subject.topics.join(" · ");
-      if (rest.includes(subject.topics[0]) && rest.includes(subject.topics.at(-1))) {
-        return row; // Already carries them.
-      }
-      return `|${first}| ${filled} |`;
-    });
+        const filled = subject.topics.join(" · ");
+        if (
+          rest.includes(subject.topics[0]) &&
+          rest.includes(subject.topics.at(-1))
+        ) {
+          return row; // Already carries them.
+        }
+        return `|${first}| ${filled} |`;
+      },
+    );
 
     if (patched === body) continue;
 
@@ -512,6 +521,225 @@ async function patchSubjectsTable() {
       ? `[migrate] subjects table: nothing to do (${lessons.length} lesson(s) checked)`
       : `[migrate] subjects table: ${touched} lesson(s) updated`,
   );
+}
+
+/*
+ * Figures entered once, on the deploy after they were given, and never
+ * again: a fix is recorded in data_fixes when it is done, so an edit made in
+ * the panel afterwards is not put back. A fix that cannot find exactly one
+ * project by its name changes nothing, says so in the log, and is tried
+ * again next deploy.
+ */
+
+const company = { paidBy: "", repaid: false, repaidOn: "", note: "" };
+const cost = (id, month, item, vendor, amount, paidOn = "") => ({
+  id,
+  item,
+  vendor,
+  amount,
+  month,
+  fileId: "",
+  fileName: "",
+  ...company,
+  paidOn,
+  clientPaid: true,
+  clientPaidOn: "",
+});
+
+/** The one project whose client and title match `pattern`, or null. */
+async function findProject(tx, name, pattern, exclude) {
+  const rows = await tx`
+    select id, client, title, value, starts_on, created_at
+      from client_projects
+     where (client || ' ' || title) ~* ${pattern}
+       and (${exclude}::text is null or (client || ' ' || title) !~* ${exclude})
+  `;
+  if (rows.length !== 1) {
+    console.log(
+      `[migrate] data fix ${name}: ${rows.length} projects match, skipped` +
+        (rows.length ? ` (${rows.map((r) => r.title).join(", ")})` : ""),
+    );
+    return null;
+  }
+  return rows[0];
+}
+
+const DATA_FIXES = [
+  {
+    /*
+     * Adough Cookie: the ₹35,000 received, the August start-up costs
+     * (₹5,076, paid back by the client) and October's running costs
+     * (₹2,442, also paid back).
+     */
+    name: "2026-10-adough-cookie",
+    async run(tx) {
+      const p = await findProject(
+        tx,
+        this.name,
+        "a ?-? ?dough|edo ?cookie",
+        null,
+      );
+      if (!p) return false;
+
+      const [{ received }] = await tx`
+        select coalesce(sum(amount), 0)::numeric as received
+          from client_payments where project_id = ${p.id}
+      `;
+      if (Number(received) === 0) {
+        await tx`
+          insert into client_payments (project_id, amount, received_on)
+          values (${p.id}, 35000,
+                  coalesce(${p.starts_on}::date, ${p.created_at}::date))
+        `;
+      }
+      if (p.value == null) {
+        await tx`update client_projects set value = 35000 where id = ${p.id}`;
+      }
+
+      const [row] = await tx`
+        select paid, closed_months from project_details
+         where project_id = ${p.id}
+      `;
+      let paid = Array.isArray(row?.paid) ? row.paid : [];
+      let closed = Array.isArray(row?.closed_months) ? row.closed_months : [];
+      const inMonth = (m) => paid.filter((r) => r.month === m);
+
+      if (inMonth("2026-08").length === 0) {
+        paid = [
+          ...paid,
+          cost("aug-otp", "2026-08", "OTP gateway", "Message Central", 1000),
+          cost(
+            "aug-hosting",
+            "2026-08",
+            "Hosting (frontend, backend & database)",
+            "Railway",
+            2176,
+          ),
+          cost(
+            "aug-shiprocket",
+            "2026-08",
+            "Shiprocket wallet top-up",
+            "Shiprocket",
+            900,
+          ),
+          cost(
+            "aug-delhivery",
+            "2026-08",
+            "Delhivery wallet top-up",
+            "Delhivery",
+            1000,
+          ),
+        ];
+        closed = [...new Set([...closed, "2026-08"])].sort();
+      }
+
+      const october = inMonth("2026-10");
+      if (october.length === 0) {
+        paid = [
+          ...paid,
+          cost(
+            "oct-hosting",
+            "2026-10",
+            "Deployment, database, backend & frontend",
+            "Railway",
+            2000,
+          ),
+          cost("oct-whatsapp", "2026-10", "WhatsApp messaging", "", 133),
+          cost("oct-email", "2026-10", "Email service", "", 177),
+          cost("oct-chatbot", "2026-10", "AI chatbot", "", 132),
+        ];
+      } else if (
+        october.reduce((n, r) => n + Number(r.amount || 0), 0) === 2442
+      ) {
+        // Already typed in: the client has paid it back.
+        paid = paid.map((r) =>
+          r.month === "2026-10" ? { ...r, clientPaid: true } : r,
+        );
+      }
+
+      await tx`
+        insert into project_details (project_id, paid, closed_months, message)
+        values (${p.id}, ${tx.json(paid)}, ${tx.json(closed)},
+                ${tx.json({ greeting: "Hi Mama,", closing: "", off: false })})
+        on conflict (project_id) do update
+          set paid = excluded.paid,
+              closed_months = excluded.closed_months,
+              message = case
+                when project_details.message ? 'greeting' then project_details.message
+                else excluded.message end,
+              updated_at = now()
+      `;
+      return true;
+    },
+  },
+  {
+    // Legal services: ₹25,000 expected. Not the Legal TakeCare project.
+    name: "2026-10-legal-services-value",
+    async run(tx) {
+      const p = await findProject(
+        tx,
+        this.name,
+        "legal",
+        "take ?care|tech ?cap",
+      );
+      if (!p) return false;
+      await tx`update client_projects set value = 25000 where id = ${p.id}`;
+      return true;
+    },
+  },
+  {
+    // Deeds & Co. website: ₹20,000.
+    name: "2026-10-deeds-value",
+    async run(tx) {
+      const p = await findProject(tx, this.name, "deeds", null);
+      if (!p) return false;
+      await tx`update client_projects set value = 20000 where id = ${p.id}`;
+      return true;
+    },
+  },
+  {
+    // Our own companies are not sent a monthly cost message.
+    name: "2026-10-own-companies-no-message",
+    async run(tx) {
+      const own = await tx`
+        select id from client_projects
+         where (client || ' ' || title) ~* 'verona|nect ?array'
+      `;
+      for (const { id } of own) {
+        await tx`
+          update project_details
+             set message = ${tx.json({ greeting: "", closing: "", off: true })}
+           where project_id = ${id}
+        `;
+      }
+      console.log(`[migrate] data fix ${this.name}: ${own.length} projects`);
+      return true;
+    },
+  },
+];
+
+async function applyDataFixes() {
+  await sql`
+    create table if not exists data_fixes (
+      name text primary key,
+      applied_at timestamptz not null default now()
+    )
+  `;
+  for (const fix of DATA_FIXES) {
+    const [done] = await sql`select 1 from data_fixes where name = ${fix.name}`;
+    if (done) continue;
+    try {
+      await sql.begin(async (tx) => {
+        if (await fix.run(tx)) {
+          await tx`insert into data_fixes (name) values (${fix.name})`;
+          console.log(`[migrate] data fix ${fix.name}: applied`);
+        }
+      });
+    } catch (error) {
+      // A figure that could not go in is not worth failing the deploy over.
+      console.error(`[migrate] data fix ${fix.name} failed:`, error.message);
+    }
+  }
 }
 
 async function report() {
@@ -538,6 +766,7 @@ async function report() {
 
 const ok = await applySchema();
 if (ok) {
+  await applyDataFixes();
   await copyContent();
   await syncLessons();
   await patchSubjectsTable();

@@ -11,7 +11,7 @@ import { seal } from "@/lib/vault";
 
 /**
  * Saves a project's working file: status note, deployment links, the .env
- * file, the notes and the three handover sheets. Passwords and the .env are
+ * file, the notes, the three handover sheets and the client message. Passwords and the .env are
  * encrypted on the way in when PROJECT_VAULT_KEY is set, and documents no
  * payment or note points to any more are removed.
  */
@@ -49,6 +49,7 @@ export async function saveProjectSheets(projectId: string, input: unknown) {
       : seal(sheets.env),
     closedMonths: sheets.closedMonths,
     notes: sheets.notes,
+    message: sheets.message,
     updatedAt: new Date(),
   };
   await db
