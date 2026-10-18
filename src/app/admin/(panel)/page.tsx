@@ -12,6 +12,7 @@ import {
   th,
 } from "@/components/admin/Business";
 import { AssetsPanel } from "@/components/admin/AssetsPanel";
+import { BalanceLog } from "@/components/admin/BalanceLog";
 import { REVENUE_LINES, rupees, serviceLabel } from "@/lib/business";
 import { lastMonths, loadMoney, totals } from "@/lib/business-data";
 import { loadAssets } from "@/lib/assets";
@@ -88,11 +89,23 @@ export default async function AdminRevenuePage({
           value={rupees.format(all.outstanding)}
           hint={`Pipeline ${rupees.format(all.pipeline)}`}
         />
-        <Stat
-          label="Company balance"
-          value={rupees.format(assets.totals.balance)}
-          hint="Details at the bottom"
-        />
+        <BalanceLog
+          balance={assets.totals.balance}
+          movements={assets.movements}
+          className="card hover:border-brand group min-w-0 p-4 transition-colors sm:p-5"
+        >
+          <p className="eyebrow">Company balance</p>
+          <p
+            className={`display mt-1.5 text-[1.25rem] break-words sm:text-[1.5rem] ${
+              assets.totals.balance < 0 ? "text-danger" : "text-ink"
+            }`}
+          >
+            {rupees.format(assets.totals.balance)}
+          </p>
+          <p className="text-brand-deep mt-1 text-[0.75rem] font-semibold group-hover:underline">
+            See the full history
+          </p>
+        </BalanceLog>
         <Stat
           label="To pay back to people"
           value={rupees.format(assets.totals.stillOwed)}

@@ -1,24 +1,12 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
-import { ArrowDownLeft, ArrowUpRight, ChevronRight } from "lucide-react";
-import { Empty, deleteButton, field } from "@/components/admin/Business";
+import { BalanceLog } from "@/components/admin/BalanceLog";
+import { ChevronRight, History } from "lucide-react";
+import { field } from "@/components/admin/Business";
 import { rupees } from "@/lib/business";
 import type { loadAssets } from "@/lib/assets";
-import { isMonth, monthLabel } from "@/lib/project-details";
 import { todayIST } from "@/lib/work";
-import {
-  addAssetEntry,
-  deleteAssetEntry,
-} from "@/app/admin/(panel)/assets/actions";
-
-const day = (value: string) =>
-  isMonth(value)
-    ? monthLabel(value)
-    : new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
+import { addAssetEntry } from "@/app/admin/(panel)/assets/actions";
 
 /**
  * The company's money: the balance, the form for money in and spends, who
@@ -163,82 +151,18 @@ export function AssetsPanel({
         </div>
       )}
 
-      <details className="group mt-4">
-        <summary className="card text-ink hover:text-brand-deep flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[0.9375rem] font-semibold">
-          <ChevronRight
-            className="size-4 transition-transform group-open:rotate-90"
-            aria-hidden
-          />
-          Every movement
-          <span className="text-ink-faint text-[0.8125rem] font-normal">
-            · {movements.length}
-          </span>
-        </summary>
-        <div className="mt-2">
-          {movements.length === 0 ? (
-            <Empty>
-              Nothing yet. Add the money the company has with + Money in.
-            </Empty>
-          ) : (
-            <ul className="card divide-line-soft divide-y">
-              {movements.map((m) => (
-                <li key={m.key} className="flex items-start gap-3 px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-ink text-[0.875rem] break-words">
-                      {m.reason}
-                    </p>
-                    <p className="text-ink-faint mt-0.5 text-[0.75rem]">
-                      {day(m.on)}
-                      {m.source !== "entry" && (
-                        <>
-                          {" · "}
-                          <Link
-                            href={`${ADMIN}/projects/${m.id}`}
-                            className="hover:text-brand-deep underline-offset-2 hover:underline"
-                          >
-                            {m.source === "bill" ? "Bill: " : ""}
-                            {m.project}
-                          </Link>
-                          {m.repaidTo && ` · paid back to ${m.repaidTo}`}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <p
-                    className={`shrink-0 text-[0.9375rem] font-semibold ${
-                      m.kind === "in" ? "text-leaf-deep" : "text-ink"
-                    }`}
-                  >
-                    {m.kind === "in" ? (
-                      <ArrowDownLeft
-                        className="mr-0.5 inline size-4 align-[-0.2em]"
-                        aria-label="In"
-                      />
-                    ) : (
-                      <ArrowUpRight
-                        className="text-ink-faint mr-0.5 inline size-4 align-[-0.2em]"
-                        aria-label="Out"
-                      />
-                    )}
-                    {rupees.format(m.amount)}
-                  </p>
-                  {m.source === "entry" && (
-                    <form action={deleteAssetEntry} className="shrink-0">
-                      <input type="hidden" name="id" value={m.id} />
-                      <button
-                        className={`${deleteButton} px-1 text-[1rem]`}
-                        aria-label={`Remove ${m.reason}`}
-                      >
-                        ×
-                      </button>
-                    </form>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </details>
+      <BalanceLog
+        balance={totals.balance}
+        movements={movements}
+        className="card hover:border-brand hover:text-brand-deep text-ink mt-4 flex w-full items-center gap-2 px-4 py-3 text-[0.9375rem] font-semibold transition-colors"
+      >
+        <History className="size-4" aria-hidden />
+        Full history
+        <span className="text-ink-faint text-[0.8125rem] font-normal">
+          · {movements.length} entries, with filters
+        </span>
+        <ChevronRight className="text-ink-faint ml-auto size-4" aria-hidden />
+      </BalanceLog>
     </section>
   );
 }
