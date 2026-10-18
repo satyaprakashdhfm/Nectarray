@@ -1,3 +1,4 @@
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -76,7 +77,7 @@ export default async function AdminNotesIndex({
           <label className={label} htmlFor="new-module">
             Course
           </label>
-          <select
+          <Select
             id="new-module"
             name="module_id"
             defaultValue={chosen[0]?.id}
@@ -87,7 +88,7 @@ export default async function AdminNotesIndex({
                 {m.title}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className={label} htmlFor="new-title">

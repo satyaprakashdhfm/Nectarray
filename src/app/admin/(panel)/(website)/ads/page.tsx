@@ -1,3 +1,4 @@
+import { Select } from "@/components/admin/Select";
 import { AutoSaveForm } from "@/components/admin/autosave";
 import { ADMIN } from "@/lib/admin-path";
 import { desc, eq } from "drizzle-orm";
@@ -118,7 +119,7 @@ export default async function AdminAdsPage({
                         className="flex flex-wrap items-center gap-1.5"
                       >
                         <input type="hidden" name="id" value={c.id} />
-                        <select
+                        <Select
                           name="status"
                           defaultValue={c.status}
                           className={`${field} w-24 capitalize`}
@@ -128,7 +129,7 @@ export default async function AdminAdsPage({
                               {s}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                         <input
                           name="spend"
                           aria-label="Spend"
@@ -176,13 +177,13 @@ export default async function AdminAdsPage({
           <ServiceSelect current={service} />
           <label className="block">
             <span className="eyebrow">Platform</span>
-            <select name="platform" className={`${field} mt-1`}>
+            <Select name="platform" className={`${field} mt-1`}>
               {PLATFORMS.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="block">
             <span className="eyebrow">Spend (₹)</span>

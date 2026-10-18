@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -339,7 +340,7 @@ function Toolbar({
           <Redo2 />
         </Tool>
         <Divider />
-        <select
+        <Select
           value={on.style}
           onChange={(e) => setStyle(e.target.value)}
           aria-label="Text style"
@@ -350,7 +351,7 @@ function Toolbar({
               {s.label}
             </option>
           ))}
-        </select>
+        </Select>
         <Divider />
         <Tool
           label="Bold (Ctrl+B)"

@@ -1,3 +1,4 @@
+import { Select } from "@/components/admin/Select";
 import Link from "next/link";
 import { Plug } from "lucide-react";
 import {
@@ -178,7 +179,7 @@ export function ServiceSelect({ current }: { current: string | null }) {
   return (
     <label className="block">
       <span className="eyebrow">Service</span>
-      <select
+      <Select
         name="service"
         defaultValue={current ?? "marketing"}
         className={`${field} mt-1`}
@@ -188,7 +189,7 @@ export function ServiceSelect({ current }: { current: string | null }) {
             {s.label}
           </option>
         ))}
-      </select>
+      </Select>
     </label>
   );
 }

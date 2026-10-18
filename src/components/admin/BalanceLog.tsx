@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { useMemo, useRef, useState, type ReactNode } from "react";
@@ -199,7 +200,7 @@ export function BalanceLog({
               </label>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <select
+              <Select
                 value={kind}
                 onChange={(e) => setKind(e.target.value)}
                 aria-label="Kind"
@@ -211,8 +212,8 @@ export function BalanceLog({
                     {text}
                   </option>
                 ))}
-              </select>
-              <select
+              </Select>
+              <Select
                 value={project}
                 onChange={(e) => setProject(e.target.value)}
                 aria-label="Project"
@@ -224,8 +225,8 @@ export function BalanceLog({
                     {name}
                   </option>
                 ))}
-              </select>
-              <select
+              </Select>
+              <Select
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
                 aria-label="Month"
@@ -237,7 +238,7 @@ export function BalanceLog({
                     {monthLabel(m)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="text-ink-soft flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] tabular-nums">
               <span>

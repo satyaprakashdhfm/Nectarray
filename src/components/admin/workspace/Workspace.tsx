@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/admin/Select";
 import {
   useCallback,
   useEffect,
@@ -1470,7 +1471,7 @@ function NewSession({
             >
               Permissions
             </label>
-            <select
+            <Select
               id="ws-mode"
               value={mode}
               onChange={(e) => setMode(e.target.value as Mode)}
@@ -1481,7 +1482,7 @@ function NewSession({
                   {m.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </>
       )}

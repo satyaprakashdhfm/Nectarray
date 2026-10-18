@@ -1,3 +1,4 @@
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 import { AutoSaveForm } from "@/components/admin/autosave";
 import Link from "next/link";
@@ -234,7 +235,7 @@ export default async function AdminStudentsPage() {
         <td className="px-4 py-4">
           <AutoSaveForm action={setStudentBatch} className="flex gap-1.5">
             <input type="hidden" name="user_id" value={row.id} />
-            <select
+            <Select
               name="batch_id"
               defaultValue={row.batch_id ?? ""}
               aria-label={`Batch for ${name}`}
@@ -246,7 +247,7 @@ export default async function AdminStudentsPage() {
                   {b.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </AutoSaveForm>
         </td>
 
@@ -293,7 +294,7 @@ export default async function AdminStudentsPage() {
               className="mt-2 flex gap-1.5"
             >
               <input type="hidden" name="id" value={enrolment.id} />
-              <select
+              <Select
                 name="status"
                 defaultValue={enrolment.status}
                 aria-label={`Status for ${name}`}
@@ -304,7 +305,7 @@ export default async function AdminStudentsPage() {
                     {status}
                   </option>
                 ))}
-              </select>
+              </Select>
             </AutoSaveForm>
           ) : defaultCohort ? (
             <form action={createEnrolment} className="mt-2">

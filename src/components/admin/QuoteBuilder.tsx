@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -269,7 +270,7 @@ export function QuoteBuilder({
           <span className="text-ink-faint hidden text-[0.75rem] font-semibold sm:inline">
             Status
           </span>
-          <select
+          <Select
             value={meta.status}
             onChange={(e) => setMetaField("status", e.target.value)}
             className={cn(field, "w-auto py-1.5")}
@@ -280,7 +281,7 @@ export function QuoteBuilder({
                 {s.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <SaveState
           status={auto.status}
@@ -759,7 +760,7 @@ function LineRow({
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <label className="block min-w-0">
                 <span className={label}>Service</span>
-                <select
+                <Select
                   value={line.service}
                   onChange={(e) =>
                     set({ service: e.target.value as QuoteService })
@@ -771,11 +772,11 @@ function LineRow({
                       {s.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label className="block min-w-0">
                 <span className={label}>Billed</span>
-                <select
+                <Select
                   value={line.billing}
                   onChange={(e) => setBilling(e.target.value as Billing)}
                   className={cn(field, "py-2")}
@@ -788,7 +789,7 @@ function LineRow({
                         : ""}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <div className="col-span-2 min-w-0 sm:col-span-1">
                 <span className={label}>Discount</span>
@@ -981,7 +982,7 @@ function DiscountControl({
       : [...DISCOUNT_PERCENTS, value.value].sort((a, b) => a - b);
   return (
     <div className={inline ? "flex gap-1.5" : "space-y-1.5"}>
-      <select
+      <Select
         value={selected}
         aria-label={`Discount on ${name}`}
         onChange={(e) => {
@@ -1003,7 +1004,7 @@ function DiscountControl({
           </option>
         ))}
         <option value="amount">Exact amount</option>
-      </select>
+      </Select>
       {value.mode === "amount" && (
         <MoneyInput
           value={value.value}
@@ -1198,7 +1199,7 @@ function ProjectsCard({
         </label>
         <label className="block">
           <span className={label}>Status</span>
-          <select
+          <Select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className={cn(field, "py-2")}
@@ -1210,7 +1211,7 @@ function ProjectsCard({
                 {s.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
 

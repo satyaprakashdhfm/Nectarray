@@ -1,3 +1,4 @@
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { AutoSaveForm } from "@/components/admin/autosave";
@@ -209,23 +210,23 @@ export function ProjectsTable({
                         </label>
                         <label className="block">
                           <span className="eyebrow">Service</span>
-                          <select
+                          <Select
                             name="service"
                             defaultValue={p.service}
                             className={`${field} mt-1`}
                           >
                             <ServiceOptions />
-                          </select>
+                          </Select>
                         </label>
                         <label className="block">
                           <span className="eyebrow">Status</span>
-                          <select
+                          <Select
                             name="status"
                             defaultValue={p.status}
                             className={`${field} mt-1`}
                           >
                             <StatusOptions />
-                          </select>
+                          </Select>
                         </label>
                         <label className="block">
                           <span className="eyebrow">Value (₹)</span>
@@ -289,14 +290,14 @@ export function ProjectsTable({
                     className="mt-2 flex gap-1.5"
                   >
                     <input type="hidden" name="id" value={p.id} />
-                    <select
+                    <Select
                       name="status"
                       defaultValue={p.status}
                       aria-label="Status"
                       className={`${field} w-28`}
                     >
                       <StatusOptions />
-                    </select>
+                    </Select>
                   </AutoSaveForm>
                 </td>
                 <td className={`${td} whitespace-nowrap`}>
@@ -421,19 +422,19 @@ export function NewProjectForm({ service }: { service?: string }) {
       </label>
       <label className="block">
         <span className="eyebrow">Service</span>
-        <select
+        <Select
           name="service"
           defaultValue={service ?? "software"}
           className={`${field} mt-1`}
         >
           <ServiceOptions />
-        </select>
+        </Select>
       </label>
       <label className="block">
         <span className="eyebrow">Status</span>
-        <select name="status" defaultValue="lead" className={`${field} mt-1`}>
+        <Select name="status" defaultValue="lead" className={`${field} mt-1`}>
           <StatusOptions />
-        </select>
+        </Select>
       </label>
       <label className="block">
         <span className="eyebrow">Value (₹)</span>

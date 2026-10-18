@@ -1,3 +1,4 @@
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 import { AutoSaveForm } from "@/components/admin/autosave";
 import Link from "next/link";
@@ -303,7 +304,7 @@ export async function TaskBoard({
             action={`${ADMIN}/tasks`}
           >
             <input type="hidden" name="view" value={view} />
-            <select
+            <Select
               name="project"
               defaultValue={params.project ?? ""}
               className={cn(field, "w-auto py-1.5")}
@@ -315,8 +316,8 @@ export async function TaskBoard({
                   {p.client}: {p.title}
                 </option>
               ))}
-            </select>
-            <select
+            </Select>
+            <Select
               name="person"
               defaultValue={params.person ?? ""}
               className={cn(field, "w-auto py-1.5")}
@@ -329,7 +330,7 @@ export async function TaskBoard({
                   {p}
                 </option>
               ))}
-            </select>
+            </Select>
             <button type="submit" className={quietButton}>
               Filter
             </button>
@@ -529,7 +530,7 @@ function ProjectSelect({
   value?: string | null;
 }) {
   return (
-    <select
+    <Select
       name="project_id"
       defaultValue={value ?? ""}
       className={cn(field, "py-2")}
@@ -540,19 +541,19 @@ function ProjectSelect({
           {p.client}: {p.title}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 
 function PrioritySelect({ value = "normal" }: { value?: string }) {
   return (
-    <select name="priority" defaultValue={value} className={cn(field, "py-2")}>
+    <Select name="priority" defaultValue={value} className={cn(field, "py-2")}>
       {PRIORITIES.map((p) => (
         <option key={p.id} value={p.id}>
           {p.label}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 
@@ -683,7 +684,7 @@ function TaskCard({
                 />
                 <PrioritySelect value={item.priority} />
               </div>
-              <select
+              <Select
                 name="status"
                 defaultValue={item.status}
                 className={field}
@@ -694,7 +695,7 @@ function TaskCard({
                     {s.label}
                   </option>
                 ))}
-              </select>
+              </Select>
               <textarea
                 name="notes"
                 defaultValue={item.notes ?? ""}

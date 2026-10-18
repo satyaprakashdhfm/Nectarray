@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 
 import {
@@ -241,7 +242,7 @@ export function ProjectWorkspace({
             <h2 className="text-ink text-[1.0625rem] font-semibold">
               Current status
             </h2>
-            <select
+            <Select
               defaultValue={status}
               onChange={(e) => changeStatus(e.target.value)}
               disabled={statusPending}
@@ -253,7 +254,7 @@ export function ProjectWorkspace({
                   {p.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <label className="block">
             <span className={label}>Where it stands, what is next</span>
@@ -698,7 +699,7 @@ function SheetTable<T extends { id: string }>({
       );
     if (c.kind === "billing")
       return (
-        <select
+        <Select
           value={String(value)}
           onChange={(e) => set(i, c.key, e.target.value)}
           aria-label={c.text}
@@ -709,7 +710,7 @@ function SheetTable<T extends { id: string }>({
               {f.label}
             </option>
           ))}
-        </select>
+        </Select>
       );
     return (
       <input
@@ -1016,7 +1017,7 @@ function PaidMonths({
         return (
           <section key={month} className="border-line border-b last:border-b-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3 sm:px-5">
-              <select
+              <Select
                 value={month}
                 onChange={(e) => relabel(month, e.target.value)}
                 aria-label="Month these expenses are billed in"
@@ -1027,7 +1028,7 @@ function PaidMonths({
                     {monthLabel(m)}
                   </option>
                 ))}
-              </select>
+              </Select>
               <span className="text-ink-soft text-[0.8125rem] tabular-nums">
                 {items.length
                   ? `${items.length} ${items.length === 1 ? "item" : "items"}, ${rupees.format(items.reduce((n, r) => n + r.amount, 0))}`
@@ -1160,7 +1161,7 @@ function StatusWithDate({
 }) {
   return (
     <div className="space-y-1">
-      <select
+      <Select
         value={done ? "yes" : "no"}
         onChange={(e) =>
           e.target.value === "yes"
@@ -1176,7 +1177,7 @@ function StatusWithDate({
       >
         <option value="no">{no}</option>
         <option value="yes">{yes}</option>
-      </select>
+      </Select>
       {done && (
         <input
           type="date"
@@ -1436,7 +1437,7 @@ function ClientMessageBox({
           <div className="min-w-0 space-y-3">
             <label className="block max-w-[14rem]">
               <span className={label}>Month</span>
-              <select
+              <Select
                 value={month}
                 onChange={(e) => setPicked(e.target.value)}
                 className={cn(field, "py-2 font-semibold")}
@@ -1446,7 +1447,7 @@ function ClientMessageBox({
                     {monthLabel(m)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
 
             {box(

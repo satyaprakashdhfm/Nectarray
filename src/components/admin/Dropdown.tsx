@@ -36,6 +36,9 @@ export function Dropdown({
   onChange,
   disabled,
   className,
+  unstyled,
+  id: buttonId,
+  title,
   "aria-label": ariaLabel,
 }: {
   value: string;
@@ -43,12 +46,19 @@ export function Dropdown({
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  /** Leave the button's look entirely to `className` (a form field's). */
+  unstyled?: boolean;
+  id?: string;
+  title?: string;
   "aria-label"?: string;
 }) {
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
+  // Inside a pop-up (a <dialog>), the list has to be in it too, or it
+  // opens underneath.
+  const [host, setHost] = useState<HTMLElement | null>(null);
   const [active, setActive] = useState(0);
   const [place, setPlace] = useState<{
     left: number;
@@ -64,6 +74,7 @@ export function Dropdown({
   const show = () => {
     if (disabled || options.length === 0) return;
     setActive(Math.max(selected, 0));
+    setHost(button.current?.closest("dialog") ?? null);
     setOpen(true);
   };
   const choose = (index: number) => {
@@ -171,6 +182,8 @@ export function Dropdown({
       <button
         ref={button}
         type="button"
+        id={buttonId}
+        title={title}
         disabled={disabled}
         aria-label={ariaLabel}
         role="combobox"
@@ -181,7 +194,9 @@ export function Dropdown({
         onClick={() => (open ? setOpen(false) : show())}
         onKeyDown={onKeyDown}
         className={cn(
-          "border-line bg-surface text-ink focus:border-brand flex h-10 w-full items-center gap-2 rounded-lg border px-3 text-left text-[0.875rem] outline-none disabled:cursor-not-allowed",
+          "flex items-center gap-2 text-left outline-none disabled:cursor-not-allowed disabled:opacity-60",
+          !unstyled &&
+            "border-line bg-surface text-ink focus:border-brand h-10 w-full rounded-lg border px-3 text-[0.875rem]",
           className,
         )}
       >
@@ -254,7 +269,7 @@ export function Dropdown({
               );
             })}
           </ul>,
-          document.body,
+          host ?? document.body,
         )}
     </>
   );

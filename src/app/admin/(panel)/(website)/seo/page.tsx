@@ -1,3 +1,4 @@
+import { Select } from "@/components/admin/Select";
 import { AutoSaveForm } from "@/components/admin/autosave";
 import { ADMIN } from "@/lib/admin-path";
 import { asc, desc, eq } from "drizzle-orm";
@@ -253,7 +254,7 @@ export default async function AdminSeoPage({
                           {p.status}
                           {p.publishedOn && ` ${day(p.publishedOn)}`}
                         </span>
-                        <select
+                        <Select
                           name="status"
                           defaultValue={p.status}
                           className={`${field} w-28`}
@@ -263,7 +264,7 @@ export default async function AdminSeoPage({
                               {s}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                         <input
                           name="url"
                           defaultValue={p.url ?? ""}
