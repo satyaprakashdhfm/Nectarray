@@ -36,12 +36,12 @@ const METRICS: { id: Metric; label: string; lede: string }[] = [
   {
     id: "profit",
     label: "Profit",
-    lede: "Revenue and costs paid back, less bills paid, commission and other spends",
+    lede: "Revenue, less company expenses, commission and other spends (personal use and temporary costs aside)",
   },
   {
     id: "costs",
     label: "Costs",
-    lede: "Bills the company paid, commission and other spends, less what clients paid back",
+    lede: "Company expenses, commission and other spends (personal use and temporary costs aside)",
   },
   {
     id: "clients",

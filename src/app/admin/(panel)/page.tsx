@@ -165,8 +165,26 @@ export default async function AdminRevenuePage({
   );
 
   // Profit: what came in, and costs paid back, less what went out.
+  // Only company expenses count: personal use is profit taken out, and a
+  // temporary cost comes back, so neither is a profit or a loss.
+  const counted = (m: (typeof assets.movements)[number]) =>
+    !m.use || m.use === "company";
   const back = sum(
-    assets.movements.filter((m) => m.source === "repaid"),
+    assets.movements.filter((m) => m.source === "repaid" && counted(m)),
+    (m) => m.amount,
+  );
+  const billsCounted = sum(
+    assets.movements.filter((m) => m.source === "bill" && counted(m)),
+    (m) => m.amount,
+  );
+  const personal = sum(
+    assets.movements.filter((m) => m.source === "bill" && m.use === "personal"),
+    (m) => m.amount,
+  );
+  const temporary = sum(
+    assets.movements.filter(
+      (m) => m.source === "bill" && m.use === "temporary",
+    ),
     (m) => m.amount,
   );
   // Commission stays in the revenue and comes off the profit, paid or not.
@@ -179,7 +197,7 @@ export default async function AdminRevenuePage({
   const profit =
     total(receipts) +
     back -
-    assets.totals.bills -
+    billsCounted -
     assets.totals.spent -
     commissionTotal;
 
@@ -196,13 +214,15 @@ export default async function AdminRevenuePage({
           : undefined,
     })),
     ...assets.movements.flatMap((m): ChartEvent[] =>
-      m.source === "bill"
-        ? [{ on: m.on, type: "cost", amount: m.amount }]
-        : m.source === "repaid"
-          ? [{ on: m.on, type: "back", amount: m.amount }]
-          : m.source === "entry" && m.kind === "out"
-            ? [{ on: m.on, type: "spend", amount: m.amount }]
-            : [],
+      !counted(m)
+        ? []
+        : m.source === "bill"
+          ? [{ on: m.on, type: "cost", amount: m.amount }]
+          : m.source === "repaid"
+            ? [{ on: m.on, type: "back", amount: m.amount }]
+            : m.source === "entry" && m.kind === "out"
+              ? [{ on: m.on, type: "spend", amount: m.amount }]
+              : [],
     ),
     ...commissions.map((c) => ({
       on: c.on,
@@ -428,14 +448,14 @@ export default async function AdminRevenuePage({
             against: monthName(lastMonth),
           }}
           hint={`${rupees.format(profitIn(thisMonth))} this month`}
-          lede="All revenue, and costs clients paid back, less every bill the company paid, all commission given and every other spend. Money put into the company is not profit, so it is left out."
+          lede="All revenue, less every company expense paid, all commission given and every other spend. Costs marked Personal use (profit taken out) or Temporary (money we get back) are not counted, nor is money put into the company."
         >
           <div className="px-4 py-4 sm:px-6">
             <dl className="border-line divide-line-soft divide-y rounded-xl border text-[0.875rem] tabular-nums">
               {[
                 ["Revenue", total(receipts), "in"],
                 ["Costs paid back by clients", back, "in"],
-                ["Bills paid", assets.totals.bills, "out"],
+                ["Company expenses", billsCounted, "out"],
                 ["Commission", commissionTotal, "out"],
                 ["Other spends", assets.totals.spent, "out"],
               ].map(([label, amount, kind]) => (
@@ -480,6 +500,20 @@ export default async function AdminRevenuePage({
                 </dd>
               </div>
             </dl>
+            {(personal > 0 || temporary > 0) && (
+              <p className="text-ink-faint mt-2 text-[0.75rem]">
+                Not counted:{" "}
+                {[
+                  personal > 0 &&
+                    `${rupees.format(personal)} personal use (taken out of the profit)`,
+                  temporary > 0 &&
+                    `${rupees.format(temporary)} temporary (comes back)`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+                . Both still move the company balance.
+              </p>
+            )}
             <p className="text-ink mt-5 mb-2 text-[0.875rem] font-semibold">
               Month by month
             </p>

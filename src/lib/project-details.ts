@@ -30,7 +30,40 @@ export type PaidRow = {
   /** Whether the client has paid us back for it, and on which day. */
   clientPaid: boolean;
   clientPaidOn: string;
+  /**
+   * What kind of spend it is, for the profit: "company" is a real company
+   * expense; "personal" is money taken out for someone's own use (it is
+   * profit, not a cost); "temporary" is money we get back (from the client,
+   * or whoever owes it), so it is neither profit nor loss. "" is the
+   * default: see costUse.
+   */
+  use: CostUse | "";
 };
+export type CostUse = "company" | "personal" | "temporary";
+export const COST_USES: { id: CostUse; label: string; lede: string }[] = [
+  {
+    id: "company",
+    label: "Company expense",
+    lede: "A real cost of the business: it comes off the profit",
+  },
+  {
+    id: "personal",
+    label: "Personal use",
+    lede: "Money taken out for someone's own use: it is profit, not a cost",
+  },
+  {
+    id: "temporary",
+    label: "Temporary",
+    lede: "Paid now, got back later (from the client): not in profit or loss",
+  },
+];
+/**
+ * A cost's kind. Not chosen, a cost on a client's project is temporary
+ * (the client pays it back) and one on our own products is a company
+ * expense.
+ */
+export const costUse = (row: Pick<PaidRow, "use">, own: boolean): CostUse =>
+  row.use || (own ? "company" : "temporary");
 export type RecurringRow = {
   id: string;
   item: string;
@@ -301,6 +334,7 @@ export function cleanSheets(input: unknown): ProjectSheets {
         repaidOn: day(o.repaidOn),
         clientPaid: o.clientPaid === true,
         clientPaidOn: day(o.clientPaidOn),
+        use: COST_USES.some((u) => u.id === o.use) ? (o.use as CostUse) : "",
       };
     }),
     recurring: rows(x.recurring).map((r, i) => {
@@ -511,6 +545,7 @@ export const maintenanceRow = (month: string): PaidRow => ({
   repaidOn: "",
   clientPaid: false,
   clientPaidOn: "",
+  use: "",
 });
 
 /**

@@ -9,7 +9,12 @@ import {
 } from "@/lib/db/schema";
 import { isOwnCompany, num } from "@/lib/business";
 import { loadCommissions, loadFees } from "@/lib/business-data";
-import { cleanSheets, isCompany } from "@/lib/project-details";
+import {
+  cleanSheets,
+  costUse,
+  isCompany,
+  type CostUse,
+} from "@/lib/project-details";
 
 /**
  * The company's money on the Assets page: what came in, less what went
@@ -45,6 +50,11 @@ export type Movement = {
   source: "entry" | "bill" | "repaid" | "payment" | "fee" | "commission";
   /** A course fee, or commission on one: it links to the students page. */
   academy?: boolean;
+  /**
+   * For a bill, or a cost paid back: what kind of spend it is. Only a
+   * company expense counts in the profit; the money moves all the same.
+   */
+  use?: CostUse;
   /** The entry's id, or the project. */
   id: string;
   /** For anything off a project: the project; for a bill, who was paid back. */
@@ -160,7 +170,9 @@ export async function loadAssets() {
       if (row.amount <= 0) continue;
       const reason =
         [row.item, row.vendor].filter(Boolean).join(" · ") || "Bill";
-      if (!own) {
+      const use = costUse(row, own);
+      // Only a temporary cost on a client's project is the client's to pay.
+      if (!own && use === "temporary") {
         if (!row.clientPaid) {
           clientsOwe += row.amount;
           dues.push({
@@ -180,6 +192,7 @@ export async function loadAssets() {
             amount: row.amount,
             reason: `Paid back by the client: ${reason}`,
             source: "repaid",
+            use,
             id: s.projectId,
             project,
           });
@@ -195,6 +208,7 @@ export async function loadAssets() {
           amount: row.amount,
           reason,
           source: "bill",
+          use,
           id: s.projectId,
           project,
           repaidTo: company ? undefined : row.paidBy,

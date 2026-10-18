@@ -10,7 +10,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { isOwnCompany, lineOf, num } from "@/lib/business";
-import { cleanSheets, isCompany } from "@/lib/project-details";
+import { cleanSheets, costUse, isCompany } from "@/lib/project-details";
 
 /** One line of money on a project card: in from the client, or a cost. */
 export type CardMove = {
@@ -120,7 +120,8 @@ export async function loadDashboard(): Promise<{
           paidBy: isCompany(r.paidBy) ? "Company" : r.paidBy,
           repaid: isCompany(r.paidBy) || r.repaid,
           // Our own products have no client to pay anything back.
-          clientPaid: own ? undefined : r.clientPaid,
+          clientPaid:
+            own || costUse(r, own) !== "temporary" ? undefined : r.clientPaid,
         })),
     ]
       .sort((a, b) => b.on.localeCompare(a.on))
@@ -146,7 +147,9 @@ export async function loadDashboard(): Promise<{
       // Our own products have no client to pay anything back.
       clientOwes: isOwnCompany(p.client, p.title)
         ? 0
-        : paid.filter((r) => !r.clientPaid).reduce((n, r) => n + r.amount, 0),
+        : paid
+            .filter((r) => !r.clientPaid && costUse(r, own) === "temporary")
+            .reduce((n, r) => n + r.amount, 0),
       toPayBack: paid
         .filter((r) => !isCompany(r.paidBy) && !r.repaid)
         .reduce((n, r) => n + r.amount, 0),

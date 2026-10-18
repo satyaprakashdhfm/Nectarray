@@ -42,6 +42,8 @@ import {
   monthBreakdown,
   dashboardFor,
   envKeys,
+  COST_USES,
+  costUse,
   isCompany,
   monthLabel,
   owedByCompany,
@@ -79,9 +81,9 @@ const PAID_BY_NAMES = "paid-by-names";
 
 /** Our own products (Nectarray, Verona Ads) have no client to pay back. */
 const paidCols = (projectId: string, own: boolean): Col<PaidRow>[] =>
-  paidColsAll(projectId).filter((c) => !own || c.key !== "clientPaid");
+  paidColsAll(projectId, own).filter((c) => !own || c.key !== "clientPaid");
 
-const paidColsAll = (projectId: string): Col<PaidRow>[] => [
+const paidColsAll = (projectId: string, own: boolean): Col<PaidRow>[] => [
   {
     key: "item",
     text: "Service",
@@ -97,6 +99,27 @@ const paidColsAll = (projectId: string): Col<PaidRow>[] => [
     placeholder: "GoDaddy",
   },
   { key: "amount", text: "Amount", kind: "money", w: "7rem" },
+  {
+    key: "use",
+    text: "Type",
+    kind: "custom",
+    w: "10.5rem",
+    render: (row, patch) => (
+      <Select
+        value={costUse(row, own)}
+        onChange={(e) => patch({ use: e.target.value as PaidRow["use"] })}
+        aria-label="Type of expense"
+        title={COST_USES.find((u) => u.id === costUse(row, own))?.lede}
+        className={cn(field, "py-2")}
+      >
+        {COST_USES.map((u) => (
+          <option key={u.id} value={u.id}>
+            {u.label}
+          </option>
+        ))}
+      </Select>
+    ),
+  },
   {
     key: "paidBy",
     text: "Paid by",
@@ -890,7 +913,7 @@ function PaidMonths({
       cols={cols}
       rows={paidInMonth(rows, month)}
       onChange={(next) => setMonthRows(month, next)}
-      blank={() => ({
+      blank={(): PaidRow => ({
         id: newId(),
         item: "",
         vendor: "",
@@ -905,15 +928,16 @@ function PaidMonths({
         repaidOn: "",
         clientPaid: false,
         clientPaidOn: "",
+        use: "",
       })}
       addText="Add expense"
-      wide="lg:min-w-[80rem]"
+      wide="lg:min-w-[90rem]"
     />
   );
 
   const owed = owedByCompany(rows);
   const clientOwes = rows
-    .filter((r) => !r.clientPaid)
+    .filter((r) => !r.clientPaid && costUse(r, own) === "temporary")
     .reduce((n, r) => n + r.amount, 0);
   const names = [
     ...new Map(
