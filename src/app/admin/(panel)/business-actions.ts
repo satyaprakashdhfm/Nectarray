@@ -8,6 +8,8 @@ import {
   blogPosts,
   clientPayments,
   clientProjects,
+  enrolments,
+  projectDetails,
   seoKeywords,
 } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/access";
@@ -20,6 +22,7 @@ import {
   isService,
 } from "@/lib/business";
 import { todayIST } from "@/lib/work";
+import { cleanCommissions } from "@/lib/commissions";
 
 /**
  * Mutations for the business dashboard: projects, payments, keywords, the
@@ -351,5 +354,34 @@ export async function deleteCampaign(form: FormData) {
   const id = text(form, "id");
   if (!id) throw new Error("Missing campaign.");
   await db.delete(adCampaigns).where(eq(adCampaigns.id, id));
+  done();
+}
+
+/**
+ * Saves the commissions on a project (a share of its development payments)
+ * or on a student's enrolment (a share of their fee).
+ */
+export async function saveCommissions(
+  on: "project" | "enrolment",
+  id: string,
+  input: unknown,
+) {
+  await requireAdmin();
+  if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Missing id.");
+  const commissions = cleanCommissions(input);
+  if (on === "project") {
+    await db
+      .insert(projectDetails)
+      .values({ projectId: id, commissions })
+      .onConflictDoUpdate({
+        target: projectDetails.projectId,
+        set: { commissions },
+      });
+  } else {
+    await db
+      .update(enrolments)
+      .set({ commissions })
+      .where(eq(enrolments.id, id));
+  }
   done();
 }

@@ -18,6 +18,7 @@ const KINDS: Record<string, string> = {
   fee: "Course fee",
   repaid: "Client paid back",
   bill: "Bill paid",
+  commission: "Commission",
   "entry-in": "Money added",
   "entry-out": "Spent",
 };
@@ -72,7 +73,7 @@ export function BalanceLog({
   }, [movements]);
 
   // Course fees all sit under one "Academy" choice.
-  const groupOf = (m: Movement) => (m.source === "fee" ? "academy" : m.id);
+  const groupOf = (m: Movement) => (m.academy ? "academy" : m.id);
   const projects = [
     ...new Map(
       movements.filter((m) => m.project).map((m) => [groupOf(m), m.project!]),
@@ -306,7 +307,7 @@ export function BalanceLog({
                           {m.source !== "entry" && m.project && (
                             <Link
                               href={
-                                m.source === "fee"
+                                m.academy
                                   ? `${ADMIN}/students`
                                   : `${ADMIN}/projects/${m.id}`
                               }

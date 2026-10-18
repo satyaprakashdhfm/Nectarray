@@ -5,6 +5,8 @@ import {
   setProjectValue,
 } from "@/app/admin/(panel)/business-actions";
 import { AutoSaveForm } from "@/components/admin/autosave";
+import { Commissions } from "@/components/admin/Commissions";
+import type { Commission } from "@/lib/commissions";
 import { field, primaryButton } from "@/components/admin/Business";
 import { rupees } from "@/lib/business";
 import { todayIST } from "@/lib/work";
@@ -28,6 +30,7 @@ export function DevelopmentCost({
   expected,
   quoted,
   payments,
+  commissions,
 }: {
   projectId: string;
   /** The agreed one-time price, or null while it is not set. */
@@ -36,6 +39,8 @@ export function DevelopmentCost({
   quoted: number | null;
   /** Newest first. */
   payments: { id: string; amount: number; on: string; ref: string | null }[];
+  /** Commission given to people on what the client pays. */
+  commissions: Commission[];
 }) {
   const received = payments.reduce((n, p) => n + p.amount, 0);
   const left = expected == null ? null : Math.max(0, expected - received);
@@ -224,6 +229,15 @@ export function DevelopmentCost({
             Add payment
           </button>
         </form>
+      </div>
+
+      <div className="border-line-soft border-t px-4 py-4 sm:px-5">
+        <Commissions
+          on="project"
+          id={projectId}
+          base={received}
+          initial={commissions}
+        />
       </div>
     </section>
   );

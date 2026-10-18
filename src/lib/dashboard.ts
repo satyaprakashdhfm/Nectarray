@@ -130,7 +130,9 @@ export async function loadDashboard(): Promise<{
       iso(p.createdAt),
       iso(sheet?.updatedAt),
       ...ins.map((x) => iso(x.createdAt)),
-    ].sort()[0 + 0 === 0 ? 2 : 0];
+    ]
+      .sort()
+      .at(-1);
 
     return {
       id: p.id,

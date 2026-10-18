@@ -5,12 +5,18 @@ import { notFound } from "next/navigation";
 import { desc, eq, sql } from "drizzle-orm";
 import { ChevronLeft, FileText, HardDrive } from "lucide-react";
 import { db } from "@/lib/db";
-import { clientPayments, clientProjects, quotations } from "@/lib/db/schema";
+import {
+  clientPayments,
+  clientProjects,
+  projectDetails,
+  quotations,
+} from "@/lib/db/schema";
 import { DevelopmentCost } from "@/components/admin/DevelopmentCost";
 import { StatusPill } from "@/components/admin/Business";
 import { DriveBrowser, NotConnected } from "@/components/admin/DriveBrowser";
 import { ProjectWorkspace } from "@/components/admin/ProjectWorkspace";
 import { isOwnCompany, num, rupees, serviceLabel } from "@/lib/business";
+import { cleanCommissions } from "@/lib/commissions";
 import { isId, loadFolder } from "@/lib/drive";
 import { driveReady } from "@/lib/drive-storage";
 import { loadProjectSheets } from "@/lib/project-data";
@@ -49,7 +55,7 @@ export default async function AdminProjectPage({
   if (!project) notFound();
 
   const folderId = isId(folder) ? folder : null;
-  const [quotes, sheets, contents, jar, payments] = await Promise.all([
+  const [quotes, sheets, contents, jar, payments, detail] = await Promise.all([
     db
       .select()
       .from(quotations)
@@ -64,6 +70,11 @@ export default async function AdminProjectPage({
       .from(clientPayments)
       .where(eq(clientPayments.projectId, id))
       .orderBy(desc(clientPayments.receivedOn)),
+    db
+      .select({ commissions: projectDetails.commissions })
+      .from(projectDetails)
+      .where(eq(projectDetails.projectId, id))
+      .catch(() => []),
   ]);
   // A folder that is not in this project's Drive opens the top instead.
   const drive = contents ?? (await loadFolder(id, null));
@@ -109,6 +120,7 @@ export default async function AdminProjectPage({
           on: p.receivedOn,
           ref: p.ref,
         }))}
+        commissions={cleanCommissions(detail[0]?.commissions)}
       />
 
       <section className="card mt-6 p-4 sm:p-5">

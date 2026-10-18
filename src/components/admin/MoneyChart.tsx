@@ -12,8 +12,9 @@ export type ChartEvent = {
   /**
    * revenue: a client payment or a course fee. cost: a bill the company
    * paid. back: a cost a client paid us back. spend: anything else spent.
+   * commission: a share of what came in, given to someone.
    */
-  type: "revenue" | "cost" | "back" | "spend";
+  type: "revenue" | "cost" | "back" | "spend" | "commission";
   amount: number;
   /**
    * For revenue: the service line, and the client who paid; none for a
@@ -35,12 +36,12 @@ const METRICS: { id: Metric; label: string; lede: string }[] = [
   {
     id: "profit",
     label: "Profit",
-    lede: "Revenue and costs paid back, less bills paid and other spends",
+    lede: "Revenue and costs paid back, less bills paid, commission and other spends",
   },
   {
     id: "costs",
     label: "Costs",
-    lede: "Bills the company paid and other spends, less what clients paid back",
+    lede: "Bills the company paid, commission and other spends, less what clients paid back",
   },
   {
     id: "clients",
@@ -153,9 +154,13 @@ export function MoneyChart({
         metric === "revenue"
           ? income
           : metric === "profit"
-            ? sum("revenue") + sum("back") - sum("cost") - sum("spend")
+            ? sum("revenue") +
+              sum("back") -
+              sum("cost") -
+              sum("spend") -
+              sum("commission")
             : metric === "costs"
-              ? sum("cost") + sum("spend") - sum("back")
+              ? sum("cost") + sum("spend") + sum("commission") - sum("back")
               : new Set(revenue.flatMap((e) => (e.who ? [e.who] : []))).size;
       const label =
         period === "year"

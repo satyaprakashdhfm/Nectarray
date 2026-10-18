@@ -1,6 +1,8 @@
 import { Select } from "@/components/admin/Select";
 import { ADMIN } from "@/lib/admin-path";
 import { AutoSaveForm } from "@/components/admin/autosave";
+import { Commissions } from "@/components/admin/Commissions";
+import { cleanCommissions, type Commission } from "@/lib/commissions";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import {
@@ -59,6 +61,7 @@ type Enrolment = {
   amount_paid: string | null;
   paid_on: string | null;
   payment_ref: string | null;
+  commissions: Commission[];
 };
 
 type Row = {
@@ -160,6 +163,7 @@ export default async function AdminStudentsPage() {
         amount_paid: entry.amountPaid,
         paid_on: entry.paidOn,
         payment_ref: entry.paymentRef,
+        commissions: cleanCommissions(entry.commissions),
       })),
   }));
 
@@ -358,6 +362,16 @@ export default async function AdminStudentsPage() {
           ) : (
             <span className="text-ink-faint text-[0.8125rem]">—</span>
           )}
+          {enrolment && (
+            <Commissions
+              key={enrolment.id}
+              on="enrolment"
+              id={enrolment.id}
+              base={Number(enrolment.amount_paid ?? 0)}
+              initial={enrolment.commissions}
+              compact
+            />
+          )}
         </td>
       </tr>
     );
@@ -449,7 +463,7 @@ export default async function AdminStudentsPage() {
                 </span>
               </summary>
               <div className="card mt-2 overflow-x-auto">
-                <table className="w-full min-w-[68rem] text-left">
+                <table className="w-full min-w-[72rem] text-left">
                   <thead>
                     <tr className="border-line-soft border-b">
                       {[

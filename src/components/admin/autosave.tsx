@@ -155,10 +155,21 @@ export function AutoSaveForm({
     setTimeout(() => setState("idle"), 1600);
   };
 
+  // Leaving with typing not yet sent: send it. The form is gone from the
+  // page by then and cannot submit itself, so its action is called with
+  // what was last typed.
+  const last = useRef<{ data: FormData | null; action: unknown }>({
+    data: null,
+    action: props.action,
+  });
+  useEffect(() => {
+    last.current.action = props.action;
+  });
   useEffect(
     () => () => {
-      // Leaving with typing not yet sent: send it.
-      if (timer.current) send();
+      const { data, action } = last.current;
+      if (timer.current && data && typeof action === "function")
+        void (action as (d: FormData) => unknown)(data);
     },
     [],
   );
@@ -177,6 +188,7 @@ export function AutoSaveForm({
               target.type,
             ));
         if (timer.current) clearTimeout(timer.current);
+        last.current.data = new FormData(e.currentTarget);
         setState("pending");
         if (typed) timer.current = setTimeout(send, DELAY_MS + 300);
         else send();

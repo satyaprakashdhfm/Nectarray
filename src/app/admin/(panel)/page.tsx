@@ -10,6 +10,7 @@ import {
   StatusPill,
 } from "@/components/admin/Business";
 import { AssetsPanel } from "@/components/admin/AssetsPanel";
+import { FreshOnVisit } from "@/components/admin/FreshOnVisit";
 import { BalanceLog } from "@/components/admin/BalanceLog";
 import { MoneyChart, type ChartEvent } from "@/components/admin/MoneyChart";
 import { StatCard, StatFace, cardButton } from "@/components/admin/StatCard";
@@ -78,6 +79,7 @@ export default async function AdminRevenuePage({
     loadDashboard(),
   ]);
 
+  const renderedAt = new Date().getTime();
   const thisMonth = currentMonth();
   const lastMonth = addMonths(thisMonth, -1);
   const thisYear = thisMonth.slice(0, 4);
@@ -142,8 +144,19 @@ export default async function AdminRevenuePage({
     assets.movements.filter((m) => m.source === "repaid"),
     (m) => m.amount,
   );
+  // Commission stays in the revenue and comes off the profit, paid or not.
+  const commissions = assets.commissions;
+  const commissionTotal = assets.totals.commission;
+  const commissionDue = sum(
+    commissions.filter((c) => !c.paidOn),
+    (c) => c.amount,
+  );
   const profit =
-    total(receipts) + back - assets.totals.bills - assets.totals.spent;
+    total(receipts) +
+    back -
+    assets.totals.bills -
+    assets.totals.spent -
+    commissionTotal;
 
   const events: ChartEvent[] = [
     ...receipts.map((r) => ({
@@ -166,6 +179,11 @@ export default async function AdminRevenuePage({
             ? [{ on: m.on, type: "spend", amount: m.amount }]
             : [],
     ),
+    ...commissions.map((c) => ({
+      on: c.on,
+      type: "commission" as const,
+      amount: c.amount,
+    })),
   ];
   const profitIn = (key: string) =>
     sum(
@@ -179,6 +197,7 @@ export default async function AdminRevenuePage({
 
   return (
     <>
+      <FreshOnVisit renderedAt={renderedAt} />
       <PageHead
         title="Revenue & assets"
         lede="Everything the company has earned, spent and holds. Click any card to see what makes it up."
@@ -293,7 +312,7 @@ export default async function AdminRevenuePage({
               ? assets.owed.map((p) => p.name).join(", ")
               : "Nobody waiting"
           }
-          lede="Costs people paid out of their own pocket, not yet paid back by the company. Mark them “Paid back” on the project."
+          lede="Costs people paid out of their own pocket, not yet paid back by the company, and commission not yet paid. Mark costs “Paid back” on the project; give a commission its paid date."
         >
           {assets.owed.length === 0 ? (
             <p className="text-ink-faint px-6 py-12 text-center text-[0.875rem]">
@@ -358,7 +377,7 @@ export default async function AdminRevenuePage({
             against: monthName(lastMonth),
           }}
           hint={`${rupees.format(profitIn(thisMonth))} this month`}
-          lede="All revenue, and costs clients paid back, less every bill the company paid and every other spend. Money put into the company is not profit, so it is left out."
+          lede="All revenue, and costs clients paid back, less every bill the company paid, all commission given and every other spend. Money put into the company is not profit, so it is left out."
         >
           <div className="px-4 py-4 sm:px-6">
             <dl className="border-line divide-line-soft divide-y rounded-xl border text-[0.875rem] tabular-nums">
@@ -366,6 +385,7 @@ export default async function AdminRevenuePage({
                 ["Revenue", total(receipts), "in"],
                 ["Costs paid back by clients", back, "in"],
                 ["Bills paid", assets.totals.bills, "out"],
+                ["Commission", commissionTotal, "out"],
                 ["Other spends", assets.totals.spent, "out"],
               ].map(([label, amount, kind]) => (
                 <div
@@ -438,6 +458,49 @@ export default async function AdminRevenuePage({
               })}
             />
           </div>
+        </StatCard>
+
+        <StatCard
+          label="Commission"
+          value={rupees.format(commissionTotal)}
+          hint={
+            commissions.length
+              ? commissionDue
+                ? `${rupees.format(commissionDue)} still to pay`
+                : "All paid"
+              : "None given"
+          }
+          tone={commissionDue ? "warn" : undefined}
+          lede="Commission given to people on projects and course fees, worked out from what has come in. It is part of the revenue and comes off the profit; paid ones come off the company balance."
+        >
+          <Table
+            head={["When", "Person", "On", "Share", "Amount"]}
+            empty="No commission given yet. Add it on a project's Development cost or a student's payment."
+            rows={commissions.map((c) => [
+              day(c.on),
+              <strong key="n" className="text-ink">
+                {c.name}
+              </strong>,
+              <ProjectLink key="p" id={c.projectId} name={c.what} />,
+              <span key="s">
+                {c.percent ? `${c.percent}%` : "Fixed"}
+                <span className="text-ink-faint block text-[0.75rem]">
+                  of {rupees.format(c.base)}
+                </span>
+              </span>,
+              <span key="a">
+                <strong className="text-ink">{rupees.format(c.amount)}</strong>
+                <span
+                  className={cn(
+                    "block text-[0.75rem]",
+                    c.paidOn ? "text-leaf-deep" : "text-amber-deep",
+                  )}
+                >
+                  {c.paidOn ? `paid ${day(c.paidOn)}` : "to pay"}
+                </span>
+              </span>,
+            ])}
+          />
         </StatCard>
       </div>
 
@@ -747,18 +810,19 @@ function Table({
   );
 }
 
+/** A project, or the students page for something with no project. */
 function ProjectLink({
   id,
   name,
   sub,
 }: {
-  id: string;
+  id?: string;
   name: string;
   sub?: string;
 }) {
   return (
     <Link
-      href={`${ADMIN}/projects/${id}`}
+      href={id ? `${ADMIN}/projects/${id}` : `${ADMIN}/students`}
       className="hover:text-brand-deep text-ink font-semibold underline-offset-2 hover:underline"
     >
       {name}

@@ -62,6 +62,10 @@ export function AssetsPanel({
             <dd className="text-ink font-semibold">
               {rupees.format(totals.spent)}
             </dd>
+            <dt>Commission paid</dt>
+            <dd className="text-ink font-semibold">
+              {rupees.format(totals.commissionPaid)}
+            </dd>
           </dl>
         </div>
 
@@ -131,7 +135,11 @@ export function AssetsPanel({
                       className="text-ink-soft flex justify-between gap-3 text-[0.8125rem]"
                     >
                       <Link
-                        href={`${ADMIN}/projects/${b.projectId}`}
+                        href={
+                          b.projectId
+                            ? `${ADMIN}/projects/${b.projectId}`
+                            : `${ADMIN}/students`
+                        }
                         className="hover:text-brand-deep min-w-0 truncate"
                       >
                         {b.item}

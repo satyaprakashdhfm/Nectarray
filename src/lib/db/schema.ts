@@ -162,6 +162,8 @@ export const enrolments = pgTable(
     amountPaid: numeric("amount_paid"),
     paidOn: date("paid_on"),
     paymentRef: text("payment_ref"),
+    /** Commission given on the fee: name, percent (see lib/commissions). */
+    commissions: jsonb().notNull().default([]),
     createdAt: now(),
   },
   (table) => [
@@ -712,6 +714,8 @@ export const projectDetails = pgTable("project_details", {
   notes: jsonb().notNull().default([]),
   /** The monthly cost message to the client: greeting, closing, or off. */
   message: jsonb().notNull().default({}),
+  /** Commission given on the development payments (see lib/commissions). */
+  commissions: jsonb().notNull().default([]),
   updatedAt: now(),
 });
 

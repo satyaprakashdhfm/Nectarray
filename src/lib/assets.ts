@@ -8,7 +8,7 @@ import {
   projectDetails,
 } from "@/lib/db/schema";
 import { isOwnCompany, num } from "@/lib/business";
-import { loadFees } from "@/lib/business-data";
+import { loadCommissions, loadFees } from "@/lib/business-data";
 import { cleanSheets, isCompany } from "@/lib/project-details";
 
 /**
@@ -23,7 +23,9 @@ import { cleanSheets, isCompany } from "@/lib/project-details";
  * Out: bills off each project's Amounts paid. One the company paid counts
  * at once; one a person paid out of pocket counts once it is marked "Paid
  * back", because that is when the company's money moves (until then it is
- * listed as still owed). Plus spends typed in with their reason.
+ * listed as still owed). Commission given to people, once it is paid
+ * (until then it is listed as still owed to them). Plus spends typed in
+ * with their reason.
  *
  * Our own products (Nectarray, Verona Ads) have no client: their costs
  * come out like any other, and nothing comes back in.
@@ -38,9 +40,12 @@ export type Movement = {
   reason: string;
   /**
    * Typed in on the Assets page (can be removed there), off a bill, a cost
-   * a client paid back, a client's payment, or a student's course fee.
+   * a client paid back, a client's payment, a student's course fee, or a
+   * commission paid to someone.
    */
-  source: "entry" | "bill" | "repaid" | "payment" | "fee";
+  source: "entry" | "bill" | "repaid" | "payment" | "fee" | "commission";
+  /** A course fee, or commission on one: it links to the students page. */
+  academy?: boolean;
   /** The entry's id, or the project. */
   id: string;
   /** For anything off a project: the project; for a bill, who was paid back. */
@@ -53,7 +58,8 @@ export type Owed = {
   total: number;
   bills: {
     project: string;
-    projectId: string;
+    /** The project; none for commission on a student's fee. */
+    projectId?: string;
     item: string;
     amount: number;
     /** When the person paid it, or the month it was billed in. */
@@ -72,7 +78,7 @@ export type ClientDue = {
 };
 
 export async function loadAssets() {
-  const [entries, sheets, payments, fees] = await Promise.all([
+  const [entries, sheets, payments, fees, commissions] = await Promise.all([
     db.select().from(assetEntries).orderBy(desc(assetEntries.on)),
     db
       .select({
@@ -101,6 +107,7 @@ export async function loadAssets() {
         eq(clientPayments.projectId, clientProjects.id),
       ),
     loadFees(),
+    loadCommissions(),
   ]);
 
   const movements: Movement[] = entries.map((e) => ({
@@ -124,6 +131,7 @@ export async function loadAssets() {
       source: "fee",
       id: f.id,
       project: "Academy",
+      academy: true,
     });
   }
 
@@ -209,6 +217,36 @@ export async function loadAssets() {
     }
   }
 
+  // Commission: out once paid; until then owed to the person.
+  for (const c of commissions) {
+    const reason = `Commission ${c.percent ? `${c.percent}% ` : ""}to ${c.name}`;
+    if (c.paidOn) {
+      movements.push({
+        key: `c-${c.key}`,
+        on: c.paidOn,
+        kind: "out",
+        amount: c.amount,
+        reason,
+        source: "commission",
+        id: c.projectId ?? c.enrolmentId ?? "",
+        project: c.projectId ? c.what : "Academy",
+        academy: !c.projectId,
+      });
+      continue;
+    }
+    const key = c.name.toLowerCase();
+    const person = owed.get(key) ?? { name: c.name, total: 0, bills: [] };
+    person.total += c.amount;
+    person.bills.push({
+      project: c.what,
+      projectId: c.projectId,
+      item: c.percent ? `Commission ${c.percent}%` : "Commission",
+      amount: c.amount,
+      on: c.on,
+    });
+    owed.set(key, person);
+  }
+
   // Newest first. A bill with only its month sits under that month's
   // dated entries.
   movements.sort((a, b) => b.on.localeCompare(a.on));
@@ -219,14 +257,17 @@ export async function loadAssets() {
   const fromClients = sum((m) => m.kind === "in" && m.source !== "entry");
   const bills = sum((m) => m.kind === "out" && m.source === "bill");
   const spent = sum((m) => m.kind === "out" && m.source === "entry");
+  const commissionPaid = sum((m) => m.source === "commission");
+  const commission = commissions.reduce((n, c) => n + c.amount, 0);
   const people = [...owed.values()].sort((a, b) => b.total - a.total);
   const stillOwed = people.reduce((n, p) => n + p.total, 0);
-  const balance = added + fromClients - bills - spent;
+  const balance = added + fromClients - bills - spent - commissionPaid;
 
   dues.sort((a, b) => b.on.localeCompare(a.on));
 
   return {
     movements,
+    commissions,
     owed: people,
     dues,
     totals: {
@@ -234,6 +275,8 @@ export async function loadAssets() {
       fromClients,
       bills,
       spent,
+      commission,
+      commissionPaid,
       balance,
       stillOwed,
       clientsOwe,

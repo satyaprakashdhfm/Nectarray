@@ -6,9 +6,15 @@ import {
   clientPayments,
   clientProjects,
   enrolments,
+  projectDetails,
   users,
 } from "@/lib/db/schema";
 import { REVENUE_LINES, lineOf, num } from "@/lib/business";
+import {
+  cleanCommissions,
+  commissionAmount,
+  realCommissions,
+} from "@/lib/commissions";
 
 /**
  * Every rupee received, from every service, as one list.
@@ -53,17 +59,138 @@ export async function loadFees() {
       id: f.id,
       amount: num(f.amount),
       // In India time, so a late-evening enrolment keeps its own day.
-      on:
-        f.on ??
-        new Date(f.enrolled.getTime() + 5.5 * 3_600_000)
-          .toISOString()
-          .slice(0, 10),
+      on: f.on ?? istDay(f.enrolled),
       name:
         [f.firstName, f.lastName].filter(Boolean).join(" ") ||
         f.email ||
         "Student",
     }));
 }
+
+/** One commission given, worked out from what has been received. */
+export type CommissionRow = {
+  key: string;
+  name: string;
+  percent: number;
+  amount: number;
+  /** What it is a share of. */
+  base: number;
+  /** The day it was paid, or "" while still to pay. */
+  paidOn: string;
+  /**
+   * When it counts against the profit: the day it was paid, else the day
+   * the money it is a share of last came in.
+   */
+  on: string;
+  /** The project or student it was given on. */
+  what: string;
+  line: string;
+  /** The project, for a link; none for a student. */
+  projectId?: string;
+  /** The enrolment, for a student. */
+  enrolmentId?: string;
+};
+
+/**
+ * Every commission given, on projects (a share of the development
+ * payments) and on students (a share of the fee), worked out from what
+ * has been received now, so a changed fee changes its commission too.
+ */
+export async function loadCommissions(): Promise<CommissionRow[]> {
+  const [projects, payments, students] = await Promise.all([
+    db
+      .select({
+        id: clientProjects.id,
+        title: clientProjects.title,
+        client: clientProjects.client,
+        service: clientProjects.service,
+        commissions: projectDetails.commissions,
+      })
+      .from(projectDetails)
+      .innerJoin(
+        clientProjects,
+        eq(projectDetails.projectId, clientProjects.id),
+      )
+      .catch(() => []),
+    db
+      .select({
+        projectId: clientPayments.projectId,
+        amount: clientPayments.amount,
+        on: clientPayments.receivedOn,
+      })
+      .from(clientPayments),
+    db
+      .select({
+        id: enrolments.id,
+        commissions: enrolments.commissions,
+        amount: enrolments.amountPaid,
+        on: enrolments.paidOn,
+        enrolled: enrolments.createdAt,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      })
+      .from(enrolments)
+      .innerJoin(users, eq(enrolments.userId, users.id))
+      .catch(() => []),
+  ]);
+
+  const rows: CommissionRow[] = [];
+  for (const p of projects) {
+    const list = realCommissions(cleanCommissions(p.commissions));
+    if (!list.length) continue;
+    const mine = payments.filter((x) => x.projectId === p.id);
+    const base = mine.reduce((n, x) => n + num(x.amount), 0);
+    const last = mine
+      .map((x) => x.on)
+      .sort()
+      .at(-1);
+    for (const c of list) {
+      rows.push({
+        key: `p-${p.id}-${c.id}`,
+        name: c.name || "Someone",
+        percent: c.percent,
+        amount: commissionAmount(c, base),
+        base,
+        paidOn: c.paidOn,
+        on: c.paidOn || last || istDay(new Date()),
+        what: `${p.client} · ${p.title}`,
+        line: lineOf(p.service),
+        projectId: p.id,
+      });
+    }
+  }
+  for (const s of students) {
+    const list = realCommissions(cleanCommissions(s.commissions));
+    if (!list.length) continue;
+    const base = num(s.amount);
+    const name =
+      [s.firstName, s.lastName].filter(Boolean).join(" ") ||
+      s.email ||
+      "Student";
+    for (const c of list) {
+      rows.push({
+        key: `s-${s.id}-${c.id}`,
+        name: c.name || "Someone",
+        percent: c.percent,
+        amount: commissionAmount(c, base),
+        base,
+        paidOn: c.paidOn,
+        on: c.paidOn || s.on || istDay(s.enrolled),
+        what: `Course fee · ${name}`,
+        line: "academy",
+        enrolmentId: s.id,
+      });
+    }
+  }
+  return rows
+    .filter((r) => r.amount > 0)
+    .sort((a, b) => b.on.localeCompare(a.on));
+}
+
+/** The date in India time, so a late-evening entry keeps its own day. */
+const istDay = (d: Date) =>
+  new Date(d.getTime() + 5.5 * 3_600_000).toISOString().slice(0, 10);
 
 export async function loadMoney() {
   const [payments, fees, projects, campaigns] = await Promise.all([
