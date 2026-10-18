@@ -100,6 +100,7 @@ export async function loadDashboard(): Promise<{
     const ins = payments.filter((x) => x.projectId === p.id);
     const sheet = sheetOf.get(p.id);
     const paid = sheet ? cleanSheets({ paid: sheet.paid }).paid : [];
+    const own = isOwnCompany(p.client, p.title);
     const recent: CardMove[] = [
       ...ins.map((x) => ({
         key: `p-${x.id}`,
@@ -118,7 +119,8 @@ export async function loadDashboard(): Promise<{
           amount: r.amount,
           paidBy: isCompany(r.paidBy) ? "Company" : r.paidBy,
           repaid: isCompany(r.paidBy) || r.repaid,
-          clientPaid: r.clientPaid,
+          // Our own products have no client to pay anything back.
+          clientPaid: own ? undefined : r.clientPaid,
         })),
     ]
       .sort((a, b) => b.on.localeCompare(a.on))

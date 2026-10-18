@@ -77,7 +77,11 @@ const MAX_FILE_BYTES = 8 * 1024 * 1024;
 /** The names already typed under "Paid by", offered as the field is filled. */
 const PAID_BY_NAMES = "paid-by-names";
 
-const paidCols = (projectId: string): Col<PaidRow>[] => [
+/** Our own products (Nectarray, Verona Ads) have no client to pay back. */
+const paidCols = (projectId: string, own: boolean): Col<PaidRow>[] =>
+  paidColsAll(projectId).filter((c) => !own || c.key !== "clientPaid");
+
+const paidColsAll = (projectId: string): Col<PaidRow>[] => [
   {
     key: "item",
     text: "Service",
@@ -203,6 +207,7 @@ export function ProjectWorkspace({
   initial,
   vaultReady,
   thisMonth,
+  own = false,
 }: {
   projectId: string;
   status: string;
@@ -210,13 +215,18 @@ export function ProjectWorkspace({
   vaultReady: boolean;
   /** "2026-10", in India time, so the page and the server agree. */
   thisMonth: string;
+  /**
+   * One of our own products (Nectarray, Verona Ads): no client, so nothing
+   * about a client paying back and no message to a client.
+   */
+  own?: boolean;
 }) {
   const [s, setS] = useState(initial);
   // Every change is saved by itself a moment after it is made.
   const auto = useAutoSave(s, (sheets) => saveProjectSheets(projectId, sheets));
   const dirty = auto.dirty;
   const [tab, setTab] = useState<Tab>("paid");
-  const cols = useMemo(() => paidCols(projectId), [projectId]);
+  const cols = useMemo(() => paidCols(projectId, own), [projectId, own]);
   const [show, setShow] = useState(false);
   const [statusPending, startStatus] = useTransition();
 
@@ -456,6 +466,7 @@ export function ProjectWorkspace({
             closed={s.closedMonths}
             thisMonth={thisMonth}
             dirty={dirty}
+            own={own}
             onChange={(paid, closedMonths) =>
               setS({ ...s, paid, closedMonths })
             }
@@ -498,12 +509,14 @@ export function ProjectWorkspace({
         )}
       </section>
 
-      <ClientMessageBox
-        rows={s.paid}
-        thisMonth={thisMonth}
-        message={s.message}
-        onChange={(message) => setS({ ...s, message })}
-      />
+      {!own && (
+        <ClientMessageBox
+          rows={s.paid}
+          thisMonth={thisMonth}
+          message={s.message}
+          onChange={(message) => setS({ ...s, message })}
+        />
+      )}
 
       <div className="pointer-events-none sticky bottom-3 z-20 flex justify-end">
         <div className="border-line bg-surface/95 pointer-events-auto rounded-full border px-3.5 py-1.5 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur">
@@ -824,6 +837,7 @@ function PaidMonths({
   closed,
   thisMonth,
   dirty,
+  own,
   onChange,
 }: {
   projectId: string;
@@ -832,6 +846,7 @@ function PaidMonths({
   closed: string[];
   thisMonth: string;
   dirty: boolean;
+  own: boolean;
   onChange: (rows: PaidRow[], closed: string[]) => void;
 }) {
   const [opened, setOpened] = useState<string[]>([]);
@@ -940,7 +955,7 @@ function PaidMonths({
         </div>
       )}
 
-      {clientOwes > 0 && (
+      {!own && clientOwes > 0 && (
         <p className="border-line bg-mist/60 text-ink-soft border-b px-4 py-2 text-[0.8125rem] sm:px-5">
           The client still has to pay us back{" "}
           <span className="text-ink font-semibold tabular-nums">

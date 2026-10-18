@@ -25,9 +25,8 @@ import { cleanSheets, isCompany } from "@/lib/project-details";
  * back", because that is when the company's money moves (until then it is
  * listed as still owed). Plus spends typed in with their reason.
  *
- * Our own products (Nectarray, Verona Ads) are paid for by the company
- * itself: their costs come out, and "client paid" on them means the
- * company paid, so nothing comes back in.
+ * Our own products (Nectarray, Verona Ads) have no client: their costs
+ * come out like any other, and nothing comes back in.
  */
 
 export type Movement = {
@@ -179,8 +178,8 @@ export async function loadAssets() {
           });
       }
       const company = isCompany(row.paidBy);
-      // On our own products, "client paid" is the company paying.
-      if (company || row.repaid || (own && row.clientPaid)) {
+      // Paid by the company, or by a person the company has paid back.
+      if (company || row.repaid) {
         movements.push({
           key: `b-${s.projectId}-${row.id}`,
           // The day the money left: paid back, or paid; else the bill's month.

@@ -10,7 +10,7 @@ import { DevelopmentCost } from "@/components/admin/DevelopmentCost";
 import { StatusPill } from "@/components/admin/Business";
 import { DriveBrowser, NotConnected } from "@/components/admin/DriveBrowser";
 import { ProjectWorkspace } from "@/components/admin/ProjectWorkspace";
-import { num, rupees, serviceLabel } from "@/lib/business";
+import { isOwnCompany, num, rupees, serviceLabel } from "@/lib/business";
 import { isId, loadFolder } from "@/lib/drive";
 import { driveReady } from "@/lib/drive-storage";
 import { loadProjectSheets } from "@/lib/project-data";
@@ -194,6 +194,7 @@ export default async function AdminProjectPage({
         initial={sheets}
         vaultReady={vaultReady()}
         thisMonth={currentMonth()}
+        own={isOwnCompany(project.client, project.title)}
       />
 
       <section id="drive" className="mt-8 scroll-mt-24">

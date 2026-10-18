@@ -566,13 +566,19 @@ function ProjectCardView({ card: c }: { card: ProjectCard }) {
                             {m.repaid ? " · paid back" : " · to pay back"}
                           </span>
                         )}
-                        <span
-                          className={
-                            m.clientPaid ? "text-leaf-deep" : "text-amber-deep"
-                          }
-                        >
-                          {m.clientPaid ? " · client paid" : " · client to pay"}
-                        </span>
+                        {m.clientPaid !== undefined && (
+                          <span
+                            className={
+                              m.clientPaid
+                                ? "text-leaf-deep"
+                                : "text-amber-deep"
+                            }
+                          >
+                            {m.clientPaid
+                              ? " · client paid"
+                              : " · client to pay"}
+                          </span>
+                        )}
                       </>
                     )}
                   </p>
