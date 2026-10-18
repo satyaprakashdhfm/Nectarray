@@ -1,23 +1,35 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ArrowDownLeft, ArrowUpRight, ChevronRight } from "lucide-react";
 import {
   Empty,
   PageHead,
   Section,
   ServiceFilter,
-  Stat,
   StatusPill,
-  td,
-  th,
 } from "@/components/admin/Business";
 import { AssetsPanel } from "@/components/admin/AssetsPanel";
 import { BalanceLog } from "@/components/admin/BalanceLog";
-import { REVENUE_LINES, rupees, serviceLabel } from "@/lib/business";
-import { lastMonths, loadMoney, totals } from "@/lib/business-data";
+import { MoneyChart, type ChartEvent } from "@/components/admin/MoneyChart";
+import { StatCard, StatFace, cardButton } from "@/components/admin/StatCard";
+import {
+  REVENUE_LINES,
+  isOwnCompany,
+  lineOf,
+  num,
+  rupees,
+  serviceLabel,
+} from "@/lib/business";
+import { loadMoney, type Receipt } from "@/lib/business-data";
 import { loadAssets } from "@/lib/assets";
 import { loadDashboard, type Batch, type ProjectCard } from "@/lib/dashboard";
-import { isMonth, monthLabel } from "@/lib/project-details";
+import {
+  addMonths,
+  currentMonth,
+  isMonth,
+  monthLabel,
+} from "@/lib/project-details";
 import { cn } from "@/lib/utils";
 
 /* Rendered per request: it is all live figures from the database. */
@@ -41,11 +53,14 @@ const day = (value: string | null) =>
           year: "numeric",
         });
 
+const sum = <T,>(rows: T[], pick: (r: T) => number) =>
+  rows.reduce((n, r) => n + pick(r), 0);
+
 /**
- * Revenue and assets as one dashboard: the summary and its graph first,
- * then every project as a card, most recently changed first, filtered by
- * service; the academy's batches; and the company's money at the bottom.
- * Everything on a card opens its project.
+ * Revenue and assets as one dashboard: nine cards, each opening what makes
+ * up its figure; the graph, by month or year; then every project as a
+ * card, most recently changed first, filtered by service; the academy's
+ * batches; and the company's money at the bottom.
  */
 export default async function AdminRevenuePage({
   searchParams,
@@ -62,13 +77,99 @@ export default async function AdminRevenuePage({
     loadAssets(),
     loadDashboard(),
   ]);
-  const all = totals(money, null);
-  const rows = REVENUE_LINES.map((s) => ({
-    ...s,
-    ...totals(money, s.takes),
-  }));
-  const months = lastMonths(money.receipts);
-  const peak = Math.max(1, ...months.map((m) => m.total));
+
+  const thisMonth = currentMonth();
+  const lastMonth = addMonths(thisMonth, -1);
+  const thisYear = thisMonth.slice(0, 4);
+  const lastYear = String(Number(thisYear) - 1);
+  const receipts = money.receipts;
+  const inPeriod = (key: string) =>
+    receipts.filter((r) => r.on.startsWith(key));
+  const monthRev = inPeriod(thisMonth);
+  const yearRev = inPeriod(thisYear);
+  const total = (rows: Receipt[]) => sum(rows, (r) => r.amount);
+
+  // Development: the agreed one-time price, less what the client has paid.
+  const dev = money.projects
+    .filter(
+      (p) =>
+        ["active", "on_hold", "delivered"].includes(p.status) &&
+        !isOwnCompany(p.client, p.title) &&
+        p.value != null,
+    )
+    .map((p) => {
+      const received = money.paidByProject.get(p.id) ?? 0;
+      return {
+        id: p.id,
+        project: p.title,
+        client: p.client,
+        expected: num(p.value),
+        received,
+        owed: Math.max(0, num(p.value) - received),
+        last: receipts.find((r) => r.projectId === p.id)?.on ?? null,
+      };
+    })
+    .filter((d) => d.owed > 0)
+    .sort((a, b) => b.owed - a.owed);
+  const devOwed = sum(dev, (d) => d.owed);
+
+  // Clients: everyone we have agreed work with, our own companies aside.
+  const clientMap = new Map<
+    string,
+    { name: string; projects: number; expected: number; received: number }
+  >();
+  for (const p of money.projects) {
+    if (isOwnCompany(p.client, p.title)) continue;
+    if (!["active", "on_hold", "delivered"].includes(p.status)) continue;
+    const key = p.client.trim().toLowerCase();
+    const c = clientMap.get(key) ?? {
+      name: p.client.trim(),
+      projects: 0,
+      expected: 0,
+      received: 0,
+    };
+    c.projects += 1;
+    c.expected += num(p.value);
+    c.received += money.paidByProject.get(p.id) ?? 0;
+    clientMap.set(key, c);
+  }
+  const clients = [...clientMap.values()].sort(
+    (a, b) => b.received - a.received,
+  );
+
+  // Profit: what came in, and costs paid back, less what went out.
+  const back = sum(
+    assets.movements.filter((m) => m.source === "repaid"),
+    (m) => m.amount,
+  );
+  const profit =
+    total(receipts) + back - assets.totals.bills - assets.totals.spent;
+
+  const events: ChartEvent[] = [
+    ...receipts.map((r) => ({
+      on: r.on,
+      type: "revenue" as const,
+      amount: r.amount,
+      line: lineOf(r.service),
+      who: r.from,
+    })),
+    ...assets.movements.flatMap((m): ChartEvent[] =>
+      m.source === "bill"
+        ? [{ on: m.on, type: "cost", amount: m.amount }]
+        : m.source === "repaid"
+          ? [{ on: m.on, type: "back", amount: m.amount }]
+          : m.source === "entry" && m.kind === "out"
+            ? [{ on: m.on, type: "spend", amount: m.amount }]
+            : [],
+    ),
+  ];
+  const profitIn = (key: string) =>
+    sum(
+      events.filter((e) => e.on.startsWith(key)),
+      (e) => (e.type === "revenue" || e.type === "back" ? e.amount : -e.amount),
+    );
+  const monthName = (key: string) => monthLabel(key).split(" ")[0];
+
   const cards = line ? board.cards.filter((c) => c.line === line) : board.cards;
   const showAcademy = !line || line === "academy";
 
@@ -76,142 +177,267 @@ export default async function AdminRevenuePage({
     <>
       <PageHead
         title="Revenue & assets"
-        lede="Everything the company has earned, spent and holds, then each project with its latest payments. Click any project to open it."
+        lede="Everything the company has earned, spent and holds. Click any card to see what makes it up."
       />
 
-      {/* Summary ------------------------------------------------------- */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <Stat label="This month" value={rupees.format(all.month)} />
-        <Stat label="This year" value={rupees.format(all.year)} />
-        <Stat label="All time" value={rupees.format(all.all)} />
-        <Stat
-          label="Clients still owe"
-          value={rupees.format(all.outstanding)}
-          hint={`Pipeline ${rupees.format(all.pipeline)}`}
-        />
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        <StatCard
+          label="This month's revenue"
+          value={rupees.format(total(monthRev))}
+          change={{
+            now: total(monthRev),
+            before: total(inPeriod(lastMonth)),
+            against: monthName(lastMonth),
+          }}
+          lede={`Everything received in ${monthLabel(thisMonth)}.`}
+        >
+          <Receipts rows={monthRev} />
+        </StatCard>
+        <StatCard
+          label="This year's revenue"
+          value={rupees.format(total(yearRev))}
+          change={{
+            now: total(yearRev),
+            before: total(inPeriod(lastYear)),
+            against: lastYear,
+          }}
+          lede={`Everything received in ${thisYear}.`}
+        >
+          <Receipts rows={yearRev} />
+        </StatCard>
+        <StatCard
+          label="All-time revenue"
+          value={rupees.format(total(receipts))}
+          hint={`${receipts.length} payments`}
+          lede="Every client payment and course fee ever received."
+        >
+          <Receipts rows={receipts} />
+        </StatCard>
+
+        <StatCard
+          label="Clients owe · development"
+          value={rupees.format(devOwed)}
+          tone={devOwed ? "warn" : undefined}
+          hint={
+            dev.length
+              ? `${dev.length} ${dev.length === 1 ? "project" : "projects"}`
+              : "All paid up"
+          }
+          lede="The one-time development price of each project, less what its client has paid."
+        >
+          <Table
+            head={[
+              "Project",
+              "Expected",
+              "Received",
+              "Still owed",
+              "Last paid",
+            ]}
+            empty="Every project's development is paid up."
+            rows={dev.map((d) => [
+              <ProjectLink key="p" id={d.id} name={d.project} sub={d.client} />,
+              rupees.format(d.expected),
+              <span key="r" className="text-leaf-deep">
+                {rupees.format(d.received)}
+              </span>,
+              <strong key="o" className="text-amber-deep">
+                {rupees.format(d.owed)}
+              </strong>,
+              day(d.last),
+            ])}
+          />
+        </StatCard>
+        <StatCard
+          label="Clients owe · maintenance"
+          value={rupees.format(assets.totals.clientsOwe)}
+          tone={assets.totals.clientsOwe ? "warn" : undefined}
+          hint={`${assets.dues.length} ${assets.dues.length === 1 ? "cost" : "costs"} not paid back`}
+          lede="Running costs we paid for clients (hosting, messages, maintenance charges) that they have not paid us back yet. Mark them “Client paid” on the project."
+        >
+          <Table
+            head={["When", "Cost", "Project", "Amount"]}
+            empty="Clients have paid back every cost."
+            rows={assets.dues.map((d) => [
+              day(d.on),
+              d.item,
+              <ProjectLink key="p" id={d.projectId} name={d.project} />,
+              <strong key="a" className="text-amber-deep">
+                {rupees.format(d.amount)}
+              </strong>,
+            ])}
+          />
+        </StatCard>
         <BalanceLog
           balance={assets.totals.balance}
           movements={assets.movements}
-          className="card hover:border-brand group min-w-0 p-4 transition-colors sm:p-5"
+          className={cardButton}
         >
-          <p className="eyebrow">Company balance</p>
-          <p
-            className={`display mt-1.5 text-[1.25rem] break-words sm:text-[1.5rem] ${
-              assets.totals.balance < 0 ? "text-danger" : "text-ink"
-            }`}
-          >
-            {rupees.format(assets.totals.balance)}
-          </p>
-          <p className="text-brand-deep mt-1 text-[0.75rem] font-semibold group-hover:underline">
-            See the full history
-          </p>
+          <StatFace
+            label="Company balance"
+            value={rupees.format(assets.totals.balance)}
+            tone={assets.totals.balance < 0 ? "bad" : undefined}
+            hint="Every rupee in and out"
+          />
         </BalanceLog>
-        <Stat
+
+        <StatCard
           label="To pay back to people"
           value={rupees.format(assets.totals.stillOwed)}
+          tone={assets.totals.stillOwed ? "warn" : undefined}
           hint={
             assets.owed.length
               ? assets.owed.map((p) => p.name).join(", ")
               : "Nobody waiting"
           }
-        />
-        <Stat
-          label="Costs clients owe us"
-          value={rupees.format(assets.totals.clientsOwe)}
-          hint="Not yet paid back by the client"
-        />
-        <Stat
-          label="Bills paid"
-          value={rupees.format(assets.totals.bills)}
-          hint="Off every project's Amounts paid"
-        />
-      </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-        <div className="card overflow-x-auto">
-          <table className="w-full min-w-[36rem] text-left">
-            <thead>
-              <tr className="border-line-soft border-b">
-                {["Service", "This month", "All time", "Still owed"].map(
-                  (h) => (
-                    <th key={h} className={th}>
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-line-soft border-b last:border-0"
-                >
-                  <td className={td}>
-                    <Link
-                      href={`${ADMIN}?service=${r.id}#projects`}
-                      className="text-ink hover:text-brand-deep inline-flex items-center gap-2 font-semibold"
-                    >
-                      <span className={`size-2 rounded-full ${BAR[r.id]}`} />
-                      {r.label}
-                    </Link>
-                  </td>
-                  <td className={td}>{rupees.format(r.month)}</td>
-                  <td className={`${td} text-ink font-semibold`}>
-                    {rupees.format(r.all)}
-                  </td>
-                  <td className={td}>
-                    {r.id === "academy" ? "—" : rupees.format(r.outstanding)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="card p-5">
-          <p className="eyebrow">Last six months</p>
-          <div className="mt-3 flex h-40 items-end gap-3 sm:gap-5">
-            {months.map((m) => (
-              <div
-                key={m.key}
-                className="flex h-full flex-1 flex-col justify-end"
-              >
-                <p className="text-ink-faint mb-1 hidden text-center text-[0.6875rem] sm:block">
-                  {m.total ? rupees.format(m.total) : ""}
-                </p>
-                <div
-                  className="flex w-full flex-col-reverse overflow-hidden rounded-md"
-                  style={{ height: `${(m.total / peak) * 100}%` }}
-                  title={`${m.label}: ${rupees.format(m.total)}`}
-                >
-                  {m.byService.map((s) =>
-                    s.amount ? (
-                      <div
-                        key={s.service}
-                        className={BAR[s.service]}
-                        style={{ height: `${(s.amount / m.total) * 100}%` }}
-                        title={`${serviceLabel(s.service)}: ${rupees.format(s.amount)}`}
-                      />
-                    ) : null,
-                  )}
+          lede="Costs people paid out of their own pocket, not yet paid back by the company. Mark them “Paid back” on the project."
+        >
+          {assets.owed.length === 0 ? (
+            <p className="text-ink-faint px-6 py-12 text-center text-[0.875rem]">
+              Nobody is waiting to be paid back.
+            </p>
+          ) : (
+            <div className="space-y-5 px-4 py-4 sm:px-6">
+              {assets.owed.map((p) => (
+                <div key={p.name}>
+                  <p className="text-ink flex items-baseline justify-between gap-3 font-semibold">
+                    {p.name}
+                    <span className="text-amber-deep tabular-nums">
+                      {rupees.format(p.total)}
+                    </span>
+                  </p>
+                  <Table
+                    head={["When", "Cost", "Project", "Amount"]}
+                    rows={p.bills.map((b) => [
+                      day(b.on),
+                      b.item,
+                      <ProjectLink key="p" id={b.projectId} name={b.project} />,
+                      rupees.format(b.amount),
+                    ])}
+                    flush
+                  />
                 </div>
-                <p className="text-ink-soft mt-2 text-center text-[0.75rem] font-semibold">
-                  {m.label}
-                </p>
+              ))}
+            </div>
+          )}
+        </StatCard>
+        <StatCard
+          label="Clients"
+          value={String(clients.length)}
+          hint={`${sum(clients, (c) => c.projects)} projects, our own aside`}
+          lede="Clients with work running or delivered. Nectarray and Verona Ads are ours, so they are not counted."
+        >
+          <Table
+            head={["Client", "Projects", "Expected", "Received", "Still owed"]}
+            empty="No clients yet."
+            rows={clients.map((c) => [
+              <strong key="n" className="text-ink">
+                {c.name}
+              </strong>,
+              String(c.projects),
+              c.expected ? rupees.format(c.expected) : "—",
+              <span key="r" className="text-leaf-deep">
+                {rupees.format(c.received)}
+              </span>,
+              c.expected
+                ? rupees.format(Math.max(0, c.expected - c.received))
+                : "—",
+            ])}
+          />
+        </StatCard>
+        <StatCard
+          label="Overall profit"
+          value={rupees.format(profit)}
+          tone={profit < 0 ? "bad" : "good"}
+          change={{
+            now: profitIn(thisMonth),
+            before: profitIn(lastMonth),
+            against: monthName(lastMonth),
+          }}
+          hint={`${rupees.format(profitIn(thisMonth))} this month`}
+          lede="All revenue, and costs clients paid back, less every bill the company paid and every other spend. Money put into the company is not profit, so it is left out."
+        >
+          <div className="px-4 py-4 sm:px-6">
+            <dl className="border-line divide-line-soft divide-y rounded-xl border text-[0.875rem] tabular-nums">
+              {[
+                ["Revenue", total(receipts), "in"],
+                ["Costs paid back by clients", back, "in"],
+                ["Bills paid", assets.totals.bills, "out"],
+                ["Other spends", assets.totals.spent, "out"],
+              ].map(([label, amount, kind]) => (
+                <div
+                  key={label as string}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5"
+                >
+                  <dt className="text-ink-soft inline-flex items-center gap-2">
+                    {kind === "in" ? (
+                      <ArrowDownLeft
+                        className="text-leaf-deep size-4"
+                        aria-hidden
+                      />
+                    ) : (
+                      <ArrowUpRight
+                        className="text-ink-faint size-4"
+                        aria-hidden
+                      />
+                    )}
+                    {label}
+                  </dt>
+                  <dd
+                    className={cn(
+                      "font-semibold",
+                      kind === "in" ? "text-leaf-deep" : "text-ink",
+                    )}
+                  >
+                    {kind === "in" ? "" : "− "}
+                    {rupees.format(amount as number)}
+                  </dd>
+                </div>
+              ))}
+              <div className="bg-mist/60 flex items-center justify-between gap-3 px-4 py-3">
+                <dt className="text-ink font-semibold">Profit</dt>
+                <dd
+                  className={cn(
+                    "text-[1.0625rem] font-bold",
+                    profit < 0 ? "text-danger" : "text-leaf-deep",
+                  )}
+                >
+                  {rupees.format(profit)}
+                </dd>
               </div>
-            ))}
+            </dl>
+            <p className="text-ink mt-5 mb-2 text-[0.875rem] font-semibold">
+              Month by month
+            </p>
+            <Table
+              head={["Month", "Revenue", "Costs", "Profit"]}
+              flush
+              rows={Array.from({ length: 12 }, (_, i) =>
+                addMonths(thisMonth, -i),
+              ).map((m) => {
+                const mine = events.filter((e) => e.on.startsWith(m));
+                const rev = sum(
+                  mine.filter((e) => e.type === "revenue"),
+                  (e) => e.amount,
+                );
+                const p = profitIn(m);
+                return [
+                  monthLabel(m),
+                  rupees.format(rev),
+                  rupees.format(rev - p),
+                  <strong
+                    key="p"
+                    className={p < 0 ? "text-danger" : "text-leaf-deep"}
+                  >
+                    {rupees.format(p)}
+                  </strong>,
+                ];
+              })}
+            />
           </div>
-          <ul className="text-ink-soft mt-4 flex flex-wrap gap-4 text-[0.75rem]">
-            {REVENUE_LINES.map((s) => (
-              <li key={s.id} className="inline-flex items-center gap-1.5">
-                <span className={`size-2 rounded-full ${BAR[s.id]}`} />
-                {s.label}
-              </li>
-            ))}
-          </ul>
-        </div>
+        </StatCard>
       </div>
+
+      <MoneyChart events={events} thisMonth={thisMonth} />
 
       {/* By service ---------------------------------------------------- */}
       <section id="projects" className="mt-10 scroll-mt-24">
@@ -442,5 +668,151 @@ function BatchView({ batch: b }: { batch: Batch }) {
         )}
       </ul>
     </details>
+  );
+}
+
+/** A table for a pop-up: a sticky head, and a line when there is nothing. */
+function Table({
+  head,
+  rows,
+  empty = "Nothing here.",
+  flush,
+}: {
+  head: string[];
+  rows: ReactNode[][];
+  empty?: string;
+  /** Inside padding already: no side gutters of its own. */
+  flush?: boolean;
+}) {
+  if (rows.length === 0)
+    return (
+      <p className="text-ink-faint px-6 py-12 text-center text-[0.875rem]">
+        {empty}
+      </p>
+    );
+  const pad = flush
+    ? "px-3"
+    : "px-4 first:pl-4 last:pr-4 sm:first:pl-6 sm:last:pr-6";
+  return (
+    <div
+      className={cn(flush && "border-line overflow-x-auto rounded-xl border")}
+    >
+      <table className="w-full min-w-[34rem] text-left text-[0.8125rem]">
+        <thead className="bg-surface sticky top-0 z-10 shadow-[0_1px_0_var(--color-line)]">
+          <tr className="text-ink-faint text-[0.6875rem] font-semibold tracking-[0.08em] uppercase">
+            {head.map((h, i) => (
+              <th
+                key={h}
+                className={cn(
+                  pad,
+                  "py-2.5",
+                  i > 0 && i === head.length - 1 && "text-right",
+                )}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-line-soft divide-y">
+          {rows.map((cells, r) => (
+            <tr key={r} className="hover:bg-mist/50 align-top">
+              {cells.map((cell, i) => (
+                <td
+                  key={i}
+                  className={cn(
+                    pad,
+                    "text-ink-soft py-2.5 tabular-nums",
+                    i > 0 && i === cells.length - 1 && "text-right",
+                  )}
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ProjectLink({
+  id,
+  name,
+  sub,
+}: {
+  id: string;
+  name: string;
+  sub?: string;
+}) {
+  return (
+    <Link
+      href={`${ADMIN}/projects/${id}`}
+      className="hover:text-brand-deep text-ink font-semibold underline-offset-2 hover:underline"
+    >
+      {name}
+      {sub && (
+        <span className="text-ink-faint block text-[0.75rem] font-normal">
+          {sub}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+/** Payments received, newest first, with a total for each service. */
+function Receipts({ rows }: { rows: Receipt[] }) {
+  const byLine = REVENUE_LINES.map((l) => ({
+    ...l,
+    amount: sum(
+      rows.filter((r) => lineOf(r.service) === l.id),
+      (r) => r.amount,
+    ),
+  })).filter((l) => l.amount);
+  return (
+    <>
+      {byLine.length > 0 && (
+        <div className="border-line bg-mist/40 flex flex-wrap gap-2 border-b px-4 py-3 sm:px-6">
+          {byLine.map((l) => (
+            <span
+              key={l.id}
+              className="bg-surface border-line inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.75rem] tabular-nums"
+            >
+              <span className={`size-2 rounded-full ${BAR[l.id]}`} />
+              {l.label}
+              <strong className="text-ink">{rupees.format(l.amount)}</strong>
+            </span>
+          ))}
+        </div>
+      )}
+      <Table
+        head={["Received", "From", "For", "Amount"]}
+        empty="Nothing received in this period."
+        rows={rows.map((r) => [
+          day(r.on),
+          <span key="f" className="text-ink">
+            {r.from}
+            <span className="text-ink-faint block text-[0.75rem]">
+              {serviceLabel(r.service)}
+            </span>
+          </span>,
+          r.projectId ? (
+            <ProjectLink key="p" id={r.projectId} name={r.what} sub={r.ref} />
+          ) : (
+            <Link
+              key="s"
+              href={`${ADMIN}/students`}
+              className="hover:text-brand-deep underline-offset-2 hover:underline"
+            >
+              {r.what}
+            </Link>
+          ),
+          <strong key="a" className="text-leaf-deep">
+            {rupees.format(r.amount)}
+          </strong>,
+        ])}
+      />
+    </>
   );
 }

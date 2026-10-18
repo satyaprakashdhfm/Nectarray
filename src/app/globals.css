@@ -1750,3 +1750,37 @@ label:has(input[type="checkbox"]) {
   color: var(--color-ink-faint);
   pointer-events: none;
 }
+
+/* Dashboard pop-ups and the money graph: a short rise in, nothing more. */
+dialog.pop[open] {
+  animation: pop-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+dialog.pop[open]::backdrop {
+  animation: fade-in 180ms ease-out;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.bar-grow {
+  animation: bar-grow 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.pop[open],
+  dialog.pop[open]::backdrop,
+  .bar-grow {
+    animation: none;
+  }
+}

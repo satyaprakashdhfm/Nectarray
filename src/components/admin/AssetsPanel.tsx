@@ -1,7 +1,5 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
-import { BalanceLog } from "@/components/admin/BalanceLog";
-import { ChevronRight, History } from "lucide-react";
 import { field } from "@/components/admin/Business";
 import { rupees } from "@/lib/business";
 import type { loadAssets } from "@/lib/assets";
@@ -150,19 +148,6 @@ export function AssetsPanel({
           </ul>
         </div>
       )}
-
-      <BalanceLog
-        balance={totals.balance}
-        movements={movements}
-        className="card hover:border-brand hover:text-brand-deep text-ink mt-4 flex w-full items-center gap-2 px-4 py-3 text-[0.9375rem] font-semibold transition-colors"
-      >
-        <History className="size-4" aria-hidden />
-        Full history
-        <span className="text-ink-faint text-[0.8125rem] font-normal">
-          · {movements.length} entries, with filters
-        </span>
-        <ChevronRight className="text-ink-faint ml-auto size-4" aria-hidden />
-      </BalanceLog>
     </section>
   );
 }

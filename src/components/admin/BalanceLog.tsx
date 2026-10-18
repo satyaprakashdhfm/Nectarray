@@ -126,7 +126,7 @@ export function BalanceLog({
           // A click on the dimmed backdrop closes it.
           if (e.target === dialog.current) dialog.current.close();
         }}
-        className="bg-surface text-ink m-auto h-[min(92vh,52rem)] w-[min(96vw,64rem)] max-w-none overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-[2px]"
+        className="pop bg-surface text-ink m-auto h-[min(92vh,52rem)] w-[min(96vw,64rem)] max-w-none overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-[2px]"
       >
         <div className="flex h-full flex-col">
           <header className="border-line flex items-start gap-4 border-b px-4 py-4 sm:px-6">

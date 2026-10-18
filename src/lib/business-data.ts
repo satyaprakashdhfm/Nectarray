@@ -23,6 +23,10 @@ export type Receipt = {
   on: string;
   from: string;
   what: string;
+  /** The client project it was paid on; none for an academy fee. */
+  projectId?: string;
+  /** A note kept with the payment ("advance", a UPI ref). */
+  ref?: string;
 };
 
 export async function loadMoney() {
@@ -31,6 +35,7 @@ export async function loadMoney() {
       .select({
         projectId: clientPayments.projectId,
         amount: clientPayments.amount,
+        ref: clientPayments.ref,
         on: clientPayments.receivedOn,
         service: clientProjects.service,
         client: clientProjects.client,
@@ -66,6 +71,8 @@ export async function loadMoney() {
       on: p.on,
       from: p.client,
       what: p.title,
+      projectId: p.projectId,
+      ref: p.ref ?? undefined,
     })),
     ...fees
       .filter((f) => num(f.amount) > 0)

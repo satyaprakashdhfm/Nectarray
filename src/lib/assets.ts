@@ -50,7 +50,24 @@ export type Movement = {
 export type Owed = {
   name: string;
   total: number;
-  bills: { project: string; projectId: string; item: string; amount: number }[];
+  bills: {
+    project: string;
+    projectId: string;
+    item: string;
+    amount: number;
+    /** When the person paid it, or the month it was billed in. */
+    on: string;
+  }[];
+};
+
+/** A cost on a client's project that the client has not paid us back. */
+export type ClientDue = {
+  projectId: string;
+  project: string;
+  item: string;
+  amount: number;
+  /** The day it was paid, or the month it was billed in. */
+  on: string;
 };
 
 export async function loadAssets() {
@@ -112,6 +129,7 @@ export async function loadAssets() {
   const owed = new Map<string, Owed>();
   // Costs the clients have not paid us back for yet.
   let clientsOwe = 0;
+  const dues: ClientDue[] = [];
   for (const s of sheets) {
     const project = `${s.client} · ${s.title}`;
     const own = isOwnCompany(s.client, s.title);
@@ -120,7 +138,16 @@ export async function loadAssets() {
       const reason =
         [row.item, row.vendor].filter(Boolean).join(" · ") || "Bill";
       if (!own) {
-        if (!row.clientPaid) clientsOwe += row.amount;
+        if (!row.clientPaid) {
+          clientsOwe += row.amount;
+          dues.push({
+            projectId: s.projectId,
+            project,
+            item: reason,
+            amount: row.amount,
+            on: row.paidOn || row.month,
+          });
+        }
         // The client paid this cost back: it comes into the company.
         else
           movements.push({
@@ -160,6 +187,7 @@ export async function loadAssets() {
         projectId: s.projectId,
         item: reason,
         amount: row.amount,
+        on: row.paidOn || row.month,
       });
       owed.set(key, person);
     }
@@ -179,9 +207,12 @@ export async function loadAssets() {
   const stillOwed = people.reduce((n, p) => n + p.total, 0);
   const balance = added + fromClients - bills - spent;
 
+  dues.sort((a, b) => b.on.localeCompare(a.on));
+
   return {
     movements,
     owed: people,
+    dues,
     totals: {
       added,
       fromClients,
