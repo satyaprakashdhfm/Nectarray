@@ -36,6 +36,7 @@ import {
   FREQUENCIES,
   addMonths,
   clientMessageText,
+  monthBreakdown,
   dashboardFor,
   envKeys,
   isCompany,
@@ -1399,10 +1400,10 @@ function RemoveButton({
 }
 
 /**
- * The month's costs as a message for the client, ready to copy or send on
- * WhatsApp. Written from Amounts paid each time; the text can be changed
- * before sending, and the greeting and closing line are kept with the
- * project.
+ * The month's message for the client. Our text above and below is typed
+ * here and saved with the project, so it can say something different each
+ * time; the cost breakdown between them is read off Amounts paid for the
+ * month picked. Copied, or sent on WhatsApp, as the preview shows it.
  */
 function ClientMessageBox({
   rows,
@@ -1419,10 +1420,8 @@ function ClientMessageBox({
   const [picked, setPicked] = useState<string | null>(null);
   const month =
     picked && months.includes(picked) ? picked : (months[0] ?? thisMonth);
-  const written = clientMessageText(rows, month, message);
-  // Changes typed into the text last until the costs or month change.
-  const [edit, setEdit] = useState<{ from: string; text: string } | null>(null);
-  const text = edit?.from === written ? edit.text : written;
+  const { items, total } = monthBreakdown(rows, month);
+  const text = clientMessageText(rows, month, message);
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -1430,6 +1429,19 @@ function ClientMessageBox({
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   }
+
+  const box = (key: "top" | "bottom", title: string, placeholder: string) => (
+    <label className="block">
+      <span className={label}>{title}</span>
+      <textarea
+        value={message[key]}
+        onChange={(e) => onChange({ ...message, [key]: e.target.value })}
+        rows={Math.min(Math.max(message[key].split("\n").length + 1, 3), 12)}
+        placeholder={placeholder}
+        className={cn(field, "resize-y py-2 leading-relaxed")}
+      />
+    </label>
+  );
 
   return (
     <section className="card p-4 sm:p-5">
@@ -1439,8 +1451,11 @@ function ClientMessageBox({
             Message to the client
           </h2>
           <p className="text-ink-faint mt-0.5 text-[0.75rem]">
-            The month&apos;s costs from Amounts paid, written out to send at the
-            end of the month. Change the text before sending if needed.
+            Write the text above and below the costs; it is saved with the
+            project. The costs come from Amounts paid for the month you pick.
+            Type <code className="font-mono">{"{month}"}</code> or{" "}
+            <code className="font-mono">{"{total}"}</code> to have them filled
+            in.
           </p>
         </div>
         <label className="text-ink-soft inline-flex items-center gap-2 text-[0.8125rem]">
@@ -1458,14 +1473,14 @@ function ClientMessageBox({
           Off: our own company, or a client who is not sent the costs.
         </p>
       ) : (
-        <div className="mt-4 grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
-          <div className="space-y-3">
-            <label className="block">
+        <div className="mt-4 grid gap-5 lg:grid-cols-2">
+          <div className="min-w-0 space-y-3">
+            <label className="block max-w-[14rem]">
               <span className={label}>Month</span>
               <select
                 value={month}
                 onChange={(e) => setPicked(e.target.value)}
-                className={cn(field, "py-2")}
+                className={cn(field, "py-2 font-semibold")}
               >
                 {(months.length ? months : [thisMonth]).map((m) => (
                   <option key={m} value={m}>
@@ -1474,38 +1489,57 @@ function ClientMessageBox({
                 ))}
               </select>
             </label>
-            <label className="block">
-              <span className={label}>Greeting</span>
-              <input
-                value={message.greeting}
-                onChange={(e) =>
-                  onChange({ ...message, greeting: e.target.value })
-                }
-                placeholder="Hi Mama,"
-                className={cn(field, "py-2")}
-              />
-            </label>
-            <label className="block">
-              <span className={label}>Closing line (optional)</span>
-              <textarea
-                value={message.closing}
-                onChange={(e) =>
-                  onChange({ ...message, closing: e.target.value })
-                }
-                rows={3}
-                placeholder="From next month we will share the costs at the end of each month."
-                className={cn(field, "resize-y py-2")}
-              />
-            </label>
+
+            {box(
+              "top",
+              "Message above the costs",
+              "Hi Mama, the following expenses have been paid by us for {month}.",
+            )}
+
+            <div className="border-line rounded-lg border">
+              <p className="border-line-soft bg-mist/60 text-ink-faint border-b px-3 py-1.5 text-[0.6875rem] font-semibold">
+                Cost breakdown, {monthLabel(month)} · from Amounts paid
+              </p>
+              {items.length === 0 ? (
+                <p className="text-ink-faint px-3 py-2.5 text-[0.8125rem]">
+                  No costs entered for this month.
+                </p>
+              ) : (
+                <table className="w-full text-[0.8125rem]">
+                  <tbody>
+                    {items.map((i) => (
+                      <tr key={i.name} className="border-line-soft border-b">
+                        <td className="text-ink-soft px-3 py-1.5">{i.name}</td>
+                        <td className="text-ink px-3 py-1.5 text-right tabular-nums">
+                          {rupees.format(i.amount)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td className="text-ink px-3 py-1.5 font-semibold">
+                        Total
+                      </td>
+                      <td className="text-ink px-3 py-1.5 text-right font-semibold tabular-nums">
+                        {rupees.format(total)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {box(
+              "bottom",
+              "Message below the costs (optional)",
+              "From next month onwards, we will share the cost breakdown at the end of each month.",
+            )}
           </div>
+
           <div className="min-w-0">
-            <textarea
-              value={text}
-              onChange={(e) => setEdit({ from: written, text: e.target.value })}
-              rows={Math.min(Math.max(text.split("\n").length + 1, 8), 20)}
-              aria-label="Message to the client"
-              className={cn(field, "resize-y py-2 leading-relaxed")}
-            />
+            <span className={label}>What the client gets</span>
+            <pre className="border-line bg-mist/40 text-ink rounded-lg border px-3 py-2.5 font-sans text-[0.8125rem] leading-relaxed break-words whitespace-pre-wrap">
+              {text}
+            </pre>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -1534,19 +1568,6 @@ function ClientMessageBox({
                 <MessageCircle className="size-3.5" aria-hidden />
                 Send on WhatsApp
               </a>
-              {edit?.from === written && (
-                <button
-                  type="button"
-                  onClick={() => setEdit(null)}
-                  className={cn(
-                    quietButton,
-                    "inline-flex items-center gap-1.5 py-2",
-                  )}
-                >
-                  <RotateCcw className="size-3.5" aria-hidden />
-                  Back to the costs
-                </button>
-              )}
             </div>
           </div>
         </div>

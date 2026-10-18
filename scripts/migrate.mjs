@@ -531,6 +531,10 @@ async function patchSubjectsTable() {
  * again next deploy.
  */
 
+/** The client message's text above the costs, after the greeting. */
+const MESSAGE_TOP_REST =
+  "the following expenses have been paid by us for {month}.";
+
 const company = { paidBy: "", repaid: false, repaidOn: "", note: "" };
 const cost = (id, month, item, vendor, amount, paidOn = "") => ({
   id,
@@ -660,12 +664,13 @@ const DATA_FIXES = [
       await tx`
         insert into project_details (project_id, paid, closed_months, message)
         values (${p.id}, ${tx.json(paid)}, ${tx.json(closed)},
-                ${tx.json({ greeting: "Hi Mama,", closing: "", off: false })})
+                ${tx.json({ top: `Hi Mama, ${MESSAGE_TOP_REST}`, bottom: "", off: false })})
         on conflict (project_id) do update
           set paid = excluded.paid,
               closed_months = excluded.closed_months,
               message = case
-                when project_details.message ? 'greeting' then project_details.message
+                when project_details.message ?| array['top', 'greeting']
+                  then project_details.message
                 else excluded.message end,
               updated_at = now()
       `;
@@ -708,11 +713,39 @@ const DATA_FIXES = [
       for (const { id } of own) {
         await tx`
           update project_details
-             set message = ${tx.json({ greeting: "", closing: "", off: true })}
+             set message = ${tx.json({ top: `Hi, ${MESSAGE_TOP_REST}`, bottom: "", off: true })}
            where project_id = ${id}
         `;
       }
       console.log(`[migrate] data fix ${this.name}: ${own.length} projects`);
+      return true;
+    },
+  },
+  {
+    /*
+     * The client message keeps its own text above and below the costs now.
+     * Every saved project gets it written out from what it had: its
+     * greeting starts the text above, its closing line is the text below.
+     */
+    name: "2026-10-message-top-bottom",
+    async run(tx) {
+      const rows = await tx`
+        select project_id, message from project_details
+         where not (message ? 'top')
+      `;
+      for (const { project_id, message } of rows) {
+        const greeting = String(message?.greeting ?? "").trim() || "Hi,";
+        await tx`
+          update project_details
+             set message = ${tx.json({
+               top: `${greeting} ${MESSAGE_TOP_REST}`,
+               bottom: String(message?.closing ?? ""),
+               off: message?.off === true,
+             })}
+           where project_id = ${project_id}
+        `;
+      }
+      console.log(`[migrate] data fix ${this.name}: ${rows.length} projects`);
       return true;
     },
   },

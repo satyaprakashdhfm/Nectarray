@@ -78,18 +78,23 @@ export type NoteRow = {
 };
 
 /**
- * The month's cost message to the client, written out of Amounts paid.
- * Only the greeting and the closing line are kept; the costs are read off
- * the sheet each time.
+ * The month's cost message to the client. The text above and below the
+ * costs is written by us and kept; the cost breakdown between them is read
+ * off Amounts paid for the month picked. {month} and {total} in either text
+ * become that month's name and total.
  */
 export type ClientMessage = {
-  /** "Hi Mama," */
-  greeting: string;
-  /** A line after the total, if any. */
-  closing: string;
+  /** Above the costs: "Hi Mama, the following expenses … for {month}." */
+  top: string;
+  /** Below the total, if anything. */
+  bottom: string;
   /** Our own companies get no message. */
   off: boolean;
 };
+
+/** The text above the costs when nothing has been written yet. */
+export const DEFAULT_MESSAGE_TOP =
+  "Hi, the following expenses have been paid by us for {month}.";
 
 export type ProjectSheets = {
   statusNote: string;
@@ -115,7 +120,7 @@ export const EMPTY_SHEETS: ProjectSheets = {
   env: "",
   closedMonths: [],
   notes: [],
-  message: { greeting: "", closing: "", off: false },
+  message: { top: DEFAULT_MESSAGE_TOP, bottom: "", off: false },
 };
 
 const svc = (
@@ -342,11 +347,28 @@ export function cleanSheets(input: unknown): ProjectSheets {
         updated: Number.isNaN(Date.parse(updated)) ? "" : updated,
       };
     }),
-    message: {
-      greeting: str(obj(x.message).greeting, 200),
-      closing: str(obj(x.message).closing, 1000),
-      off: obj(x.message).off === true,
-    },
+    message: cleanMessage(obj(x.message)),
+  };
+}
+
+/**
+ * The client message as stored. One saved before it had a top and bottom
+ * kept only a greeting ("Hi Mama,") and a closing line; those become the
+ * start of the top text and the bottom text.
+ */
+function cleanMessage(m: Record<string, unknown>): ClientMessage {
+  const greeting = str(m.greeting, 200).trim();
+  const top =
+    typeof m.top === "string"
+      ? str(m.top, 4000)
+      : greeting
+        ? DEFAULT_MESSAGE_TOP.replace(/^Hi,/, greeting)
+        : DEFAULT_MESSAGE_TOP;
+  return {
+    top,
+    bottom:
+      typeof m.bottom === "string" ? str(m.bottom, 4000) : str(m.closing, 4000),
+    off: m.off === true,
   };
 }
 
@@ -358,32 +380,46 @@ const inr = new Intl.NumberFormat("en-IN", {
 });
 
 /**
- * A month's costs as the message sent to the client: a greeting, the line
- * for the month, one line a cost and the total. Costs with the same name
- * are added together.
+ * A month's costs, one line per cost name (costs with the same name added
+ * together), in the order they were entered, and their total.
  */
-export function clientMessageText(
-  rows: PaidRow[],
-  month: string,
-  message: ClientMessage,
-): string {
+export function monthBreakdown(rows: PaidRow[], month: string) {
   const lines = new Map<string, number>();
   for (const r of paidInMonth(rows, month)) {
     if (r.amount <= 0) continue;
     const name = r.item.trim() || r.vendor.trim() || "Other";
     lines.set(name, (lines.get(name) ?? 0) + r.amount);
   }
-  const total = [...lines.values()].reduce((n, v) => n + v, 0);
+  const items = [...lines].map(([name, amount]) => ({ name, amount }));
+  return { items, total: items.reduce((n, i) => n + i.amount, 0) };
+}
+
+/**
+ * The message sent to the client for a month: our text above, the month's
+ * cost breakdown and total, and our text below. {month} and {total} in our
+ * text are filled in.
+ */
+export function clientMessageText(
+  rows: PaidRow[],
+  month: string,
+  message: ClientMessage,
+): string {
+  const { items, total } = monthBreakdown(rows, month);
   const [, m] = month.split("-");
-  const monthName = MONTH_NAMES[Number(m) - 1] ?? month;
+  const fill = (text: string) =>
+    text
+      .trim()
+      .replace(/\{month\}/gi, MONTH_NAMES[Number(m) - 1] ?? month)
+      .replace(/\{total\}/gi, inr.format(total));
   return [
-    `${message.greeting.trim() || "Hi,"} the following expenses have been paid by us for ${monthName}.`,
-    "",
-    "Cost breakdown:",
-    ...[...lines].map(([name, amount]) => `- ${name}: ${inr.format(amount)}`),
+    ...(fill(message.top) ? [fill(message.top), ""] : []),
+    `Cost breakdown (${monthLabel(month)}):`,
+    ...(items.length
+      ? items.map((i) => `- ${i.name}: ${inr.format(i.amount)}`)
+      : ["- No costs this month"]),
     "",
     `Total amount: ${inr.format(total)}`,
-    ...(message.closing.trim() ? ["", message.closing.trim()] : []),
+    ...(fill(message.bottom) ? ["", fill(message.bottom)] : []),
   ].join("\n");
 }
 
