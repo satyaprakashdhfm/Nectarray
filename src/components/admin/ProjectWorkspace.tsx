@@ -16,6 +16,7 @@ import {
   Copy,
   Download,
   RotateCcw,
+  CalendarDays,
   ExternalLink,
   MessageCircle,
   Eye,
@@ -810,9 +811,11 @@ function SheetTable<T extends { id: string }>({
 }
 
 /**
- * Amounts paid, month by month. The month being filled in sits at the
- * bottom; "Complete month" folds it up into the list above and starts the
- * next one. Every month has its own bill to download, finished or not.
+ * Amounts paid, month by month: finished months folded up at the top, the
+ * months still being filled in below, in order. A month is added with "Add
+ * month" when it comes, and starts with its website maintenance charges;
+ * "Complete month" folds it up. Every month has its own bill to download,
+ * finished or not.
  */
 function PaidMonths({
   projectId,
@@ -832,31 +835,33 @@ function PaidMonths({
   onChange: (rows: PaidRow[], closed: string[]) => void;
 }) {
   const [opened, setOpened] = useState<string[]>([]);
-  const [draft, setDraft] = useState<string | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
 
   const used = [...new Set(rows.map((r) => r.month))];
-  const open = used.filter((m) => !closed.includes(m)).sort();
-  // Nothing open: an empty month to start, the one after the last finished.
-  const fresh =
-    draft ?? (closed.length ? addMonths(closed.at(-1)!, 1) : thisMonth);
-  const openMonths = open.length ? open : [fresh];
+  const openMonths = used.filter((m) => !closed.includes(m)).sort();
+  const shut = closed.filter((m) => used.includes(m)).sort();
+  // Months that can be added: from a year and a half back to three ahead,
+  // newest first, leaving out any already there.
+  const free = Array.from({ length: 22 }, (_, i) =>
+    addMonths(thisMonth, 3 - i),
+  ).filter((m) => !used.includes(m));
+  const latest = [...used].sort().at(-1);
+  const suggested =
+    [latest ? addMonths(latest, 1) : thisMonth, thisMonth].find((m) =>
+      free.includes(m),
+    ) ?? free[0];
 
   const setMonthRows = (month: string, next: PaidRow[]) =>
     onChange([...rows.filter((r) => r.month !== month), ...next], closed);
-  const relabel = (from: string, to: string) => {
-    if (!rows.some((r) => r.month === from)) return setDraft(to);
+  const addMonth = (month: string) => {
+    // A new month starts with its website maintenance charges.
     onChange(
-      rows.map((r) => (r.month === from ? { ...r, month: to } : r)),
-      closed,
+      withMaintenance(rows, [month]),
+      closed.filter((m) => m !== month),
     );
+    setAdding(null);
   };
-  const complete = (month: string) => {
-    const next = [...closed, month].sort();
-    const following = addMonths(next.at(-1)!, 1);
-    setDraft(following);
-    // The new month starts with its website maintenance row.
-    onChange(withMaintenance(rows, [following]), next);
-  };
+  const complete = (month: string) => onChange(rows, [...closed, month].sort());
   const reopen = (month: string) => {
     setOpened((o) => o.filter((m) => m !== month));
     onChange(
@@ -864,11 +869,6 @@ function PaidMonths({
       closed.filter((m) => m !== month),
     );
   };
-  // A month can be picked if no other section already has it.
-  const choices = (current: string) =>
-    Array.from({ length: 19 }, (_, i) => addMonths(thisMonth, 3 - i)).filter(
-      (m) => m === current || (!closed.includes(m) && !open.includes(m)),
-    );
 
   const table = (month: string) => (
     <SheetTable
@@ -950,9 +950,9 @@ function PaidMonths({
         </p>
       )}
 
-      {closed.length > 0 && (
+      {shut.length > 0 && (
         <ul className="divide-line border-line divide-y border-b">
-          {closed.map((month) => {
+          {shut.map((month) => {
             const items = paidInMonth(rows, month);
             const isOpen = opened.includes(month);
             return (
@@ -1017,18 +1017,10 @@ function PaidMonths({
         return (
           <section key={month} className="border-line border-b last:border-b-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3 sm:px-5">
-              <Select
-                value={month}
-                onChange={(e) => relabel(month, e.target.value)}
-                aria-label="Month these expenses are billed in"
-                className={cn(field, "w-auto py-1.5 font-semibold")}
-              >
-                {choices(month).map((m) => (
-                  <option key={m} value={m}>
-                    {monthLabel(m)}
-                  </option>
-                ))}
-              </Select>
+              <h3 className="text-ink inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold">
+                <CalendarDays className="text-brand-deep size-4" aria-hidden />
+                {monthLabel(month)}
+              </h3>
               <span className="text-ink-soft text-[0.8125rem] tabular-nums">
                 {items.length
                   ? `${items.length} ${items.length === 1 ? "item" : "items"}, ${rupees.format(items.reduce((n, r) => n + r.amount, 0))}`
@@ -1040,7 +1032,7 @@ function PaidMonths({
                   type="button"
                   onClick={() => complete(month)}
                   disabled={items.length === 0}
-                  title="Fold this month up and start the next one"
+                  title="Fold this month up; add the next one when it comes"
                   className={cn(
                     primaryButton,
                     "inline-flex items-center gap-1.5 py-2 disabled:opacity-50",
@@ -1055,6 +1047,64 @@ function PaidMonths({
           </section>
         );
       })}
+
+      <div className="border-line bg-mist/30 border-t px-4 py-3 sm:px-5">
+        {used.length === 0 && adding == null && (
+          <p className="text-ink-faint mb-2 text-[0.8125rem]">
+            No months yet. Add the month these costs are for.
+          </p>
+        )}
+        {adding != null ? (
+          <div className="border-line bg-surface flex flex-wrap items-end gap-2 rounded-lg border p-3">
+            <label className="block min-w-[12rem]">
+              <span className={label}>Which month?</span>
+              <Select
+                value={adding}
+                onChange={(e) => setAdding(e.target.value)}
+                aria-label="Month to add"
+                className={cn(field, "py-2 font-semibold")}
+              >
+                {free.map((m) => (
+                  <option key={m} value={m}>
+                    {monthLabel(m)}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <button
+              type="button"
+              onClick={() => addMonth(adding)}
+              className={cn(
+                primaryButton,
+                "inline-flex items-center gap-1.5 py-2",
+              )}
+            >
+              <Plus className="size-3.5" aria-hidden />
+              Add {monthLabel(adding)}
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdding(null)}
+              className={cn(quietButton, "py-2")}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => suggested && setAdding(suggested)}
+            disabled={!suggested}
+            className={cn(
+              quietButton,
+              "inline-flex items-center gap-1.5 py-2 disabled:opacity-50",
+            )}
+          >
+            <Plus className="size-3.5" aria-hidden />
+            Add month
+          </button>
+        )}
+      </div>
     </div>
   );
 }

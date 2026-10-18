@@ -6,7 +6,6 @@ import { AccessError, requireAdmin } from "@/lib/auth/access";
 import {
   EMPTY_SHEETS,
   STARTER_SHEETS,
-  addMonths,
   cleanSheets,
   currentMonth,
   dashboardFor,
@@ -64,15 +63,12 @@ export async function loadProjectSheets(
   const month = currentMonth();
   // A payment from before months, with no date either, goes on this one.
   const paid = sheets.paid.map((p) => (p.month ? p : { ...p, month }));
-  // Every month has a website maintenance row: each month with costs, and
-  // the month being filled in when none is open.
+  // Every month there is has a website maintenance charges row. Months
+  // are added on the page as they come.
   const used = [...new Set(paid.map((p) => p.month))];
-  const anyOpen = used.some((m) => !sheets.closedMonths.includes(m));
-  const last = sheets.closedMonths.at(-1);
-  const fresh = anyOpen ? [] : [last ? addMonths(last, 1) : month];
   return {
     ...sheets,
-    paid: withMaintenance(paid, [...used, ...fresh]),
+    paid: withMaintenance(paid, used),
     // A service with no link typed gets its platform's dashboard.
     recurring: sheets.recurring.map((r) => ({
       ...r,
