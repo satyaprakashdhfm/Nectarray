@@ -1,6 +1,6 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ChevronRight } from "lucide-react";
 import { Empty, deleteButton, field } from "@/components/admin/Business";
 import { rupees } from "@/lib/business";
 import type { loadAssets } from "@/lib/assets";
@@ -202,7 +202,17 @@ export function AssetsPanel({
                       m.kind === "in" ? "text-leaf-deep" : "text-ink"
                     }`}
                   >
-                    {m.kind === "in" ? "+" : "−"}
+                    {m.kind === "in" ? (
+                      <ArrowDownLeft
+                        className="mr-0.5 inline size-4 align-[-0.2em]"
+                        aria-label="In"
+                      />
+                    ) : (
+                      <ArrowUpRight
+                        className="text-ink-faint mr-0.5 inline size-4 align-[-0.2em]"
+                        aria-label="Out"
+                      />
+                    )}
                     {rupees.format(m.amount)}
                   </p>
                   {m.source === "entry" && (

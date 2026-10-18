@@ -1,6 +1,6 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ChevronRight } from "lucide-react";
 import {
   Empty,
   PageHead,
@@ -344,7 +344,17 @@ function ProjectCardView({ card: c }: { card: ProjectCard }) {
                     m.kind === "in" ? "text-leaf-deep" : "text-ink",
                   )}
                 >
-                  {m.kind === "in" ? "+" : "−"}
+                  {m.kind === "in" ? (
+                    <ArrowDownLeft
+                      className="mr-0.5 inline size-3.5 align-[-0.2em]"
+                      aria-label="In"
+                    />
+                  ) : (
+                    <ArrowUpRight
+                      className="text-ink-faint mr-0.5 inline size-3.5 align-[-0.2em]"
+                      aria-label="Out"
+                    />
+                  )}
                   {rupees.format(m.amount)}
                 </p>
               </Link>
