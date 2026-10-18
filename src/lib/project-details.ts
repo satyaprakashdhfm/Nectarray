@@ -490,6 +490,40 @@ export function paidInMonth(rows: PaidRow[], month: string): PaidRow[] {
   return rows.filter((r) => r.month === month);
 }
 
+/** The cost every month has, whatever the project: filled in each month. */
+export const MAINTENANCE_ITEM = "Website maintenance";
+
+const isMaintenance = (r: PaidRow) => /website\s*maintenance/i.test(r.item);
+
+/** A month's website maintenance row, at ₹0 until it is filled in. */
+export const maintenanceRow = (month: string): PaidRow => ({
+  id: `maint-${month}`,
+  item: MAINTENANCE_ITEM,
+  vendor: "",
+  amount: 0,
+  month,
+  note: "",
+  fileId: "",
+  fileName: "",
+  paidBy: "",
+  repaid: false,
+  paidOn: "",
+  repaidOn: "",
+  clientPaid: false,
+  clientPaidOn: "",
+});
+
+/**
+ * The rows with a website maintenance row in each of `months` that has
+ * none, put first in its month.
+ */
+export function withMaintenance(rows: PaidRow[], months: string[]): PaidRow[] {
+  const missing = [...new Set(months)].filter(
+    (m) => !rows.some((r) => r.month === m && isMaintenance(r)),
+  );
+  return missing.length ? [...missing.map(maintenanceRow), ...rows] : rows;
+}
+
 /** Whether "Paid by" means the company itself: left blank or typed as such. */
 export const isCompany = (paidBy: string) => /^\s*(company)?\s*$/i.test(paidBy);
 

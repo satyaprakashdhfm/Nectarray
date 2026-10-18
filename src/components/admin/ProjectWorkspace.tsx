@@ -50,6 +50,7 @@ import {
   type PaidRow,
   type ProjectSheets,
   type RecurringRow,
+  withMaintenance,
 } from "@/lib/project-details";
 import { newId } from "@/lib/quotes";
 import { todayIST } from "@/lib/work";
@@ -850,8 +851,10 @@ function PaidMonths({
   };
   const complete = (month: string) => {
     const next = [...closed, month].sort();
-    setDraft(addMonths(next.at(-1)!, 1));
-    onChange(rows, next);
+    const following = addMonths(next.at(-1)!, 1);
+    setDraft(following);
+    // The new month starts with its website maintenance row.
+    onChange(withMaintenance(rows, [following]), next);
   };
   const reopen = (month: string) => {
     setOpened((o) => o.filter((m) => m !== month));
