@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 /** What each kind of movement is called in the log. */
 const KINDS: Record<string, string> = {
   payment: "Client payment",
+  fee: "Course fee",
   repaid: "Client paid back",
   bill: "Bill paid",
   "entry-in": "Money added",
@@ -70,9 +71,11 @@ export function BalanceLog({
     return out.reverse();
   }, [movements]);
 
+  // Course fees all sit under one "Academy" choice.
+  const groupOf = (m: Movement) => (m.source === "fee" ? "academy" : m.id);
   const projects = [
     ...new Map(
-      movements.filter((m) => m.project).map((m) => [m.id, m.project!]),
+      movements.filter((m) => m.project).map((m) => [groupOf(m), m.project!]),
     ),
   ].sort((a, b) => a[1].localeCompare(b[1]));
   const months = [...new Set(movements.map((m) => m.on.slice(0, 7)))]
@@ -84,7 +87,7 @@ export function BalanceLog({
     (m) =>
       (dir === "all" || m.kind === dir) &&
       (kind === "all" || kindOf(m) === kind) &&
-      (project === "all" || (m.source !== "entry" && m.id === project)) &&
+      (project === "all" || (m.source !== "entry" && groupOf(m) === project)) &&
       (month === "all" || m.on.startsWith(month)) &&
       (!q || `${m.reason} ${m.project ?? ""}`.toLowerCase().includes(q)),
   );
@@ -302,7 +305,11 @@ export function BalanceLog({
                           </span>
                           {m.source !== "entry" && m.project && (
                             <Link
-                              href={`${ADMIN}/projects/${m.id}`}
+                              href={
+                                m.source === "fee"
+                                  ? `${ADMIN}/students`
+                                  : `${ADMIN}/projects/${m.id}`
+                              }
                               className="hover:text-brand-deep underline-offset-2 hover:underline"
                             >
                               {m.project}

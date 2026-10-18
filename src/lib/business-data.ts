@@ -29,6 +29,42 @@ export type Receipt = {
   ref?: string;
 };
 
+/**
+ * Every course fee paid, with who paid it. A fee entered without its date
+ * counts from the day the student was enrolled, so it always has one.
+ */
+export async function loadFees() {
+  const rows = await db
+    .select({
+      id: enrolments.id,
+      amount: enrolments.amountPaid,
+      on: enrolments.paidOn,
+      enrolled: enrolments.createdAt,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+    })
+    .from(enrolments)
+    .innerJoin(users, eq(enrolments.userId, users.id))
+    .where(isNotNull(enrolments.amountPaid));
+  return rows
+    .filter((f) => num(f.amount) > 0)
+    .map((f) => ({
+      id: f.id,
+      amount: num(f.amount),
+      // In India time, so a late-evening enrolment keeps its own day.
+      on:
+        f.on ??
+        new Date(f.enrolled.getTime() + 5.5 * 3_600_000)
+          .toISOString()
+          .slice(0, 10),
+      name:
+        [f.firstName, f.lastName].filter(Boolean).join(" ") ||
+        f.email ||
+        "Student",
+    }));
+}
+
 export async function loadMoney() {
   const [payments, fees, projects, campaigns] = await Promise.all([
     db
@@ -47,17 +83,7 @@ export async function loadMoney() {
         eq(clientPayments.projectId, clientProjects.id),
       )
       .orderBy(desc(clientPayments.receivedOn)),
-    db
-      .select({
-        amount: enrolments.amountPaid,
-        on: enrolments.paidOn,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-      })
-      .from(enrolments)
-      .innerJoin(users, eq(enrolments.userId, users.id))
-      .where(isNotNull(enrolments.amountPaid)),
+    loadFees(),
     db.select().from(clientProjects).orderBy(desc(clientProjects.createdAt)),
     db
       .select({ service: adCampaigns.service, spend: adCampaigns.spend })
@@ -74,19 +100,13 @@ export async function loadMoney() {
       projectId: p.projectId,
       ref: p.ref ?? undefined,
     })),
-    ...fees
-      .filter((f) => num(f.amount) > 0)
-      .map((f) => ({
-        service: "academy" as const,
-        amount: num(f.amount),
-        // A fee with no date still counts; it sorts as the day it was entered.
-        on: f.on ?? new Date().toISOString().slice(0, 10),
-        from:
-          [f.firstName, f.lastName].filter(Boolean).join(" ") ||
-          f.email ||
-          "Student",
-        what: "Course fee",
-      })),
+    ...fees.map((f) => ({
+      service: "academy" as const,
+      amount: f.amount,
+      on: f.on,
+      from: f.name,
+      what: "Course fee",
+    })),
   ].sort((a, b) => b.on.localeCompare(a.on));
 
   const paidByProject = new Map<string, number>();

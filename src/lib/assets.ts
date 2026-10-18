@@ -8,13 +8,15 @@ import {
   projectDetails,
 } from "@/lib/db/schema";
 import { isOwnCompany, num } from "@/lib/business";
+import { loadFees } from "@/lib/business-data";
 import { cleanSheets, isCompany } from "@/lib/project-details";
 
 /**
  * The company's money on the Assets page: what came in, less what went
  * out.
  *
- * In: every payment a client makes, and every cost a client pays us back
+ * In: every payment a client makes, every course fee a student pays,
+ * and every cost a client pays us back
  * for (marked "Client paid" on the project's Amounts paid), plus money
  * typed in on the page.
  *
@@ -37,9 +39,9 @@ export type Movement = {
   reason: string;
   /**
    * Typed in on the Assets page (can be removed there), off a bill, a cost
-   * a client paid back, or a client's payment.
+   * a client paid back, a client's payment, or a student's course fee.
    */
-  source: "entry" | "bill" | "repaid" | "payment";
+  source: "entry" | "bill" | "repaid" | "payment" | "fee";
   /** The entry's id, or the project. */
   id: string;
   /** For anything off a project: the project; for a bill, who was paid back. */
@@ -71,7 +73,7 @@ export type ClientDue = {
 };
 
 export async function loadAssets() {
-  const [entries, sheets, payments] = await Promise.all([
+  const [entries, sheets, payments, fees] = await Promise.all([
     db.select().from(assetEntries).orderBy(desc(assetEntries.on)),
     db
       .select({
@@ -99,6 +101,7 @@ export async function loadAssets() {
         clientProjects,
         eq(clientPayments.projectId, clientProjects.id),
       ),
+    loadFees(),
   ]);
 
   const movements: Movement[] = entries.map((e) => ({
@@ -110,6 +113,20 @@ export async function loadAssets() {
     source: "entry",
     id: e.id,
   }));
+
+  // Every course fee comes into the company's money too.
+  for (const f of fees) {
+    movements.push({
+      key: `f-${f.id}`,
+      on: f.on,
+      kind: "in",
+      amount: f.amount,
+      reason: `Course fee · ${f.name}`,
+      source: "fee",
+      id: f.id,
+      project: "Academy",
+    });
+  }
 
   // Every client payment comes into the company's money.
   for (const p of payments) {

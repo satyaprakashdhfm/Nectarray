@@ -46,7 +46,7 @@ export function AssetsPanel({
             )}
           </div>
           <dl className="text-ink-soft grid grid-cols-2 gap-x-6 gap-y-1 text-[0.8125rem] tabular-nums sm:grid-flow-col sm:grid-cols-none sm:grid-rows-2">
-            <dt>From clients</dt>
+            <dt>From clients &amp; students</dt>
             <dd className="text-ink font-semibold">
               {rupees.format(totals.fromClients)}
             </dd>
