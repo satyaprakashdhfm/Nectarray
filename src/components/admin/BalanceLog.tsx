@@ -145,8 +145,9 @@ export function BalanceLog({
                 {rupees.format(balance)}
               </p>
               <p className="text-ink-faint mt-1.5 text-[0.75rem]">
-                Client money comes in by itself; anything marked company paid,
-                or paid back to a person, goes out.
+                Client money and course fees come in by themselves; anything
+                marked company paid, paid back to a person, or given as
+                commission goes out.
               </p>
             </div>
             <button

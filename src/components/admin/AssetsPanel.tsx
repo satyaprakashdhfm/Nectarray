@@ -23,9 +23,9 @@ export function AssetsPanel({
       <p className="text-ink-faint mt-0.5 text-[0.8125rem]">
         Client payments, and costs a client pays back, come in by themselves;
         bills on each project&apos;s Amounts paid come off by themselves (the
-        company&apos;s own at once, a person&apos;s once paid back). Nectarray
-        and Verona Ads are ours, so their costs only come off. Add anything else
-        here with its reason.
+        company&apos;s own at once, a person&apos;s once paid back), and so does
+        commission, as soon as it is given. Nectarray and Verona Ads are ours,
+        so their costs only come off. Add anything else here with its reason.
       </p>
 
       <div className="card mt-4 p-5 sm:p-6">
@@ -62,9 +62,9 @@ export function AssetsPanel({
             <dd className="text-ink font-semibold">
               {rupees.format(totals.spent)}
             </dd>
-            <dt>Commission paid</dt>
+            <dt>Commission</dt>
             <dd className="text-ink font-semibold">
-              {rupees.format(totals.commissionPaid)}
+              {rupees.format(totals.commission)}
             </dd>
           </dl>
         </div>

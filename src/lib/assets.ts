@@ -23,9 +23,8 @@ import { cleanSheets, isCompany } from "@/lib/project-details";
  * Out: bills off each project's Amounts paid. One the company paid counts
  * at once; one a person paid out of pocket counts once it is marked "Paid
  * back", because that is when the company's money moves (until then it is
- * listed as still owed). Commission given to people, once it is paid
- * (until then it is listed as still owed to them). Plus spends typed in
- * with their reason.
+ * listed as still owed). Commission given to people, as soon as it is
+ * given, paid yet or not. Plus spends typed in with their reason.
  *
  * Our own products (Nectarray, Verona Ads) have no client: their costs
  * come out like any other, and nothing comes back in.
@@ -41,7 +40,7 @@ export type Movement = {
   /**
    * Typed in on the Assets page (can be removed there), off a bill, a cost
    * a client paid back, a client's payment, a student's course fee, or a
-   * commission paid to someone.
+   * commission given to someone.
    */
   source: "entry" | "bill" | "repaid" | "payment" | "fee" | "commission";
   /** A course fee, or commission on one: it links to the students page. */
@@ -217,34 +216,22 @@ export async function loadAssets() {
     }
   }
 
-  // Commission: out once paid; until then owed to the person.
+  // Commission comes off the company's money as soon as it is given: what
+  // came in was never all ours. Its paid date only says when it left.
   for (const c of commissions) {
-    const reason = `Commission ${c.percent ? `${c.percent}% ` : ""}to ${c.name}`;
-    if (c.paidOn) {
-      movements.push({
-        key: `c-${c.key}`,
-        on: c.paidOn,
-        kind: "out",
-        amount: c.amount,
-        reason,
-        source: "commission",
-        id: c.projectId ?? c.enrolmentId ?? "",
-        project: c.projectId ? c.what : "Academy",
-        academy: !c.projectId,
-      });
-      continue;
-    }
-    const key = c.name.toLowerCase();
-    const person = owed.get(key) ?? { name: c.name, total: 0, bills: [] };
-    person.total += c.amount;
-    person.bills.push({
-      project: c.what,
-      projectId: c.projectId,
-      item: c.percent ? `Commission ${c.percent}%` : "Commission",
-      amount: c.amount,
+    movements.push({
+      key: `c-${c.key}`,
       on: c.on,
+      kind: "out",
+      amount: c.amount,
+      reason: `Commission ${c.percent ? `${c.percent}% ` : ""}to ${c.name}${
+        c.paidOn ? "" : " (still to pay)"
+      }`,
+      source: "commission",
+      id: c.projectId ?? c.enrolmentId ?? "",
+      project: c.projectId ? c.what : "Academy",
+      academy: !c.projectId,
     });
-    owed.set(key, person);
   }
 
   // Newest first. A bill with only its month sits under that month's
@@ -257,11 +244,10 @@ export async function loadAssets() {
   const fromClients = sum((m) => m.kind === "in" && m.source !== "entry");
   const bills = sum((m) => m.kind === "out" && m.source === "bill");
   const spent = sum((m) => m.kind === "out" && m.source === "entry");
-  const commissionPaid = sum((m) => m.source === "commission");
-  const commission = commissions.reduce((n, c) => n + c.amount, 0);
+  const commission = sum((m) => m.source === "commission");
   const people = [...owed.values()].sort((a, b) => b.total - a.total);
   const stillOwed = people.reduce((n, p) => n + p.total, 0);
-  const balance = added + fromClients - bills - spent - commissionPaid;
+  const balance = added + fromClients - bills - spent - commission;
 
   dues.sort((a, b) => b.on.localeCompare(a.on));
 
@@ -276,7 +262,6 @@ export async function loadAssets() {
       bills,
       spent,
       commission,
-      commissionPaid,
       balance,
       stillOwed,
       clientsOwe,

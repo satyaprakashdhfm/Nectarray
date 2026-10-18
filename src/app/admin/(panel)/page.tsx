@@ -312,7 +312,7 @@ export default async function AdminRevenuePage({
               ? assets.owed.map((p) => p.name).join(", ")
               : "Nobody waiting"
           }
-          lede="Costs people paid out of their own pocket, not yet paid back by the company, and commission not yet paid. Mark costs “Paid back” on the project; give a commission its paid date."
+          lede="Costs people paid out of their own pocket, not yet paid back by the company. Mark them “Paid back” on the project."
         >
           {assets.owed.length === 0 ? (
             <p className="text-ink-faint px-6 py-12 text-center text-[0.875rem]">
@@ -471,7 +471,7 @@ export default async function AdminRevenuePage({
               : "None given"
           }
           tone={commissionDue ? "warn" : undefined}
-          lede="Commission given to people on projects and course fees, worked out from what has come in. It is part of the revenue and comes off the profit; paid ones come off the company balance."
+          lede="Commission given to people on projects and course fees, worked out from what has come in. It is part of the revenue, and comes off the profit and the company balance as soon as it is given, paid yet or not."
         >
           <Table
             head={["When", "Person", "On", "Share", "Amount"]}
