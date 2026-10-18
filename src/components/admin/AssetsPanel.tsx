@@ -35,9 +35,11 @@ export function AssetsPanel({
     <section id="assets" className="mt-10 scroll-mt-24">
       <h2 className="text-ink text-[1.25rem] font-semibold">Company assets</h2>
       <p className="text-ink-faint mt-0.5 text-[0.8125rem]">
-        Add what comes in, and what is spent with a reason. Bills on each
-        project&apos;s Amounts paid come off by themselves: the company&apos;s
-        own at once, a person&apos;s once they are marked paid back.
+        Client payments, and costs a client pays back, come in by themselves;
+        bills on each project&apos;s Amounts paid come off by themselves (the
+        company&apos;s own at once, a person&apos;s once paid back). Nectarray
+        and Verona Ads are ours, so their costs only come off. Add anything else
+        here with its reason.
       </p>
 
       <div className="card mt-4 p-5 sm:p-6">
@@ -57,16 +59,20 @@ export function AssetsPanel({
               </p>
             )}
           </div>
-          <dl className="text-ink-soft grid grid-cols-3 gap-x-6 gap-y-1 text-[0.8125rem] tabular-nums">
-            <dt>Money in</dt>
-            <dt>Bills paid</dt>
-            <dt>Other spends</dt>
+          <dl className="text-ink-soft grid grid-cols-2 gap-x-6 gap-y-1 text-[0.8125rem] tabular-nums sm:grid-flow-col sm:grid-cols-none sm:grid-rows-2">
+            <dt>From clients</dt>
+            <dd className="text-ink font-semibold">
+              {rupees.format(totals.fromClients)}
+            </dd>
+            <dt>Money added</dt>
             <dd className="text-ink font-semibold">
               {rupees.format(totals.added)}
             </dd>
+            <dt>Bills paid</dt>
             <dd className="text-ink font-semibold">
               {rupees.format(totals.bills)}
             </dd>
+            <dt>Other spends</dt>
             <dd className="text-ink font-semibold">
               {rupees.format(totals.spent)}
             </dd>
@@ -183,14 +189,15 @@ export function AssetsPanel({
                     </p>
                     <p className="text-ink-faint mt-0.5 text-[0.75rem]">
                       {day(m.on)}
-                      {m.source === "bill" && (
+                      {m.source !== "entry" && (
                         <>
                           {" · "}
                           <Link
                             href={`${ADMIN}/projects/${m.id}`}
                             className="hover:text-brand-deep underline-offset-2 hover:underline"
                           >
-                            Bill: {m.project}
+                            {m.source === "bill" ? "Bill: " : ""}
+                            {m.project}
                           </Link>
                           {m.repaidTo && ` · paid back to ${m.repaidTo}`}
                         </>

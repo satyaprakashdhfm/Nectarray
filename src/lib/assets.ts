@@ -1,19 +1,31 @@
 import "server-only";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { assetEntries, clientProjects, projectDetails } from "@/lib/db/schema";
-import { num } from "@/lib/business";
+import {
+  assetEntries,
+  clientPayments,
+  clientProjects,
+  projectDetails,
+} from "@/lib/db/schema";
+import { isOwnCompany, num } from "@/lib/business";
 import { cleanSheets, isCompany } from "@/lib/project-details";
 
 /**
- * The company's money on the Assets page: what was put in, less what went
+ * The company's money on the Assets page: what came in, less what went
  * out.
  *
- * Two kinds of going out. Bills come straight off each project's Amounts
- * paid: a payment the company made counts at once, and one a person made out
- * of pocket counts once it is marked "Paid back", because that is when the
- * company's money moves. Until then it is listed as still owed. Everything
- * else (rent, a laptop, a salary) is typed in on the page with its reason.
+ * In: every payment a client makes, and every cost a client pays us back
+ * for (marked "Client paid" on the project's Amounts paid), plus money
+ * typed in on the page.
+ *
+ * Out: bills off each project's Amounts paid. One the company paid counts
+ * at once; one a person paid out of pocket counts once it is marked "Paid
+ * back", because that is when the company's money moves (until then it is
+ * listed as still owed). Plus spends typed in with their reason.
+ *
+ * Our own products (Nectarray, Verona Ads) are paid for by the company
+ * itself: their costs come out, and "client paid" on them means the
+ * company paid, so nothing comes back in.
  */
 
 export type Movement = {
@@ -23,11 +35,14 @@ export type Movement = {
   kind: "in" | "out";
   amount: number;
   reason: string;
-  /** Typed in on the Assets page (can be removed there), or off a bill. */
-  source: "entry" | "bill";
-  /** The entry's id, or the bill's project. */
+  /**
+   * Typed in on the Assets page (can be removed there), off a bill, a cost
+   * a client paid back, or a client's payment.
+   */
+  source: "entry" | "bill" | "repaid" | "payment";
+  /** The entry's id, or the project. */
   id: string;
-  /** For a bill: the project, and who was paid back. */
+  /** For anything off a project: the project; for a bill, who was paid back. */
   project?: string;
   repaidTo?: string;
 };
@@ -39,7 +54,7 @@ export type Owed = {
 };
 
 export async function loadAssets() {
-  const [entries, sheets] = await Promise.all([
+  const [entries, sheets, payments] = await Promise.all([
     db.select().from(assetEntries).orderBy(desc(assetEntries.on)),
     db
       .select({
@@ -53,6 +68,20 @@ export async function loadAssets() {
         clientProjects,
         eq(projectDetails.projectId, clientProjects.id),
       ),
+    db
+      .select({
+        id: clientPayments.id,
+        projectId: clientPayments.projectId,
+        amount: clientPayments.amount,
+        on: clientPayments.receivedOn,
+        client: clientProjects.client,
+        title: clientProjects.title,
+      })
+      .from(clientPayments)
+      .innerJoin(
+        clientProjects,
+        eq(clientPayments.projectId, clientProjects.id),
+      ),
   ]);
 
   const movements: Movement[] = entries.map((e) => ({
@@ -65,18 +94,49 @@ export async function loadAssets() {
     id: e.id,
   }));
 
+  // Every client payment comes into the company's money.
+  for (const p of payments) {
+    if (isOwnCompany(p.client, p.title) || num(p.amount) <= 0) continue;
+    movements.push({
+      key: `p-${p.id}`,
+      on: p.on,
+      kind: "in",
+      amount: num(p.amount),
+      reason: "Client payment",
+      source: "payment",
+      id: p.projectId,
+      project: `${p.client} · ${p.title}`,
+    });
+  }
+
   const owed = new Map<string, Owed>();
   // Costs the clients have not paid us back for yet.
   let clientsOwe = 0;
   for (const s of sheets) {
     const project = `${s.client} · ${s.title}`;
+    const own = isOwnCompany(s.client, s.title);
     for (const row of cleanSheets({ paid: s.paid }).paid) {
       if (row.amount <= 0) continue;
-      if (!row.clientPaid) clientsOwe += row.amount;
       const reason =
         [row.item, row.vendor].filter(Boolean).join(" · ") || "Bill";
+      if (!own) {
+        if (!row.clientPaid) clientsOwe += row.amount;
+        // The client paid this cost back: it comes into the company.
+        else
+          movements.push({
+            key: `r-${s.projectId}-${row.id}`,
+            on: row.clientPaidOn || row.paidOn || row.month,
+            kind: "in",
+            amount: row.amount,
+            reason: `Paid back by the client: ${reason}`,
+            source: "repaid",
+            id: s.projectId,
+            project,
+          });
+      }
       const company = isCompany(row.paidBy);
-      if (company || row.repaid) {
+      // On our own products, "client paid" is the company paying.
+      if (company || row.repaid || (own && row.clientPaid)) {
         movements.push({
           key: `b-${s.projectId}-${row.id}`,
           // The day the money left: paid back, or paid; else the bill's month.
@@ -111,18 +171,20 @@ export async function loadAssets() {
 
   const sum = (pick: (m: Movement) => boolean) =>
     movements.filter(pick).reduce((n, m) => n + m.amount, 0);
-  const added = sum((m) => m.kind === "in");
+  const added = sum((m) => m.kind === "in" && m.source === "entry");
+  const fromClients = sum((m) => m.kind === "in" && m.source !== "entry");
   const bills = sum((m) => m.kind === "out" && m.source === "bill");
   const spent = sum((m) => m.kind === "out" && m.source === "entry");
   const people = [...owed.values()].sort((a, b) => b.total - a.total);
   const stillOwed = people.reduce((n, p) => n + p.total, 0);
-  const balance = added - bills - spent;
+  const balance = added + fromClients - bills - spent;
 
   return {
     movements,
     owed: people,
     totals: {
       added,
+      fromClients,
       bills,
       spent,
       balance,

@@ -52,6 +52,14 @@ export const lineOf = (service: string) =>
 export const serviceLabel = (id: string) =>
   REVENUE_LINES.find((s) => s.id === lineOf(id))?.label ?? id;
 
+/**
+ * Our own products, recorded as projects: Nectarray and Verona Ads. Their
+ * "client" is the company itself, so what they cost only ever comes out of
+ * the company's money, and nothing they "pay back" comes in.
+ */
+export const isOwnCompany = (client: string, title = "") =>
+  /verona|nect\s*array/i.test(`${client} ${title}`);
+
 export const isService = (id: string): id is ServiceId =>
   SERVICES.some((s) => s.id === id);
 

@@ -9,7 +9,7 @@ import {
   projectDetails,
   users,
 } from "@/lib/db/schema";
-import { lineOf, num } from "@/lib/business";
+import { isOwnCompany, lineOf, num } from "@/lib/business";
 import { cleanSheets, isCompany } from "@/lib/project-details";
 
 /** One line of money on a project card: in from the client, or a cost. */
@@ -139,9 +139,10 @@ export async function loadDashboard(): Promise<{
       value: p.value == null ? null : num(p.value),
       received: ins.reduce((n, x) => n + num(x.amount), 0),
       costs: paid.reduce((n, r) => n + r.amount, 0),
-      clientOwes: paid
-        .filter((r) => !r.clientPaid)
-        .reduce((n, r) => n + r.amount, 0),
+      // Our own products have no client to pay anything back.
+      clientOwes: isOwnCompany(p.client, p.title)
+        ? 0
+        : paid.filter((r) => !r.clientPaid).reduce((n, r) => n + r.amount, 0),
       toPayBack: paid
         .filter((r) => !isCompany(r.paidBy) && !r.repaid)
         .reduce((n, r) => n + r.amount, 0),
