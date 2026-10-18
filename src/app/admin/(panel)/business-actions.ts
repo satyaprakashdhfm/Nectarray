@@ -132,6 +132,19 @@ export async function updateProject(form: FormData) {
   done();
 }
 
+/** The one-time development price agreed for a project; blank clears it. */
+export async function setProjectValue(form: FormData) {
+  await requireAdmin();
+  const id = text(form, "id");
+  if (!id) throw new Error("Missing project.");
+  const value = amount(form, "value", "Expected amount");
+  await db
+    .update(clientProjects)
+    .set({ value: value === null ? null : String(value) })
+    .where(eq(clientProjects.id, id));
+  done();
+}
+
 /**
  * Adds to a project's agreed value — extra scope, a second phase. Done in
  * SQL so two top-ups at once both land.

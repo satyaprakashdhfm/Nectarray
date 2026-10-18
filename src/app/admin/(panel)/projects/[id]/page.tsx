@@ -2,10 +2,11 @@ import { ADMIN, DRIVE_VIEW_COOKIE } from "@/lib/admin-path";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { ChevronLeft, FileText, HardDrive } from "lucide-react";
 import { db } from "@/lib/db";
-import { clientProjects, quotations } from "@/lib/db/schema";
+import { clientPayments, clientProjects, quotations } from "@/lib/db/schema";
+import { DevelopmentCost } from "@/components/admin/DevelopmentCost";
 import { StatusPill } from "@/components/admin/Business";
 import { DriveBrowser, NotConnected } from "@/components/admin/DriveBrowser";
 import { ProjectWorkspace } from "@/components/admin/ProjectWorkspace";
@@ -48,7 +49,7 @@ export default async function AdminProjectPage({
   if (!project) notFound();
 
   const folderId = isId(folder) ? folder : null;
-  const [quotes, sheets, contents, jar] = await Promise.all([
+  const [quotes, sheets, contents, jar, payments] = await Promise.all([
     db
       .select()
       .from(quotations)
@@ -58,6 +59,11 @@ export default async function AdminProjectPage({
     loadProjectSheets(id),
     loadFolder(id, folderId),
     cookies(),
+    db
+      .select()
+      .from(clientPayments)
+      .where(eq(clientPayments.projectId, id))
+      .orderBy(desc(clientPayments.receivedOn)),
   ]);
   // A folder that is not in this project's Drive opens the top instead.
   const drive = contents ?? (await loadFolder(id, null));
@@ -92,6 +98,18 @@ export default async function AdminProjectPage({
         {project.client} · {serviceLabel(project.service)}
         {project.value ? ` · ${rupees.format(num(project.value))}` : ""}
       </p>
+
+      <DevelopmentCost
+        projectId={id}
+        expected={project.value == null ? null : num(project.value)}
+        quoted={quote ? num(quote.onceTotal) || null : null}
+        payments={payments.map((p) => ({
+          id: p.id,
+          amount: num(p.amount),
+          on: p.receivedOn,
+          ref: p.ref,
+        }))}
+      />
 
       <section className="card mt-6 p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">

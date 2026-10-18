@@ -491,7 +491,7 @@ export function paidInMonth(rows: PaidRow[], month: string): PaidRow[] {
 }
 
 /** The cost every month has, whatever the project: filled in each month. */
-export const MAINTENANCE_ITEM = "Website maintenance";
+export const MAINTENANCE_ITEM = "Website maintenance charges";
 
 const isMaintenance = (r: PaidRow) => /website\s*maintenance/i.test(r.item);
 
@@ -518,10 +518,16 @@ export const maintenanceRow = (month: string): PaidRow => ({
  * none, put first in its month.
  */
 export function withMaintenance(rows: PaidRow[], months: string[]): PaidRow[] {
-  const missing = [...new Set(months)].filter(
-    (m) => !rows.some((r) => r.month === m && isMaintenance(r)),
+  // Rows from when it was called "Website maintenance" take the new name.
+  const named = rows.map((r) =>
+    /^\s*website\s*maintenance\s*$/i.test(r.item)
+      ? { ...r, item: MAINTENANCE_ITEM }
+      : r,
   );
-  return missing.length ? [...missing.map(maintenanceRow), ...rows] : rows;
+  const missing = [...new Set(months)].filter(
+    (m) => !named.some((r) => r.month === m && isMaintenance(r)),
+  );
+  return missing.length ? [...missing.map(maintenanceRow), ...named] : named;
 }
 
 /** Whether "Paid by" means the company itself: left blank or typed as such. */
