@@ -1,5 +1,6 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
+import { AutoSaveForm } from "@/components/admin/autosave";
 import { ChevronDown, ExternalLink, FolderOpen } from "lucide-react";
 import {
   addPayment,
@@ -183,7 +184,7 @@ export function ProjectsTable({
                   )}
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                     <Drop label="Edit">
-                      <form
+                      <AutoSaveForm
                         action={updateProject}
                         className="border-line bg-mist grid w-[22rem] grid-cols-2 gap-2 rounded-lg border p-3"
                       >
@@ -261,12 +262,10 @@ export function ProjectsTable({
                             className={`${field} mt-1`}
                           />
                         </label>
-                        <div className="col-span-2">
-                          <button className={primaryButton}>
-                            Save changes
-                          </button>
-                        </div>
-                      </form>
+                        <p className="text-ink-faint col-span-2 text-[0.6875rem]">
+                          Changes save by themselves.
+                        </p>
+                      </AutoSaveForm>
                     </Drop>
                     <Drop label="Delete" tone="danger">
                       <form action={deleteProject}>
@@ -285,7 +284,10 @@ export function ProjectsTable({
                 )}
                 <td className={td}>
                   <StatusPill status={p.status} />
-                  <form action={setProjectStatus} className="mt-2 flex gap-1.5">
+                  <AutoSaveForm
+                    action={setProjectStatus}
+                    className="mt-2 flex gap-1.5"
+                  >
                     <input type="hidden" name="id" value={p.id} />
                     <select
                       name="status"
@@ -295,8 +297,7 @@ export function ProjectsTable({
                     >
                       <StatusOptions />
                     </select>
-                    <button className={quietButton}>Set</button>
-                  </form>
+                  </AutoSaveForm>
                 </td>
                 <td className={`${td} whitespace-nowrap`}>
                   <span className="block">Start {day(p.startsOn)}</span>

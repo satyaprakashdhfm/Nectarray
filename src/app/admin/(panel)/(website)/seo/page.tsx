@@ -1,3 +1,4 @@
+import { AutoSaveForm } from "@/components/admin/autosave";
 import { ADMIN } from "@/lib/admin-path";
 import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -144,7 +145,7 @@ export default async function AdminSeoPage({
                       )}
                     </td>
                     <td className={td}>
-                      <form
+                      <AutoSaveForm
                         action={updateKeywordPosition}
                         className="flex items-center gap-1.5"
                       >
@@ -156,11 +157,10 @@ export default async function AdminSeoPage({
                           placeholder="—"
                           className={`${field} w-16`}
                         />
-                        <button className={quietButton}>Save</button>
                         <span className="text-ink-faint text-[0.6875rem] whitespace-nowrap">
                           {day(k.checkedOn)}
                         </span>
-                      </form>
+                      </AutoSaveForm>
                     </td>
                     <td className={td}>
                       <form action={deleteKeyword}>
@@ -242,7 +242,7 @@ export default async function AdminSeoPage({
                     </td>
                     <td className={td}>{serviceLabel(p.service)}</td>
                     <td className={td}>
-                      <form
+                      <AutoSaveForm
                         action={updateBlogPost}
                         className="flex flex-wrap items-center gap-1.5"
                       >
@@ -270,8 +270,7 @@ export default async function AdminSeoPage({
                           placeholder="/blog/… or https://"
                           className={`${field} w-48`}
                         />
-                        <button className={quietButton}>Save</button>
-                      </form>
+                      </AutoSaveForm>
                     </td>
                     <td className={td}>
                       <form action={deleteBlogPost}>

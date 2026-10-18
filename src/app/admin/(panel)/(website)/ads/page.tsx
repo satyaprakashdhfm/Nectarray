@@ -1,3 +1,4 @@
+import { AutoSaveForm } from "@/components/admin/autosave";
 import { ADMIN } from "@/lib/admin-path";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -112,7 +113,7 @@ export default async function AdminAdsPage({
                     </td>
                     <td className={td}>{serviceLabel(c.service)}</td>
                     <td className={td}>
-                      <form
+                      <AutoSaveForm
                         action={updateCampaign}
                         className="flex flex-wrap items-center gap-1.5"
                       >
@@ -146,8 +147,7 @@ export default async function AdminAdsPage({
                           defaultValue={c.leads}
                           className={`${field} w-16`}
                         />
-                        <button className={quietButton}>Save</button>
-                      </form>
+                      </AutoSaveForm>
                     </td>
                     <td className={`${td} text-ink font-semibold`}>
                       {c.leads ? rupees.format(num(c.spend) / c.leads) : "—"}

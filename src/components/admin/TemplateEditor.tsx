@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   resetQuoteTemplate,
@@ -68,18 +69,11 @@ export function TemplateEditor({
   sample: QuoteDocData;
 }) {
   const [t, setT] = useState(initial);
-  const [saved, setSaved] = useState(() => JSON.stringify(initial));
-  const dirty = JSON.stringify(t) !== saved;
+  // Saved by itself a moment after each change. A new section is given its
+  // id on the server, from its name, each time until the page is reloaded.
+  const auto = useAutoSave(t, saveQuoteTemplate);
   const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
 
   const html = useMemo(
     () =>
@@ -112,21 +106,6 @@ export function TemplateEditor({
     });
   const setLabel = (key: keyof QuoteLabels, value: string) =>
     setT((x) => ({ ...x, labels: { ...x.labels, [key]: value } }));
-
-  function save() {
-    const snapshot = JSON.stringify(t);
-    setError(null);
-    start(async () => {
-      try {
-        await saveQuoteTemplate(t);
-        setSaved(snapshot);
-        // New sections get their ids on the server; load them back.
-        if (t.sections.some((s) => !s.id)) window.location.reload();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not save.");
-      }
-    });
-  }
 
   function reset() {
     if (!window.confirm("Go back to the built-in template?")) return;
@@ -349,19 +328,11 @@ export function TemplateEditor({
         </section>
 
         <div className="border-line bg-surface/95 sticky bottom-3 z-20 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur">
-          <p
-            className={cn(
-              "text-[0.8125rem]",
-              dirty ? "text-amber-deep" : "text-ink-faint",
-            )}
-          >
-            {dirty ? "Unsaved changes" : "Saved"}
-          </p>
-          {error && (
-            <p className="text-danger text-[0.8125rem]" role="alert">
-              {error}
-            </p>
-          )}
+          <SaveState
+            status={auto.status}
+            error={auto.error}
+            onRetry={auto.saveNow}
+          />
           <div className="ml-auto flex items-center gap-2">
             {customised && (
               <button
@@ -373,14 +344,6 @@ export function TemplateEditor({
                 Reset to built-in
               </button>
             )}
-            <button
-              type="button"
-              onClick={save}
-              disabled={!dirty || pending}
-              className={cn(primaryButton, "px-4 py-2 disabled:opacity-50")}
-            >
-              {pending ? "Saving" : "Save template"}
-            </button>
           </div>
         </div>
       </div>

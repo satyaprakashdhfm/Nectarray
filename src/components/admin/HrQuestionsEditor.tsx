@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   saveHrQuestions,
@@ -29,9 +30,8 @@ const toDraft = (q: HrQuestion): Draft => ({
  * The HR questions as an editable list: the wording, the answer, the other
  * ways it gets asked, a note, and whether the answer is a draft or advice.
  *
- * Everything is local until Save, which writes the whole list in this order.
- * Leaving with unsaved changes asks first — a rewritten answer is a long
- * thing to lose to a stray click on the sidebar.
+ * Saved by itself a moment after each change, the whole list in this
+ * order; a question not yet given any wording waits until it has some.
  */
 export function HrQuestionsEditor({
   initial,
@@ -41,22 +41,15 @@ export function HrQuestionsEditor({
   customised: boolean;
 }) {
   const [drafts, setDrafts] = useState<Draft[]>(() => initial.map(toDraft));
-  const [dirty, setDirty] = useState(false);
-  const [message, setMessage] = useState<{ ok: boolean; text: string }>();
-  const [saving, startSaving] = useTransition();
+  const ready = drafts
+    .filter((d) => d.question.trim())
+    .map(({ key: _key, ...q }) => q);
+  const auto = useAutoSave(ready, async (questions) => {
+    const result = await saveHrQuestions(questions);
+    if (result.error) throw new Error(result.error);
+  });
 
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
-
-  function change(next: Draft[]) {
-    setDrafts(next);
-    setDirty(true);
-    setMessage(undefined);
-  }
+  const change = (next: Draft[]) => setDrafts(next);
 
   const edit = (i: number, patch: Partial<Draft>) =>
     change(drafts.map((d, j) => (j === i ? { ...d, ...patch } : d)));
@@ -79,20 +72,6 @@ export function HrQuestionsEditor({
         answer: "",
       },
     ]);
-
-  function save() {
-    startSaving(async () => {
-      const result = await saveHrQuestions(
-        drafts.map(({ key: _key, ...q }) => q),
-      );
-      if (result.error) {
-        setMessage({ ok: false, text: result.error });
-      } else {
-        setDirty(false);
-        setMessage({ ok: true, text: "Saved. Students see this now." });
-      }
-    });
-  }
 
   return (
     <>
@@ -254,30 +233,14 @@ export function HrQuestionsEditor({
       {/* Stays on screen however long the list gets. */}
       <div className="bg-mist/90 sticky bottom-0 z-10 -mx-1 mt-6 px-1 py-3 backdrop-blur">
         <div className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <p
-            role="status"
-            className={cn(
-              "text-[0.8125rem]",
-              message
-                ? message.ok
-                  ? "text-leaf-deep font-semibold"
-                  : "text-danger font-semibold"
-                : "text-ink-faint",
-            )}
-          >
-            {message?.text ??
-              (dirty
-                ? "You have unsaved changes."
-                : `${drafts.length} questions`)}
+          <p className="text-ink-faint text-[0.8125rem]">
+            {drafts.length} questions · students see each change once saved
           </p>
-          <button
-            type="button"
-            onClick={save}
-            disabled={saving || !dirty}
-            className="bg-ink hover:bg-brand-deep text-cta-fg rounded-lg px-4 py-2 text-[0.875rem] font-semibold transition-colors disabled:opacity-40"
-          >
-            {saving ? "Saving…" : "Save changes"}
-          </button>
+          <SaveState
+            status={auto.status}
+            error={auto.error}
+            onRetry={auto.saveNow}
+          />
         </div>
       </div>
     </>

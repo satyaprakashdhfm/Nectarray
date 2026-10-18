@@ -1,7 +1,8 @@
 "use client";
 import { ADMIN } from "@/lib/admin-path";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import Link from "next/link";
 import {
   ArrowDown,
@@ -48,8 +49,8 @@ const host = (url: string) => {
  * One list on the Website tab, read like a page and edited in place.
  *
  * Learnings and steps read as a numbered list; references as a grid of link
- * cards. Edit turns the same list into fields, and Save writes the whole
- * list in its new order.
+ * cards. Edit turns the same list into fields, saved by themselves a
+ * moment after each change, the whole list in its order.
  */
 export function WebNotesEditor({
   kind,
@@ -67,24 +68,18 @@ export function WebNotesEditor({
   const [notes, setNotes] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [drafts, setDrafts] = useState<Draft[]>(() => initial.map(toDraft));
-  const [dirty, setDirty] = useState(false);
-  const [message, setMessage] = useState<{ ok: boolean; text: string }>();
-  const [saving, startSaving] = useTransition();
   const singular = WEB_NOTE_KINDS[kind].singular;
   const isReference = kind === "reference";
+  // An empty row waits until something is typed in it.
+  const ready = drafts
+    .filter((d) => d.title.trim() || d.body.trim() || d.url.trim())
+    .map(({ key: _key, ...n }) => n);
+  const auto = useAutoSave(ready, async (list) => {
+    const result = await saveWebNotes(kind, list);
+    if (result.error) throw new Error(result.error);
+  });
 
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
-
-  function change(next: Draft[]) {
-    setDrafts(next);
-    setDirty(true);
-    setMessage(undefined);
-  }
+  const change = (next: Draft[]) => setDrafts(next);
 
   const edit = (i: number, patch: Partial<Draft>) =>
     change(drafts.map((d, j) => (j === i ? { ...d, ...patch } : d)));
@@ -95,35 +90,19 @@ export function WebNotesEditor({
     change(next);
   }
 
-  function cancel() {
-    setDrafts(notes.map(toDraft));
-    setDirty(false);
-    setMessage(undefined);
-    setEditing(false);
-  }
-
-  function save() {
-    startSaving(async () => {
-      const result = await saveWebNotes(
-        kind,
-        drafts.map(({ key: _key, ...n }) => n),
-      );
-      if (result.error) {
-        setMessage({ ok: false, text: result.error });
-        return;
-      }
-      setNotes(
-        drafts.map((d) => ({
+  function done() {
+    if (auto.dirty) auto.saveNow();
+    setNotes(
+      drafts
+        .filter((d) => d.title.trim() || d.body.trim() || d.url.trim())
+        .map((d) => ({
           id: d.key,
           title: d.title.trim(),
           body: d.body.trim(),
           url: d.url.trim() || undefined,
         })),
-      );
-      setDirty(false);
-      setEditing(false);
-      setMessage({ ok: true, text: "Saved." });
-    });
+    );
+    setEditing(false);
   }
 
   return (
@@ -147,12 +126,15 @@ export function WebNotesEditor({
         )}
       </div>
 
-      {message?.ok && !editing && (
-        <p className="text-leaf-deep mt-2 text-[0.8125rem] font-semibold">
-          {message.text}
-        </p>
+      {!editing && auto.status !== "saved" && (
+        <SaveState
+          status={auto.status}
+          error={auto.error}
+          onRetry={auto.saveNow}
+          className="mt-2"
+        />
       )}
-      {!customised && !editing && !message && (
+      {!customised && !editing && !auto.dirty && notes === initial && (
         <p className="text-ink-faint mt-2 text-[0.75rem]">
           The built-in list. Edit it to make it yours.
         </p>
@@ -339,33 +321,18 @@ export function WebNotesEditor({
           </button>
 
           <div className="border-line bg-surface sticky bottom-3 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 shadow-lg">
-            <p
-              className={cn(
-                "text-[0.8125rem]",
-                message && !message.ok
-                  ? "text-danger font-semibold"
-                  : "text-ink-soft",
-              )}
+            <SaveState
+              status={auto.status}
+              error={auto.error}
+              onRetry={auto.saveNow}
+            />
+            <button
+              type="button"
+              onClick={done}
+              className="bg-ink hover:bg-brand-deep text-cta-fg rounded-lg px-4 py-1.5 text-[0.8125rem] font-semibold transition-colors"
             >
-              {message && !message.ok
-                ? message.text
-                : dirty
-                  ? "Unsaved changes."
-                  : "No changes yet."}
-            </p>
-            <div className="flex gap-2">
-              <button type="button" onClick={cancel} className={smallButton}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={save}
-                disabled={saving || !dirty}
-                className="bg-ink hover:bg-brand-deep text-cta-fg rounded-lg px-4 py-1.5 text-[0.8125rem] font-semibold transition-colors disabled:opacity-40"
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
+              Done
+            </button>
           </div>
         </>
       )}

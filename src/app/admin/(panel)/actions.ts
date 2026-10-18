@@ -230,6 +230,8 @@ export async function updateLesson(formData: FormData) {
   // one marks drafts. Back to the lesson itself, so the save is seen rendered.
   revalidatePath("/admin/lessons", "layout");
   revalidatePath("/dashboard/notes", "layout");
+  // Saved by itself while editing: stay on the editor.
+  if (formData.get("stay")) return;
   redirect(`${ADMIN}/lessons/${id}`);
 }
 

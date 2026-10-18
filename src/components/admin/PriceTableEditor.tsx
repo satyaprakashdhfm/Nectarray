@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import {
   resetPriceTable,
@@ -25,7 +26,7 @@ const CONFIDENCE = ["Official", "Secondary", "Low"];
 
 /**
  * A price book table with every cell open for editing, rows to add and
- * delete, and Save. What is typed is turned back into prices here; the
+ * delete, saved by itself a moment after each change. What is typed is turned back into prices here; the
  * server checks it again against the table's columns before saving.
  */
 export function TableEditor({
@@ -75,23 +76,25 @@ export function TableEditor({
       },
     ]);
 
-  const save = () =>
-    startSaving(async () => {
-      setError(null);
-      const result = await savePriceTable(
-        sheet,
-        table.id,
-        rows.map((r) => ({
-          id: r.id,
-          cells: table.columns.map((c, i) =>
-            toCell(r.inputs[i], c, r.currencies[i]),
-          ),
-        })),
-      );
-      if (!result.ok) return setError(result.error);
-      router.refresh();
-      onDone();
-    });
+  const auto = useAutoSave(rows, async (list) => {
+    const result = await savePriceTable(
+      sheet,
+      table.id,
+      list.map((r) => ({
+        id: r.id,
+        cells: table.columns.map((c, i) =>
+          toCell(r.inputs[i], c, r.currencies[i]),
+        ),
+      })),
+    );
+    if (!result.ok) throw new Error(result.error);
+  });
+
+  const done = () => {
+    if (auto.dirty) auto.saveNow();
+    router.refresh();
+    onDone();
+  };
 
   const reset = () => {
     if (
@@ -200,21 +203,18 @@ export function TableEditor({
           </p>
         )}
         <div className="ml-auto flex gap-2">
+          <SaveState
+            status={auto.status}
+            error={auto.error}
+            onRetry={auto.saveNow}
+          />
           <button
             type="button"
-            onClick={onDone}
-            disabled={saving}
-            className="text-ink-soft hover:text-ink rounded-lg px-3 py-1.5 text-[0.8125rem] font-semibold disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={save}
+            onClick={done}
             disabled={saving}
             className="bg-brand-solid text-cta-fg rounded-lg px-4 py-1.5 text-[0.8125rem] font-semibold transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
-            {saving ? "Saving" : "Save"}
+            Done
           </button>
         </div>
       </div>

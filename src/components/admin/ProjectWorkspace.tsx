@@ -30,6 +30,7 @@ import { setProjectStatus } from "@/app/admin/(panel)/business-actions";
 import { saveProjectSheets } from "@/app/admin/(panel)/project-actions";
 import { field, primaryButton, quietButton } from "@/components/admin/Business";
 import { ProjectNotes } from "@/components/admin/ProjectNotes";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import { MoneyInput } from "@/components/admin/QuoteBuilder";
 import { PROJECT_STATUSES, rupees } from "@/lib/business";
 import {
@@ -208,36 +209,13 @@ export function ProjectWorkspace({
   thisMonth: string;
 }) {
   const [s, setS] = useState(initial);
-  const [saved, setSaved] = useState(() => JSON.stringify(initial));
-  const dirty = JSON.stringify(s) !== saved;
+  // Every change is saved by itself a moment after it is made.
+  const auto = useAutoSave(s, (sheets) => saveProjectSheets(projectId, sheets));
+  const dirty = auto.dirty;
   const [tab, setTab] = useState<Tab>("paid");
-  // Bumped by Undo, so the open note's editor reloads the saved text.
-  const [resets, setResets] = useState(0);
   const cols = useMemo(() => paidCols(projectId), [projectId]);
   const [show, setShow] = useState(false);
-  const [pending, start] = useTransition();
   const [statusPending, startStatus] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
-
-  function save() {
-    const snapshot = JSON.stringify(s);
-    setError(null);
-    start(async () => {
-      try {
-        await saveProjectSheets(projectId, s);
-        setSaved(snapshot);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not save.");
-      }
-    });
-  }
 
   function changeStatus(next: string) {
     const form = new FormData();
@@ -371,7 +349,7 @@ export function ProjectWorkspace({
         projectId={projectId}
         notes={s.notes}
         onChange={(notes) => setS({ ...s, notes })}
-        version={resets}
+        version={0}
       />
 
       <EnvFile
@@ -396,7 +374,7 @@ export function ProjectWorkspace({
             aria-disabled={dirty}
             title={
               dirty
-                ? "Save first"
+                ? "Saving first"
                 : "Everything, with the passwords and monthly costs"
             }
             className={cn(
@@ -524,37 +502,15 @@ export function ProjectWorkspace({
         onChange={(message) => setS({ ...s, message })}
       />
 
-      {(dirty || error) && (
-        <div className="border-line bg-surface/95 sticky bottom-3 z-20 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur">
-          <p className="text-amber-deep text-[0.8125rem]">Unsaved changes</p>
-          {error && (
-            <p className="text-danger text-[0.8125rem]" role="alert">
-              {error}
-            </p>
-          )}
-          <div className="ml-auto flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setS(JSON.parse(saved) as ProjectSheets);
-                setResets((n) => n + 1);
-              }}
-              disabled={pending}
-              className={cn(quietButton, "py-2")}
-            >
-              Undo
-            </button>
-            <button
-              type="button"
-              onClick={save}
-              disabled={pending}
-              className={cn(primaryButton, "px-4 py-2 disabled:opacity-50")}
-            >
-              {pending ? "Saving" : "Save"}
-            </button>
-          </div>
+      <div className="pointer-events-none sticky bottom-3 z-20 flex justify-end">
+        <div className="border-line bg-surface/95 pointer-events-auto rounded-full border px-3.5 py-1.5 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur">
+          <SaveState
+            status={auto.status}
+            error={auto.error}
+            onRetry={auto.saveNow}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -1117,7 +1073,7 @@ function BillLink({
       aria-disabled={dirty}
       title={
         dirty
-          ? "Save first"
+          ? "Saving first"
           : `The ${monthLabel(month)} bill, to send to the client`
       }
       className={cn(

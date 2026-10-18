@@ -1,4 +1,5 @@
 import { Video } from "lucide-react";
+import { AutoSaveForm } from "@/components/admin/autosave";
 import { updateCohort } from "../actions";
 import { cohortRoom } from "@/lib/meeting";
 import { asc } from "drizzle-orm";
@@ -50,7 +51,11 @@ export default async function AdminCohortPage() {
         {(cohorts ?? []).map((cohort) => {
           const room = cohortRoom(cohort);
           return (
-            <form key={cohort.id} action={updateCohort} className="card p-7">
+            <AutoSaveForm
+              key={cohort.id}
+              action={updateCohort}
+              className="card p-7"
+            >
               <input type="hidden" name="id" value={cohort.id} />
               <h2 className="display text-ink text-[1.375rem]">
                 {cohort.name}
@@ -153,14 +158,7 @@ export default async function AdminCohortPage() {
                   />
                 </div>
               </div>
-
-              <button
-                type="submit"
-                className="bg-ink hover:bg-brand-deep text-cta-fg mt-7 rounded-full px-6 py-3 text-[0.9375rem] font-semibold transition-colors"
-              >
-                Save
-              </button>
-            </form>
+            </AutoSaveForm>
           );
         })}
       </div>

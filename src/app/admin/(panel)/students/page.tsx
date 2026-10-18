@@ -1,4 +1,5 @@
 import { ADMIN } from "@/lib/admin-path";
+import { AutoSaveForm } from "@/components/admin/autosave";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import {
@@ -231,7 +232,7 @@ export default async function AdminStudentsPage() {
         </td>
 
         <td className="px-4 py-4">
-          <form action={setStudentBatch} className="flex gap-1.5">
+          <AutoSaveForm action={setStudentBatch} className="flex gap-1.5">
             <input type="hidden" name="user_id" value={row.id} />
             <select
               name="batch_id"
@@ -246,13 +247,7 @@ export default async function AdminStudentsPage() {
                 </option>
               ))}
             </select>
-            <button
-              type="submit"
-              className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep shrink-0 rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
-            >
-              Move
-            </button>
-          </form>
+          </AutoSaveForm>
         </td>
 
         <td className="text-ink-soft px-4 py-4 text-[0.8125rem] whitespace-nowrap">
@@ -293,7 +288,10 @@ export default async function AdminStudentsPage() {
           </span>
 
           {enrolment ? (
-            <form action={setEnrolmentStatus} className="mt-2 flex gap-1.5">
+            <AutoSaveForm
+              action={setEnrolmentStatus}
+              className="mt-2 flex gap-1.5"
+            >
               <input type="hidden" name="id" value={enrolment.id} />
               <select
                 name="status"
@@ -307,13 +305,7 @@ export default async function AdminStudentsPage() {
                   </option>
                 ))}
               </select>
-              <button
-                type="submit"
-                className="bg-ink hover:bg-brand-deep text-cta-fg shrink-0 rounded-lg px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
-              >
-                Save
-              </button>
-            </form>
+            </AutoSaveForm>
           ) : defaultCohort ? (
             <form action={createEnrolment} className="mt-2">
               <input type="hidden" name="user_id" value={row.id} />
@@ -334,7 +326,7 @@ export default async function AdminStudentsPage() {
 
         <td className="px-4 py-4">
           {enrolment ? (
-            <form action={updatePayment} className="space-y-1.5">
+            <AutoSaveForm action={updatePayment} className="space-y-1.5">
               <input type="hidden" name="id" value={enrolment.id} />
               <input
                 name="amount_paid"
@@ -361,13 +353,7 @@ export default async function AdminStudentsPage() {
                 aria-label={`Payment reference for ${name}`}
                 className={field}
               />
-              <button
-                type="submit"
-                className="border-line bg-surface text-ink hover:border-brand hover:text-brand-deep w-full rounded-lg border px-3 py-1.5 text-[0.8125rem] font-semibold transition-colors"
-              >
-                Save payment
-              </button>
-            </form>
+            </AutoSaveForm>
           ) : (
             <span className="text-ink-faint text-[0.8125rem]">—</span>
           )}

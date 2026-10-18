@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   resetThirdPartyCosts,
@@ -35,10 +36,10 @@ export function CostSheet({
   customised: boolean;
 }) {
   const [groups, setGroups] = useState(initial);
-  const [saved, setSaved] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  // Saved by itself a moment after each change.
+  const auto = useAutoSave(groups, saveThirdPartyCosts);
 
   const setItem = (gi: number, ii: number, patch: Partial<CostItem>) =>
     setGroups((gs) =>
@@ -54,17 +55,9 @@ export function CostSheet({
       ),
     );
 
-  function save() {
-    setError(null);
-    start(async () => {
-      try {
-        await saveThirdPartyCosts(groups);
-        setSaved(groups);
-        setEditing(false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not save.");
-      }
-    });
+  function done() {
+    if (auto.dirty) auto.saveNow();
+    setEditing(false);
   }
 
   function reset() {
@@ -307,11 +300,11 @@ export function CostSheet({
             Add group
           </button>
           <div className="border-line bg-surface/95 sticky bottom-3 z-20 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 shadow-[0_10px_30px_-12px_rgba(16,40,60,0.35)] backdrop-blur">
-            {error && (
-              <p className="text-danger text-[0.8125rem]" role="alert">
-                {error}
-              </p>
-            )}
+            <SaveState
+              status={auto.status}
+              error={auto.error}
+              onRetry={auto.saveNow}
+            />
             <div className="ml-auto flex items-center gap-2">
               {customised && (
                 <button
@@ -325,22 +318,11 @@ export function CostSheet({
               )}
               <button
                 type="button"
-                onClick={() => {
-                  setGroups(saved);
-                  setEditing(false);
-                }}
-                disabled={pending}
-                className={cn(quietButton, "py-2")}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={save}
+                onClick={done}
                 disabled={pending}
                 className={cn(primaryButton, "px-4 py-2 disabled:opacity-50")}
               >
-                {pending ? "Saving" : "Save"}
+                Done
               </button>
             </div>
           </div>

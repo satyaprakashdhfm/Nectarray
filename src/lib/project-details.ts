@@ -386,7 +386,8 @@ const inr = new Intl.NumberFormat("en-IN", {
 export function monthBreakdown(rows: PaidRow[], month: string) {
   const lines = new Map<string, number>();
   for (const r of paidInMonth(rows, month)) {
-    if (r.amount <= 0) continue;
+    // Every cost entered shows, ₹0 included; only a row left empty is skipped.
+    if (!r.item.trim() && !r.vendor.trim() && r.amount <= 0) continue;
     const name = r.item.trim() || r.vendor.trim() || "Other";
     lines.set(name, (lines.get(name) ?? 0) + r.amount);
   }

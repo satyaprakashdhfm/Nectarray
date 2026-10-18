@@ -2,6 +2,7 @@
 import { ADMIN } from "@/lib/admin-path";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -139,33 +140,17 @@ export function QuoteBuilder({
     quoteDate: quote.quoteDate,
   }));
   const [body, setBody] = useState<QuoteBody>(quote.body);
-  const [saved, setSaved] = useState(() => JSON.stringify({ meta, body }));
-  const current = JSON.stringify({ meta, body });
-  const dirty = current !== saved;
   const [tab, setTab] = useState<"prices" | "document">("prices");
-  const [saving, startSave] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
-
-  function save() {
-    setError(null);
-    startSave(async () => {
-      try {
-        const stored = await saveQuote(quote.id, { ...meta, body });
-        // Rows added to Standard prices come back linked to it.
-        setBody(stored);
-        setSaved(JSON.stringify({ meta, body: stored }));
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not save.");
-      }
-    });
-  }
+  // Saved by itself a moment after each change.
+  const auto = useAutoSave({ meta, body }, async (sent) => {
+    const stored = await saveQuote(quote.id, { ...sent.meta, body: sent.body });
+    // Rows added to Standard prices come back linked to it; take that in
+    // unless something has been typed since.
+    const was = JSON.stringify(sent.body);
+    if (JSON.stringify(stored) !== was)
+      setBody((now) => (JSON.stringify(now) === was ? stored : now));
+  });
+  const dirty = auto.dirty;
 
   const setMetaField = (key: keyof Meta, value: string) =>
     setMeta((m) => ({ ...m, [key]: value }));
@@ -297,28 +282,12 @@ export function QuoteBuilder({
             ))}
           </select>
         </label>
-        <span
-          className={cn(
-            "hidden text-[0.75rem] sm:inline",
-            dirty ? "text-amber-deep" : "text-ink-faint",
-          )}
-          aria-live="polite"
-        >
-          {saving ? "Saving" : dirty ? "Unsaved changes" : "Saved"}
-        </span>
-        <button
-          type="button"
-          onClick={save}
-          disabled={!dirty || saving}
-          className={cn(primaryButton, "px-4 py-2 disabled:opacity-50")}
-        >
-          {saving ? "Saving" : "Save"}
-        </button>
-        {error && (
-          <p className="text-danger w-full text-[0.8125rem]" role="alert">
-            {error}
-          </p>
-        )}
+        <SaveState
+          status={auto.status}
+          error={auto.error}
+          onRetry={auto.saveNow}
+          className="px-1"
+        />
       </div>
 
       {tab === "prices" ? (
@@ -1261,9 +1230,7 @@ function ProjectsCard({
         </button>
       </div>
       {dirty && (
-        <p className="text-amber-deep mt-2 text-[0.75rem]">
-          Save the quote first.
-        </p>
+        <p className="text-amber-deep mt-2 text-[0.75rem]">Saving the quote…</p>
       )}
       {!dirty && t.count === 0 && (
         <p className="text-ink-faint mt-2 text-[0.75rem]">

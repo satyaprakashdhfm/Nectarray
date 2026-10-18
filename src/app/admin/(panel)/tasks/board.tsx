@@ -1,4 +1,5 @@
 import { ADMIN } from "@/lib/admin-path";
+import { AutoSaveForm } from "@/components/admin/autosave";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import {
@@ -652,7 +653,7 @@ function TaskCard({
             />
           </summary>
           <div className="border-line bg-surface absolute right-2 left-2 z-10 mt-2 rounded-xl border p-3 shadow-lg sm:relative sm:right-auto sm:left-auto sm:w-72">
-            <form action={updateWorkItem} className="space-y-2">
+            <AutoSaveForm action={updateWorkItem} className="space-y-2">
               <input type="hidden" name="id" value={item.id} />
               <input
                 name="title"
@@ -702,10 +703,7 @@ function TaskCard({
                 placeholder="Notes"
                 className={cn(field, "resize-y")}
               />
-              <button type="submit" className={cn(primaryButton, "w-full")}>
-                Save
-              </button>
-            </form>
+            </AutoSaveForm>
             <form action={deleteWorkItem} className="mt-2 text-right">
               <input type="hidden" name="id" value={item.id} />
               <button type="submit" className={deleteButton}>

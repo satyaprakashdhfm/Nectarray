@@ -1,5 +1,6 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
+import { AutoSaveForm } from "@/components/admin/autosave";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Pencil, Plus } from "lucide-react";
 import { asc, eq } from "drizzle-orm";
@@ -98,8 +99,9 @@ export default async function AdminLessonPage({
           </Link>
         </div>
 
-        <form action={updateLesson} className="card mt-4 p-6 sm:p-7">
+        <AutoSaveForm action={updateLesson} className="card mt-4 p-6 sm:p-7">
           <input type="hidden" name="id" value={lesson.id} />
+          <input type="hidden" name="stay" value="1" />
 
           <div>
             <label className={label} htmlFor="title">
@@ -163,21 +165,18 @@ export default async function AdminLessonPage({
             </label>
 
             <div className="flex items-center gap-3">
+              <span className="text-ink-faint text-[0.8125rem]">
+                Changes save by themselves
+              </span>
               <Link
                 href={href}
-                className="text-ink-soft hover:text-ink px-3 py-3 text-[0.9375rem] font-medium transition-colors"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
                 className="bg-ink hover:bg-brand-deep text-cta-fg rounded-full px-6 py-3 text-[0.9375rem] font-semibold transition-colors"
               >
-                Save lesson
-              </button>
+                Done
+              </Link>
             </div>
           </div>
-        </form>
+        </AutoSaveForm>
       </article>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { SaveState, useAutoSave } from "@/components/admin/autosave";
 import { ChevronDown, ListChecks, Plus, Trash2 } from "lucide-react";
 import {
   resetStandardPrices,
@@ -36,18 +37,9 @@ export function StandardPrices({
   sections: QuoteSectionDef[];
 }) {
   const [lines, setLines] = useState(initial);
-  const [saved, setSaved] = useState(() => JSON.stringify(initial));
-  const dirty = JSON.stringify(lines) !== saved;
+  // Saved by itself a moment after each change; every quotation shows it.
+  const auto = useAutoSave(lines, saveStandardPrices);
   const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
 
   const update = (id: string, patch: Partial<QuoteLine>) =>
     setLines((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l)));
@@ -72,21 +64,6 @@ export function StandardPrices({
       },
     ]);
 
-  function save() {
-    const snapshot = JSON.stringify(lines);
-    setError(null);
-    setNote(null);
-    start(async () => {
-      try {
-        await saveStandardPrices(lines);
-        setSaved(snapshot);
-        setNote("Saved. Every quotation shows these now.");
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not save.");
-      }
-    });
-  }
-
   function reset() {
     if (
       !window.confirm(
@@ -94,7 +71,6 @@ export function StandardPrices({
       )
     )
       return;
-    setError(null);
     start(async () => {
       await resetStandardPrices();
       // The page reloads with the built-in list.
@@ -245,16 +221,11 @@ export function StandardPrices({
           {rupees.format(lines.reduce((n, l) => n + (l.rates?.once ?? 0), 0))}{" "}
           if every one-time item is bought
         </p>
-        {error && (
-          <p className="text-danger text-[0.8125rem]" role="alert">
-            {error}
-          </p>
-        )}
-        {note && !dirty && (
-          <p className="text-leaf-deep text-[0.8125rem]" role="status">
-            {note}
-          </p>
-        )}
+        <SaveState
+          status={auto.status}
+          error={auto.error}
+          onRetry={auto.saveNow}
+        />
         <div className="ml-auto flex items-center gap-2">
           {customised && (
             <button
@@ -266,14 +237,6 @@ export function StandardPrices({
               Reset to built-in
             </button>
           )}
-          <button
-            type="button"
-            onClick={save}
-            disabled={!dirty || pending}
-            className={cn(primaryButton, "px-4 py-2 disabled:opacity-50")}
-          >
-            {pending ? "Saving" : dirty ? "Save changes" : "Saved"}
-          </button>
         </div>
       </div>
     </div>
