@@ -177,16 +177,6 @@ export default async function AdminRevenuePage({
     assets.movements.filter((m) => m.source === "bill" && counted(m)),
     (m) => m.amount,
   );
-  const personal = sum(
-    assets.movements.filter((m) => m.source === "bill" && m.use === "personal"),
-    (m) => m.amount,
-  );
-  const temporary = sum(
-    assets.movements.filter(
-      (m) => m.source === "bill" && m.use === "temporary",
-    ),
-    (m) => m.amount,
-  );
   // Commission stays in the revenue and comes off the profit, paid or not.
   const commissions = assets.commissions;
   const commissionTotal = assets.totals.commission;
@@ -451,96 +441,119 @@ export default async function AdminRevenuePage({
           lede="All revenue, less every company expense paid, all commission given and every other spend. Costs marked Personal use (profit taken out) or Temporary (money we get back) are not counted, nor is money put into the company."
         >
           <div className="px-4 py-4 sm:px-6">
-            <dl className="border-line divide-line-soft divide-y rounded-xl border text-[0.875rem] tabular-nums">
-              {[
-                ["Revenue", total(receipts), "in"],
-                ["Costs paid back by clients", back, "in"],
-                ["Company expenses", billsCounted, "out"],
-                ["Commission", commissionTotal, "out"],
-                ["Other spends", assets.totals.spent, "out"],
-              ].map(([label, amount, kind]) => (
-                <div
-                  key={label as string}
-                  className="flex items-center justify-between gap-3 px-4 py-2.5"
-                >
-                  <dt className="text-ink-soft inline-flex items-center gap-2">
-                    {kind === "in" ? (
-                      <ArrowDownLeft
-                        className="text-leaf-deep size-4"
-                        aria-hidden
-                      />
-                    ) : (
-                      <ArrowUpRight
-                        className="text-ink-faint size-4"
-                        aria-hidden
-                      />
-                    )}
-                    {label}
-                  </dt>
-                  <dd
-                    className={cn(
-                      "font-semibold",
-                      kind === "in" ? "text-leaf-deep" : "text-ink",
-                    )}
-                  >
-                    {kind === "in" ? "" : "− "}
-                    {rupees.format(amount as number)}
-                  </dd>
-                </div>
-              ))}
-              <div className="bg-mist/60 flex items-center justify-between gap-3 px-4 py-3">
-                <dt className="text-ink font-semibold">Profit</dt>
-                <dd
-                  className={cn(
-                    "text-[1.0625rem] font-bold",
-                    profit < 0 ? "text-danger" : "text-leaf-deep",
-                  )}
-                >
-                  {rupees.format(profit)}
-                </dd>
-              </div>
-            </dl>
-            {(personal > 0 || temporary > 0) && (
-              <p className="text-ink-faint mt-2 text-[0.75rem]">
-                Not counted:{" "}
-                {[
-                  personal > 0 &&
-                    `${rupees.format(personal)} personal use (taken out of the profit)`,
-                  temporary > 0 &&
-                    `${rupees.format(temporary)} temporary (comes back)`,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-                . Both still move the company balance.
-              </p>
-            )}
+            <ProfitBreakdown
+              profit={profit}
+              groups={[
+                {
+                  label: "Revenue",
+                  kind: "in",
+                  items: receipts.map((r) => ({
+                    key: `${r.on}-${r.from}-${r.amount}-${r.what}`,
+                    on: r.on,
+                    what: r.projectId ? r.what : `${r.what} · ${r.from}`,
+                    sub: r.projectId ? r.from : "Academy",
+                    href: r.projectId
+                      ? `${ADMIN}/projects/${r.projectId}`
+                      : `${ADMIN}/students`,
+                    amount: r.amount,
+                  })),
+                },
+                {
+                  label: "Costs paid back by clients",
+                  kind: "in",
+                  items: moveItems(
+                    assets.movements.filter(
+                      (m) => m.source === "repaid" && counted(m),
+                    ),
+                  ),
+                },
+                {
+                  label: "Company expenses",
+                  kind: "out",
+                  items: moveItems(
+                    assets.movements.filter(
+                      (m) => m.source === "bill" && counted(m),
+                    ),
+                  ),
+                },
+                {
+                  label: "Commission",
+                  kind: "out",
+                  items: commissions.map((c) => ({
+                    key: c.key,
+                    on: c.on,
+                    what: `${c.name}${c.percent ? ` · ${c.percent}%` : ""}${c.paidOn ? "" : " · to pay"}`,
+                    sub: c.what,
+                    href: c.projectId
+                      ? `${ADMIN}/projects/${c.projectId}`
+                      : `${ADMIN}/students`,
+                    amount: c.amount,
+                  })),
+                },
+                {
+                  label: "Other spends",
+                  kind: "out",
+                  items: moveItems(
+                    assets.movements.filter(
+                      (m) => m.source === "entry" && m.kind === "out",
+                    ),
+                  ),
+                },
+              ]}
+              aside={[
+                {
+                  label: "Personal use",
+                  lede: "profit taken out",
+                  kind: "out",
+                  items: moveItems(
+                    assets.movements.filter(
+                      (m) => m.source === "bill" && m.use === "personal",
+                    ),
+                  ),
+                },
+                {
+                  label: "Temporary",
+                  lede: "comes back",
+                  kind: "out",
+                  items: moveItems(
+                    assets.movements.filter(
+                      (m) => m.source === "bill" && m.use === "temporary",
+                    ),
+                  ),
+                },
+              ]}
+            />
             <p className="text-ink mt-5 mb-2 text-[0.875rem] font-semibold">
               Month by month
             </p>
             <Table
               head={["Month", "Revenue", "Costs", "Profit"]}
               flush
+              empty="Nothing in the last twelve months."
               rows={Array.from({ length: 12 }, (_, i) =>
                 addMonths(thisMonth, -i),
-              ).map((m) => {
-                const mine = events.filter((e) => e.on.startsWith(m));
-                const rev = sum(
-                  mine.filter((e) => e.type === "revenue"),
-                  (e) => e.amount,
-                );
-                const p = profitIn(m);
-                return [
-                  monthLabel(m),
-                  rupees.format(rev),
-                  rupees.format(rev - p),
-                  <strong
-                    key="p"
-                    className={p < 0 ? "text-danger" : "text-leaf-deep"}
-                  >
-                    {rupees.format(p)}
-                  </strong>,
-                ];
-              })}
+              )
+                // Only months where something happened.
+                .filter((m) => events.some((e) => e.on.startsWith(m)))
+                .map((m) => {
+                  const mine = events.filter((e) => e.on.startsWith(m));
+                  const rev = sum(
+                    mine.filter((e) => e.type === "revenue"),
+                    (e) => e.amount,
+                  );
+                  const p = profitIn(m);
+                  return [
+                    monthLabel(m),
+                    rupees.format(rev),
+                    rupees.format(rev - p),
+                    <strong
+                      key="p"
+                      className={p < 0 ? "text-danger" : "text-leaf-deep"}
+                    >
+                      {rupees.format(p)}
+                    </strong>,
+                  ];
+                })}
             />
           </div>
         </StatCard>
@@ -824,6 +837,187 @@ function BatchView({ batch: b }: { batch: Batch }) {
             Nobody in this batch yet.
           </li>
         )}
+      </ul>
+    </details>
+  );
+}
+
+type BreakdownItem = {
+  key: string;
+  on: string;
+  what: string;
+  sub?: string;
+  href?: string;
+  amount: number;
+};
+type BreakdownGroup = {
+  label: string;
+  lede?: string;
+  kind: "in" | "out";
+  items: BreakdownItem[];
+};
+
+/** Movements off the company's money as lines of a breakdown. */
+const moveItems = (
+  moves: Awaited<ReturnType<typeof loadAssets>>["movements"],
+): BreakdownItem[] =>
+  moves.map((m) => ({
+    key: m.key,
+    on: m.on,
+    what: m.reason,
+    sub: [m.project, m.repaidTo && `paid back to ${m.repaidTo}`]
+      .filter(Boolean)
+      .join(" · "),
+    href:
+      m.source === "entry"
+        ? undefined
+        : m.academy
+          ? `${ADMIN}/students`
+          : `${ADMIN}/projects/${m.id}`,
+    amount: m.amount,
+  }));
+
+/**
+ * The profit, line by line. Each line opens to what makes it up, newest
+ * first; the costs that are not counted sit below, opening the same way.
+ */
+function ProfitBreakdown({
+  profit,
+  groups,
+  aside,
+}: {
+  profit: number;
+  groups: BreakdownGroup[];
+  aside: BreakdownGroup[];
+}) {
+  const shown = aside.filter((g) => g.items.length > 0);
+  return (
+    <>
+      <div className="border-line divide-line-soft divide-y overflow-hidden rounded-xl border text-[0.875rem] tabular-nums">
+        {groups.map((g) => (
+          <BreakdownRow key={g.label} group={g} />
+        ))}
+        <div className="bg-mist/60 flex items-center justify-between gap-3 px-4 py-3">
+          <span className="text-ink font-semibold">Profit</span>
+          <span
+            className={cn(
+              "text-[1.0625rem] font-bold",
+              profit < 0 ? "text-danger" : "text-leaf-deep",
+            )}
+          >
+            {rupees.format(profit)}
+          </span>
+        </div>
+      </div>
+      {shown.length > 0 && (
+        <>
+          <p className="text-ink-faint mt-4 mb-1.5 text-[0.75rem]">
+            Not counted in the profit, though they still move the company
+            balance:
+          </p>
+          <div className="border-line divide-line-soft divide-y overflow-hidden rounded-xl border border-dashed text-[0.875rem] tabular-nums">
+            {shown.map((g) => (
+              <BreakdownRow key={g.label} group={g} muted />
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/** One line of the profit; opens to its entries, newest first. */
+function BreakdownRow({
+  group: g,
+  muted,
+}: {
+  group: BreakdownGroup;
+  muted?: boolean;
+}) {
+  const amount = sum(g.items, (i) => i.amount);
+  const items = [...g.items].sort((a, b) => b.on.localeCompare(a.on));
+  return (
+    <details className="group/row">
+      <summary
+        className={cn(
+          "hover:bg-mist/50 flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 transition-colors [&::-webkit-details-marker]:hidden",
+          items.length === 0 && "pointer-events-none",
+        )}
+      >
+        <ChevronRight
+          className={cn(
+            "text-ink-faint size-4 shrink-0 transition-transform group-open/row:rotate-90",
+            items.length === 0 && "opacity-0",
+          )}
+          aria-hidden
+        />
+        {g.kind === "in" ? (
+          <ArrowDownLeft className="text-leaf-deep size-4" aria-hidden />
+        ) : (
+          <ArrowUpRight className="text-ink-faint size-4" aria-hidden />
+        )}
+        <span className={muted ? "text-ink-faint" : "text-ink-soft"}>
+          {g.label}
+          {g.lede && (
+            <span className="text-ink-faint text-[0.75rem]"> · {g.lede}</span>
+          )}
+        </span>
+        <span className="text-ink-faint hidden text-[0.75rem] sm:inline">
+          {items.length > 0 &&
+            `${items.length} ${items.length === 1 ? "entry" : "entries"}`}
+        </span>
+        <span
+          className={cn(
+            "ml-auto font-semibold",
+            muted
+              ? "text-ink-faint"
+              : g.kind === "in"
+                ? "text-leaf-deep"
+                : "text-ink",
+          )}
+        >
+          {g.kind === "in" || muted ? "" : "− "}
+          {rupees.format(amount)}
+        </span>
+      </summary>
+      <ul className="bg-mist/30 border-line-soft divide-line-soft max-h-72 divide-y overflow-y-auto border-t">
+        {items.map((i) => {
+          const body = (
+            <>
+              <span className="text-ink-faint w-24 shrink-0 text-[0.75rem]">
+                {day(i.on)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="text-ink block truncate text-[0.8125rem]">
+                  {i.what}
+                </span>
+                {i.sub && (
+                  <span className="text-ink-faint block truncate text-[0.6875rem]">
+                    {i.sub}
+                  </span>
+                )}
+              </span>
+              <span className="text-ink shrink-0 text-[0.8125rem] font-semibold">
+                {rupees.format(i.amount)}
+              </span>
+            </>
+          );
+          const row = "flex items-center gap-3 py-2 pr-4 pl-11";
+          return (
+            <li key={i.key}>
+              {i.href ? (
+                <Link
+                  href={i.href}
+                  className={cn(row, "hover:bg-surface transition-colors")}
+                >
+                  {body}
+                </Link>
+              ) : (
+                <div className={row}>{body}</div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </details>
   );
