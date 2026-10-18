@@ -115,6 +115,31 @@ export default async function AdminRevenuePage({
     .sort((a, b) => b.owed - a.owed);
   const devOwed = sum(dev, (d) => d.owed);
 
+  // Expected: every project not lost, lead to delivered, at its agreed
+  // price less what its client has already paid. Our own companies aside.
+  const expected = money.projects
+    .filter(
+      (p) =>
+        p.status !== "lost" &&
+        !isOwnCompany(p.client, p.title) &&
+        num(p.value) > 0,
+    )
+    .map((p) => {
+      const received = money.paidByProject.get(p.id) ?? 0;
+      return {
+        id: p.id,
+        project: p.title,
+        client: p.client,
+        status: p.status,
+        value: num(p.value),
+        received,
+        toCome: Math.max(0, num(p.value) - received),
+      };
+    })
+    .filter((e) => e.toCome > 0)
+    .sort((a, b) => b.toCome - a.toCome);
+  const expectedTotal = sum(expected, (e) => e.toCome);
+
   // Clients: everyone we have agreed work with, our own companies aside.
   const clientMap = new Map<
     string,
@@ -227,6 +252,32 @@ export default async function AdminRevenuePage({
           lede={`Everything received in ${thisYear}.`}
         >
           <Receipts rows={yearRev} />
+        </StatCard>
+        <StatCard
+          label="Expected revenue"
+          value={rupees.format(expectedTotal)}
+          hint={
+            expected.length
+              ? `${expected.length} ${expected.length === 1 ? "project" : "projects"} still to pay`
+              : "Nothing expected"
+          }
+          lede="Money still to come: each project in lead, proposal, active, on hold or delivered, at its agreed price less what the client has already paid. Lost projects and our own companies are left out."
+        >
+          <Table
+            head={["Project", "Stage", "Agreed", "Paid", "Still to come"]}
+            empty="Nothing more is expected. Set a project's price to count it."
+            rows={expected.map((e) => [
+              <ProjectLink key="p" id={e.id} name={e.project} sub={e.client} />,
+              <StatusPill key="s" status={e.status} />,
+              rupees.format(e.value),
+              <span key="r" className="text-leaf-deep">
+                {rupees.format(e.received)}
+              </span>,
+              <strong key="o" className="text-brand-deep">
+                {rupees.format(e.toCome)}
+              </strong>,
+            ])}
+          />
         </StatCard>
         <StatCard
           label="All-time revenue"
