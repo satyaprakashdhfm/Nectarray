@@ -64,7 +64,7 @@ export default async function AdminIntegrationsPage({
 function Head() {
   return (
     <PageHead
-      title="Integrations"
+      title="External costs"
       lede={`What the services we build on cost, as tables you can sort, filter and compare. Tick two or more rows to set them side by side, or use Edit on a table to change prices and add services. Workbook prices checked ${CHECKED}.`}
     />
   );

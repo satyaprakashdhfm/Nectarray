@@ -62,13 +62,14 @@ const TOP: Tab[] = [
   { href: `${ADMIN}/quotes`, label: "Quotations", icon: FileText },
   { href: `${ADMIN}/tasks`, label: "Tasks & timeline", icon: ListChecks },
   { href: `${ADMIN}/workspace`, label: "Workspace", icon: SquareTerminal },
+  // What the services we build on cost.
+  { href: `${ADMIN}/integrations`, label: "External costs", icon: Plug },
 ];
 
 /**
  * Each service is its own group, holding its projects and the tools and
  * notes for doing that work: Marketing has the notes on Search Console, GA4,
- * ads and WhatsApp; Software has the website-building tabs and the
- * integrations (what the services we build on cost). Then the
+ * ads and WhatsApp; Software has the website-building tabs. Then the
  * academy.
  */
 const GROUPS: Group[] = [
@@ -90,18 +91,13 @@ const GROUPS: Group[] = [
     href: `${ADMIN}/services/software`,
     label: "Software",
     icon: Code,
-    owns: [
-      `${ADMIN}/services/software`,
-      `${ADMIN}/web`,
-      `${ADMIN}/integrations`,
-    ],
+    owns: [`${ADMIN}/services/software`, `${ADMIN}/web`],
     children: [
       {
         href: `${ADMIN}/services/software`,
         label: "Projects",
         icon: FolderKanban,
       },
-      { href: `${ADMIN}/integrations`, label: "Integrations", icon: Plug },
       { href: `${ADMIN}/web`, label: "Learnings", icon: Lightbulb },
       { href: `${ADMIN}/web/colours`, label: "Colours", icon: Palette },
       { href: `${ADMIN}/web/elements`, label: "Elements", icon: Component },
