@@ -222,6 +222,57 @@ export function QuoteBuilder({
     else if (kind === "line" && (part === "name" || part === "description"))
       ops.update(id, { [part]: value });
     else if (kind === "scope") ops.update(id, { includes: points(value) });
+    else if (kind === "note")
+      setBody((b) => ({
+        ...b,
+        doc: {
+          ...b.doc,
+          // A paragraph cleared of its words goes.
+          notes: (b.doc.notes ?? []).flatMap((n) =>
+            n.id !== id ? [n] : value ? [{ ...n, text: value }] : [],
+          ),
+        },
+      }));
+  }
+
+  /**
+   * A control clicked on the Document preview: a row added to a section, a
+   * paragraph added after a part, or a row taken off. Gives back the part
+   * to type in next.
+   */
+  function onAction(action: string): string | undefined {
+    const [kind, id] = action.split(":");
+    if (kind === "row") {
+      const line = blankLine(id);
+      setLines((ls) => {
+        const at = ls.findLastIndex((l) => l.section === id);
+        const next = [...ls];
+        next.splice(at + 1, 0, line);
+        return next;
+      });
+      return `line:${line.id}:name`;
+    }
+    if (kind === "text") {
+      const note = { id: newId(), after: id, text: "" };
+      setBody((b) => ({
+        ...b,
+        doc: { ...b.doc, notes: [...(b.doc.notes ?? []), note] },
+      }));
+      return `note:${note.id}`;
+    }
+    if (kind === "drop") {
+      // Rows typed on the page and left empty go; the rest stay unticked.
+      setLines((ls) =>
+        ls.flatMap((l) =>
+          l.id !== id
+            ? [l]
+            : !l.name.trim() && !l.ref
+              ? []
+              : [{ ...l, on: false }],
+        ),
+      );
+    }
+    return undefined;
   }
 
   const docData: QuoteDocData = useMemo(
@@ -358,6 +409,7 @@ export function QuoteBuilder({
           template={template}
           setDoc={setDoc}
           onEdit={onEdit}
+          onAction={onAction}
           setValidDays={(validDays) => setBody((b) => ({ ...b, validDays }))}
         />
       )}
@@ -1308,12 +1360,14 @@ function DocumentPane({
   template,
   setDoc,
   onEdit,
+  onAction,
   setValidDays,
 }: {
   data: QuoteDocData;
   template: QuoteTemplate;
   setDoc: (patch: Partial<QuoteDoc>) => void;
   onEdit: (field: string, value: string) => void;
+  onAction: (action: string) => string | undefined;
   setValidDays: (n: number) => void;
 }) {
   const { doc, validDays, lines } = data.body;
@@ -1327,6 +1381,7 @@ function DocumentPane({
         labels: template.labels,
         // Section names belong to the template; the rest is this quote's.
         editable: (f) => !f.startsWith("section:"),
+        adding: true,
       }),
     [data, template],
   );
@@ -1372,7 +1427,7 @@ function DocumentPane({
   function standard() {
     if (
       !window.confirm(
-        "Replace the opening, summary note, terms, questions paragraph, signature and any headings typed on the page with the template wording?",
+        "Replace the opening, summary note, terms, questions paragraph, signature, and any headings, amounts or notes typed over on the page, with the template wording? Paragraphs added on the page stay.",
       )
     )
       return;
@@ -1563,9 +1618,17 @@ function DocumentPane({
 
       <div className="min-w-0">
         <p className="text-ink-faint mb-2 text-[0.75rem]">
-          The page exactly as it prints. Click any paragraph to edit it.
+          The page exactly as it prints. Type on any part of it, amounts and
+          dates too. Use + Add a row and + Add text to add your own; the
+          controls do not print.
         </p>
-        <DocPreview html={html} frame={frame} onPick={pick} onEdit={onEdit} />
+        <DocPreview
+          html={html}
+          frame={frame}
+          onPick={pick}
+          onEdit={onEdit}
+          onAction={onAction}
+        />
       </div>
     </div>
   );
@@ -1579,7 +1642,7 @@ const A4_WIDTH = 794;
  * Parts marked data-edit report a click through onPick.
  */
 /** Parts of the page that hold more than one line. */
-const MULTILINE = /^doc:(intro|closing|summaryNote)$|:description$/;
+const MULTILINE = /^doc:(intro|closing|summaryNote)$|:description$|^note:/;
 
 /** What a typed-on part says: a list as one point a line. */
 function fieldText(el: HTMLElement) {
@@ -1598,6 +1661,7 @@ function fieldText(el: HTMLElement) {
 /** The page without its typing handles, for the Word file. */
 export function plainCopy(page: Document) {
   const copy = page.documentElement.cloneNode(true) as HTMLElement;
+  copy.querySelectorAll("[data-ui]").forEach((el) => el.remove());
   copy.querySelectorAll("[contenteditable]").forEach((el) => {
     el.removeAttribute("contenteditable");
     el.removeAttribute("spellcheck");
@@ -1613,23 +1677,30 @@ export function DocPreview({
   frame,
   onPick,
   onEdit,
+  onAction,
 }: {
   html: string;
   frame: React.RefObject<HTMLIFrameElement | null>;
   onPick?: (part: string) => void;
   /** A part typed on, by its data-field, once the cursor leaves it. */
   onEdit?: (field: string, value: string) => void;
+  /** A data-ui control clicked; gives back the part to type in next. */
+  onAction?: (action: string) => string | undefined;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const picker = useRef(onPick);
   const editor = useRef(onEdit);
+  const actor = useRef(onAction);
+  /** The part to put the cursor in when the page is next drawn. */
+  const next = useRef<string | null>(null);
   const [scale, setScale] = useState(1);
   const [height, setHeight] = useState(1123);
 
   useEffect(() => {
     picker.current = onPick;
     editor.current = onEdit;
-  }, [onPick, onEdit]);
+    actor.current = onAction;
+  }, [onPick, onEdit, onAction]);
 
   useEffect(() => {
     const el = box.current;
@@ -1648,7 +1719,10 @@ export function DocPreview({
       const win = f?.contentWindow;
       if (!doc || !win) return;
       // Typing goes on where it was after the page is drawn again.
-      const typing = (doc.activeElement as HTMLElement | null)?.dataset?.field;
+      const typing =
+        next.current ??
+        (doc.activeElement as HTMLElement | null)?.dataset?.field;
+      next.current = null;
       doc.open();
       doc.write(html);
       doc.close();
@@ -1668,6 +1742,11 @@ export function DocPreview({
       }
       doc.addEventListener("click", (e) => {
         const target = e.target as Element | null;
+        const ui = target?.closest?.("[data-ui]")?.getAttribute("data-ui");
+        if (ui) {
+          next.current = actor.current?.(ui) ?? null;
+          return;
+        }
         if (target?.closest?.("[contenteditable]")) return;
         const part = target
           ?.closest?.("[data-edit]")
@@ -1686,7 +1765,12 @@ export function DocPreview({
         );
         if (!el?.dataset.field) return;
         const value = fieldText(el);
-        if (value !== el.dataset.was) editor.current?.(el.dataset.field, value);
+        // A new paragraph left empty is reported too, so it goes.
+        if (
+          value !== el.dataset.was ||
+          (!value && el.dataset.field.startsWith("note:"))
+        )
+          editor.current?.(el.dataset.field, value);
       });
       // Enter ends a one-line part; lists and paragraphs take new lines.
       doc.addEventListener("keydown", (e) => {

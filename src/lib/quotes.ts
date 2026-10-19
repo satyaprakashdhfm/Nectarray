@@ -71,9 +71,16 @@ export type QuoteDoc = {
   signerRole: string;
   /** Which parts the printed quote shows. */
   show: DocShow;
-  /** Headings typed on this quote's page, over the template's. */
+  /**
+   * Headings typed on this quote's page, over the template's, and any
+   * worked-out part typed over (an amount, a date, a note under a price).
+   */
   labels?: Record<string, string>;
+  /** Paragraphs added on the page, each after the part named in `after`. */
+  notes?: DocNote[];
 };
+
+export type DocNote = { id: string; after: string; text: string };
 
 export type DocShow = {
   summary: boolean;
@@ -801,10 +808,21 @@ export function cleanDoc(input: unknown): QuoteDoc {
   const labels = Object.fromEntries(
     Object.entries((d.labels ?? {}) as Record<string, unknown>)
       .filter(([k, v]) => /^[a-zA-Z]{1,30}$/.test(k) && typeof v === "string")
-      .slice(0, 30)
+      .slice(0, 80)
       .map(([k, v]) => [k, (v as string).trim().slice(0, 200)]),
   );
   const labelsSet = Object.keys(labels).length > 0;
+  const notes = (Array.isArray(d.notes) ? d.notes : [])
+    .slice(0, 40)
+    .map((raw): DocNote => {
+      const n = (raw ?? {}) as Partial<DocNote>;
+      return {
+        id: str(n.id, 64) || newId(),
+        after: str(n.after, 60),
+        text: str(n.text, 2000),
+      };
+    })
+    .filter((n) => /^[a-z0-9:-]{1,60}$/.test(n.after));
   return {
     intro: text(d.intro, "", 4000),
     understanding: text(d.understanding, "", 8000),
@@ -824,6 +842,7 @@ export function cleanDoc(input: unknown): QuoteDoc {
       signatures: flag("signatures"),
     },
     ...(labelsSet ? { labels } : {}),
+    ...(notes.length ? { notes } : {}),
   };
 }
 
