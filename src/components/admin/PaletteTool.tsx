@@ -75,7 +75,8 @@ const same = (a: Palette, b: Palette) =>
  * Pick three colours and see them on a whole website.
  *
  * Left: a button for each colour that opens a colour picker, the light,
- * medium and dark shade it makes, and ready palettes. Right: one sample
+ * medium and dark shade it makes, ready palettes, and the job each colour
+ * does on a page. Right: one sample
  * website with almost every kind of component, repainted as you pick.
  */
 export function PaletteTool() {
@@ -115,10 +116,11 @@ export function PaletteTool() {
             Click a colour to change it.
           </p>
           <div className="mt-4 space-y-3">
-            {ROLES.map(({ role, label }) => (
+            {ROLES.map(({ role, label, job }) => (
               <ColourButton
                 key={role}
                 label={label}
+                job={job}
                 value={palette[role]}
                 open={open === role}
                 onOpen={() => setOpen(open === role ? null : role)}
@@ -156,6 +158,9 @@ export function PaletteTool() {
                     type="button"
                     onClick={() => setPalette(preset.palette)}
                     aria-pressed={active}
+                    title={ROLES.map(
+                      ({ role, label }) => `${label} ${preset.palette[role]}`,
+                    ).join(", ")}
                     className={cn(
                       "w-full overflow-hidden rounded-lg border text-left transition-colors",
                       active
@@ -180,6 +185,39 @@ export function PaletteTool() {
               );
             })}
           </ul>
+        </div>
+
+        <div className="card p-4">
+          <p className="text-ink text-[0.9375rem] font-semibold">
+            What each colour is for
+          </p>
+          <p className="text-ink-faint mt-0.5 text-[0.75rem]">
+            The same jobs in every palette, ready or your own.
+          </p>
+          <div className="mt-4 space-y-4">
+            {ROLES.map(({ role, label, job, uses, note }) => (
+              <section key={role}>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="ring-line size-4 shrink-0 rounded ring-1 ring-inset"
+                    style={{ background: palette[role] }}
+                  />
+                  <p className="text-ink text-[0.8125rem] font-semibold">
+                    {label}{" "}
+                    <span className="text-ink-faint font-normal">· {job}</span>
+                  </p>
+                </div>
+                <ul className="text-ink-soft mt-1.5 list-disc space-y-0.5 pl-[2.1rem] text-[0.75rem] leading-snug">
+                  {uses.map((use) => (
+                    <li key={use}>{use}</li>
+                  ))}
+                </ul>
+                <p className="text-ink-faint mt-1.5 pl-6 text-[0.75rem] leading-snug">
+                  {note}
+                </p>
+              </section>
+            ))}
+          </div>
         </div>
       </aside>
 
@@ -236,6 +274,7 @@ export function PaletteTool() {
  */
 function ColourButton({
   label,
+  job,
   value,
   open,
   onOpen,
@@ -243,6 +282,7 @@ function ColourButton({
   onChange,
 }: {
   label: string;
+  job: string;
   value: string;
   open: boolean;
   onOpen: () => void;
@@ -287,6 +327,9 @@ function ColourButton({
         <span className="min-w-0 flex-1">
           <span className="text-ink block text-[0.875rem] font-semibold">
             {label}
+          </span>
+          <span className="text-ink-faint block truncate text-[0.75rem]">
+            {job}
           </span>
           <span className="text-ink-faint block font-mono text-[0.75rem]">
             {value}

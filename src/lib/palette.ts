@@ -13,10 +13,56 @@ import { useSyncExternalStore } from "react";
 export type Palette = { primary: string; secondary: string; tertiary: string };
 export type Role = keyof Palette;
 
-export const ROLES: { role: Role; label: string; prefix: string }[] = [
-  { role: "primary", label: "Primary", prefix: "p" },
-  { role: "secondary", label: "Secondary", prefix: "s" },
-  { role: "tertiary", label: "Tertiary", prefix: "t" },
+export const ROLES: {
+  role: Role;
+  label: string;
+  prefix: string;
+  /** The colour's job, in a few words. */
+  job: string;
+  /** Where it goes on a page. */
+  uses: string[];
+  /** How to use its light and dark shades, or what to avoid. */
+  note: string;
+}[] = [
+  {
+    role: "primary",
+    label: "Primary",
+    prefix: "p",
+    job: "The main interactive colour",
+    uses: [
+      "Main buttons: Apply, Book now, Get started",
+      "Links and the active menu item",
+      "Selected tabs, pagination and toggles",
+      "Key icons, focus rings and progress bars",
+    ],
+    note: "Its light tint marks selected backgrounds; its dark shade is the hover state.",
+  },
+  {
+    role: "secondary",
+    label: "Secondary",
+    prefix: "s",
+    job: "Supporting emphasis",
+    uses: [
+      "Second buttons and important alternative actions",
+      "A featured testimonial or selected feature card",
+      "Promotions, notification highlights and selected badges",
+      "Small illustrations and decorative accents",
+    ],
+    note: "Use its pale tint for larger areas instead of filling many cards with the full colour.",
+  },
+  {
+    role: "tertiary",
+    label: "Tertiary",
+    prefix: "t",
+    job: "Occasional highlights",
+    uses: [
+      "Star ratings and achievement markers",
+      "Small promotional labels and decorative icons",
+      "Selected chart data and illustrations",
+      "Premium indicators and special highlights",
+    ],
+    note: "Keep it off large amounts of text and off the background of major sections.",
+  },
 ];
 
 export const SHADES = [
@@ -58,6 +104,28 @@ export const PRESETS: { name: string; palette: Palette }[] = [
   {
     name: "Charcoal and rose",
     palette: { primary: "#272d36", secondary: "#e8436d", tertiary: "#2ec4b6" },
+  },
+  // Three-colour sets: the deep, strong colour leads, the lightest is kept
+  // for highlights, and the one left over supports.
+  {
+    name: "Saddle and tan",
+    palette: { primary: "#733f2d", secondary: "#a67153", tertiary: "#d99962" },
+  },
+  {
+    name: "Fern and lime",
+    palette: { primary: "#4f772d", secondary: "#90a955", tertiary: "#ecf39e" },
+  },
+  {
+    name: "Deep space",
+    palette: { primary: "#1d3557", secondary: "#457b9d", tertiary: "#a8dadc" },
+  },
+  {
+    name: "Ember and jasmine",
+    palette: { primary: "#bf0603", secondary: "#8d0801", tertiary: "#f4d58d" },
+  },
+  {
+    name: "Plum and cocoa",
+    palette: { primary: "#402a2c", secondary: "#241715", tertiary: "#703d57" },
   },
 ];
 
