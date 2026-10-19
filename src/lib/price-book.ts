@@ -2434,6 +2434,11 @@ const WORKBOOK: WorkbookSheet[] = [
             "We do, under maintenance.",
           ],
           [
+            "How do customers log in?",
+            'Shopify\'s own way: an email code or "Sign in with Shop". No "Continue with Google" or phone OTP out of the box; those need a paid app (often ₹1,000 to ₹5,000 a month) and still sit outside Shopify\'s checkout.',
+            "Whatever the client wants: Continue with Google, phone OTP, WhatsApp, or email, in one step.",
+          ],
+          [
             "Who owns it?",
             "Shopify. Stop paying and the store goes offline; moving away later is work.",
             "The client owns the code and the data, and can move hosts.",
@@ -2480,6 +2485,11 @@ const WORKBOOK: WorkbookSheet[] = [
             "Speed (page load)",
             "Good by default; slows as apps add scripts.",
             "Fast if built well (server-rendered, images optimised); we control every script.",
+          ],
+          [
+            "Customer login",
+            'New customer accounts use a one-time email code or Shop Pay\'s "Sign in with Shop"; Google, Facebook or phone OTP login only through third-party apps (on Plus, through Multipass or an identity provider). Every login is a Shopify account, tied to Shop.',
+            "Our own auth (Auth.js or similar): Google, phone OTP via an SMS gateway (about ₹0.15 to ₹0.25 a message), WhatsApp or email; the customer list is ours.",
           ],
           [
             "Data and lock-in",
