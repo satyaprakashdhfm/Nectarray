@@ -20,7 +20,7 @@ import { DOC_SHOW_FIELDS } from "@/lib/quotes";
 import { cn } from "@/lib/utils";
 
 const WORDING: {
-  key: "intro" | "terms" | "nextSteps" | "closing";
+  key: "intro" | "terms" | "closing";
   label: string;
   hint: string;
   rows: number;
@@ -29,12 +29,6 @@ const WORDING: {
     key: "intro",
     label: "Opening paragraph",
     hint: "After “Dear” and the contact person's name.",
-    rows: 4,
-  },
-  {
-    key: "nextSteps",
-    label: "Next steps",
-    hint: "What happens after the client reads it. One step a line.",
     rows: 4,
   },
   {
@@ -82,7 +76,7 @@ export function TemplateEditor({
           ...sample,
           body: {
             ...sample.body,
-            doc: { ...t.doc, understanding: sample.body.doc.understanding },
+            doc: t.doc,
             validDays: t.validDays,
           },
         },

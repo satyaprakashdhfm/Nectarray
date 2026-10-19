@@ -18,7 +18,6 @@ import {
   quoteTotals,
 } from "@/lib/quotes";
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
-import { cleanCosts } from "@/lib/third-party-costs";
 import { cleanTemplate } from "@/lib/quote-template";
 import { todayIST } from "@/lib/work";
 
@@ -331,24 +330,4 @@ export async function resetQuoteTemplate() {
   await requireAdmin();
   await db.delete(quoteDefaults).where(eq(quoteDefaults.id, "template"));
   revalidatePath("/admin/quotes", "layout");
-}
-
-/** The Third-party costs tab. */
-export async function saveThirdPartyCosts(input: unknown) {
-  await requireAdmin();
-  const body = cleanCosts(input);
-  await db
-    .insert(quoteDefaults)
-    .values({ id: "costs", body })
-    .onConflictDoUpdate({
-      target: quoteDefaults.id,
-      set: { body, updatedAt: new Date() },
-    });
-  revalidatePath("/admin/quotes/costs");
-}
-
-export async function resetThirdPartyCosts() {
-  await requireAdmin();
-  await db.delete(quoteDefaults).where(eq(quoteDefaults.id, "costs"));
-  revalidatePath("/admin/quotes/costs");
 }

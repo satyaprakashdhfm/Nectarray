@@ -85,8 +85,6 @@ export const DOC_SHOW_FIELDS: { key: keyof DocShow; label: string }[] = [
   { key: "summary", label: "Investment summary" },
   { key: "descriptions", label: "Item descriptions" },
   { key: "scope", label: "Scope of work" },
-  { key: "understanding", label: "Our understanding" },
-  { key: "nextSteps", label: "Next steps" },
   { key: "terms", label: "Terms and notes" },
   { key: "signatures", label: "Acceptance" },
 ];
@@ -759,7 +757,7 @@ export const STANDARD_TERMS = [
 
 export const DEFAULT_DOC: QuoteDoc = {
   intro:
-    "Thank you for the opportunity to discuss your requirements. Based on our initial conversation, we are pleased to share this quotation for your review. It sets out the services requested, our understanding of the scope, and the investment for each.",
+    "Based on our initial conversation, we are pleased to share this quotation for your review. It sets out the services required, the scope of work and the investment.",
   understanding: "",
   terms: STANDARD_TERMS,
   nextSteps: [

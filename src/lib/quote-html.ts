@@ -1,12 +1,5 @@
 import { company as studio } from "@/lib/content/site";
-import {
-  discountOf,
-  lineTotal,
-  quoteTotals,
-  type Billing,
-  type QuoteBody,
-  type QuoteLine,
-} from "@/lib/quotes";
+import { quoteTotals, type QuoteBody, type QuoteLine } from "@/lib/quotes";
 import {
   defaultTemplate,
   sectionsFor,
@@ -105,9 +98,6 @@ const WASH = "#f2f6f9";
 const TINT = "#e7f1f6";
 const ACCENT = "#f5a44a";
 
-const per = (b: Billing) =>
-  b === "monthly" ? " / month" : b === "yearly" ? " / year" : "";
-
 export function quoteHtml(
   q: QuoteDocData,
   opts: {
@@ -124,26 +114,21 @@ export function quoteHtml(
   const show = doc.show;
   const t = quoteTotals(body);
   const on = body.lines.filter((l) => l.on);
-  const anyDiscount =
-    on.some((l) => l.discount.mode !== "none" && l.discount.value > 0) ||
-    t.overall > 0;
   const signer = doc.signer.trim();
   const para = (text: string) => esc(text.trim()).replace(/\n/g, "<br>");
 
   const heading = (text: string) =>
     `<table style="margin:26px 0 10px"><tr>
       <td style="width:4px;background:${ACCENT}"></td>
-      <td style="padding-left:10px;font-size:13pt;font-weight:700;color:${DEEP}">${text}</td>
+      <td style="padding-left:10px;font-size:14pt;font-weight:700;color:${DEEP}">${text}</td>
     </tr></table>`;
 
-  // Services table ----------------------------------------------------------
-  const cols = anyDiscount ? 4 : 2;
-  const th = (text: string, align = "right") =>
-    `<th style="text-align:${align};padding:9px 12px;font-size:8.5pt;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#ffffff">${text}</th>`;
+  // Services table: what is included, without a price on each row; the
+  // client sees only the final development and maintenance costs.
+  const th = (text: string) =>
+    `<th style="text-align:left;padding:9px 12px;font-size:9.5pt;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#ffffff">${text}</th>`;
   const td = (inner: string, extra = "") =>
     `<td style="padding:10px 12px;border-bottom:1px solid ${LINE};vertical-align:top;${extra}">${inner}</td>`;
-  const money = (n: number, b: Billing) =>
-    `${inr.format(n)}${b === "once" ? "" : `<span style="color:${FAINT};font-size:8.5pt">${per(b)}</span>`}`;
 
   let zebra = 0;
   const serviceRows = sectionsFor(body.lines, opts.sections ?? base.sections)
@@ -152,34 +137,20 @@ export function quoteHtml(
       if (rows.length === 0) return "";
       zebra = 0;
       return (
-        `<tr><td colspan="${cols}" style="padding:12px 12px 6px;background:${TINT};font-size:9pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND}">${esc(section.label)}</td></tr>` +
+        `<tr><td style="padding:12px 12px 6px;background:${TINT};font-size:10pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND}">${esc(section.label)}</td></tr>` +
         rows
           .map((r) => {
             if (r.kind === "group") {
-              return `<tr><td colspan="${cols}" style="padding:10px 12px 2px;font-weight:700;color:${INK}">${esc(r.name)}</td></tr>`;
+              return `<tr><td style="padding:10px 12px 2px;font-weight:700;color:${INK}">${esc(r.name)}</td></tr>`;
             }
             const l = r.line;
-            const off = discountOf(l.price, l.discount);
             const bg = zebra++ % 2 ? `background:${WASH};` : "";
             const what = `<div style="font-weight:600;color:${INK}">${esc(l.name || "Untitled")}</div>${
               l.description && show.descriptions
-                ? `<div style="color:${SOFT};font-size:9pt;margin-top:3px;line-height:1.45">${esc(l.description)}</div>`
+                ? `<div style="color:${SOFT};font-size:10pt;margin-top:3px;line-height:1.45">${esc(l.description)}</div>`
                 : ""
             }`;
-            return `<tr>${td(what, `${bg}${r.sub ? "padding-left:28px;" : ""}`)}${
-              anyDiscount
-                ? td(
-                    money(l.price, l.billing),
-                    `${bg}text-align:right;white-space:nowrap;color:${SOFT}`,
-                  ) +
-                  td(
-                    off
-                      ? `-${inr.format(off)}${l.discount.mode === "percent" ? `<br><span style="font-size:8.5pt;color:${FAINT}">${l.discount.value}% off</span>` : ""}`
-                      : "",
-                    `${bg}text-align:right;white-space:nowrap;color:${SOFT}`,
-                  )
-                : ""
-            }${td(money(lineTotal(l), l.billing), `${bg}text-align:right;white-space:nowrap;font-weight:700;color:${INK}`)}</tr>`;
+            return `<tr>${td(what, `${bg}${r.sub ? "padding-left:28px;" : ""}`)}</tr>`;
           })
           .join("")
       );
@@ -188,20 +159,17 @@ export function quoteHtml(
 
   const totalRow = (label: string, value: string, strong = false) =>
     strong
-      ? `<tr><td style="padding:10px 14px;background:${DEEP};color:#ffffff;font-weight:700">${label}</td><td style="padding:10px 14px;background:${DEEP};color:#ffffff;text-align:right;white-space:nowrap;font-weight:800;font-size:13pt">${value}</td></tr>`
+      ? `<tr><td style="padding:10px 14px;background:${DEEP};color:#ffffff;font-weight:700">${label}</td><td style="padding:10px 14px;background:${DEEP};color:#ffffff;text-align:right;white-space:nowrap;font-weight:800;font-size:14pt">${value}</td></tr>`
       : `<tr><td style="padding:6px 14px;color:${SOFT}">${label}</td><td style="padding:6px 14px;text-align:right;white-space:nowrap;color:${INK}">${value}</td></tr>`;
   const totals = [
-    t.onceList || t.onceTotal
-      ? (anyDiscount
-          ? totalRow("Subtotal", inr.format(t.onceList)) +
-            totalRow("Discount", `-${inr.format(t.onceSaved)}`)
-          : "") + totalRow("One-time total", inr.format(t.onceTotal), true)
+    t.onceTotal
+      ? totalRow("Development cost", inr.format(t.onceTotal), true)
       : "",
     t.monthlyTotal
-      ? totalRow("Monthly charges", `${inr.format(t.monthlyTotal)} / month`)
+      ? totalRow("Maintenance charges", `${inr.format(t.monthlyTotal)} / month`)
       : "",
     t.yearlyTotal
-      ? totalRow("Yearly charges", `${inr.format(t.yearlyTotal)} / year`)
+      ? totalRow("Maintenance charges", `${inr.format(t.yearlyTotal)} / year`)
       : "",
   ].join("");
 
@@ -209,9 +177,9 @@ export function quoteHtml(
   const tile = (label: string, value: string, note = "", dark = false) =>
     `<td style="padding:0 5px;vertical-align:top">
       <div style="padding:12px 14px;border-radius:8px;${dark ? `background:${DEEP};` : `background:${WASH};border:1px solid ${LINE};`}">
-        <div style="font-size:8pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${dark ? "#bfe3f2" : FAINT}">${label}</div>
-        <div style="font-size:15pt;font-weight:800;margin-top:4px;color:${dark ? "#ffffff" : INK}">${value}</div>
-        ${note ? `<div style="font-size:8.5pt;margin-top:2px;color:${dark ? "#bfe3f2" : FAINT}">${note}</div>` : ""}
+        <div style="font-size:9pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${dark ? "#bfe3f2" : FAINT}">${label}</div>
+        <div style="font-size:16pt;font-weight:800;margin-top:4px;color:${dark ? "#ffffff" : INK}">${value}</div>
+        ${note ? `<div style="font-size:9.5pt;margin-top:2px;color:${dark ? "#bfe3f2" : FAINT}">${note}</div>` : ""}
       </div>
     </td>`;
   const tiles = [
@@ -247,8 +215,8 @@ export function quoteHtml(
         <div style="font-weight:700;color:${INK}">${esc(s.line.name)}</div>
         ${
           s.items.length
-            ? `<ul style="margin:6px 0 0;padding-left:16px;color:${SOFT};font-size:9pt;line-height:1.5">${s.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`
-            : `<div style="margin-top:4px;color:${SOFT};font-size:9pt;line-height:1.5">${esc(s.line.description)}</div>`
+            ? `<ul style="margin:6px 0 0;padding-left:16px;color:${SOFT};font-size:10pt;line-height:1.5">${s.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`
+            : `<div style="margin-top:4px;color:${SOFT};font-size:10pt;line-height:1.5">${esc(s.line.description)}</div>`
         }
       </div>
     </td>`;
@@ -263,35 +231,11 @@ export function quoteHtml(
       ? `${heading(esc(L.scope))}<table>${scopePairs.join("")}</table>`
       : "";
 
-  // Understanding, next steps, terms -----------------------------------------
-  const understandingPoints = points(doc.understanding);
-  const understanding =
-    show.understanding && understandingPoints.length
-      ? `<div data-edit="understanding">${heading(esc(L.understanding))}
-        <div style="background:${WASH};border-radius:8px;padding:12px 16px">
-          <ul style="margin:0;padding-left:18px;color:${SOFT};line-height:1.6">${understandingPoints.map((p) => `<li style="margin:2px 0">${esc(p)}</li>`).join("")}</ul>
-        </div></div>`
-      : "";
-
-  const steps = points(doc.nextSteps);
-  const nextSteps =
-    show.nextSteps && steps.length
-      ? `<div data-edit="nextSteps">${heading(esc(L.nextSteps))}<table>${steps
-          .map(
-            (s, i) => `<tr>
-              <td style="width:30px;padding:5px 0;vertical-align:top">
-                <div style="width:22px;height:22px;line-height:22px;border-radius:11px;background:${BRAND};color:#ffffff;text-align:center;font-size:9pt;font-weight:700">${i + 1}</div>
-              </td>
-              <td style="padding:6px 0 6px 6px;color:${SOFT};vertical-align:top">${esc(s)}</td>
-            </tr>`,
-          )
-          .join("")}</table></div>`
-      : "";
-
+  // Terms -------------------------------------------------------------------
   const termPoints = points(doc.terms);
   const terms =
     show.terms && termPoints.length
-      ? `<div data-edit="terms">${heading(esc(L.notes))}<ol style="margin:0;padding-left:20px;color:${SOFT};font-size:9pt;line-height:1.6">${termPoints
+      ? `<div data-edit="terms">${heading(esc(L.notes))}<ol style="margin:0;padding-left:20px;color:${SOFT};font-size:10pt;line-height:1.6">${termPoints
           .map((p) => `<li style="margin:2px 0">${esc(p)}</li>`)
           .join("")}</ol></div>`
       : "";
@@ -299,10 +243,10 @@ export function quoteHtml(
   // Contact and acceptance -----------------------------------------------------
   const contact = `<table data-edit="closing" style="margin-top:26px;background:${TINT};border-radius:8px"><tr>
     <td style="padding:16px 18px;vertical-align:top">
-      <div style="font-weight:700;color:${DEEP};font-size:11.5pt">Questions? We are here to help.</div>
+      <div style="font-weight:700;color:${DEEP};font-size:12.5pt">Questions? We are here to help.</div>
       ${doc.closing.trim() ? `<div style="margin-top:4px;color:${SOFT}">${para(doc.closing)}</div>` : ""}
     </td>
-    <td style="padding:16px 18px;vertical-align:top;text-align:right;white-space:nowrap;color:${INK};font-size:9.5pt">
+    <td style="padding:16px 18px;vertical-align:top;text-align:right;white-space:nowrap;color:${INK};font-size:10.5pt">
       <div><span style="color:${FAINT}">Email</span>&nbsp; ${esc(studio.email)}</div>
       <div style="margin-top:3px"><span style="color:${FAINT}">Phone</span>&nbsp; ${esc(studio.phone)}</div>
       <div style="margin-top:3px"><span style="color:${FAINT}">Web</span>&nbsp; nectarray.com</div>
@@ -311,15 +255,15 @@ export function quoteHtml(
 
   const acceptance = show.signatures
     ? `<div data-edit="signatures">${heading("Acceptance")}
-      <p style="margin:0 0 6px;color:${SOFT};font-size:9.5pt">By signing below, both parties agree to the services and prices in this quotation.</p>
+      <p style="margin:0 0 6px;color:${SOFT};font-size:10.5pt">By signing below, both parties agree to the services and prices in this quotation.</p>
       <table style="margin-top:34px"><tr>
         <td style="width:50%;vertical-align:bottom;padding-right:28px">
           <div style="border-top:1px solid ${INK};padding-top:6px;font-weight:700;color:${INK}">${esc(L.signOurs)}</div>
-          <div style="color:${FAINT};font-size:9pt">${signer ? `${esc(signer)}${doc.signerRole.trim() ? `, ${esc(doc.signerRole.trim())}` : ""}` : "Authorised signatory"}</div>
+          <div style="color:${FAINT};font-size:10pt">${signer ? `${esc(signer)}${doc.signerRole.trim() ? `, ${esc(doc.signerRole.trim())}` : ""}` : "Authorised signatory"}</div>
         </td>
         <td style="width:50%;vertical-align:bottom">
           <div style="border-top:1px solid ${INK};padding-top:6px;font-weight:700;color:${INK}">${esc(L.signClient)} ${esc(q.company)}</div>
-          <div style="color:${FAINT};font-size:9pt">Name, signature and date</div>
+          <div style="color:${FAINT};font-size:10pt">Name, signature and date</div>
         </td>
       </tr></table></div>`
     : "";
@@ -331,12 +275,11 @@ export function quoteHtml(
   ]
     .filter(Boolean)
     .join("");
-  const greeting = q.contactName.trim()
-    ? `Dear ${esc(q.contactName.trim())},`
-    : "Dear Sir or Madam,";
+  // The contact person by name, else the company.
+  const greeting = `Dear ${esc(q.contactName.trim() || q.company.trim() || "Sir or Madam")},`;
   const meta = (label: string, value: string, last = false) =>
     `<td style="padding:10px 14px;vertical-align:top;${last ? "" : `border-right:1px solid ${LINE}`}">
-      <div style="font-size:7.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${label}</div>
+      <div style="font-size:8.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${label}</div>
       <div style="margin-top:2px;font-weight:600;color:${INK}">${value}</div>
     </td>`;
 
@@ -347,7 +290,7 @@ export function quoteHtml(
 <title>${esc(`${q.number} ${q.company}`)}</title>
 <style>
   @page { size: A4; margin: 14mm 14mm 16mm; }
-  body { font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.5; color: ${INK}; margin: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.5; color: ${INK}; margin: 0; }
   table { border-collapse: collapse; width: 100%; }
   tr, li { page-break-inside: avoid; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
@@ -365,37 +308,35 @@ export function quoteHtml(
     <table style="width:auto"><tr>
       ${opts.logo ? `<td style="padding-right:12px;vertical-align:middle"><div style="background:#ffffff;border-radius:8px;padding:5px 6px"><img src="${esc(opts.logo)}" width="38" height="34" alt=""></div></td>` : ""}
       <td style="vertical-align:middle">
-        <div style="font-size:19pt;font-weight:800;color:#ffffff;letter-spacing:-0.02em">${esc(studio.name)}</div>
-        <div style="color:#bfe3f2;font-size:8.5pt">${esc(studio.tagline)}</div>
+        <div style="font-size:20pt;font-weight:800;color:#ffffff;letter-spacing:-0.02em">${esc(studio.name)}</div>
+        <div style="color:#bfe3f2;font-size:9.5pt">${esc(studio.tagline)}</div>
       </td>
     </tr></table>
   </td>
   <td style="padding:20px 22px;vertical-align:middle;text-align:right">
-    <div style="font-size:21pt;font-weight:800;color:#ffffff;letter-spacing:0.12em;text-transform:uppercase">${esc(L.title)}</div>
-    <div style="color:${ACCENT};font-weight:700;font-size:10pt;margin-top:2px">${esc(q.number)}</div>
+    <div style="font-size:22pt;font-weight:800;color:#ffffff;letter-spacing:0.12em;text-transform:uppercase">${esc(L.title)}</div>
   </td>
 </tr></table>
 
 <table style="margin-top:12px;border:1px solid ${LINE}"><tr>
   ${meta("Date", longDate(q.quoteDate))}
   ${meta("Valid until", validUntil(q.quoteDate, body.validDays))}
-  ${meta("Prepared by", signer ? `${esc(signer)}, ${esc(studio.name)}` : esc(studio.name))}
   ${meta("Phone", esc(studio.phone), true)}
 </tr></table>
 
 <table style="margin-top:14px"><tr>
   <td style="width:50%;padding-right:7px;vertical-align:top">
     <div style="border:1px solid ${LINE};border-radius:8px;padding:12px 14px">
-      <div style="font-size:7.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${esc(L.preparedFor)}</div>
-      <div style="font-size:12.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.company)}</div>
-      <div style="color:${SOFT};font-size:9.5pt;margin-top:2px">${to}</div>
+      <div style="font-size:8.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${esc(L.preparedFor)}</div>
+      <div style="font-size:13.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.company)}</div>
+      <div style="color:${SOFT};font-size:10.5pt;margin-top:2px">${to}</div>
     </div>
   </td>
   <td style="width:50%;padding-left:7px;vertical-align:top">
     <div style="border:1px solid ${LINE};border-radius:8px;padding:12px 14px;background:${WASH}">
-      <div style="font-size:7.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${esc(L.project)}</div>
-      <div style="font-size:12.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.title || "Proposed services")}</div>
-      <div style="color:${SOFT};font-size:9.5pt;margin-top:2px">${on.length} ${on.length === 1 ? "service" : "services"} included</div>
+      <div style="font-size:8.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${esc(L.project)}</div>
+      <div style="font-size:13.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.title || "Proposed services")}</div>
+      <div style="color:${SOFT};font-size:10.5pt;margin-top:2px">${on.length} ${on.length === 1 ? "service" : "services"} included</div>
     </div>
   </td>
 </tr></table>
@@ -411,23 +352,21 @@ ${heading(esc(L.services))}
 ${
   on.length
     ? `<table style="border:1px solid ${LINE}">
-  <tr style="background:${DEEP}">${th("Service", "left")}${anyDiscount ? th("Price") + th("Discount") : ""}${th("Amount")}</tr>
+  <tr style="background:${DEEP}">${th("Service")}</tr>
   ${serviceRows}
 </table>
-<table style="width:55%;margin:12px 0 0 auto;border:1px solid ${LINE}">${totals}</table>`
+<table style="width:60%;margin:12px 0 0 auto;border:1px solid ${LINE}">${totals}</table>`
     : `<p style="color:${FAINT}">No services selected yet.</p>`
 }
 
 ${scope}
-${understanding}
-${nextSteps}
 ${terms}
 ${contact}
 ${acceptance}
 
 <table style="margin-top:30px;border-top:1px solid ${LINE}"><tr>
-  <td style="padding-top:8px;color:${FAINT};font-size:8pt">${esc(studio.name)} · ${esc(studio.email)} · ${esc(studio.phone)} · nectarray.com</td>
-  <td style="padding-top:8px;color:${FAINT};font-size:8pt;text-align:right">Thank you for considering ${esc(studio.name)}.</td>
+  <td style="padding-top:8px;color:${FAINT};font-size:9pt">${esc(studio.name)} · ${esc(studio.email)} · ${esc(studio.phone)} · nectarray.com</td>
+  <td style="padding-top:8px;color:${FAINT};font-size:9pt;text-align:right">Thank you for considering ${esc(studio.name)}.</td>
 </tr></table>
 </body>
 </html>`;

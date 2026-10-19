@@ -2,7 +2,7 @@ import { ADMIN } from "@/lib/admin-path";
 import { PageHead } from "@/components/admin/Business";
 import { QuotesNav } from "@/components/admin/QuotesNav";
 import { TemplateEditor } from "@/components/admin/TemplateEditor";
-import { scopeFor, understandingFromLines } from "@/lib/quotes";
+import { scopeFor } from "@/lib/quotes";
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
 
 export const dynamic = "force-dynamic";
@@ -37,15 +37,11 @@ export default async function AdminQuoteTemplatePage() {
           number: "NA-Q-SAMPLE",
           title: "Website and admin portal",
           company: "Sample Company",
-          contactName: "Owner",
+          contactName: "Ravi Kumar",
           phone: "+91 90000 00000",
           email: "hello@example.com",
           quoteDate: new Date().toISOString().slice(0, 10),
-          body: {
-            ...body,
-            lines,
-            doc: { ...body.doc, understanding: understandingFromLines(lines) },
-          },
+          body: { ...body, lines },
           scope: Object.fromEntries(
             lines.map((l) => [l.id, scopeFor(l, body.lines)]),
           ),

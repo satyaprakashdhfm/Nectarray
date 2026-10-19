@@ -43,8 +43,6 @@ export const LABEL_FIELDS: { key: keyof QuoteLabels; what: string }[] = [
   { key: "summary", what: "Above the investment summary" },
   { key: "services", what: "Above the table of services" },
   { key: "scope", what: "Above what each service includes" },
-  { key: "understanding", what: "Above the meeting notes" },
-  { key: "nextSteps", what: "Above the next steps" },
   { key: "notes", what: "Above the notes and terms" },
   { key: "signOurs", what: "Our signature line" },
   { key: "signClient", what: "Client's signature line, before their name" },
@@ -100,6 +98,9 @@ export function sectionsFor(
   return [...sections, ...extra];
 }
 
+const OLD_INTRO =
+  "Thank you for the opportunity to discuss your requirements. Based on our initial conversation, we are pleased to share this quotation for your review. It sets out the services requested, our understanding of the scope, and the investment for each.";
+
 const str = (v: unknown, max: number) =>
   typeof v === "string" ? v.slice(0, max) : "";
 
@@ -125,10 +126,13 @@ export function cleanTemplate(input: unknown): QuoteTemplate {
     if (v) labels[key] = v;
   }
   const valid = Math.round(Number(t.validDays));
+  const doc = cleanDoc(t.doc);
+  // A template saved with the old opening takes the new one.
+  if (doc.intro === OLD_INTRO) doc.intro = base.doc.intro;
   return {
     sections: sections.length ? sections : base.sections,
     labels,
-    doc: cleanDoc(t.doc),
+    doc,
     validDays: Number.isFinite(valid) && valid > 0 ? Math.min(valid, 365) : 30,
   };
 }

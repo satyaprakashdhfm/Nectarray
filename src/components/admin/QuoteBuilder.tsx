@@ -1273,14 +1273,12 @@ function ProjectsCard({
 
 // Document -------------------------------------------------------------------
 
-type TextKey = "intro" | "understanding" | "terms" | "nextSteps" | "closing";
+type TextKey = "intro" | "terms" | "closing";
 
 /** Which wording field each clickable part of the printed page opens. */
 const PICK: Record<string, string> = {
   intro: "intro",
-  understanding: "understanding",
   terms: "terms",
-  nextSteps: "nextSteps",
   closing: "closing",
   signatures: "signer",
 };
@@ -1347,19 +1345,10 @@ function DocumentPane({
     window.setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
-  function fill() {
-    if (
-      doc.understanding.trim() &&
-      !window.confirm("Replace what is written under Our understanding?")
-    )
-      return;
-    setDoc({ understanding: understandingFromLines(lines) });
-  }
-
   function standard() {
     if (
       !window.confirm(
-        "Replace the opening, terms, next steps, questions paragraph and signature with the template wording?",
+        "Replace the opening, terms, questions paragraph and signature with the template wording?",
       )
     )
       return;
@@ -1367,7 +1356,6 @@ function DocumentPane({
     setDoc({
       intro: t.intro,
       terms: t.terms,
-      nextSteps: t.nextSteps,
       closing: t.closing,
       signer: t.signer,
       signerRole: t.signerRole,
@@ -1451,40 +1439,12 @@ function DocumentPane({
             ),
           )}
           {box(
-            "understanding",
-            <>
-              {area(
-                "understanding",
-                "Our understanding of the requirements",
-                "Notes from the first meeting, one point a line.",
-                6,
-              )}
-              <button
-                type="button"
-                onClick={fill}
-                className="text-brand-deep hover:text-ink mt-1.5 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold"
-              >
-                <Sparkles className="size-3.5" aria-hidden />
-                Fill from the ticked rows
-              </button>
-            </>,
-          )}
-          {box(
             "terms",
             area(
               "terms",
               "Terms and notes",
               "Pricing, payment, third-party charges. One a line.",
               6,
-            ),
-          )}
-          {box(
-            "nextSteps",
-            area(
-              "nextSteps",
-              "Next steps",
-              "What happens after the client reads it. One step a line.",
-              4,
             ),
           )}
           {box(

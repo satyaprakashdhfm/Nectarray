@@ -1,6 +1,6 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
-import { FileText, IndianRupee, LayoutTemplate, Receipt } from "lucide-react";
+import { FileText, IndianRupee, LayoutTemplate } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -10,7 +10,6 @@ const TABS = [
     label: "Standard prices",
     icon: IndianRupee,
   },
-  { href: `${ADMIN}/quotes/costs`, label: "Third-party costs", icon: Receipt },
   { href: `${ADMIN}/quotes/template`, label: "Template", icon: LayoutTemplate },
 ];
 
