@@ -100,6 +100,23 @@ const WASH = "#f2f6f9";
 const TINT = "#e7f1f6";
 const ACCENT = "#f5a44a";
 
+/**
+ * A size set on a part (data-size, in points) made into its font-size, at
+ * the end of the part's own style so it wins, for print and Word alike.
+ */
+function withSizes(html: string) {
+  return html.replace(
+    /<([a-z]+)([^>]*?) data-size="([\d.]+)"([^>]*)>/g,
+    (_, tag, a, pt, b) => {
+      const rest = `${a}${b}`;
+      const size = `font-size:${pt}pt;line-height:1.4`;
+      return /\sstyle="/.test(rest)
+        ? `<${tag}${rest.replace(/\sstyle="([^"]*)"/, (_m, css) => ` style="${css.replace(/;?\s*$/, ";")}${size}"`)}>`
+        : `<${tag}${rest} style="${size}">`;
+    },
+  );
+}
+
 export function quoteHtml(
   q: QuoteDocData,
   opts: {
@@ -132,9 +149,10 @@ export function quoteHtml(
   const para = (text: string) => esc(text.trim()).replace(/\n/g, "<br>");
   /** The attributes that let a part be typed on, when it may be. */
   const E = (field: string, list = false) =>
-    opts.editable?.(field)
+    (doc.sizes?.[field] ? ` data-size="${doc.sizes[field]}"` : "") +
+    (opts.editable?.(field)
       ? ` data-field="${esc(field)}"${list ? ' data-list="1"' : ""} contenteditable="true" spellcheck="true"`
-      : "";
+      : "");
   const lab = (key: keyof QuoteLabels) =>
     `<span${E(`label:${key}`)}>${esc(L[key])}</span>`;
   /**
@@ -365,7 +383,7 @@ export function quoteHtml(
       <div style="margin-top:2px;font-weight:600;color:${INK}">${value}</div>
     </td>`;
 
-  return `<!doctype html>
+  return withSizes(`<!doctype html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
 <meta charset="utf-8">
@@ -463,5 +481,5 @@ ${acceptance}
   <td style="padding-top:8px;color:${FAINT};font-size:9pt;text-align:right">${lab("thanks")}</td>
 </tr></table>
 </body>
-</html>`;
+</html>`);
 }

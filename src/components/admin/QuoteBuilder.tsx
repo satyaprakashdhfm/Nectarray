@@ -39,6 +39,7 @@ import {
 import {
   DISCOUNT_PERCENTS,
   DOC_SHOW_FIELDS,
+  TEXT_SIZES,
   QUOTE_STATUSES,
   BILLINGS,
   billingOf,
@@ -1359,6 +1360,32 @@ function DocumentPane({
 }) {
   const { doc } = data.body;
   const frame = useRef<HTMLIFrameElement>(null);
+  /** The part of the page last clicked into, and its text size in points. */
+  const [focused, setFocused] = useState<{ field: string; pt: number } | null>(
+    null,
+  );
+  const size = focused ? (doc.sizes?.[focused.field] ?? focused.pt) : null;
+
+  /** A size for the part last clicked into, keeping what was typed in it. */
+  function setSize(pt: number | null) {
+    if (!focused) return;
+    const page = frame.current?.contentDocument;
+    const el = page?.querySelector<HTMLElement>(
+      `[data-field="${CSS.escape(focused.field)}"]`,
+    );
+    // Words typed but not yet saved would go when the page is redrawn.
+    if (el) {
+      const value = fieldText(el);
+      if (value !== el.dataset.was) {
+        el.dataset.was = value;
+        onEdit(focused.field, value);
+      }
+    }
+    const sizes = { ...doc.sizes };
+    if (pt === null) delete sizes[focused.field];
+    else sizes[focused.field] = Math.min(40, Math.max(6, pt));
+    setDoc({ sizes });
+  }
   const html = useMemo(
     () =>
       quoteHtml(data, {
@@ -1415,6 +1442,7 @@ function DocumentPane({
       signer: t.signer,
       signerRole: t.signerRole,
       labels: undefined,
+      sizes: undefined,
     });
   }
 
@@ -1467,6 +1495,60 @@ function DocumentPane({
             ))}
           </div>
         </details>
+        <div
+          className="border-line flex items-center gap-0.5 rounded-lg border p-0.5"
+          title={
+            focused
+              ? "Text size of the part you clicked on the page"
+              : "Click a text on the page first, then change its size"
+          }
+        >
+          <button
+            type="button"
+            disabled={!size}
+            // Keeps the cursor on the page while the bar is clicked.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => size && setSize(Math.max(6, Math.round(size) - 1))}
+            aria-label="Smaller text"
+            className="text-ink-soft hover:bg-mist hover:text-ink rounded-md px-2 py-1 text-[0.75rem] font-bold disabled:opacity-40"
+          >
+            A−
+          </button>
+          <select
+            value={size ? String(size) : ""}
+            disabled={!focused}
+            onChange={(e) =>
+              setSize(
+                e.target.value === "default" ? null : Number(e.target.value),
+              )
+            }
+            aria-label="Text size"
+            className="text-ink bg-transparent px-1 py-1 text-[0.8125rem] font-semibold disabled:opacity-40"
+          >
+            {!focused && <option value="">Size</option>}
+            {size && !TEXT_SIZES.includes(size) && (
+              <option value={String(size)}>{size}</option>
+            )}
+            {TEXT_SIZES.map((n) => (
+              <option key={n} value={String(n)}>
+                {n}
+              </option>
+            ))}
+            {focused && doc.sizes?.[focused.field] && (
+              <option value="default">Default size</option>
+            )}
+          </select>
+          <button
+            type="button"
+            disabled={!size}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => size && setSize(Math.min(40, Math.round(size) + 1))}
+            aria-label="Bigger text"
+            className="text-ink-soft hover:bg-mist hover:text-ink rounded-md px-2 py-1 text-[0.9375rem] font-bold disabled:opacity-40"
+          >
+            A+
+          </button>
+        </div>
         <button
           type="button"
           onClick={standard}
@@ -1475,8 +1557,8 @@ function DocumentPane({
           Use the template wording
         </button>
         <p className="text-ink-faint ml-auto text-[0.75rem]">
-          Type on any part of the page. For a PDF, pick Save as PDF when
-          printing. The + controls do not print.
+          Type on any part of the page; click a text, then A− or A+ to size it.
+          For a PDF, pick Save as PDF when printing.
         </p>
       </div>
       <DocPreview
@@ -1484,6 +1566,7 @@ function DocumentPane({
         frame={frame}
         onEdit={onEdit}
         onAction={onAction}
+        onFocusField={(field, pt) => setFocused({ field, pt })}
         fill
       />
     </div>
@@ -1534,12 +1617,15 @@ export function DocPreview({
   onPick,
   onEdit,
   onAction,
+  onFocusField,
   fill = false,
 }: {
   html: string;
   frame: React.RefObject<HTMLIFrameElement | null>;
   /** Scale the page up to the full width, not only down to fit. */
   fill?: boolean;
+  /** A part clicked into, with its text size in points. */
+  onFocusField?: (field: string, pt: number) => void;
   onPick?: (part: string) => void;
   /** A part typed on, by its data-field, once the cursor leaves it. */
   onEdit?: (field: string, value: string) => void;
@@ -1550,6 +1636,7 @@ export function DocPreview({
   const picker = useRef(onPick);
   const editor = useRef(onEdit);
   const actor = useRef(onAction);
+  const focuser = useRef(onFocusField);
   /** The part to put the cursor in when the page is next drawn. */
   const next = useRef<string | null>(null);
   const [scale, setScale] = useState(1);
@@ -1559,7 +1646,8 @@ export function DocPreview({
     picker.current = onPick;
     editor.current = onEdit;
     actor.current = onAction;
-  }, [onPick, onEdit, onAction]);
+    focuser.current = onFocusField;
+  }, [onPick, onEdit, onAction, onFocusField]);
 
   useEffect(() => {
     const el = box.current;
@@ -1589,16 +1677,6 @@ export function DocPreview({
         setHeight(Math.max(1123, doc.documentElement.scrollHeight));
       measure();
       win.addEventListener("load", measure);
-      if (typing) {
-        const el = doc.querySelector<HTMLElement>(
-          `[data-field="${CSS.escape(typing)}"]`,
-        );
-        if (el) {
-          el.focus();
-          win.getSelection()?.selectAllChildren(el);
-          win.getSelection()?.collapseToEnd();
-        }
-      }
       doc.addEventListener("click", (e) => {
         const target = e.target as Element | null;
         const ui = target?.closest?.("[data-ui]")?.getAttribute("data-ui");
@@ -1616,7 +1694,10 @@ export function DocPreview({
         const el = (e.target as HTMLElement).closest<HTMLElement>(
           "[data-field]",
         );
-        if (el) el.dataset.was = fieldText(el);
+        if (!el?.dataset.field) return;
+        el.dataset.was = fieldText(el);
+        const px = parseFloat(win.getComputedStyle(el).fontSize) || 16;
+        focuser.current?.(el.dataset.field, Math.round(px * 0.75 * 2) / 2);
       });
       doc.addEventListener("focusout", (e) => {
         const el = (e.target as HTMLElement).closest<HTMLElement>(
@@ -1631,6 +1712,18 @@ export function DocPreview({
         )
           editor.current?.(el.dataset.field, value);
       });
+      // Back where the cursor was (or into a part just added), once the
+      // page listens, so the bar knows which part it is in.
+      if (typing) {
+        const el = doc.querySelector<HTMLElement>(
+          `[data-field="${CSS.escape(typing)}"]`,
+        );
+        if (el) {
+          el.focus();
+          win.getSelection()?.selectAllChildren(el);
+          win.getSelection()?.collapseToEnd();
+        }
+      }
       // Enter ends a one-line part; lists and paragraphs take new lines.
       doc.addEventListener("keydown", (e) => {
         const el = (e.target as HTMLElement).closest<HTMLElement>(

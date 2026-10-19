@@ -78,7 +78,12 @@ export type QuoteDoc = {
   labels?: Record<string, string>;
   /** Paragraphs added on the page, each after the part named in `after`. */
   notes?: DocNote[];
+  /** Text sizes set on the page, in points, by the part's field name. */
+  sizes?: Record<string, number>;
 };
+
+/** The text sizes offered on the Document tab, in points. */
+export const TEXT_SIZES = [8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28];
 
 export type DocNote = { id: string; after: string; text: string };
 
@@ -823,6 +828,18 @@ export function cleanDoc(input: unknown): QuoteDoc {
       };
     })
     .filter((n) => /^[a-z0-9:-]{1,60}$/.test(n.after));
+  const sizes = Object.fromEntries(
+    Object.entries((d.sizes ?? {}) as Record<string, unknown>)
+      .filter(
+        ([k, v]) =>
+          /^[a-z]{2,10}:[\w:-]{1,100}$/.test(k) &&
+          typeof v === "number" &&
+          v >= 6 &&
+          v <= 40,
+      )
+      .slice(0, 200)
+      .map(([k, v]) => [k, Math.round((v as number) * 2) / 2]),
+  );
   return {
     intro: text(d.intro, "", 4000),
     understanding: text(d.understanding, "", 8000),
@@ -843,6 +860,7 @@ export function cleanDoc(input: unknown): QuoteDoc {
     },
     ...(labelsSet ? { labels } : {}),
     ...(notes.length ? { notes } : {}),
+    ...(Object.keys(sizes).length ? { sizes } : {}),
   };
 }
 
