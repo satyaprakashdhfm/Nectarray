@@ -105,17 +105,34 @@ export function quoteHtml(
     /** From the Template tab; the built-in ones when left out. */
     sections?: QuoteSectionDef[];
     labels?: QuoteLabels;
+    /**
+     * Which parts can be typed on in the preview (see EditField). Left out,
+     * nothing can, as when printing or saving the Word file.
+     */
+    editable?: (field: string) => boolean;
   } = {},
 ) {
   const base = defaultTemplate();
-  const L = opts.labels ?? base.labels;
   const { body } = q;
   const doc = body.doc;
+  // A quote's own headings, typed on its page, over the template's.
+  const L: QuoteLabels = {
+    ...base.labels,
+    ...(opts.labels ?? {}),
+    ...(doc.labels ?? {}),
+  };
   const show = doc.show;
   const t = quoteTotals(body);
   const on = body.lines.filter((l) => l.on);
   const signer = doc.signer.trim();
   const para = (text: string) => esc(text.trim()).replace(/\n/g, "<br>");
+  /** The attributes that let a part be typed on, when it may be. */
+  const E = (field: string, list = false) =>
+    opts.editable?.(field)
+      ? ` data-field="${esc(field)}"${list ? ' data-list="1"' : ""} contenteditable="true" spellcheck="true"`
+      : "";
+  const lab = (key: keyof QuoteLabels) =>
+    `<span${E(`label:${key}`)}>${esc(L[key])}</span>`;
 
   const heading = (text: string) =>
     `<table style="margin:26px 0 10px"><tr>
@@ -130,27 +147,32 @@ export function quoteHtml(
   const td = (inner: string, extra = "") =>
     `<td style="padding:10px 12px;border-bottom:1px solid ${LINE};vertical-align:top;${extra}">${inner}</td>`;
 
+  // Each section numbered (1. Build), and each service within it (1.1, 1.2).
   let zebra = 0;
+  let sectionNo = 0;
   const serviceRows = sectionsFor(body.lines, opts.sections ?? base.sections)
     .map((section) => {
       const rows = sectionRows(body.lines, section.id);
       if (rows.length === 0) return "";
       zebra = 0;
+      const n = ++sectionNo;
+      let k = 0;
       return (
-        `<tr><td style="padding:12px 12px 6px;background:${TINT};font-size:10pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND}">${esc(section.label)}</td></tr>` +
+        `<tr><td colspan="2" style="padding:12px 12px 6px;background:${TINT};font-size:10pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND}">${n}.&nbsp; <span${E(`section:${section.id}`)}>${esc(section.label)}</span></td></tr>` +
         rows
           .map((r) => {
             if (r.kind === "group") {
-              return `<tr><td style="padding:10px 12px 2px;font-weight:700;color:${INK}">${esc(r.name)}</td></tr>`;
+              return `<tr><td colspan="2" style="padding:10px 12px 2px;font-weight:700;color:${INK}"><span${E(`group:${r.key}`)}>${esc(r.name)}</span></td></tr>`;
             }
             const l = r.line;
             const bg = zebra++ % 2 ? `background:${WASH};` : "";
-            const what = `<div style="font-weight:600;color:${INK}">${esc(l.name || "Untitled")}</div>${
-              l.description && show.descriptions
-                ? `<div style="color:${SOFT};font-size:10pt;margin-top:3px;line-height:1.45">${esc(l.description)}</div>`
+            const what = `<div${E(`line:${l.id}:name`)} style="font-weight:600;color:${INK}">${esc(l.name || "Untitled")}</div>${
+              show.descriptions &&
+              (l.description || E(`line:${l.id}:description`))
+                ? `<div${E(`line:${l.id}:description`)} style="color:${SOFT};font-size:10pt;margin-top:3px;line-height:1.45">${esc(l.description)}</div>`
                 : ""
             }`;
-            return `<tr>${td(what, `${bg}${r.sub ? "padding-left:28px;" : ""}`)}</tr>`;
+            return `<tr>${td(`${n}.${++k}`, `${bg}width:44px;padding-right:0;font-weight:600;color:${BRAND};white-space:nowrap;${r.sub ? "padding-left:28px;width:60px;" : ""}`)}${td(what, bg)}</tr>`;
           })
           .join("")
       );
@@ -161,48 +183,45 @@ export function quoteHtml(
     strong
       ? `<tr><td style="padding:10px 14px;background:${DEEP};color:#ffffff;font-weight:700">${label}</td><td style="padding:10px 14px;background:${DEEP};color:#ffffff;text-align:right;white-space:nowrap;font-weight:800;font-size:14pt">${value}</td></tr>`
       : `<tr><td style="padding:6px 14px;color:${SOFT}">${label}</td><td style="padding:6px 14px;text-align:right;white-space:nowrap;color:${INK}">${value}</td></tr>`;
+  // Maintenance with no charge on the quote shows as free, with the note.
+  const freeCare = !t.monthlyTotal && !t.yearlyTotal;
   const totals = [
-    t.onceTotal
-      ? totalRow("Development cost", inr.format(t.onceTotal), true)
-      : "",
+    totalRow(lab("devCost"), inr.format(t.onceTotal), true),
     t.monthlyTotal
-      ? totalRow("Maintenance charges", `${inr.format(t.monthlyTotal)} / month`)
+      ? totalRow(lab("maintenance"), `${inr.format(t.monthlyTotal)} / month`)
       : "",
     t.yearlyTotal
-      ? totalRow("Maintenance charges", `${inr.format(t.yearlyTotal)} / year`)
+      ? totalRow(lab("maintenance"), `${inr.format(t.yearlyTotal)} / year`)
       : "",
+    freeCare ? totalRow(lab("maintenance"), "Free*") : "",
   ].join("");
 
-  // At a glance -------------------------------------------------------------
+  // At a glance: the development cost and the maintenance charges ----------
   const tile = (label: string, value: string, note = "", dark = false) =>
-    `<td style="padding:0 5px;vertical-align:top">
+    `<td style="width:50%;padding:0 5px;vertical-align:top">
       <div style="padding:12px 14px;border-radius:8px;${dark ? `background:${DEEP};` : `background:${WASH};border:1px solid ${LINE};`}">
         <div style="font-size:9pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${dark ? "#bfe3f2" : FAINT}">${label}</div>
         <div style="font-size:16pt;font-weight:800;margin-top:4px;color:${dark ? "#ffffff" : INK}">${value}</div>
         ${note ? `<div style="font-size:9.5pt;margin-top:2px;color:${dark ? "#bfe3f2" : FAINT}">${note}</div>` : ""}
       </div>
     </td>`;
-  const tiles = [
-    tile("One-time", inr.format(t.onceTotal), "Build and set-up", true),
-    t.monthlyTotal
-      ? tile("Monthly", inr.format(t.monthlyTotal), "From go-live")
-      : "",
-    t.yearlyTotal
-      ? tile("Yearly", inr.format(t.yearlyTotal), "From go-live")
-      : "",
-    t.onceSaved > 0
-      ? tile("You save", inr.format(t.onceSaved), "On the one-time price")
-      : tile(
-          "Services",
-          String(on.length),
-          on.length === 1 ? "item included" : "items included",
-        ),
+  const care = [
+    t.monthlyTotal ? `${inr.format(t.monthlyTotal)} / month` : "",
+    t.yearlyTotal ? `${inr.format(t.yearlyTotal)} / year` : "",
   ]
     .filter(Boolean)
-    .join("");
+    .join(" + ");
+  const tiles =
+    tile(lab("devCost"), inr.format(t.onceTotal), "Paid once", true) +
+    tile(lab("maintenance"), care || "Free*", care ? "From go-live" : "");
+  const note = doc.summaryNote.trim();
   const summary =
     show.summary && on.length
-      ? `${heading(esc(L.summary))}<table><tr>${tiles}</tr></table>`
+      ? `${heading(lab("summary"))}<table><tr>${tiles}</tr></table>${
+          note || E("doc:summaryNote")
+            ? `<p${E("doc:summaryNote")} style="margin:8px 5px 0;color:${SOFT};font-size:10pt;line-height:1.5">${para(note)}</p>`
+            : ""
+        }`
       : "";
 
   // Scope of work ------------------------------------------------------------
@@ -212,10 +231,10 @@ export function quoteHtml(
   const scopeCard = (s: (typeof scoped)[number]) =>
     `<td style="width:50%;padding:5px;vertical-align:top">
       <div style="border:1px solid ${LINE};border-top:3px solid ${BRAND};border-radius:6px;padding:11px 13px">
-        <div style="font-weight:700;color:${INK}">${esc(s.line.name)}</div>
+        <div${E(`line:${s.line.id}:name`)} style="font-weight:700;color:${INK}">${esc(s.line.name)}</div>
         ${
-          s.items.length
-            ? `<ul style="margin:6px 0 0;padding-left:16px;color:${SOFT};font-size:10pt;line-height:1.5">${s.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`
+          s.items.length || E(`scope:${s.line.id}`)
+            ? `<ul${E(`scope:${s.line.id}`, true)} style="margin:6px 0 0;padding-left:16px;color:${SOFT};font-size:10pt;line-height:1.5">${(s.items.length ? s.items : [s.line.description]).map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`
             : `<div style="margin-top:4px;color:${SOFT};font-size:10pt;line-height:1.5">${esc(s.line.description)}</div>`
         }
       </div>
@@ -228,14 +247,17 @@ export function quoteHtml(
   }
   const scope =
     show.scope && scoped.length
-      ? `${heading(esc(L.scope))}<table>${scopePairs.join("")}</table>`
+      ? `${heading(lab("scope"))}<table>${scopePairs.join("")}</table>`
       : "";
 
   // Terms -------------------------------------------------------------------
   const termPoints = points(doc.terms);
   const terms =
-    show.terms && termPoints.length
-      ? `<div data-edit="terms">${heading(esc(L.notes))}<ol style="margin:0;padding-left:20px;color:${SOFT};font-size:10pt;line-height:1.6">${termPoints
+    show.terms && (termPoints.length || E("doc:terms"))
+      ? `<div data-edit="terms">${heading(lab("notes"))}<ol${E("doc:terms", true)} style="margin:0;padding-left:20px;color:${SOFT};font-size:10pt;line-height:1.6">${(termPoints.length
+          ? termPoints
+          : [""]
+        )
           .map((p) => `<li style="margin:2px 0">${esc(p)}</li>`)
           .join("")}</ol></div>`
       : "";
@@ -243,8 +265,8 @@ export function quoteHtml(
   // Contact and acceptance -----------------------------------------------------
   const contact = `<table data-edit="closing" style="margin-top:26px;background:${TINT};border-radius:8px"><tr>
     <td style="padding:16px 18px;vertical-align:top">
-      <div style="font-weight:700;color:${DEEP};font-size:12.5pt">Questions? We are here to help.</div>
-      ${doc.closing.trim() ? `<div style="margin-top:4px;color:${SOFT}">${para(doc.closing)}</div>` : ""}
+      <div style="font-weight:700;color:${DEEP};font-size:12.5pt">${lab("questions")}</div>
+      ${doc.closing.trim() || E("doc:closing") ? `<div${E("doc:closing")} style="margin-top:4px;color:${SOFT}">${para(doc.closing)}</div>` : ""}
     </td>
     <td style="padding:16px 18px;vertical-align:top;text-align:right;white-space:nowrap;color:${INK};font-size:10.5pt">
       <div><span style="color:${FAINT}">Email</span>&nbsp; ${esc(studio.email)}</div>
@@ -254,26 +276,32 @@ export function quoteHtml(
   </tr></table>`;
 
   const acceptance = show.signatures
-    ? `<div data-edit="signatures">${heading("Acceptance")}
-      <p style="margin:0 0 6px;color:${SOFT};font-size:10.5pt">By signing below, both parties agree to the services and prices in this quotation.</p>
+    ? `<div data-edit="signatures">${heading(lab("acceptance"))}
+      <p style="margin:0 0 6px;color:${SOFT};font-size:10.5pt">${lab("acceptanceNote")}</p>
       <table style="margin-top:34px"><tr>
         <td style="width:50%;vertical-align:bottom;padding-right:28px">
-          <div style="border-top:1px solid ${INK};padding-top:6px;font-weight:700;color:${INK}">${esc(L.signOurs)}</div>
+          <div style="border-top:1px solid ${INK};padding-top:6px;font-weight:700;color:${INK}">${lab("signOurs")}</div>
           <div style="color:${FAINT};font-size:10pt">${signer ? `${esc(signer)}${doc.signerRole.trim() ? `, ${esc(doc.signerRole.trim())}` : ""}` : "Authorised signatory"}</div>
         </td>
         <td style="width:50%;vertical-align:bottom">
-          <div style="border-top:1px solid ${INK};padding-top:6px;font-weight:700;color:${INK}">${esc(L.signClient)} ${esc(q.company)}</div>
+          <div style="border-top:1px solid ${INK};padding-top:6px;font-weight:700;color:${INK}">${lab("signClient")} ${esc(q.company)}</div>
           <div style="color:${FAINT};font-size:10pt">Name, signature and date</div>
         </td>
       </tr></table></div>`
     : "";
 
-  const to = [
-    q.contactName && `<div style="color:${INK}">${esc(q.contactName)}</div>`,
-    q.phone && `<div>${esc(q.phone)}</div>`,
-    q.email && `<div>${esc(q.email)}</div>`,
-  ]
-    .filter(Boolean)
+  const to = (
+    [
+      ["contactName", q.contactName, `color:${INK}`],
+      ["phone", q.phone, ""],
+      ["email", q.email, ""],
+    ] as const
+  )
+    .filter(([key, value]) => value || E(`meta:${key}`))
+    .map(
+      ([key, value, style]) =>
+        `<div${E(`meta:${key}`)} style="${style}">${esc(value)}</div>`,
+    )
     .join("");
   // The contact person by name, else the company.
   const greeting = `Dear ${esc(q.contactName.trim() || q.company.trim() || "Sir or Madam")},`;
@@ -298,6 +326,10 @@ export function quoteHtml(
     body { padding: 36px 44px; }
     [data-edit] { cursor: pointer; border-radius: 6px; transition: background-color .15s; }
     [data-edit]:hover { background: #eef6fa; outline: 1px dashed #10688f99; outline-offset: 4px; }
+    [contenteditable] { cursor: text; border-radius: 3px; }
+    [contenteditable]:hover { outline: 1px dashed #10688f99; outline-offset: 2px; }
+    [contenteditable]:focus { outline: 2px solid #10688f; outline-offset: 2px; background: #ffffff; color: ${INK}; }
+    [contenteditable]:empty::before { content: "Type here"; color: ${FAINT}; }
   }
 </style>
 </head>
@@ -314,7 +346,7 @@ export function quoteHtml(
     </tr></table>
   </td>
   <td style="padding:20px 22px;vertical-align:middle;text-align:right">
-    <div style="font-size:22pt;font-weight:800;color:#ffffff;letter-spacing:0.12em;text-transform:uppercase">${esc(L.title)}</div>
+    <div style="font-size:22pt;font-weight:800;color:#ffffff;letter-spacing:0.12em;text-transform:uppercase">${lab("title")}</div>
   </td>
 </tr></table>
 
@@ -327,32 +359,31 @@ export function quoteHtml(
 <table style="margin-top:14px"><tr>
   <td style="width:50%;padding-right:7px;vertical-align:top">
     <div style="border:1px solid ${LINE};border-radius:8px;padding:12px 14px">
-      <div style="font-size:8.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${esc(L.preparedFor)}</div>
-      <div style="font-size:13.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.company)}</div>
+      <div style="font-size:8.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${lab("preparedFor")}</div>
+      <div${E("meta:company")} style="font-size:13.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.company)}</div>
       <div style="color:${SOFT};font-size:10.5pt;margin-top:2px">${to}</div>
     </div>
   </td>
   <td style="width:50%;padding-left:7px;vertical-align:top">
     <div style="border:1px solid ${LINE};border-radius:8px;padding:12px 14px;background:${WASH}">
-      <div style="font-size:8.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${esc(L.project)}</div>
-      <div style="font-size:13.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.title || "Proposed services")}</div>
-      <div style="color:${SOFT};font-size:10.5pt;margin-top:2px">${on.length} ${on.length === 1 ? "service" : "services"} included</div>
+      <div style="font-size:8.5pt;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${FAINT}">${lab("project")}</div>
+      <div${E("meta:title")} style="font-size:13.5pt;font-weight:700;color:${INK};margin-top:3px">${esc(q.title || (E("meta:title") ? "" : "Proposed services"))}</div>
     </div>
   </td>
 </tr></table>
 
 <div data-edit="intro" style="margin-top:20px">
   <p style="margin:0;color:${INK};font-weight:600">${greeting}</p>
-  ${doc.intro.trim() ? `<p style="margin:8px 0 0;color:${SOFT};line-height:1.65">${para(doc.intro)}</p>` : ""}
+  ${doc.intro.trim() || E("doc:intro") ? `<p${E("doc:intro")} style="margin:8px 0 0;color:${SOFT};line-height:1.65">${para(doc.intro)}</p>` : ""}
 </div>
 
 ${summary}
 
-${heading(esc(L.services))}
+${heading(lab("services"))}
 ${
   on.length
     ? `<table style="border:1px solid ${LINE}">
-  <tr style="background:${DEEP}">${th("Service")}</tr>
+  <tr style="background:${DEEP}">${th("#")}${th("Service")}</tr>
   ${serviceRows}
 </table>
 <table style="width:60%;margin:12px 0 0 auto;border:1px solid ${LINE}">${totals}</table>`
@@ -366,7 +397,7 @@ ${acceptance}
 
 <table style="margin-top:30px;border-top:1px solid ${LINE}"><tr>
   <td style="padding-top:8px;color:${FAINT};font-size:9pt">${esc(studio.name)} · ${esc(studio.email)} · ${esc(studio.phone)} · nectarray.com</td>
-  <td style="padding-top:8px;color:${FAINT};font-size:9pt;text-align:right">Thank you for considering ${esc(studio.name)}.</td>
+  <td style="padding-top:8px;color:${FAINT};font-size:9pt;text-align:right">${lab("thanks")}</td>
 </tr></table>
 </body>
 </html>`;

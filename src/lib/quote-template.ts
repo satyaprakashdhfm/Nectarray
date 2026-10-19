@@ -26,6 +26,12 @@ export type QuoteLabels = {
   notes: string;
   signOurs: string;
   signClient: string;
+  devCost: string;
+  maintenance: string;
+  questions: string;
+  acceptance: string;
+  acceptanceNote: string;
+  thanks: string;
 };
 
 export type QuoteTemplate = {
@@ -41,11 +47,20 @@ export const LABEL_FIELDS: { key: keyof QuoteLabels; what: string }[] = [
   { key: "preparedFor", what: "Above the client's name" },
   { key: "project", what: "Before the project name" },
   { key: "summary", what: "Above the investment summary" },
+  { key: "devCost", what: "The development cost, in the summary and totals" },
+  {
+    key: "maintenance",
+    what: "The maintenance charges, in the summary and totals",
+  },
   { key: "services", what: "Above the table of services" },
   { key: "scope", what: "Above what each service includes" },
   { key: "notes", what: "Above the notes and terms" },
+  { key: "questions", what: "Top of the contact box" },
+  { key: "acceptance", what: "Above the signatures" },
+  { key: "acceptanceNote", what: "The line above the signatures" },
   { key: "signOurs", what: "Our signature line" },
   { key: "signClient", what: "Client's signature line, before their name" },
+  { key: "thanks", what: "Bottom right of the page" },
 ];
 
 export const DEFAULT_LABELS: QuoteLabels = {
@@ -60,6 +75,13 @@ export const DEFAULT_LABELS: QuoteLabels = {
   notes: "Terms and notes",
   signOurs: "For NectArray",
   signClient: "Accepted for",
+  devCost: "Development cost",
+  maintenance: "Maintenance charges",
+  questions: "Questions? We are here to help.",
+  acceptance: "Acceptance",
+  acceptanceNote:
+    "By signing below, both parties agree to the services and prices in this quotation.",
+  thanks: "Thank you for considering NectArray.",
 };
 
 export function defaultTemplate(): QuoteTemplate {
@@ -122,7 +144,7 @@ export function cleanTemplate(input: unknown): QuoteTemplate {
   const labels = { ...base.labels };
   const raw = (t.labels ?? {}) as Partial<QuoteLabels>;
   for (const { key } of LABEL_FIELDS) {
-    const v = str(raw[key], 80).trim();
+    const v = str(raw[key], 200).trim();
     if (v) labels[key] = v;
   }
   const valid = Math.round(Number(t.validDays));

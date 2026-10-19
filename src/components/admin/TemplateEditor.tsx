@@ -20,7 +20,7 @@ import { DOC_SHOW_FIELDS } from "@/lib/quotes";
 import { cn } from "@/lib/utils";
 
 const WORDING: {
-  key: "intro" | "terms" | "closing";
+  key: "intro" | "summaryNote" | "terms" | "closing";
   label: string;
   hint: string;
   rows: number;
@@ -30,6 +30,12 @@ const WORDING: {
     label: "Opening paragraph",
     hint: "After “Dear” and the contact person's name.",
     rows: 4,
+  },
+  {
+    key: "summaryNote",
+    label: "Note under the investment summary",
+    hint: "Starred, below the development cost and maintenance charges.",
+    rows: 3,
   },
   {
     key: "terms",
@@ -80,7 +86,13 @@ export function TemplateEditor({
             validDays: t.validDays,
           },
         },
-        { logo: "/logo-mark.png", sections: t.sections, labels: t.labels },
+        {
+          logo: "/logo-mark.png",
+          sections: t.sections,
+          labels: t.labels,
+          // The sample's client and rows are not part of the template.
+          editable: (f) => /^(label|section|doc):/.test(f),
+        },
       ),
     [sample, t],
   );
@@ -100,6 +112,22 @@ export function TemplateEditor({
     });
   const setLabel = (key: keyof QuoteLabels, value: string) =>
     setT((x) => ({ ...x, labels: { ...x.labels, [key]: value } }));
+
+  /** A part typed on in the preview, back into the template. */
+  function onEdit(field: string, value: string) {
+    const [kind, id] = field.split(":");
+    if (kind === "label" && id in t.labels)
+      setLabel(id as keyof QuoteLabels, value);
+    else if (kind === "section")
+      setT((x) => ({
+        ...x,
+        sections: x.sections.map((s) =>
+          s.id === id ? { ...s, label: value || s.label } : s,
+        ),
+      }));
+    else if (kind === "doc")
+      setT((x) => ({ ...x, doc: { ...x.doc, [id]: value } }));
+  }
 
   function reset() {
     if (!window.confirm("Go back to the built-in template?")) return;
@@ -344,9 +372,10 @@ export function TemplateEditor({
 
       <div className="min-w-0 xl:sticky xl:top-[88px]">
         <p className="text-ink-faint mb-2 text-[0.75rem]">
-          A sample quote with this template, as it prints.
+          A sample quote with this template, as it prints. Click any heading or
+          wording on it to change it there.
         </p>
-        <DocPreview html={html} frame={frame} />
+        <DocPreview html={html} frame={frame} onEdit={onEdit} />
       </div>
     </div>
   );

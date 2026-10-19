@@ -64,11 +64,15 @@ export type QuoteDoc = {
   nextSteps: string;
   /** The last paragraph: who to contact with questions. */
   closing: string;
+  /** Under the investment summary, starred: what maintenance covers. */
+  summaryNote: string;
   /** Who signs for us, and their role. */
   signer: string;
   signerRole: string;
   /** Which parts the printed quote shows. */
   show: DocShow;
+  /** Headings typed on this quote's page, over the template's. */
+  labels?: Record<string, string>;
 };
 
 export type DocShow = {
@@ -768,6 +772,8 @@ export const DEFAULT_DOC: QuoteDoc = {
   ].join("\n"),
   closing:
     "Should you have any questions, or wish to discuss any part of this quotation, please feel free to reach out to us. We would be glad to walk you through it and look forward to working with you.",
+  summaryNote:
+    "* Maintenance is free for this project. Any external services, such as domain, hosting, email, SMS or payment charges, are paid by the client.",
   signer: "Surya",
   signerRole: "NectArray",
   show: {
@@ -792,12 +798,20 @@ export function cleanDoc(input: unknown): QuoteDoc {
   const show = (d.show ?? {}) as Partial<Record<keyof DocShow, unknown>>;
   const flag = (k: keyof DocShow) =>
     typeof show[k] === "boolean" ? (show[k] as boolean) : true;
+  const labels = Object.fromEntries(
+    Object.entries((d.labels ?? {}) as Record<string, unknown>)
+      .filter(([k, v]) => /^[a-zA-Z]{1,30}$/.test(k) && typeof v === "string")
+      .slice(0, 30)
+      .map(([k, v]) => [k, (v as string).trim().slice(0, 200)]),
+  );
+  const labelsSet = Object.keys(labels).length > 0;
   return {
     intro: text(d.intro, "", 4000),
     understanding: text(d.understanding, "", 8000),
     terms: text(d.terms, "", 6000),
     nextSteps: text(d.nextSteps, DEFAULT_DOC.nextSteps, 3000),
     closing: text(d.closing, DEFAULT_DOC.closing, 2000),
+    summaryNote: text(d.summaryNote, DEFAULT_DOC.summaryNote, 1000),
     signer: text(d.signer, DEFAULT_DOC.signer, 80),
     signerRole: text(d.signerRole, DEFAULT_DOC.signerRole, 80),
     show: {
@@ -809,6 +823,7 @@ export function cleanDoc(input: unknown): QuoteDoc {
       terms: flag("terms"),
       signatures: flag("signatures"),
     },
+    ...(labelsSet ? { labels } : {}),
   };
 }
 

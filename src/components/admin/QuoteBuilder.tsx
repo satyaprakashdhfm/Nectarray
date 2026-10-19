@@ -59,7 +59,7 @@ import {
   type QuoteSection,
   type QuoteService,
 } from "@/lib/quotes";
-import { quoteHtml, type QuoteDocData } from "@/lib/quote-html";
+import { points, quoteHtml, type QuoteDocData } from "@/lib/quote-html";
 import {
   sectionsFor,
   type QuoteSectionDef,
@@ -208,6 +208,22 @@ export function QuoteBuilder({
       ),
   };
 
+  /** A part typed on in the Document preview, back into the quote. */
+  function onEdit(field: string, value: string) {
+    const [kind, id, part] = field.split(":");
+    if (kind === "meta" && id in meta) setMetaField(id as keyof Meta, value);
+    else if (kind === "doc") setDoc({ [id]: value });
+    else if (kind === "label")
+      setBody((b) => ({
+        ...b,
+        doc: { ...b.doc, labels: { ...b.doc.labels, [id]: value } },
+      }));
+    else if (kind === "group") ops.renameGroup(id, value);
+    else if (kind === "line" && (part === "name" || part === "description"))
+      ops.update(id, { [part]: value });
+    else if (kind === "scope") ops.update(id, { includes: points(value) });
+  }
+
   const docData: QuoteDocData = useMemo(
     () => ({
       number: quote.number,
@@ -217,7 +233,10 @@ export function QuoteBuilder({
       scope: Object.fromEntries(
         body.lines
           .filter((l) => l.on)
-          .map((l) => [l.id, scopeFor(l, standards)]),
+          .map((l) => [
+            l.id,
+            l.includes?.length ? l.includes : scopeFor(l, standards),
+          ]),
       ),
     }),
     [quote.number, meta, body, standards],
@@ -338,6 +357,7 @@ export function QuoteBuilder({
           data={docData}
           template={template}
           setDoc={setDoc}
+          onEdit={onEdit}
           setValidDays={(validDays) => setBody((b) => ({ ...b, validDays }))}
         />
       )}
@@ -1273,7 +1293,7 @@ function ProjectsCard({
 
 // Document -------------------------------------------------------------------
 
-type TextKey = "intro" | "terms" | "closing";
+type TextKey = "intro" | "summaryNote" | "terms" | "closing";
 
 /** Which wording field each clickable part of the printed page opens. */
 const PICK: Record<string, string> = {
@@ -1287,11 +1307,13 @@ function DocumentPane({
   data,
   template,
   setDoc,
+  onEdit,
   setValidDays,
 }: {
   data: QuoteDocData;
   template: QuoteTemplate;
   setDoc: (patch: Partial<QuoteDoc>) => void;
+  onEdit: (field: string, value: string) => void;
   setValidDays: (n: number) => void;
 }) {
   const { doc, validDays, lines } = data.body;
@@ -1303,6 +1325,8 @@ function DocumentPane({
         logo: "/logo-mark.png",
         sections: template.sections,
         labels: template.labels,
+        // Section names belong to the template; the rest is this quote's.
+        editable: (f) => !f.startsWith("section:"),
       }),
     [data, template],
   );
@@ -1328,7 +1352,7 @@ function DocumentPane({
   function download() {
     const page = frame.current?.contentDocument;
     if (!page) return;
-    const copy = page.documentElement.cloneNode(true) as HTMLElement;
+    const copy = plainCopy(page);
     // Word cannot fetch the logo from this site, so the name stands alone.
     copy.querySelectorAll("img").forEach((img) => img.closest("td")?.remove());
     const file = new Blob(["﻿<!doctype html>\n", copy.outerHTML], {
@@ -1348,17 +1372,19 @@ function DocumentPane({
   function standard() {
     if (
       !window.confirm(
-        "Replace the opening, terms, questions paragraph and signature with the template wording?",
+        "Replace the opening, summary note, terms, questions paragraph, signature and any headings typed on the page with the template wording?",
       )
     )
       return;
     const t = template.doc;
     setDoc({
       intro: t.intro,
+      summaryNote: t.summaryNote,
       terms: t.terms,
       closing: t.closing,
       signer: t.signer,
       signerRole: t.signerRole,
+      labels: undefined,
     });
   }
 
@@ -1436,6 +1462,15 @@ function DocumentPane({
               "Opening paragraph",
               "After “Dear” and the contact person's name.",
               4,
+            ),
+          )}
+          {box(
+            "summaryNote",
+            area(
+              "summaryNote",
+              "Note under the investment summary",
+              "Starred, below the development cost and maintenance charges.",
+              3,
             ),
           )}
           {box(
@@ -1530,7 +1565,7 @@ function DocumentPane({
         <p className="text-ink-faint mb-2 text-[0.75rem]">
           The page exactly as it prints. Click any paragraph to edit it.
         </p>
-        <DocPreview html={html} frame={frame} onPick={pick} />
+        <DocPreview html={html} frame={frame} onPick={pick} onEdit={onEdit} />
       </div>
     </div>
   );
@@ -1543,23 +1578,58 @@ const A4_WIDTH = 794;
  * page so it scrolls with the panel. Rewritten a moment after typing stops.
  * Parts marked data-edit report a click through onPick.
  */
+/** Parts of the page that hold more than one line. */
+const MULTILINE = /^doc:(intro|closing|summaryNote)$|:description$/;
+
+/** What a typed-on part says: a list as one point a line. */
+function fieldText(el: HTMLElement) {
+  if (el.dataset.list) {
+    const items = [...el.querySelectorAll("li")].map((li) =>
+      li.innerText.trim(),
+    );
+    return (items.length ? items : el.innerText.split("\n"))
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .join("\n");
+  }
+  return el.innerText.replace(/\u00a0/g, " ").trim();
+}
+
+/** The page without its typing handles, for the Word file. */
+export function plainCopy(page: Document) {
+  const copy = page.documentElement.cloneNode(true) as HTMLElement;
+  copy.querySelectorAll("[contenteditable]").forEach((el) => {
+    el.removeAttribute("contenteditable");
+    el.removeAttribute("spellcheck");
+    el.removeAttribute("data-field");
+    el.removeAttribute("data-list");
+    el.removeAttribute("data-was");
+  });
+  return copy;
+}
+
 export function DocPreview({
   html,
   frame,
   onPick,
+  onEdit,
 }: {
   html: string;
   frame: React.RefObject<HTMLIFrameElement | null>;
   onPick?: (part: string) => void;
+  /** A part typed on, by its data-field, once the cursor leaves it. */
+  onEdit?: (field: string, value: string) => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const picker = useRef(onPick);
+  const editor = useRef(onEdit);
   const [scale, setScale] = useState(1);
   const [height, setHeight] = useState(1123);
 
   useEffect(() => {
     picker.current = onPick;
-  }, [onPick]);
+    editor.current = onEdit;
+  }, [onPick, onEdit]);
 
   useEffect(() => {
     const el = box.current;
@@ -1577,6 +1647,8 @@ export function DocPreview({
       const doc = f?.contentDocument;
       const win = f?.contentWindow;
       if (!doc || !win) return;
+      // Typing goes on where it was after the page is drawn again.
+      const typing = (doc.activeElement as HTMLElement | null)?.dataset?.field;
       doc.open();
       doc.write(html);
       doc.close();
@@ -1584,11 +1656,47 @@ export function DocPreview({
         setHeight(Math.max(1123, doc.documentElement.scrollHeight));
       measure();
       win.addEventListener("load", measure);
+      if (typing) {
+        const el = doc.querySelector<HTMLElement>(
+          `[data-field="${CSS.escape(typing)}"]`,
+        );
+        if (el) {
+          el.focus();
+          win.getSelection()?.selectAllChildren(el);
+          win.getSelection()?.collapseToEnd();
+        }
+      }
       doc.addEventListener("click", (e) => {
-        const part = (e.target as Element | null)
+        const target = e.target as Element | null;
+        if (target?.closest?.("[contenteditable]")) return;
+        const part = target
           ?.closest?.("[data-edit]")
           ?.getAttribute("data-edit");
         if (part) picker.current?.(part);
+      });
+      doc.addEventListener("focusin", (e) => {
+        const el = (e.target as HTMLElement).closest<HTMLElement>(
+          "[data-field]",
+        );
+        if (el) el.dataset.was = fieldText(el);
+      });
+      doc.addEventListener("focusout", (e) => {
+        const el = (e.target as HTMLElement).closest<HTMLElement>(
+          "[data-field]",
+        );
+        if (!el?.dataset.field) return;
+        const value = fieldText(el);
+        if (value !== el.dataset.was) editor.current?.(el.dataset.field, value);
+      });
+      // Enter ends a one-line part; lists and paragraphs take new lines.
+      doc.addEventListener("keydown", (e) => {
+        const el = (e.target as HTMLElement).closest<HTMLElement>(
+          "[data-field]",
+        );
+        if (!el || e.key !== "Enter" || e.shiftKey) return;
+        if (el.dataset.list || MULTILINE.test(el.dataset.field ?? "")) return;
+        e.preventDefault();
+        el.blur();
       });
     }, 300);
     return () => window.clearTimeout(timer);
