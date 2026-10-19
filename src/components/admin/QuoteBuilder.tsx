@@ -67,6 +67,7 @@ import {
   type QuoteTemplate,
 } from "@/lib/quote-template";
 import { QuoteIcon } from "@/components/admin/quote-icons";
+import { QUOTE_PRESETS, applyPreset } from "@/lib/quote-presets";
 import { cn } from "@/lib/utils";
 
 type QuoteRecord = {
@@ -209,6 +210,19 @@ export function QuoteBuilder({
       ),
   };
 
+  /** The quote filled from a ready-made template, once confirmed. */
+  function fillFrom(presetId: string) {
+    const preset = QUOTE_PRESETS.find((p) => p.id === presetId);
+    if (
+      !preset ||
+      !window.confirm(
+        `Fill this quote from “${preset.label}”?\n\n${preset.about}\n\nThe ticked one-time Build rows are replaced and the development cost stays the same. Terms and notes are replaced. Maintenance and other rows stay.`,
+      )
+    )
+      return;
+    setBody((b) => applyPreset(b, preset));
+  }
+
   /** A part typed on in the Document preview, back into the quote. */
   function onEdit(field: string, value: string) {
     const [kind, id, part] = field.split(":");
@@ -337,6 +351,19 @@ export function QuoteBuilder({
             </button>
           ))}
         </div>
+        <Select
+          value=""
+          onChange={(e) => fillFrom(e.target.value)}
+          className={cn(field, "w-auto py-1.5")}
+          aria-label="Fill from a template"
+        >
+          <option value="">Fill from a template</option>
+          {QUOTE_PRESETS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+        </Select>
         <label className="ml-auto flex items-center gap-2">
           <span className="text-ink-faint hidden text-[0.75rem] font-semibold sm:inline">
             Status
