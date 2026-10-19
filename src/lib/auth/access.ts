@@ -162,9 +162,11 @@ export const adminGate = cache(async () => {
  */
 export function isAdmin(user: User | null): boolean {
   if (!user || !user.emailVerifiedAt) return false;
+  // Commas, semicolons, spaces or new lines between addresses, and quotes
+  // around the whole value, all read the same.
   const allowed = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((entry) => entry.trim().toLowerCase())
+    .split(/[\s,;]+/)
+    .map((entry) => entry.replace(/^["']+|["']+$/g, "").toLowerCase())
     .filter(Boolean);
   return allowed.includes(user.email.toLowerCase());
 }
