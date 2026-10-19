@@ -165,10 +165,46 @@ const mix = (a: string, b: string, amount: number) => {
   return toHex(x.map((c, i) => c + (y[i] - c) * amount));
 };
 
+/**
+ * A pale tint that keeps the colour's hue. Mixing with white greys out dark
+ * colours (navy turns to grey), so the tint is drawn at a fixed lightness
+ * instead, with enough saturation to still read as the colour. Greys stay
+ * grey.
+ */
+function tint(hex: string) {
+  const [r, g, b] = rgb(hex).map((c) => c / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  const l = (max + min) / 2;
+  if (d < 0.04) return mix(hex, "#ffffff", 0.86);
+  const sat = d / (1 - Math.abs(2 * l - 1));
+  const hue =
+    max === r
+      ? ((g - b) / d + 6) % 6
+      : max === g
+        ? (b - r) / d + 2
+        : (r - g) / d + 4;
+  const s = Math.min(0.75, Math.max(0.4, sat));
+  const L = 0.93;
+  const c = (1 - Math.abs(2 * L - 1)) * s;
+  const x = c * (1 - Math.abs((hue % 2) - 1));
+  const [r1, g1, b1] = [
+    [c, x, 0],
+    [x, c, 0],
+    [0, c, x],
+    [0, x, c],
+    [x, 0, c],
+    [c, 0, x],
+  ][Math.floor(hue) % 6];
+  const m = L - c / 2;
+  return toHex([r1, g1, b1].map((v) => (v + m) * 255));
+}
+
 export function shadesOf(hex: string): Record<Shade, string> {
   const base = normalHex(hex);
   return {
-    light: mix(base, "#ffffff", 0.86),
+    light: tint(base),
     medium: base,
     dark: mix(base, "#0b1016", 0.5),
   };
