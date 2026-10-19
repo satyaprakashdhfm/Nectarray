@@ -410,7 +410,6 @@ export function QuoteBuilder({
           setDoc={setDoc}
           onEdit={onEdit}
           onAction={onAction}
-          setValidDays={(validDays) => setBody((b) => ({ ...b, validDays }))}
         />
       )}
     </div>
@@ -1345,34 +1344,21 @@ function ProjectsCard({
 
 // Document -------------------------------------------------------------------
 
-type TextKey = "intro" | "summaryNote" | "terms" | "closing";
-
-/** Which wording field each clickable part of the printed page opens. */
-const PICK: Record<string, string> = {
-  intro: "intro",
-  terms: "terms",
-  closing: "closing",
-  signatures: "signer",
-};
-
 function DocumentPane({
   data,
   template,
   setDoc,
   onEdit,
   onAction,
-  setValidDays,
 }: {
   data: QuoteDocData;
   template: QuoteTemplate;
   setDoc: (patch: Partial<QuoteDoc>) => void;
   onEdit: (field: string, value: string) => void;
   onAction: (action: string) => string | undefined;
-  setValidDays: (n: number) => void;
 }) {
-  const { doc, validDays, lines } = data.body;
+  const { doc } = data.body;
   const frame = useRef<HTMLIFrameElement>(null);
-  const [active, setActive] = useState<string | null>(null);
   const html = useMemo(
     () =>
       quoteHtml(data, {
@@ -1385,17 +1371,6 @@ function DocumentPane({
       }),
     [data, template],
   );
-
-  /** A click on the page opens the field that writes that part. */
-  function pick(part: string) {
-    const key = PICK[part];
-    if (!key) return;
-    setActive(key);
-    const el = document.getElementById(`doc-${key}`);
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
-    el?.focus({ preventScroll: true });
-    window.setTimeout(() => setActive((k) => (k === key ? null : k)), 1600);
-  }
 
   function print() {
     const win = frame.current?.contentWindow;
@@ -1443,193 +1418,74 @@ function DocumentPane({
     });
   }
 
-  const box = (key: string, children: React.ReactNode) => (
-    <div
-      className={cn(
-        "-mx-2 rounded-lg px-2 py-1.5 transition-colors",
-        active === key && "bg-brand-wash ring-brand ring-1",
-      )}
-    >
-      {children}
-    </div>
-  );
-
-  const area = (key: TextKey, text: string, hint: string, rows: number) => (
-    <label className="block">
-      <span className={label}>{text}</span>
-      <textarea
-        id={`doc-${key}`}
-        value={doc[key]}
-        onChange={(e) => setDoc({ [key]: e.target.value })}
-        rows={rows}
-        className={cn(field, "resize-y py-2 leading-relaxed")}
-      />
-      <span className="text-ink-faint mt-1 block text-[0.6875rem]">{hint}</span>
-    </label>
-  );
-
   return (
-    <div className="mt-6 grid gap-6 xl:grid-cols-[24rem_minmax(0,1fr)] xl:items-start">
-      <aside className="min-w-0 space-y-4 xl:sticky xl:top-[148px] xl:max-h-[calc(100vh-164px)] xl:overflow-y-auto xl:pb-2">
-        <div className="card grid grid-cols-2 gap-2 p-3">
-          <button
-            type="button"
-            onClick={print}
-            className={cn(
-              primaryButton,
-              "inline-flex items-center justify-center gap-1.5 py-2.5",
-            )}
-          >
-            <Printer className="size-4" aria-hidden />
-            Print or PDF
-          </button>
-          <button
-            type="button"
-            onClick={download}
-            className={cn(
-              quietButton,
-              "inline-flex items-center justify-center gap-1.5 py-2.5",
-            )}
-          >
-            <FileDown className="size-4" aria-hidden />
-            Word file
-          </button>
-          <p className="text-ink-faint col-span-2 text-[0.6875rem]">
-            For a PDF, pick Save as PDF in the print window.
-          </p>
-        </div>
-
-        <div className="card space-y-2 p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-3 pb-1">
-            <h2 className="text-ink text-[1.0625rem] font-semibold">Wording</h2>
-            <button
-              type="button"
-              onClick={standard}
-              className="text-brand-deep hover:text-ink text-[0.75rem] font-semibold"
-            >
-              Use the template wording
-            </button>
+    <div className="mt-6">
+      <div className="border-line bg-surface/95 sticky top-[136px] z-20 mb-3 flex flex-wrap items-center gap-2 rounded-xl border px-2.5 py-2 shadow-sm backdrop-blur">
+        <button
+          type="button"
+          onClick={print}
+          className={cn(
+            primaryButton,
+            "inline-flex items-center gap-1.5 px-3.5 py-2",
+          )}
+        >
+          <Printer className="size-4" aria-hidden />
+          Print or PDF
+        </button>
+        <button
+          type="button"
+          onClick={download}
+          className={cn(
+            quietButton,
+            "inline-flex items-center gap-1.5 px-3.5 py-2",
+          )}
+        >
+          <FileDown className="size-4" aria-hidden />
+          Word file
+        </button>
+        <details className="relative">
+          <summary className="text-ink-soft hover:text-ink flex cursor-pointer list-none items-center gap-1 rounded-lg px-2.5 py-2 text-[0.8125rem] font-semibold">
+            Parts shown
+            <ChevronDown className="size-4" aria-hidden />
+          </summary>
+          <div className="border-line bg-surface absolute left-0 z-30 mt-1 grid w-60 gap-1 rounded-xl border p-2 shadow-lg">
+            {DOC_SHOW_FIELDS.map((f) => (
+              <label
+                key={f.key}
+                className="hover:bg-mist text-ink flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[0.8125rem]"
+              >
+                <input
+                  type="checkbox"
+                  checked={doc.show[f.key]}
+                  onChange={(e) =>
+                    setDoc({ show: { ...doc.show, [f.key]: e.target.checked } })
+                  }
+                  className="accent-brand-solid size-3.5"
+                />
+                {f.label}
+              </label>
+            ))}
           </div>
-          {box(
-            "intro",
-            area(
-              "intro",
-              "Opening paragraph",
-              "After “Dear” and the contact person's name.",
-              4,
-            ),
-          )}
-          {box(
-            "summaryNote",
-            area(
-              "summaryNote",
-              "Note under the investment summary",
-              "Starred, below the development cost and maintenance charges.",
-              3,
-            ),
-          )}
-          {box(
-            "terms",
-            area(
-              "terms",
-              "Terms and notes",
-              "Pricing, payment, third-party charges. One a line.",
-              6,
-            ),
-          )}
-          {box(
-            "closing",
-            area(
-              "closing",
-              "Questions paragraph",
-              "Shown in the contact box with our email and phone.",
-              3,
-            ),
-          )}
-          {box(
-            "signer",
-            <div className="grid grid-cols-2 gap-2">
-              <label className="block min-w-0">
-                <span className={label}>Signed by</span>
-                <input
-                  id="doc-signer"
-                  value={doc.signer}
-                  onChange={(e) => setDoc({ signer: e.target.value })}
-                  className={cn(field, "py-2")}
-                />
-              </label>
-              <label className="block min-w-0">
-                <span className={label}>Role or company</span>
-                <input
-                  value={doc.signerRole}
-                  onChange={(e) => setDoc({ signerRole: e.target.value })}
-                  className={cn(field, "py-2")}
-                />
-              </label>
-            </div>,
-          )}
-
-          <fieldset className="border-line mt-2 border-t pt-3">
-            <legend className={cn(label, "mb-2")}>Show on the quote</legend>
-            <div className="grid grid-cols-2 gap-2">
-              {DOC_SHOW_FIELDS.map((f) => (
-                <label
-                  key={f.key}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[0.75rem] font-semibold transition-colors",
-                    doc.show[f.key]
-                      ? "border-brand bg-brand-wash text-brand-deep"
-                      : "border-line text-ink-faint",
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    checked={doc.show[f.key]}
-                    onChange={(e) =>
-                      setDoc({
-                        show: { ...doc.show, [f.key]: e.target.checked },
-                      })
-                    }
-                    className="accent-brand-solid size-3.5"
-                  />
-                  {f.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <label className="block pt-2">
-            <span className={label}>Valid for (days)</span>
-            <input
-              type="number"
-              min={1}
-              max={365}
-              value={validDays}
-              onChange={(e) =>
-                setValidDays(
-                  Math.min(365, Math.max(1, Number(e.target.value) || 1)),
-                )
-              }
-              className={cn(field, "w-28 py-2")}
-            />
-          </label>
-        </div>
-      </aside>
-
-      <div className="min-w-0">
-        <p className="text-ink-faint mb-2 text-[0.75rem]">
-          The page exactly as it prints. Type on any part of it, amounts and
-          dates too. Use + Add a row and + Add text to add your own; the
-          controls do not print.
+        </details>
+        <button
+          type="button"
+          onClick={standard}
+          className="text-brand-deep hover:text-ink px-2 text-[0.8125rem] font-semibold"
+        >
+          Use the template wording
+        </button>
+        <p className="text-ink-faint ml-auto text-[0.75rem]">
+          Type on any part of the page. For a PDF, pick Save as PDF when
+          printing. The + controls do not print.
         </p>
-        <DocPreview
-          html={html}
-          frame={frame}
-          onPick={pick}
-          onEdit={onEdit}
-          onAction={onAction}
-        />
       </div>
+      <DocPreview
+        html={html}
+        frame={frame}
+        onEdit={onEdit}
+        onAction={onAction}
+        fill
+      />
     </div>
   );
 }
@@ -1678,9 +1534,12 @@ export function DocPreview({
   onPick,
   onEdit,
   onAction,
+  fill = false,
 }: {
   html: string;
   frame: React.RefObject<HTMLIFrameElement | null>;
+  /** Scale the page up to the full width, not only down to fit. */
+  fill?: boolean;
   onPick?: (part: string) => void;
   /** A part typed on, by its data-field, once the cursor leaves it. */
   onEdit?: (field: string, value: string) => void;
@@ -1706,11 +1565,11 @@ export function DocPreview({
     const el = box.current;
     if (!el) return;
     const ro = new ResizeObserver(() =>
-      setScale(Math.min(1, el.clientWidth / A4_WIDTH)),
+      setScale(Math.min(fill ? 1.6 : 1, el.clientWidth / A4_WIDTH)),
     );
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [fill]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
