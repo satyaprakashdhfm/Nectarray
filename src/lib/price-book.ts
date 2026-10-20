@@ -4011,6 +4011,19 @@ const WORKBOOK: WorkbookSheet[] = [
             "Through Zoho sales.",
           ],
           [
+            "Zoho WorkDrive Starter",
+            "Zoho Workplace",
+            inr(140),
+            "Not checked",
+            "1 TB shared by the team; 10 GB a file",
+            "None",
+            "3 to 10",
+            "Files only, no email: Team Folders with subfolder sharing, Writer, Sheet and Show, Windows and mobile apps with sync, unlimited file versions, activity timeline, workflows, secure external sharing.",
+            "Role-based access with granular controls; can stop employees deleting.",
+            "Secondary",
+            "From Zoho's WorkDrive page (screenshot). Not the same as Workplace Standard. Minimum 3 users, so at least ₹420 a month.",
+          ],
+          [
             "Zoho Mail Free",
             "Zoho Workplace",
             inr(0),
@@ -4196,6 +4209,41 @@ const WORKBOOK: WorkbookSheet[] = [
             "Mail screen",
             "Gmail.",
             "Outlook, tested for the inbox layout and reading pane we want.",
+          ],
+        ],
+      },
+      {
+        id: "workdrive-vs-m365",
+        title: "Zoho WorkDrive Starter against Microsoft 365 Business Basic",
+        note: "For 3 users: WorkDrive Starter ₹420 a month, Business Basic (no Teams) ₹390, yearly billing before GST. Need email, shared files, desktop access and permission control together: Microsoft 365 Business Basic gives more for less. Email already elsewhere and only shared files needed: WorkDrive Starter is worth testing.",
+        compare: false,
+        nameColumns: [0],
+        columns: [
+          { label: "What we need", kind: "text" },
+          { label: "Zoho WorkDrive Starter (₹140)", kind: "long" },
+          { label: "Microsoft 365 Business Basic (₹130)", kind: "long" },
+        ],
+        rows: [
+          [
+            "Storage for 3 to 10 users",
+            "1 TB in total for the team.",
+            "1 TB per user in OneDrive, plus SharePoint storage.",
+          ],
+          [
+            "Stop employees deleting",
+            "Yes, through role-based permissions.",
+            "Yes, through a custom SharePoint permission level.",
+          ],
+          [
+            "Version history",
+            "Unlimited versions.",
+            "Version history, with SharePoint controls on who can see or delete it.",
+          ],
+          ["Business email", "Not included.", "Included (Outlook)."],
+          [
+            "Files on the computer",
+            "WorkDrive Sync (TrueSync).",
+            "OneDrive sync in File Explorer.",
           ],
         ],
       },
@@ -4394,6 +4442,10 @@ const WORKBOOK: WorkbookSheet[] = [
       {
         label: "Microsoft 365 without Teams (partner prices)",
         url: "https://precisiontech.in/domain-hosting-email/email-solutions/microsoft365-noteams/",
+      },
+      {
+        label: "Zoho WorkDrive pricing",
+        url: "https://www.zoho.com/workdrive/pricing.html",
       },
       {
         label: "Zoho Workplace plans",
