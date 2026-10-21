@@ -39,8 +39,8 @@ function pageHead(): Head {
  * real but go nowhere.
  *
  * `width` fixes the frame's own width (a phone is 390). With `fit`, a wide
- * frame is scaled down to fit the space it is given, which is how the small
- * sample sites on the Colours tab are drawn.
+ * frame is scaled down to fit the space it is given, which is how a laptop
+ * width fits in an Elements card.
  */
 export function PreviewFrame({
   html,

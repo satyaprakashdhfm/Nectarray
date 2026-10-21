@@ -1,15 +1,19 @@
 import { PageHead } from "@/components/admin/Business";
-import { PaletteTool } from "@/components/admin/PaletteTool";
+import { PaletteGallery } from "@/components/admin/PaletteGallery";
+import { getSavedPalettes } from "@/lib/web-domains";
 
-/** Pick primary, secondary and tertiary, and see them on a sample site. */
-export default function AdminWebColoursPage() {
+export const dynamic = "force-dynamic";
+
+/** Trending palettes from Coolors, grouped by style. */
+export default async function AdminWebColoursPage() {
+  const saved = await getSavedPalettes();
   return (
     <>
       <PageHead
         title="Colours"
-        lede="Three colours, each in a light, medium and dark shade. Change one and the sample site repaints."
+        lede="Trending palettes from Coolors, grouped by style. Click a colour to copy it; Use shows the Elements tab in that palette."
       />
-      <PaletteTool />
+      <PaletteGallery saved={saved} />
     </>
   );
 }

@@ -60,7 +60,7 @@ export const STEPS: WebNote[] = [
   {
     id: "colours",
     title: "Pick the three colours",
-    body: "Choose primary, secondary and tertiary in the Colours tab and check them on the sample site. Everything after this uses them.",
+    body: "Pick a palette in the Colours tab and press Use. Everything after this uses it.",
     url: `${ADMIN}/web/colours`,
   },
   {

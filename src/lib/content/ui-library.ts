@@ -17,10 +17,21 @@
  * Tailwind generate them: it scans the source for class names.
  */
 
+/** Where a category sits on a page, top to bottom. */
+export type UiPart = "top" | "body" | "bottom" | "blocks";
+
+export const UI_PARTS: { id: UiPart; label: string }[] = [
+  { id: "top", label: "Top of the page" },
+  { id: "body", label: "Body" },
+  { id: "bottom", label: "Bottom of the page" },
+  { id: "blocks", label: "Building blocks" },
+];
+
 export type UiCategory = {
   id: string;
   label: string;
   blurb: string;
+  part: UiPart;
 };
 
 export type UiComponent = {
@@ -32,104 +43,193 @@ export type UiComponent = {
   html: string;
   /** Where it came from when it was not written here, e.g. "HyperUI". */
   source?: string;
+  /** Heroes only: one of HERO_TYPES. Unset is "other". */
+  type?: string;
 };
 
+/** In the order they appear on a page, ribbon to footer. */
 export const UI_CATEGORIES: UiCategory[] = [
   {
+    id: "ribbon",
+    label: "Ribbon",
+    blurb: "The thin strip above the header: an offer, a notice, a region or language switch.",
+    part: "top",
+  },
+  {
     id: "headers",
-    label: "Headers",
-    blurb: "The bar at the top: logo, links, one button.",
+    label: "Navigation header",
+    blurb: "The bar at the top: logo, links, search, one button.",
+    part: "top",
   },
   {
     id: "heroes",
-    label: "Heroes",
-    blurb: "The first screen: headline, one sentence, one button, a visual.",
+    label: "Hero section",
+    blurb: "The first screen under the header. Pick a type above.",
+    part: "top",
   },
   {
     id: "features",
     label: "Feature sections",
     blurb: "What you do, laid out so the page does not repeat itself.",
-  },
-  {
-    id: "profile-cards",
-    label: "Profile cards",
-    blurb: "Team members, mentors, trainers and speakers.",
+    part: "body",
   },
   {
     id: "sections",
-    label: "Sections",
-    blurb:
-      "Whole page sections: approach panels, timelines, zigzag rows, bento grids and practice areas. The tabs and slides work without any script.",
+    label: "Content sections",
+    blurb: "Approach panels, timelines, zigzag rows, bento grids and practice areas.",
+    part: "body",
   },
   {
-    id: "forms",
-    label: "Forms",
-    blurb: "Labels above fields, errors under them, one clear button.",
-  },
-  {
-    id: "pricing",
-    label: "Pricing",
-    blurb: "Plans side by side with the recommended one marked.",
-  },
-  {
-    id: "testimonials",
-    label: "Testimonials",
-    blurb: "Short quotes with who said them and why it matters.",
-  },
-  {
-    id: "stats",
-    label: "Stats",
-    blurb: "A few numbers that prove the point.",
-  },
-  {
-    id: "ctas",
-    label: "Call to action",
-    blurb: "The block that asks for the click, near the end of a page.",
-  },
-  {
-    id: "faqs",
-    label: "FAQs",
-    blurb: "Questions that open on click, without any script.",
-  },
-  {
-    id: "blog-cards",
-    label: "Blog and content cards",
-    blurb: "Articles, case studies and resources in a grid.",
-  },
-  {
-    id: "footers",
-    label: "Footers",
-    blurb: "Link columns, contact details and the small print.",
-  },
-  {
-    id: "buttons",
-    label: "Buttons and badges",
-    blurb: "Every button and tag style in one place.",
-  },
-  {
-    id: "feedback",
-    label: "Alerts and empty states",
-    blurb: "Success, warning and error messages, and screens with no data yet.",
+    id: "backgrounds",
+    label: "3D-perspective backgrounds",
+    blurb: "Cinematic / 3D-perspective body background: a full-width section with depth and a vanishing point, separate from the hero, with content layered over it.",
+    part: "body",
   },
   {
     id: "product-cards",
     label: "Product cards",
     blurb: "Shop items, collections and carts.",
+    part: "body",
+  },
+  {
+    id: "trust",
+    label: "Trust and offers",
+    blurb: "What Indian shoppers look for before buying: COD, returns, bank offers, ratings, delivery by pincode.",
+    part: "body",
+  },
+  {
+    id: "carousels",
+    label: "Carousels and marquees",
+    blurb: "Cards and logos that move sideways. Scroll inside the preview.",
+    part: "body",
+  },
+  {
+    id: "motion",
+    label: "Scroll and motion effects",
+    blurb: "Effects tied to scrolling or looping. Scroll inside the preview; they run in Chrome and Edge without any script.",
+    part: "body",
+  },
+  {
+    id: "profile-cards",
+    label: "Profile cards",
+    blurb: "Team members, mentors, trainers and speakers.",
+    part: "body",
+  },
+  {
+    id: "testimonials",
+    label: "Testimonials",
+    blurb: "Short quotes with who said them and why it matters.",
+    part: "body",
+  },
+  {
+    id: "stats",
+    label: "Stats",
+    blurb: "A few numbers that prove the point.",
+    part: "body",
+  },
+  {
+    id: "pricing",
+    label: "Pricing",
+    blurb: "Plans side by side with the recommended one marked.",
+    part: "body",
+  },
+  {
+    id: "blog-cards",
+    label: "Blog and content cards",
+    blurb: "Articles, case studies and resources in a grid.",
+    part: "body",
+  },
+  {
+    id: "faqs",
+    label: "FAQs",
+    blurb: "Questions that open on click, without any script.",
+    part: "body",
+  },
+  {
+    id: "ctas",
+    label: "Call to action",
+    blurb: "The block that asks for the click, near the end of a page.",
+    part: "bottom",
+  },
+  {
+    id: "sticky",
+    label: "Floating and sticky bars",
+    blurb: "WhatsApp and call buttons, and the bar that stays at the bottom of a phone screen.",
+    part: "bottom",
+  },
+  {
+    id: "footers",
+    label: "Footer",
+    blurb: "Link columns, contact details and the small print.",
+    part: "bottom",
+  },
+  {
+    id: "buttons",
+    label: "Buttons and badges",
+    blurb: "Every button and tag style in one place.",
+    part: "blocks",
+  },
+  {
+    id: "forms",
+    label: "Forms",
+    blurb: "Labels above fields, errors under them, one clear button.",
+    part: "blocks",
+  },
+  {
+    id: "feedback",
+    label: "Alerts and empty states",
+    blurb: "Success, warning and error messages, and screens with no data yet.",
+    part: "blocks",
   },
   {
     id: "navigation",
     label: "Tabs and navigation",
     blurb: "Tabs, breadcrumbs, pagination and step indicators.",
+    part: "blocks",
   },
   {
     id: "tables",
     label: "Tables and lists",
     blurb: "Data tables, timelines and detail lists.",
+    part: "blocks",
   },
   {
     id: "sketch",
     label: "Sketch diagrams",
     blurb: "Hand-drawn style diagrams to fill an image slot.",
+    part: "blocks",
+  },
+];
+
+/** The sidebar entry that swaps the components for reference websites. */
+export const DOMAINS = "domains";
+
+/** The kinds of hero, for the dropdown on the Hero section. */
+export const HERO_TYPES: { id: string; label: string; blurb: string }[] = [
+  {
+    id: "luxury",
+    label: "Luxury / brand-focused hero",
+    blurb: "Full-bleed editorial imagery, a large logo, minimal navigation, a slideshow. Fashion, luxury, lifestyle. Like LVMH and Prada.",
+  },
+  {
+    id: "category",
+    label: "Category-heavy e-commerce hero",
+    blurb: "Search, category navigation and a grid of promotional banners. Grocery, home goods, electronics, wholesale. Like Wakefit, Makro and Alibaba.",
+  },
+  {
+    id: "quick-links",
+    label: "Hero with a quick-links bar",
+    blurb: "A photo hero with a bar of shortcuts over its bottom edge: \"I am looking for…\". Insurance, banks, corporates. Like Prudential.",
+  },
+  {
+    id: "product-reveal",
+    label: "Product reveal hero",
+    blurb: "The product opens or turns as you scroll. Phones, gadgets, cars. Like Apple's iPhone pages.",
+  },
+  {
+    id: "other",
+    label: "Other heroes",
+    blurb: "Split, centred, form, search and the rest.",
   },
 ];
 

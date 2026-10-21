@@ -563,6 +563,19 @@ export const webNotes = pgTable("web_notes", {
   updatedAt: now(),
 });
 
+/** Reference websites for one domain on the Elements tab, in order. */
+export const webDomainSites = pgTable("web_domain_sites", {
+  id: uuid().primaryKey().defaultRandom(),
+  domain: text().notNull(),
+  position: integer().notNull(),
+  name: text().notNull(),
+  url: text().notNull(),
+  /** Out of 5; empty when not scored. */
+  score: integer(),
+  note: text().notNull().default(""),
+  updatedAt: now(),
+});
+
 // ---------------------------------------------------------------------------
 //  Quotations (admin only)
 // ---------------------------------------------------------------------------

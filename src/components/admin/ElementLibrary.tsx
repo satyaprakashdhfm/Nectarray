@@ -1,7 +1,13 @@
 "use client";
 import { ADMIN } from "@/lib/admin-path";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -15,7 +21,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
-import type { UiComponent } from "@/lib/content/ui-library";
+import {
+  DOMAINS,
+  UI_PARTS,
+  type UiComponent,
+  type UiPart,
+} from "@/lib/content/ui-library";
 import { ROLES, paletteCss, paletteVars, usePalette } from "@/lib/palette";
 import { useNarrow } from "@/lib/use-narrow";
 import { cn } from "@/lib/utils";
@@ -69,7 +80,15 @@ function toJsx(html: string): string {
   );
 }
 
-export type CategoryCount = { id: string; label: string; count: number };
+export type CategoryCount = {
+  id: string;
+  label: string;
+  count: number;
+  part: UiPart;
+};
+
+export type HeroTypeCount = { id: string; label: string; count: number };
+
 
 /**
  * The component library: pick a category, see each component live in the
@@ -87,6 +106,9 @@ export function ElementLibrary({
   query,
   found,
   components,
+  heroTypes,
+  heroType,
+  domainView,
 }: {
   categories: CategoryCount[];
   total: number;
@@ -96,6 +118,11 @@ export function ElementLibrary({
   /** How many matched, before the page capped how many it sends. */
   found: number;
   components: UiComponent[];
+  heroTypes: HeroTypeCount[];
+  /** The hero type picked in the dropdown; null is all of them. */
+  heroType: string | null;
+  /** Shown in place of the components when Domains is picked. */
+  domainView?: ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -111,12 +138,15 @@ export function ElementLibrary({
   const width = DEVICES.find((d) => d.id === device)!.width;
   const [copiedCss, setCopiedCss] = useState(false);
 
-  function go(next: { category?: string; q?: string }) {
+  function go(next: { category?: string; q?: string; type?: string | null }) {
     const params = new URLSearchParams();
     const c = next.category ?? category;
     const q = (next.q ?? typed).trim();
+    // A new category starts with every hero type.
+    const t = next.category ? next.type : (next.type ?? heroType);
     if (c !== "all") params.set("category", c);
     if (q) params.set("q", q);
+    if (c === "heroes" && t) params.set("type", t);
     const search = params.toString();
     startTransition(() =>
       router.replace(search ? `${pathname}?${search}` : pathname, {
@@ -164,33 +194,59 @@ export function ElementLibrary({
             className="border-line bg-surface text-ink focus:border-brand w-full rounded-lg border py-2 pr-3 pl-9 text-[0.875rem] focus:outline-none"
           />
         </label>
-        <ul className="tab-bar mt-3 xl:flex xl:flex-col xl:gap-0.5 xl:overflow-visible xl:rounded-none xl:border-0 xl:bg-transparent xl:p-0">
-          {categories.map((c) => (
-            <li key={c.id}>
-              <button
-                type="button"
-                onClick={() => go({ category: c.id })}
-                aria-pressed={category === c.id}
-                className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-full px-3 py-1.5 text-left text-[0.8125rem] font-semibold whitespace-nowrap transition-colors xl:gap-3 xl:rounded-lg",
-                  category === c.id
-                    ? "bg-brand-solid text-cta-fg"
-                    : "text-ink-soft hover:bg-surface hover:text-ink",
-                )}
-              >
-                {c.label}
-                <span className="font-mono text-[0.6875rem] opacity-70">
-                  {c.count}
-                </span>
-              </button>
-            </li>
+        <div className="tab-bar mt-3 xl:block xl:overflow-visible xl:rounded-none xl:border-0 xl:bg-transparent xl:p-0">
+          {[
+            ...UI_PARTS.map((part) => ({
+              id: part.id,
+              label: part.label,
+              items: categories.filter((c) => c.part === part.id),
+            })),
+            {
+              id: "sites",
+              label: "Reference websites",
+              items: [{ id: DOMAINS, label: "Domains", count: 0 }],
+            },
+          ].map((group) => (
+            <div key={group.id} className="contents xl:mb-3 xl:block">
+              <p className="eyebrow hidden px-3 pt-2 pb-1 xl:block">
+                {group.label}
+              </p>
+              <ul className="contents xl:flex xl:flex-col xl:gap-0.5">
+                {group.items.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => go({ category: c.id })}
+                      aria-pressed={category === c.id}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-2 rounded-full px-3 py-1.5 text-left text-[0.8125rem] font-semibold whitespace-nowrap transition-colors xl:gap-3 xl:rounded-lg",
+                        category === c.id
+                          ? "bg-brand-solid text-cta-fg"
+                          : "text-ink-soft hover:bg-surface hover:text-ink",
+                      )}
+                    >
+                      {c.label}
+                      {c.id !== DOMAINS && (
+                        <span className="font-mono text-[0.6875rem] opacity-70">
+                          {c.count}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </aside>
 
       <div
         className={cn("min-w-0 transition-opacity", pending && "opacity-60")}
       >
+        {category === DOMAINS ? (
+          domainView
+        ) : (
+          <>
         <div className="card flex flex-wrap items-center justify-between gap-3 p-3">
           <div
             role="radiogroup"
@@ -250,18 +306,35 @@ export function ElementLibrary({
               ? `${found} found for "${query}". Showing the first ${components.length}; add a word to narrow it.`
               : `${found} found for "${query}".`
             : (blurb ?? `${total} components in all.`)}
-          {category === "heroes" && !query && (
-            <>
-              {" "}
-              <Link
-                href={`${ADMIN}/web/animations`}
-                className="text-brand-deep hover:text-brand font-semibold"
-              >
-                Animated heroes are on the Animations tab →
-              </Link>
-            </>
-          )}
         </p>
+
+        {category === "heroes" && !query && (
+          <label className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-ink text-[0.8125rem] font-semibold">
+              Type
+            </span>
+            <select
+              value={heroType ?? ""}
+              onChange={(e) => go({ type: e.target.value || null })}
+              className="border-line bg-surface text-ink focus:border-brand rounded-lg border px-3 py-1.5 text-[0.875rem] focus:outline-none"
+            >
+              <option value="">
+                All types ({heroTypes.reduce((n, t) => n + t.count, 0)})
+              </option>
+              {heroTypes.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label} ({t.count})
+                </option>
+              ))}
+            </select>
+            <Link
+              href={`${ADMIN}/web/animations`}
+              className="text-brand-deep hover:text-brand text-[0.8125rem] font-semibold"
+            >
+              Animated heroes →
+            </Link>
+          </label>
+        )}
 
         {components.length === 0 ? (
           <div className="card text-ink-soft mt-4 p-8 text-center text-[0.875rem]">
@@ -290,6 +363,8 @@ export function ElementLibrary({
               </li>
             ))}
           </ul>
+        )}
+          </>
         )}
       </div>
     </div>

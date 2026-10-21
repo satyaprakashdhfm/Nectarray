@@ -3,7 +3,7 @@ import { ADMIN } from "@/lib/admin-path";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, max } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   batches,
@@ -13,10 +13,12 @@ import {
   lessonReleases,
   lessons,
   users,
+  webDomainSites,
   webNotes,
 } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/access";
 import type { WebNoteKind } from "@/lib/content/web-building";
+import { WEB_DOMAINS } from "@/lib/content/web-domains";
 
 /**
  * Admin mutations.
@@ -359,4 +361,83 @@ export async function saveWebNotes(
 
   revalidatePath("/admin/web", "layout");
   return {};
+}
+
+export type DomainSiteInput = {
+  name: string;
+  url: string;
+  score: number | null;
+  note: string;
+};
+
+/** Replaces one domain's reference sites on the Elements tab, in order. */
+export async function saveDomainSites(
+  domain: string,
+  input: DomainSiteInput[],
+): Promise<{ error?: string }> {
+  await assertAdmin();
+  if (!WEB_DOMAINS.some((d) => d.id === domain)) {
+    return { error: "Unknown domain." };
+  }
+
+  const list = input.map((s) => {
+    const score = Math.round(Number(s.score));
+    return {
+      name: String(s.name ?? "").trim(),
+      url: String(s.url ?? "").trim(),
+      score: score >= 1 && score <= 5 ? score : null,
+      note: String(s.note ?? "").trim(),
+    };
+  });
+
+  if (list.length === 0) return { error: "Keep at least one website." };
+  const blank = list.findIndex((s) => !s.name);
+  if (blank !== -1) return { error: `Website ${blank + 1} needs a name.` };
+  const badLink = list.findIndex((s) => !/^https?:\/\//.test(s.url));
+  if (badLink !== -1) {
+    return {
+      error: `The link on website ${badLink + 1} should start with https://.`,
+    };
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(webDomainSites).where(eq(webDomainSites.domain, domain));
+    await tx
+      .insert(webDomainSites)
+      .values(list.map((s, position) => ({ ...s, domain, position })));
+  });
+
+  revalidatePath(`${ADMIN}/web/elements`);
+  return {};
+}
+
+const PALETTE = /^[0-9a-f]{6}(-[0-9a-f]{6}){1,9}$/;
+
+/** Keeps a palette pasted on the Colours tab, as hex codes joined by dashes. */
+export async function addPalette(
+  colors: string,
+): Promise<{ error?: string; id?: string }> {
+  await assertAdmin();
+  const hexes = String(colors ?? "").trim().toLowerCase();
+  if (!PALETTE.test(hexes)) {
+    return { error: "That is not a palette: 2 to 10 hex colours." };
+  }
+  const [{ last }] = await db
+    .select({ last: max(webNotes.position) })
+    .from(webNotes)
+    .where(eq(webNotes.kind, "palette"));
+  const [row] = await db
+    .insert(webNotes)
+    .values({ kind: "palette", position: (last ?? -1) + 1, title: hexes })
+    .returning({ id: webNotes.id });
+  revalidatePath(`${ADMIN}/web/colours`);
+  return { id: row.id };
+}
+
+export async function removePalette(id: string): Promise<void> {
+  await assertAdmin();
+  await db
+    .delete(webNotes)
+    .where(and(eq(webNotes.id, id), eq(webNotes.kind, "palette")));
+  revalidatePath(`${ADMIN}/web/colours`);
 }
