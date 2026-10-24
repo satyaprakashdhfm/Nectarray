@@ -1,5 +1,6 @@
 import "server-only";
 import { RESUME_MAIN, type ResumeFiles } from "@/lib/resume-files";
+import { wakeFetch } from "@/lib/wake-fetch";
 
 export type CompileResult =
   | { ok: true; pdf: ArrayBuffer }
@@ -45,13 +46,16 @@ export async function compileResume(
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${url.replace(/\/+$/, "")}/compile`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Latex-Token": token },
-      body: JSON.stringify({ main: RESUME_MAIN, files }),
-      signal: AbortSignal.timeout(45_000),
-      cache: "no-store",
-    });
+    upstream = await wakeFetch(
+      `${url.replace(/\/+$/, "")}/compile`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Latex-Token": token },
+        body: JSON.stringify({ main: RESUME_MAIN, files }),
+        cache: "no-store",
+      },
+      45_000,
+    );
   } catch {
     return { ok: false, error: "Could not reach the compiler." };
   }

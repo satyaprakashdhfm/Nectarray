@@ -5,6 +5,7 @@ import { practiceProgress, practiceQuestions } from "@/lib/db/schema";
 import { currentUser } from "@/lib/auth/session";
 import { isCorrect } from "@/lib/judge";
 import { getProblem } from "@/lib/python-tests";
+import { wakeFetch } from "@/lib/wake-fetch";
 
 /**
  * Judging a Python submission.
@@ -130,20 +131,23 @@ export async function POST(request: Request) {
   };
 
   try {
-    const response = await fetch(`${RUNNER_URL.replace(/\/$/, "")}/run`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Judge-Token": RUNNER_TOKEN,
+    const response = await wakeFetch(
+      `${RUNNER_URL.replace(/\/$/, "")}/run`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Judge-Token": RUNNER_TOKEN,
+        },
+        body: JSON.stringify({
+          source,
+          entry: problem.entry_point,
+          cases: problem.tests.cases.map((c) => ({ args: c.args })),
+          compare: problem.tests.compare,
+        }),
       },
-      body: JSON.stringify({
-        source,
-        entry: problem.entry_point,
-        cases: problem.tests.cases.map((c) => ({ args: c.args })),
-        compare: problem.tests.compare,
-      }),
-      signal: AbortSignal.timeout(25_000),
-    });
+      25_000,
+    );
 
     if (!response.ok) {
       return NextResponse.json(
