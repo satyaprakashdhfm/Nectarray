@@ -164,6 +164,7 @@ async function alert(subject: string, text: string) {
           `${company.name} <onboarding@resend.dev>`,
         to: [
           process.env.ALERT_EMAIL ??
+            ownerEmail() ??
             process.env.CONTACT_TO_EMAIL ??
             company.email,
         ],
@@ -179,4 +180,15 @@ async function alert(subject: string, text: string) {
   } catch (error) {
     console.error("[monitor] Alert email failed:", error);
   }
+}
+
+/**
+ * Without ALERT_EMAIL, alerts go to the owner: the admin address that starts
+ * with "satyaprakash" in ADMIN_EMAILS (read the same way as in auth/access.ts).
+ */
+function ownerEmail(): string | undefined {
+  return (process.env.ADMIN_EMAILS ?? "")
+    .split(/[\s,;]+/)
+    .map((e) => e.replace(/^["']+|["']+$/g, "").toLowerCase())
+    .find((e) => e.startsWith("satyaprakash") && e.includes("@"));
 }
