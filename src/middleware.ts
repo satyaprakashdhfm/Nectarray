@@ -160,5 +160,7 @@ export const config = {
    * string comparison, and running everywhere is what makes the canonical
    * host redirect work at all.
    */
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  // api/health is left out: Railway's healthcheck calls it on its own
+  // hostname, and a redirect to the canonical one would read as a failure.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health|.*\\..*).*)"],
 };

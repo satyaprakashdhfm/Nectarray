@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { academyEnquiries } from "@/lib/db/schema";
 import { academy } from "@/lib/content";
+import { clientIp, limited, tooMany } from "@/lib/rate-limit";
 
 /**
  * Answers an academy enquiry, and keeps a record of both halves.
@@ -104,6 +105,17 @@ const str = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
 
 export async function POST(request: Request) {
+  /*
+   * Public, and every call is a paid model call and a row. Five an address
+   * per ten minutes is more than any applicant needs; the hourly ceiling
+   * caps the bill even if the address is forged.
+   */
+  if (
+    limited(`fit:${clientIp(request)}`, 5, 10 * 60_000) ||
+    limited("fit:all", 60, 60 * 60_000)
+  )
+    return tooMany();
+
   let body: Body;
   try {
     body = (await request.json()) as Body;

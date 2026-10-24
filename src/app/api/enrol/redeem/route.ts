@@ -3,6 +3,7 @@ import { and, eq, gt, isNull, ne, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cohorts, enrolmentCodes, enrolments } from "@/lib/db/schema";
 import { AccessError, requireUser } from "@/lib/auth/access";
+import { limited } from "@/lib/rate-limit";
 
 /**
  * Redeeming the code handed over once payment has cleared.
@@ -29,6 +30,14 @@ export async function POST(request: Request) {
     }
     throw error;
   }
+
+  // Codes are typed by hand, so they are short enough to guess at; ten tries
+  // an hour per account makes guessing pointless.
+  if (limited(`redeem:${user.id}`, 10, 60 * 60_000))
+    return NextResponse.json({
+      ok: false,
+      error: "Too many tries. Wait an hour, or ask us for help.",
+    });
 
   let raw = "";
   try {

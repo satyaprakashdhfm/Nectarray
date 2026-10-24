@@ -1,0 +1,158 @@
+name: Backup (every 3 days)
+
+# Copies Nectarray's database and its Drive bucket to Cloudflare R2.
+#
+# Runs on GitHub, not Railway, on purpose: a backup that lives inside the
+# platform it backs up dies with it. Database on Railway, schedule on GitHub,
+# copies on Cloudflare: losing any one still leaves a recoverable copy.
+#
+# Every 3 days rather than nightly: Nectarray holds little that changes
+# daily, so this is the right price for it.
+#
+# Needs these repository secrets (Settings -> Secrets and variables -> Actions):
+#   BACKUP_DATABASE_URL    Postgres -> Variables -> DATABASE_PUBLIC_URL
+#   R2_ACCESS_KEY_ID       Cloudflare R2 API token with write access to the bucket
+#   R2_SECRET_ACCESS_KEY
+#   R2_ENDPOINT            https://<account id>.r2.cloudflarestorage.com
+#   R2_BUCKET              the bucket name, e.g. nectarray-backup
+# Optional, for the Drive copy (same values as on the Web service):
+#   DRIVE_BUCKET_ENDPOINT, DRIVE_BUCKET_NAME, DRIVE_BUCKET_ACCESS_KEY_ID,
+#   DRIVE_BUCKET_SECRET_ACCESS_KEY
+# Optional, for an email when it fails:
+#   RESEND_KEY, ALERT_EMAIL
+#
+# Retention is R2's job: one lifecycle rule deleting db/ objects after 30
+# days. Nothing here ever deletes, so it can never delete the wrong thing.
+
+on:
+  schedule:
+    # 22:00 UTC = 03:30 IST, every third day of the month.
+    - cron: '0 22 */3 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: backup
+  cancel-in-progress: false   # never kill a backup midway through an upload
+
+permissions:
+  contents: read
+
+env:
+  AWS_DEFAULT_REGION: auto
+  # AWS CLI v2 sends CRC32 integrity headers that R2 rejects on some paths.
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Skip until the secrets are set
+        env:
+          CONFIGURED: ${{ secrets.BACKUP_DATABASE_URL != '' }}
+        run: |
+          if [ "$CONFIGURED" != "true" ]; then
+            echo "::notice::BACKUP_DATABASE_URL is not set yet, so there is nothing to do. See the top of this file."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Install the PostgreSQL 17 client
+        if: env.SKIP != '1'
+        # pg_dump refuses a newer server, and the runner ships v16. The
+        # versioned bindir goes first on PATH, because /usr/bin/pg_dump is a
+        # wrapper that would otherwise still pick 16.
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          export PATH="/usr/lib/postgresql/17/bin:$PATH"
+          pg_dump --version | grep -qE ' 17\.' || { echo "::error::pg_dump is not v17."; exit 1; }
+
+      - name: Dump the database
+        if: env.SKIP != '1'
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          STAMP=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          echo "KEY=db/nectarray-$STAMP.dump" >> "$GITHUB_ENV"
+          pg_dump "$DATABASE_URL" --schema=public --no-owner --no-acl \
+            --format=custom --file=nectarray.dump
+          ls -l nectarray.dump
+
+      - name: Refuse a dump that is obviously wrong
+        if: env.SKIP != '1'
+        # A dump can exit 0 and still be useless (wrong database, bad
+        # credentials). Measured 24 Oct 2026: 42 tables. Thresholds sit well
+        # below so ordinary changes never trip them.
+        run: |
+          SIZE=$(stat -c%s nectarray.dump)
+          TABLES=$(pg_restore -l nectarray.dump | grep -c "TABLE DATA" || true)
+          echo "size=$SIZE bytes | tables=$TABLES"
+          if [ "$SIZE" -lt 10000 ] || [ "$TABLES" -lt 30 ]; then
+            echo "::error::Dump looks wrong ($SIZE bytes, $TABLES tables). Not uploading."
+            exit 1
+          fi
+
+      - name: Upload to R2 and prove it landed
+        if: env.SKIP != '1'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 cp nectarray.dump "s3://$R2_BUCKET/$KEY" --endpoint-url "$R2_ENDPOINT"
+          REMOTE=$(aws s3api head-object --bucket "$R2_BUCKET" --key "$KEY" \
+            --endpoint-url "$R2_ENDPOINT" --query ContentLength --output text)
+          LOCAL=$(stat -c%s nectarray.dump)
+          [ "$REMOTE" = "$LOCAL" ] || { echo "::error::Uploaded $REMOTE bytes, dump was $LOCAL."; exit 1; }
+          echo "### Database backup OK" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$KEY\`, $REMOTE bytes" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Copy the Drive bucket
+        if: env.SKIP != '1'
+        # A mirror under drive/: files added since the last run are copied,
+        # nothing is deleted on R2 when it is deleted on the Drive, so a
+        # mistaken delete can still be recovered from here.
+        env:
+          SRC_ENDPOINT: ${{ secrets.DRIVE_BUCKET_ENDPOINT }}
+          SRC_BUCKET: ${{ secrets.DRIVE_BUCKET_NAME }}
+          SRC_KEY: ${{ secrets.DRIVE_BUCKET_ACCESS_KEY_ID }}
+          SRC_SECRET: ${{ secrets.DRIVE_BUCKET_SECRET_ACCESS_KEY }}
+          R2_KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          if [ -z "$SRC_BUCKET" ]; then
+            echo "::notice::Drive bucket secrets not set; skipping the Drive copy."
+            exit 0
+          fi
+          mkdir drive
+          AWS_ACCESS_KEY_ID="$SRC_KEY" AWS_SECRET_ACCESS_KEY="$SRC_SECRET" \
+            aws s3 sync "s3://$SRC_BUCKET" drive --endpoint-url "$SRC_ENDPOINT" --only-show-errors
+          AWS_ACCESS_KEY_ID="$R2_KEY" AWS_SECRET_ACCESS_KEY="$R2_SECRET" \
+            aws s3 sync drive "s3://$R2_BUCKET/drive" --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          echo "### Drive copy OK: $(find drive -type f | wc -l) files, $(du -sh drive | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Email if it failed
+        if: failure()
+        env:
+          RESEND_KEY: ${{ secrets.RESEND_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -n "$RESEND_KEY" ] && [ -n "$ALERT_EMAIL" ] || exit 0
+          jq -n --arg to "$ALERT_EMAIL" --arg url "$RUN_URL" '{
+            from: "Nectarray alerts <no-reply@nectarray.com>",
+            to: [$to],
+            subject: "Nectarray backup FAILED",
+            text: ("The backup to Cloudflare R2 did not finish. See the run: " + $url)
+          }' | curl -fsS https://api.resend.com/emails \
+            -H "Authorization: Bearer $RESEND_KEY" -H "Content-Type: application/json" -d @-

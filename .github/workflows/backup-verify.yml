@@ -1,0 +1,109 @@
+name: Backup restore check (monthly)
+
+# A backup nobody has restored is a hope. On the 2nd of each month this pulls
+# the newest dump from R2, restores it into a throwaway Postgres 17 and checks
+# the data is there. It also fails if the newest dump is more than four days
+# old, which is how a backup job that quietly stopped gets noticed. It never
+# connects to production.
+
+on:
+  schedule:
+    - cron: '30 23 2 * *'   # 05:00 IST on the 2nd
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_DEFAULT_REGION: auto
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+  PGURL: postgresql://postgres:verify@localhost:5432/postgres
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      pg:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: verify
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Skip until the secrets are set
+        env:
+          CONFIGURED: ${{ secrets.R2_BUCKET != '' }}
+        run: |
+          if [ "$CONFIGURED" != "true" ]; then
+            echo "::notice::R2_BUCKET is not set yet, so there is nothing to do. See the top of this file."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Install the PostgreSQL 17 client
+        if: env.SKIP != '1'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch the newest dump, and check it is recent
+        if: env.SKIP != '1'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          KEY=$(aws s3api list-objects-v2 --bucket "$R2_BUCKET" --prefix db/ \
+                  --endpoint-url "$R2_ENDPOINT" \
+                  --query 'sort_by(Contents,&LastModified)[-1].Key' --output text)
+          if [ -z "$KEY" ] || [ "$KEY" = "None" ]; then
+            echo "::error::No dumps under db/. The backup is not running."; exit 1
+          fi
+          MOD=$(aws s3api head-object --bucket "$R2_BUCKET" --key "$KEY" \
+                  --endpoint-url "$R2_ENDPOINT" --query LastModified --output text)
+          AGE_H=$(( ( $(date -u +%s) - $(date -u -d "$MOD" +%s) ) / 3600 ))
+          echo "newest: $KEY ($AGE_H h old)"
+          [ "$AGE_H" -le 96 ] || { echo "::error::Newest dump is $AGE_H hours old. The backup has stopped."; exit 1; }
+          aws s3 cp "s3://$R2_BUCKET/$KEY" newest.dump --endpoint-url "$R2_ENDPOINT"
+
+      - name: Restore and check the data
+        if: env.SKIP != '1'
+        run: |
+          set +e
+          pg_restore --no-owner --no-acl --dbname "$PGURL" newest.dump 2> restore.err
+          set -e
+          ERRS=$(grep "^pg_restore: error" restore.err | grep -cv 'schema "public" already exists' || true)
+          TABLES=$(psql "$PGURL" -Atc "select count(*) from information_schema.tables where table_schema='public'")
+          USERS=$(psql "$PGURL" -Atc "select count(*) from users")
+          echo "errors=$ERRS tables=$TABLES users=$USERS"
+          [ "$ERRS" -eq 0 ] || { head -40 restore.err; echo "::error::$ERRS restore errors."; exit 1; }
+          [ "$TABLES" -ge 30 ] || { echo "::error::Only $TABLES tables restored."; exit 1; }
+          echo "### Restore OK: $TABLES tables, $USERS users" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Email if it failed
+        if: failure()
+        env:
+          RESEND_KEY: ${{ secrets.RESEND_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -n "$RESEND_KEY" ] && [ -n "$ALERT_EMAIL" ] || exit 0
+          jq -n --arg to "$ALERT_EMAIL" --arg url "$RUN_URL" '{
+            from: "Nectarray alerts <no-reply@nectarray.com>",
+            to: [$to],
+            subject: "Nectarray backup restore check FAILED",
+            text: ("The monthly restore check failed. See the run: " + $url)
+          }' | curl -fsS https://api.resend.com/emails \
+            -H "Authorization: Bearer $RESEND_KEY" -H "Content-Type: application/json" -d @-

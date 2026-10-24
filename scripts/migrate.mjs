@@ -17,7 +17,7 @@
  * it skips silently, and that is the signal the migration is finished.
  */
 
-import { createHash } from "node:crypto";
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
@@ -775,6 +775,58 @@ async function applyDataFixes() {
   }
 }
 
+/**
+ * Seals project passwords and .env files saved before PROJECT_VAULT_KEY was
+ * set. Without the key they were stored as typed (lib/vault.ts), so the
+ * database and every backup of it held clients' credentials in the clear.
+ * Same AES-256-GCM format as lib/vault.ts, so the app opens them as usual.
+ * Runs every deploy and does nothing once everything is sealed.
+ */
+async function sealVault() {
+  const secret = process.env.PROJECT_VAULT_KEY;
+  if (!secret) {
+    console.log(
+      "[migrate] PROJECT_VAULT_KEY not set: project passwords stay unsealed",
+    );
+    return;
+  }
+  const key = createHash("sha256").update(secret).digest();
+  const PREFIX = "enc:v1:";
+  const seal = (plain) => {
+    if (!plain || plain.startsWith(PREFIX)) return plain;
+    const iv = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", key, iv);
+    const body = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
+    return (
+      PREFIX +
+      [iv, cipher.getAuthTag(), body].map((b) => b.toString("base64")).join(":")
+    );
+  };
+  const rows = await sql`select project_id, access, env from project_details`;
+  let sealed = 0;
+  for (const row of rows) {
+    const access = Array.isArray(row.access) ? row.access : [];
+    const nextAccess = access.map((a) =>
+      a && typeof a.password === "string"
+        ? { ...a, password: seal(a.password) }
+        : a,
+    );
+    const env = typeof row.env === "string" ? seal(row.env) : row.env;
+    if (
+      JSON.stringify(nextAccess) === JSON.stringify(access) &&
+      env === row.env
+    )
+      continue;
+    await sql`
+      update project_details
+      set access = ${sql.json(nextAccess)}, env = ${env}
+      where project_id = ${row.project_id}
+    `;
+    sealed++;
+  }
+  if (sealed) console.log(`[migrate] sealed passwords on ${sealed} project(s)`);
+}
+
 async function report() {
   const [counts] = await sql`
     select (select count(*) from modules)            as modules,
@@ -803,6 +855,7 @@ if (ok) {
   await copyContent();
   await syncLessons();
   await patchSubjectsTable();
+  await sealVault();
   await report();
 }
 await sql.end({ timeout: 5 });

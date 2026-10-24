@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { company, contact } from "@/lib/content";
+import { clientIp, limited, tooMany } from "@/lib/rate-limit";
 
 /**
  * Contact form endpoint.
@@ -85,6 +86,13 @@ function buildEmail(enquiry: Enquiry) {
 }
 
 export async function POST(request: Request) {
+  // Each call sends an email from our domain; keep it from being a relay.
+  if (
+    limited(`contact:${clientIp(request)}`, 5, 10 * 60_000) ||
+    limited("contact:all", 100, 60 * 60_000)
+  )
+    return tooMany();
+
   const apiKey = process.env.RESEND_KEY;
 
   if (!apiKey) {

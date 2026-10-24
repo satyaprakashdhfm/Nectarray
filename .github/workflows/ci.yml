@@ -1,0 +1,58 @@
+name: CI
+
+# Checks the website on every push to main and every pull request: lint,
+# types, the migration against an empty Postgres 17, and a production build.
+# With Railway's "Wait for CI" switched on for the Web service, a red run
+# here means the commit never deploys and the live site stays on the last
+# good one.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['mobile/**', 'workspace/**', 'services/**', '**/*.md']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      # Throwaway, so the migration is proven on an empty database the way a
+      # fresh deploy would meet one. Matches Railway's Postgres 17.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: nectarray
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:ci@localhost:5432/nectarray
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Migrate an empty database
+        run: node scripts/migrate.mjs
+      - name: Production build
+        run: npm run build
+      - name: Dependency audit (critical only fails the run)
+        run: npm audit --omit=dev --audit-level=critical

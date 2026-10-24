@@ -5,7 +5,8 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { projectSubmissions, projects } from "@/lib/db/schema";
-import { currentUser } from "@/lib/auth/session";
+import { AccessError, requireEnrolled } from "@/lib/auth/access";
+import { limited, tooMany } from "@/lib/rate-limit";
 import { fetchRepo, parseRepoUrl } from "@/lib/github";
 
 /**
@@ -39,10 +40,23 @@ const Review = z.object({
 });
 
 export async function POST(request: Request) {
-  const user = await currentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  /*
+   * Enrolled students only: the projects are course material, and each
+   * review is a GitHub fetch and a paid model call. Signing in with Google is
+   * open to anyone, so being signed in is not enough.
+   */
+  let user;
+  try {
+    user = await requireEnrolled();
+  } catch (error) {
+    if (error instanceof AccessError)
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    throw error;
   }
+  if (limited(`review:${user.id}`, 10, 60 * 60_000)) return tooMany();
 
   let projectId = "";
   let repoUrl = "";

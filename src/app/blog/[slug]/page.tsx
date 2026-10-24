@@ -87,7 +87,10 @@ export default async function BlogPostPage({
       <main id="main" className="pt-[calc(2.5rem+var(--header-room))] pb-16">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          // A post title holding "</script>" must not end the tag early.
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
         />
         <article className="shell">
           <div className="mx-auto max-w-3xl">

@@ -197,6 +197,14 @@ export async function adminSession(): Promise<{
     )
     .limit(1);
   if (!row) return null;
+  /*
+   * Every row lives in one table, so a student or app token pasted into the
+   * panel's cookie would be found here too, and with the emailed code would
+   * become a 30-day panel session. A real panel session never has more than
+   * five hours left; anything longer was made for another door.
+   */
+  if (row.expiresAt.getTime() - Date.now() > ADMIN_LIFETIME_MS + 60_000)
+    return null;
   return {
     user: row.user as User,
     tokenHash: hash(token),
