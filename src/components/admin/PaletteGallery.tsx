@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, ExternalLink, Heart, Plus, Trash2 } from "lucide-react";
+import { Check, Copy, Plus, Trash2 } from "lucide-react";
 import { addPalette, removePalette } from "@/app/admin/(panel)/actions";
 import {
   OUR_PALETTES,
@@ -10,33 +10,10 @@ import {
   TRENDING_PALETTES,
   type TrendingPalette,
 } from "@/lib/content/coolors-palettes";
-import { contrast, setPalette, textOn } from "@/lib/palette";
+import { textOn } from "@/lib/palette";
 import { cn } from "@/lib/utils";
 
 type Shown = TrendingPalette & { id?: string };
-
-const chroma = (hex: string) => {
-  const c = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return Math.max(...c) - Math.min(...c);
-};
-
-/**
- * Primary, secondary and tertiary for the Elements previews, out of a
- * palette of any length: the three most colourful, the one that can carry
- * white text leading.
- */
-function pickThree(colors: string[]) {
-  const ranked = [...new Set(colors)].sort((a, b) => chroma(b) - chroma(a));
-  while (ranked.length < 3) ranked.push(ranked[0]);
-  const [a, b, c] = ranked;
-  const lead = [a, b, c].find((h) => contrast(`#${h}`, "#ffffff") >= 3) ?? a;
-  const rest = [a, b, c].filter((h) => h !== lead);
-  return {
-    primary: `#${lead}`,
-    secondary: `#${rest[0] ?? b}`,
-    tertiary: `#${rest[1] ?? c}`,
-  };
-}
 
 const HEXES = /([0-9a-f]{6}(?:-[0-9a-f]{6}){1,9})/i;
 
@@ -203,7 +180,6 @@ function PaletteCard({
   onRemove?: () => void;
 }) {
   const [copied, setCopied] = useState<string | null>(null);
-  const [used, setUsed] = useState(false);
   const many = palette.colors.length > 6;
 
   async function copy(text: string) {
@@ -246,12 +222,6 @@ function PaletteCard({
           {palette.name}
         </h3>
         <div className="text-ink-soft flex shrink-0 items-center gap-0.5">
-          {palette.likes && (
-            <span className="mr-1.5 inline-flex items-center gap-1 text-[0.8125rem]">
-              <Heart className="size-3.5" strokeWidth={2} aria-hidden />
-              {palette.likes}
-            </span>
-          )}
           <button
             type="button"
             onClick={() => copy(all)}
@@ -263,27 +233,6 @@ function PaletteCard({
             ) : (
               <Copy className="size-3.5" strokeWidth={2} />
             )}
-          </button>
-          <a
-            href={`https://coolors.co/${palette.colors.join("-")}`}
-            target="_blank"
-            rel="noreferrer"
-            title="Open in Coolors"
-            className="hover:bg-mist hover:text-ink grid size-7 place-items-center rounded-md"
-          >
-            <ExternalLink className="size-3.5" strokeWidth={2} />
-          </a>
-          <button
-            type="button"
-            onClick={() => {
-              setPalette(pickThree(palette.colors));
-              setUsed(true);
-              window.setTimeout(() => setUsed(false), 1400);
-            }}
-            title="Show the Elements tab in these colours"
-            className="hover:bg-mist hover:text-ink rounded-md px-1.5 py-1 text-[0.75rem] font-semibold"
-          >
-            {used ? "Used" : "Use"}
           </button>
           {onRemove && (
             <button

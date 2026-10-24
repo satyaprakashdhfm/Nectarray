@@ -11,7 +11,7 @@ export default async function AdminWebColoursPage() {
     <>
       <PageHead
         title="Colours"
-        lede="Trending palettes from Coolors, grouped by style. Click a colour to copy it; Use shows the Elements tab in that palette."
+        lede="Trending palettes from Coolors, grouped by style. Click a colour to copy it."
       />
       <PaletteGallery saved={saved} />
     </>

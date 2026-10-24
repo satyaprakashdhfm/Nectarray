@@ -18,9 +18,10 @@
  */
 
 /** Where a category sits on a page, top to bottom. */
-export type UiPart = "top" | "body" | "bottom" | "blocks";
+export type UiPart = "start" | "top" | "body" | "bottom" | "blocks";
 
 export const UI_PARTS: { id: UiPart; label: string }[] = [
+  { id: "start", label: "Start here" },
   { id: "top", label: "Top of the page" },
   { id: "body", label: "Body" },
   { id: "bottom", label: "Bottom of the page" },
@@ -45,10 +46,27 @@ export type UiComponent = {
   source?: string;
   /** Heroes only: one of HERO_TYPES. Unset is "other". */
   type?: string;
+  /** The sub-section it folds under on the Elements tab, e.g. "Engraved heroes". */
+  group?: string;
 };
 
-/** In the order they appear on a page, ribbon to footer. */
+/**
+ * Sketches and buttons first, the pieces reached for most; then the page in
+ * order, ribbon to footer, then the smaller building blocks.
+ */
 export const UI_CATEGORIES: UiCategory[] = [
+  {
+    id: "sketch",
+    label: "Sketch diagrams",
+    blurb: "Hand-drawn style diagrams to fill an image slot, and heroes built on old engravings in warm sepia.",
+    part: "start",
+  },
+  {
+    id: "buttons",
+    label: "Buttons and badges",
+    blurb: "Every button and tag style in one place.",
+    part: "start",
+  },
   {
     id: "ribbon",
     label: "Ribbon",
@@ -59,6 +77,12 @@ export const UI_CATEGORIES: UiCategory[] = [
     id: "headers",
     label: "Navigation header",
     blurb: "The bar at the top: logo, links, search, one button.",
+    part: "top",
+  },
+  {
+    id: "logo-animations",
+    label: "Logo animations",
+    blurb: "The logo moving into place: drawn on, typed, gathered from dots or blooming open. For a splash, a loading screen or the top of the hero.",
     part: "top",
   },
   {
@@ -122,12 +146,6 @@ export const UI_CATEGORIES: UiCategory[] = [
     part: "body",
   },
   {
-    id: "stats",
-    label: "Stats",
-    blurb: "A few numbers that prove the point.",
-    part: "body",
-  },
-  {
     id: "pricing",
     label: "Pricing",
     blurb: "Plans side by side with the recommended one marked.",
@@ -164,12 +182,6 @@ export const UI_CATEGORIES: UiCategory[] = [
     part: "bottom",
   },
   {
-    id: "buttons",
-    label: "Buttons and badges",
-    blurb: "Every button and tag style in one place.",
-    part: "blocks",
-  },
-  {
     id: "forms",
     label: "Forms",
     blurb: "Labels above fields, errors under them, one clear button.",
@@ -191,12 +203,6 @@ export const UI_CATEGORIES: UiCategory[] = [
     id: "tables",
     label: "Tables and lists",
     blurb: "Data tables, timelines and detail lists.",
-    part: "blocks",
-  },
-  {
-    id: "sketch",
-    label: "Sketch diagrams",
-    blurb: "Hand-drawn style diagrams to fill an image slot.",
     part: "blocks",
   },
 ];
@@ -853,6 +859,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "form-contact-split",
     category: "forms",
+    group: "Full forms",
     name: "Contact form beside contact details",
     note: "The contact page. Uses the width: details left, form right.",
     html: `<section class="bg-white">
@@ -883,6 +890,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "form-sign-in",
     category: "forms",
+    group: "Full forms",
     name: "Sign in with Google or email",
     note: "Log-in pages and dashboards.",
     html: `<div class="grid min-h-[34rem] place-items-center bg-zinc-50 p-6">
@@ -906,6 +914,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "form-errors",
     category: "forms",
+    group: "Full forms",
     name: "Form showing errors",
     note: "How a field looks when it is wrong: red border, message under it.",
     html: `<div class="bg-white p-6">
@@ -933,6 +942,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "form-newsletter",
     category: "forms",
+    group: "Full forms",
     name: "Newsletter sign-up strip",
     note: "Above a footer or at the end of an article.",
     html: `<section class="bg-(--p-dark)">
@@ -952,6 +962,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "form-booking",
     category: "forms",
+    group: "Full forms",
     name: "Booking with date and time slots",
     note: "Clinics, salons, demos: pick a day, then a time.",
     html: `<div class="bg-zinc-50 p-6">
@@ -986,6 +997,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "form-multistep",
     category: "forms",
+    group: "Full forms",
     name: "Multi-step form with progress",
     note: "Long forms (admissions, quotes) broken into short steps.",
     html: `<div class="bg-white p-6">
@@ -1012,6 +1024,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "form-search-filters",
     category: "forms",
+    group: "Full forms",
     name: "Search with filters",
     note: "Listings: properties, courses, jobs, products.",
     html: `<div class="bg-(--s-light) p-6">
@@ -1036,6 +1049,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "pricing-three",
     category: "pricing",
+    group: "Plans",
     name: "Three plans, middle one marked",
     note: "The standard pricing table. The recommended plan stands out.",
     html: `<section class="bg-zinc-50">
@@ -1071,6 +1085,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "pricing-toggle",
     category: "pricing",
+    group: "Plans",
     name: "Monthly or yearly switch",
     note: "When a yearly plan has a discount. Works with CSS only.",
     html: `<section class="group/price bg-white">
@@ -1101,6 +1116,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "pricing-course",
     category: "pricing",
+    group: "Packages",
     name: "Single course fee with what is included",
     note: "One product, one price: a course, a package, an event ticket.",
     html: `<section class="bg-(--p-light)">
@@ -1183,36 +1199,6 @@ export const UI_COMPONENTS: UiComponent[] = [
   // -------------------------------------------------------------------------
   //  Stats
   // -------------------------------------------------------------------------
-  {
-    id: "stats-row",
-    category: "stats",
-    name: "Four numbers in a row",
-    note: "Under a hero or above a footer. Real numbers only.",
-    html: `<section class="bg-white">
-  <dl class="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-2xl bg-zinc-200 md:grid-cols-4">
-    <div class="bg-white p-6"><dt class="text-sm text-zinc-600">Projects delivered</dt><dd class="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">214</dd></div>
-    <div class="bg-white p-6"><dt class="text-sm text-zinc-600">Average build</dt><dd class="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">5 weeks</dd></div>
-    <div class="bg-white p-6"><dt class="text-sm text-zinc-600">Clients who came back</dt><dd class="mt-1 text-3xl font-semibold tracking-tight text-(--p-dark)">68%</dd></div>
-    <div class="bg-white p-6"><dt class="text-sm text-zinc-600">Cities</dt><dd class="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">11</dd></div>
-  </dl>
-</section>`,
-  },
-  {
-    id: "stats-feature",
-    category: "stats",
-    name: "One big number with context",
-    note: "A single result worth the whole section.",
-    html: `<section class="bg-(--p-dark)">
-  <div class="mx-auto grid max-w-6xl items-center gap-8 px-5 py-14 md:grid-cols-2">
-    <p class="text-7xl font-semibold tracking-tight text-white md:text-8xl">82%</p>
-    <div>
-      <h2 class="text-xl font-semibold text-white">of last year's batch got a job within four months</h2>
-      <p class="mt-3 max-w-[44ch] text-sm leading-relaxed text-white/75">Counted from the 61 students who finished every project. The full list of companies is on the placements page.</p>
-      <a href="#" class="mt-5 inline-block text-sm font-semibold text-(--t) underline underline-offset-4">See placements</a>
-    </div>
-  </div>
-</section>`,
-  },
 
   // -------------------------------------------------------------------------
   //  Calls to action
@@ -1274,6 +1260,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "faq-accordion",
     category: "faqs",
+    group: "Styles",
     name: "Accordion, heading on the left",
     note: "Uses details and summary, so it opens without JavaScript.",
     html: `<section class="bg-white">
@@ -1302,6 +1289,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "faq-cards",
     category: "faqs",
+    group: "Styles",
     name: "Two columns of answers",
     note: "Short answers that do not need to be hidden.",
     html: `<section class="bg-zinc-50">
@@ -1323,6 +1311,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "blog-grid",
     category: "blog-cards",
+    group: "Blog cards",
     name: "Article cards with image",
     note: "A blog index or a 'read next' row.",
     html: `<section class="bg-white">
@@ -1354,6 +1343,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "blog-featured",
     category: "blog-cards",
+    group: "Blog cards",
     name: "One featured article and a list",
     note: "A blog home page with a lead story.",
     html: `<section class="bg-white">
@@ -1374,6 +1364,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "resource-cards",
     category: "blog-cards",
+    group: "Resources",
     name: "Downloadable resources",
     note: "Guides, templates and checklists behind a button.",
     html: `<section class="bg-zinc-50">
@@ -1451,62 +1442,14 @@ export const UI_COMPONENTS: UiComponent[] = [
   // -------------------------------------------------------------------------
   //  Buttons and badges
   // -------------------------------------------------------------------------
-  {
-    id: "buttons-set",
-    category: "buttons",
-    name: "Button set",
-    note: "Main, secondary, quiet, danger, disabled, and two sizes.",
-    html: `<div class="space-y-5 bg-white p-6">
-  <div class="flex flex-wrap items-center gap-3">
-    <button class="rounded-lg bg-(--p) px-5 py-2.5 text-sm font-semibold text-(--p-on) hover:bg-(--p-dark) hover:text-white active:translate-y-px">Main action</button>
-    <button class="rounded-lg border border-(--p-dark) px-5 py-2.5 text-sm font-semibold text-(--p-dark) hover:bg-(--p-light)">Secondary</button>
-    <button class="rounded-lg px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">Quiet</button>
-    <button class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700">Delete</button>
-    <button disabled class="cursor-not-allowed rounded-lg bg-zinc-200 px-5 py-2.5 text-sm font-semibold text-zinc-500">Disabled</button>
-  </div>
-  <div class="flex flex-wrap items-center gap-3">
-    <button class="rounded-full bg-(--s) px-6 py-3 text-base font-semibold text-(--s-on) hover:bg-(--s-dark) hover:text-white">Large pill</button>
-    <button class="rounded-md bg-(--t) px-3 py-1.5 text-xs font-semibold text-(--t-on) hover:bg-(--t-dark) hover:text-white">Small</button>
-    <button class="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white"><span class="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>Saving</button>
-  </div>
-</div>`,
-  },
-  {
-    id: "badges-set",
-    category: "buttons",
-    name: "Badges and tags",
-    note: "Status, categories and counts.",
-    html: `<div class="flex flex-wrap items-center gap-2 bg-white p-6 text-xs font-semibold">
-  <span class="rounded-full bg-(--p-light) px-2.5 py-1 text-(--p-dark)">Primary</span>
-  <span class="rounded-full bg-(--s-light) px-2.5 py-1 text-(--s-dark)">Secondary</span>
-  <span class="rounded-full bg-(--t-light) px-2.5 py-1 text-(--t-dark)">Tertiary</span>
-  <span class="rounded-full bg-(--p) px-2.5 py-1 text-(--p-on)">Solid</span>
-  <span class="rounded-full border border-zinc-300 px-2.5 py-1 text-zinc-700">Outline</span>
-  <span class="rounded-md bg-emerald-50 px-2 py-1 text-emerald-800">Paid</span>
-  <span class="rounded-md bg-amber-50 px-2 py-1 text-amber-800">Pending</span>
-  <span class="rounded-md bg-red-50 px-2 py-1 text-red-800">Overdue</span>
-  <span class="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-zinc-700">Inbox <span class="rounded-full bg-zinc-900 px-1.5 text-[0.625rem] text-white">12</span></span>
-</div>`,
-  },
 
   // -------------------------------------------------------------------------
   //  Alerts and empty states
   // -------------------------------------------------------------------------
   {
-    id: "alerts-set",
-    category: "feedback",
-    name: "Alerts",
-    note: "Success, information, warning and error, with a clear next step.",
-    html: `<div class="grid gap-3 bg-white p-6 md:grid-cols-2">
-  <div role="status" class="rounded-xl border-l-4 border-emerald-500 bg-emerald-50 p-4"><p class="text-sm font-semibold text-emerald-900">Payment received</p><p class="mt-1 text-sm text-emerald-800">₹15,500 for instalment 2. A receipt is on its way to your email.</p></div>
-  <div role="status" class="rounded-xl border-l-4 border-(--p) bg-(--p-light) p-4"><p class="text-sm font-semibold text-(--p-dark)">Class moved to 11 am</p><p class="mt-1 text-sm text-zinc-700">Saturday only. The link stays the same.</p></div>
-  <div role="alert" class="rounded-xl border-l-4 border-amber-500 bg-amber-50 p-4"><p class="text-sm font-semibold text-amber-900">Your trial ends in 3 days</p><p class="mt-1 text-sm text-amber-800">Pick a plan to keep your invoices. <a href="#" class="font-semibold underline">See plans</a></p></div>
-  <div role="alert" class="rounded-xl border-l-4 border-red-500 bg-red-50 p-4"><p class="text-sm font-semibold text-red-900">Could not send the invoice</p><p class="mt-1 text-sm text-red-800">The customer's email bounced. Check the address and try again.</p></div>
-</div>`,
-  },
-  {
     id: "empty-state",
     category: "feedback",
+    group: "Empty states",
     name: "Empty state",
     note: "A list with nothing in it yet: say why, and how to fill it.",
     html: `<div class="bg-zinc-50 p-6">
@@ -1518,19 +1461,6 @@ export const UI_COMPONENTS: UiComponent[] = [
   </div>
 </div>`,
   },
-  {
-    id: "toast",
-    category: "feedback",
-    name: "Toast notification",
-    note: "A short message that confirms an action, bottom corner.",
-    html: `<div class="relative h-48 bg-zinc-100">
-  <div role="status" class="absolute right-4 bottom-4 flex w-80 max-w-[calc(100%-2rem)] items-start gap-3 rounded-xl bg-zinc-900 p-4 text-sm text-white shadow-lg">
-    <span class="mt-0.5 size-2.5 shrink-0 rounded-full bg-(--s)"></span>
-    <div class="flex-1"><p class="font-semibold">Link copied</p><p class="mt-0.5 text-white/70">Anyone with it can view this report.</p></div>
-    <button class="text-white/60 hover:text-white" aria-label="Close">✕</button>
-  </div>
-</div>`,
-  },
 
   // -------------------------------------------------------------------------
   //  Sketch diagrams
@@ -1538,6 +1468,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "sketch-flow",
     category: "sketch",
+    group: "Diagrams",
     name: "Three-step flow",
     note: "Any process: enquiry to delivery, data to dashboard.",
     html: `<div class="bg-white p-6">
@@ -1562,6 +1493,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "sketch-before-after",
     category: "sketch",
+    group: "Diagrams",
     name: "Before and after",
     note: "Show the problem and the fix side by side.",
     html: `<div class="bg-zinc-50 p-6">
@@ -1588,6 +1520,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "sketch-hub",
     category: "sketch",
+    group: "Diagrams",
     name: "Hub and spokes",
     note: "One product connected to many tools or channels.",
     html: `<div class="bg-white p-6">
@@ -1609,6 +1542,7 @@ export const UI_COMPONENTS: UiComponent[] = [
   {
     id: "sketch-timeline",
     category: "sketch",
+    group: "Diagrams",
     name: "Timeline",
     note: "A course plan, a project schedule or a company story.",
     html: `<div class="bg-(--p-light) p-6">

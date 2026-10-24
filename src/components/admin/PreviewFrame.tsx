@@ -35,8 +35,8 @@ function pageHead(): Head {
  * page's stylesheets, so the Tailwind classes in the snippets just work, and
  * the palette arrives as CSS variables on its root.
  *
- * Sandboxed without scripts or forms: buttons and links in a preview look
- * real but go nowhere.
+ * Sandboxed without scripts or forms, and link clicks are stopped: buttons
+ * and links in a preview look real but go nowhere.
  *
  * `width` fixes the frame's own width (a phone is 390). With `fit`, a wide
  * frame is scaled down to fit the space it is given, which is how a laptop
@@ -93,6 +93,14 @@ export function PreviewFrame({
     const measure = () =>
       setHeight(Math.max(minHeight, doc.documentElement.scrollHeight));
     measure();
+    // Links in the snippets point at "#" or made-up paths, which resolve
+    // against this page: followed, the frame would load the admin inside
+    // itself. A link click stays put instead.
+    doc.addEventListener("click", (e) => {
+      if ((e.target as Element | null)?.closest?.("a[href]")) {
+        e.preventDefault();
+      }
+    });
     const observer = new ResizeObserver(measure);
     observer.observe(doc.body);
     // Images arriving late change the height after the first measure.
