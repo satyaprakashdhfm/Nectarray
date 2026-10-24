@@ -16,9 +16,17 @@ export type NoteBlock =
   | { kind: "steps"; items: string[] }
   | { kind: "terms"; items: { term: string; meaning: string }[] }
   | { kind: "table"; head: string[]; rows: string[][] }
-  | { kind: "tip"; text: string };
+  | { kind: "tip"; text: string }
+  /** Preformatted text: an architecture sketch or a few shell lines. */
+  | { kind: "code"; text: string };
 
-export type NoteSection = { id: string; title: string; blocks: NoteBlock[] };
+export type NoteSection = {
+  id: string;
+  title: string;
+  blocks: NoteBlock[];
+  /** Where sections sit two to a row (DevOps), take the whole row. */
+  wide?: boolean;
+};
 
 export type NoteTopic = {
   id: string;

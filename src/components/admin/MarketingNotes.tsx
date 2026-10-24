@@ -37,7 +37,7 @@ export function SetupBoxes({ topic }: { topic: NoteTopic }) {
   );
 }
 
-/** One block of a section, in whichever of the six shapes it comes in. */
+/** One block of a section, in whichever of the seven shapes it comes in. */
 export function Block({ block }: { block: NoteBlock }) {
   switch (block.kind) {
     case "p":
@@ -63,7 +63,7 @@ export function Block({ block }: { block: NoteBlock }) {
     }
     case "terms":
       return (
-        <dl className="grid gap-2 sm:grid-cols-2">
+        <dl className="grid gap-2 sm:grid-cols-2 @4xl:grid-cols-3">
           {block.items.map((item) => (
             <div
               key={item.term}
@@ -118,6 +118,12 @@ export function Block({ block }: { block: NoteBlock }) {
           />
           <span>{block.text}</span>
         </p>
+      );
+    case "code":
+      return (
+        <pre className="border-line bg-canvas text-ink overflow-x-auto rounded-xl border p-4 font-mono text-[0.75rem] leading-relaxed">
+          {block.text}
+        </pre>
       );
   }
 }

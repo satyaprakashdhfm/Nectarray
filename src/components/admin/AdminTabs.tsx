@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookOpen,
   Bot,
+  Boxes,
   Briefcase,
   CalendarDays,
   ChevronDown,
@@ -24,9 +26,11 @@ import {
   LockOpen,
   Megaphone,
   Menu,
+  Network,
   NotebookPen,
   Palette,
   Plug,
+  Server,
   Sparkles,
   SquareTerminal,
   Users,
@@ -105,6 +109,28 @@ const GROUPS: Group[] = [
       { href: `${ADMIN}/web/references`, label: "References", icon: Link2 },
     ],
   },
+  // Every project we run, the stack under them, how they are designed.
+  {
+    href: `${ADMIN}/devops`,
+    label: "DevOps",
+    icon: Server,
+    owns: [`${ADMIN}/devops`],
+    children: [
+      {
+        href: `${ADMIN}/devops`,
+        label: "Projects",
+        icon: FolderKanban,
+        also: [`${ADMIN}/devops/projects`],
+      },
+      { href: `${ADMIN}/devops/stack`, label: "Stack", icon: Boxes },
+      { href: `${ADMIN}/devops/design`, label: "System design", icon: Network },
+      {
+        href: `${ADMIN}/devops/knowledge`,
+        label: "General knowledge",
+        icon: BookOpen,
+      },
+    ],
+  },
   {
     href: `${ADMIN}/services/ai`,
     label: "Agentic AI",
@@ -165,9 +191,11 @@ export function AdminTabs() {
     tab.also?.some((path) => pathname.startsWith(path)) ||
     (tab.href === `${ADMIN}`
       ? pathname === `${ADMIN}`
-      : // All projects and Learnings own only their own page, not the
-        // tabs beside them.
-        tab.href === `${ADMIN}/development` || tab.href === `${ADMIN}/web`
+      : // All projects, Learnings and DevOps projects own only their own
+        // page, not the tabs beside them.
+        tab.href === `${ADMIN}/development` ||
+          tab.href === `${ADMIN}/web` ||
+          tab.href === `${ADMIN}/devops`
         ? pathname === tab.href
         : pathname.startsWith(tab.href));
   const groupActive = (group: Group) =>
@@ -323,7 +351,8 @@ export function AdminMenu() {
     tab.also?.some((path) => pathname.startsWith(path)) ||
     (tab.href === `${ADMIN}` ||
     tab.href === `${ADMIN}/development` ||
-    tab.href === `${ADMIN}/web`
+    tab.href === `${ADMIN}/web` ||
+    tab.href === `${ADMIN}/devops`
       ? pathname === tab.href
       : pathname.startsWith(tab.href));
 
