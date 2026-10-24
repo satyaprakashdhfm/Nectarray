@@ -3,6 +3,8 @@
 import { createHmac } from "node:crypto";
 import { requireAdmin } from "@/lib/auth/access";
 import { deployBoard, type DeployBoard } from "@/lib/deploys/board";
+import { recentIncidents, type Incident } from "@/lib/monitor/incidents";
+import { parseSites } from "@/lib/monitor/uptime";
 
 /**
  * A one-minute pass to the Workspace runner, for an admin who is all the way
@@ -43,4 +45,16 @@ export async function workspaceAccess(): Promise<
 export async function deploys(): Promise<DeployBoard> {
   await requireAdmin();
   return deployBoard();
+}
+
+/** Open incidents and the last week's recoveries, for the panel above the board. */
+export async function incidents(): Promise<{
+  incidents: Incident[];
+  watching: number;
+}> {
+  await requireAdmin();
+  return {
+    incidents: await recentIncidents(),
+    watching: parseSites(process.env.MONITOR_URLS).length,
+  };
 }

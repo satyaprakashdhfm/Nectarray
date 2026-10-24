@@ -940,6 +940,35 @@ export const adCampaigns = pgTable("ad_campaigns", {
   createdAt: now(),
 });
 
+/**
+ * Something that went wrong with a site or service: a Railway deploy that
+ * failed or crashed (its webhook), or a site that stopped answering (the
+ * uptime checker in lib/monitor). Open while resolvedAt is null; a repeat of
+ * the same problem updates the open row rather than adding another.
+ */
+export const serviceIncidents = pgTable(
+  "service_incidents",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** railway · uptime */
+    source: text().notNull(),
+    /** What is affected, the key a repeat or a recovery matches on. */
+    target: text().notNull(),
+    /** The app it belongs to, for display: a Railway project or a site. */
+    project: text().notNull(),
+    title: text().notNull(),
+    detail: text().notNull().default(""),
+    /** Where to go to look: the Railway service, or the site itself. */
+    href: text(),
+    openedAt: now(),
+    lastSeenAt: now(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("service_incidents_target_idx").on(table.target, table.resolvedAt),
+  ],
+);
+
 // ---------------------------------------------------------------------------
 //  Relations, for the query builder
 // ---------------------------------------------------------------------------
