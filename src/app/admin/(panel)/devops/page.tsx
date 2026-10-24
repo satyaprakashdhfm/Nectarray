@@ -6,7 +6,7 @@ import { DEVOPS_PROJECTS } from "@/lib/content/devops";
 /**
  * DevOps: one card per project we run, each opening its architecture,
  * versions, deploy, data, cost and open items. Stack, System design and
- * General knowledge sit beside it in the sidebar.
+ * General knowledge are the tabs beside it (devops/layout.tsx).
  */
 export default function DevopsPage() {
   return (

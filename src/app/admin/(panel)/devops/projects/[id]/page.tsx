@@ -1,7 +1,7 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { PageHead, Stat } from "@/components/admin/Business";
 import { NoteSections } from "@/components/admin/DevopsNotes";
 import { DEVOPS_PROJECTS, devopsProject } from "@/lib/content/devops";
@@ -22,14 +22,6 @@ export default async function DevopsProjectPage({
 
   return (
     <>
-      <Link
-        href={`${ADMIN}/devops`}
-        className="text-ink-soft hover:text-ink mb-4 inline-flex items-center gap-1.5 text-[0.8125rem] font-medium"
-      >
-        <ArrowLeft className="size-3.5" aria-hidden />
-        All projects
-      </Link>
-
       <ul className="tab-bar mb-6" aria-label="Projects">
         {DEVOPS_PROJECTS.map((p) => (
           <li key={p.id}>

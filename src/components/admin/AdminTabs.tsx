@@ -5,9 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen,
   Bot,
-  Boxes,
   Briefcase,
   CalendarDays,
   ChevronDown,
@@ -26,7 +24,6 @@ import {
   LockOpen,
   Megaphone,
   Menu,
-  Network,
   NotebookPen,
   Palette,
   Plug,
@@ -95,7 +92,7 @@ const GROUPS: Group[] = [
     href: `${ADMIN}/services/software`,
     label: "Software",
     icon: Code,
-    owns: [`${ADMIN}/services/software`, `${ADMIN}/web`],
+    owns: [`${ADMIN}/services/software`, `${ADMIN}/web`, `${ADMIN}/devops`],
     children: [
       {
         href: `${ADMIN}/services/software`,
@@ -107,28 +104,8 @@ const GROUPS: Group[] = [
       { href: `${ADMIN}/web/elements`, label: "Elements", icon: Component },
       { href: `${ADMIN}/web/animations`, label: "Animations", icon: Sparkles },
       { href: `${ADMIN}/web/references`, label: "References", icon: Link2 },
-    ],
-  },
-  // Every project we run, the stack under them, how they are designed.
-  {
-    href: `${ADMIN}/devops`,
-    label: "DevOps",
-    icon: Server,
-    owns: [`${ADMIN}/devops`],
-    children: [
-      {
-        href: `${ADMIN}/devops`,
-        label: "Projects",
-        icon: FolderKanban,
-        also: [`${ADMIN}/devops/projects`],
-      },
-      { href: `${ADMIN}/devops/stack`, label: "Stack", icon: Boxes },
-      { href: `${ADMIN}/devops/design`, label: "System design", icon: Network },
-      {
-        href: `${ADMIN}/devops/knowledge`,
-        label: "General knowledge",
-        icon: BookOpen,
-      },
+      // Projects, Stack, System design and General knowledge, as tabs.
+      { href: `${ADMIN}/devops`, label: "DevOps", icon: Server },
     ],
   },
   {
@@ -191,11 +168,9 @@ export function AdminTabs() {
     tab.also?.some((path) => pathname.startsWith(path)) ||
     (tab.href === `${ADMIN}`
       ? pathname === `${ADMIN}`
-      : // All projects, Learnings and DevOps projects own only their own
-        // page, not the tabs beside them.
-        tab.href === `${ADMIN}/development` ||
-          tab.href === `${ADMIN}/web` ||
-          tab.href === `${ADMIN}/devops`
+      : // All projects and Learnings own only their own page, not the
+        // tabs beside them.
+        tab.href === `${ADMIN}/development` || tab.href === `${ADMIN}/web`
         ? pathname === tab.href
         : pathname.startsWith(tab.href));
   const groupActive = (group: Group) =>
@@ -351,8 +326,7 @@ export function AdminMenu() {
     tab.also?.some((path) => pathname.startsWith(path)) ||
     (tab.href === `${ADMIN}` ||
     tab.href === `${ADMIN}/development` ||
-    tab.href === `${ADMIN}/web` ||
-    tab.href === `${ADMIN}/devops`
+    tab.href === `${ADMIN}/web`
       ? pathname === tab.href
       : pathname.startsWith(tab.href));
 
