@@ -160,7 +160,7 @@ export const ANIMATIONS: AnimationEntry[] = [
     id: "jewellery-look-zoom",
     category: "fashion",
     name: "Jewellery lookbook: one scroll, one piece",
-    note: "One model photo, moved like a film camera. Each scroll (a wheel flick, a swipe, an arrow key) glides to the next piece and stops there while its card pops up with products to swipe: earring, pendant, ring, bracelet. The fifth pulls back to the whole look with every piece marked, and the sixth carries on down the page. One image, so every shot keeps the same light. Suits jewellery, watches, eyewear and any shop-the-look page.",
+    note: "One model photo, moved like a film camera. Each scroll (a wheel flick, a swipe, an arrow key) glides to the next piece and stops there while its card pops up with products to swipe: earring, pendant, bracelet, ring. The fifth pulls back to the whole look with every piece marked, and the sixth carries on down the page. One image, so every shot keeps the same light. Suits jewellery, watches, eyewear and any shop-the-look page.",
     file: "JewelleryLookZoom.tsx",
   },
   {

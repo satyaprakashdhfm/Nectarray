@@ -15,7 +15,7 @@ import {
 /**
  * One photograph, scrolled like a camera. The look opens wide, then each
  * scroll — one flick of the wheel, one swipe — glides the camera to the
- * next piece: the earring, the pendant, the ring, the bracelet. It stops
+ * next piece: the earring, the pendant, the bracelet, the ring. It stops
  * there while that piece's card pops up beside it with products to swipe
  * through. The fifth pulls back to the whole look with every piece marked,
  * and the sixth carries on down the page.
@@ -81,21 +81,6 @@ export const LOOKS: Look[] = [
     ],
   },
   {
-    id: "rings",
-    label: "Rings",
-    blurb: "Sterling bands with a black inlay, to stack or wear alone.",
-    fx: 0.567,
-    fy: 0.475,
-    zoom: 2.7,
-    side: "right",
-    products: [
-      { name: "Onyx Inlay Band", price: "₹3,790" },
-      { name: "Brushed Band", price: "₹2,690" },
-      { name: "Signet Ring", price: "₹4,290" },
-      { name: "Twist Band", price: "₹2,490" },
-    ],
-  },
-  {
     id: "bracelets",
     label: "Bracelets",
     blurb: "Curb and figaro links with real weight to them.",
@@ -108,6 +93,21 @@ export const LOOKS: Look[] = [
       { name: "Figaro Link", price: "₹4,290" },
       { name: "Silver Cuff", price: "₹3,590" },
       { name: "Beaded Onyx", price: "₹2,190" },
+    ],
+  },
+  {
+    id: "rings",
+    label: "Rings",
+    blurb: "Sterling bands with a black inlay, to stack or wear alone.",
+    fx: 0.567,
+    fy: 0.475,
+    zoom: 2.7,
+    side: "right",
+    products: [
+      { name: "Onyx Inlay Band", price: "₹3,790" },
+      { name: "Brushed Band", price: "₹2,690" },
+      { name: "Signet Ring", price: "₹4,290" },
+      { name: "Twist Band", price: "₹2,490" },
     ],
   },
 ];
