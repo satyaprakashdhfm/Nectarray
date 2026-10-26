@@ -74,8 +74,14 @@ export const ANIMATION_CATEGORIES: AnimationCategory[] = [
   },
   {
     id: "ecommerce",
-    label: "E-commerce and fashion",
+    label: "E-commerce and retail",
     blurb: "The product is the hero: reveals, swatches and rotating picks.",
+  },
+  {
+    id: "fashion",
+    label: "Fashion and jewellery",
+    blurb:
+      "Lookbooks that sell what the model is wearing: the camera moves from piece to piece, and each one opens onto the shop.",
   },
   {
     id: "agency",
@@ -140,6 +146,22 @@ export const ANIMATIONS: AnimationEntry[] = [
     note: "A whole one-page site where every section moves differently: the hero is the city from above, with orders popping over homes, vans driving the roads from the hub and homes ticking Delivered; orders from every channel stream into a live feed; a conveyor scans parcels and sorts them down chutes by area; a pinned phone tracks one parcel as the scroll drives the van to the door; and the delivery area lights up pincode by pincode.",
     file: "CommerceCitySite.tsx",
     with: ["SiteParts.tsx"],
+  },
+  {
+    id: "jewellery-site",
+    category: "fashion",
+    name: "Full men's jewellery website, shop the look",
+    note: "A whole one-page store built around the lookbook: five scrolls walk the camera over the model piece by piece, then the page carries on to a running strip of promises, tall shop-by-piece tiles, a craft section whose photo drifts against the scroll, bestsellers that count up the bag in the header, and a newsletter footer.",
+    file: "JewellerySite.tsx",
+    with: ["JewelleryLookZoom.tsx"],
+    page: "/showcase/silver-edit",
+  },
+  {
+    id: "jewellery-look-zoom",
+    category: "fashion",
+    name: "Jewellery lookbook: one scroll, one piece",
+    note: "One model photo, moved like a film camera. Each scroll (a wheel flick, a swipe, an arrow key) glides to the next piece and stops there while its card pops up with products to swipe: earring, pendant, ring, bracelet. The fifth pulls back to the whole look with every piece marked, and the sixth carries on down the page. One image, so every shot keeps the same light. Suits jewellery, watches, eyewear and any shop-the-look page.",
+    file: "JewelleryLookZoom.tsx",
   },
   {
     id: "kitchen-taste-site",

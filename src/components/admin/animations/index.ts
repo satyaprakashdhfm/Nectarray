@@ -22,6 +22,8 @@ import { GeoChangeDetection } from "./heroes/GeoChangeDetection";
 import { FintechLiveChart } from "./heroes/FintechLiveChart";
 import { HealthBreathing } from "./heroes/HealthBreathing";
 import { HealthHeartbeat } from "./heroes/HealthHeartbeat";
+import { JewelleryLookZoom } from "./heroes/JewelleryLookZoom";
+import { JewellerySite } from "./heroes/JewellerySite";
 import { KitchenTasteSite } from "./heroes/KitchenTasteSite";
 import { LawOfficeScrollSite } from "./heroes/LawOfficeScrollSite";
 import { LawPropertyVerification } from "./heroes/LawPropertyVerification";
@@ -83,6 +85,8 @@ export const HEROES: Record<string, ComponentType> = {
   "geo-change-detection": GeoChangeDetection,
   "ecommerce-mask-reveal": EcommerceMaskReveal,
   "ecommerce-colour-picker": EcommerceColourPicker,
+  "jewellery-site": JewellerySite,
+  "jewellery-look-zoom": JewelleryLookZoom,
   "agency-rolling-words": AgencyRollingWords,
   "agency-marquee-magnetic": AgencyMarqueeMagnetic,
   "education-count-up": EducationCountUp,
