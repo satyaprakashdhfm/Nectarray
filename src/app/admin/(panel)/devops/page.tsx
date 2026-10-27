@@ -16,9 +16,12 @@ import {
   devopsProject,
 } from "@/lib/content/devops";
 import { DEVOPS_ENV } from "@/lib/content/devops-env";
+import { DEVOPS_UI } from "@/lib/content/devops-ui";
+import { ProjectUi } from "@/components/admin/ProjectUi";
 
 const PARTS = [
   { id: "project", label: "Project" },
+  { id: "ui", label: "UI / UX" },
   { id: "env", label: "Environment variables" },
   { id: "stack", label: "Stack" },
   { id: "design", label: "System design" },
@@ -27,7 +30,8 @@ const PARTS = [
 
 /**
  * DevOps on one page. A bar under the header jumps between its parts: the
- * chosen project (architecture, versions, deploy, data, cost, open items),
+ * chosen project (UI / UX first, then architecture, versions, deploy, data,
+ * cost, open items),
  * that project's environment variables, then the stack, system design and
  * general knowledge shared by all of them. The project is picked by tabs
  * (?project=), so a link can point straight at one.
@@ -41,6 +45,7 @@ export default async function DevopsPage({
   const project = devopsProject(id ?? "") ?? DEVOPS_PROJECTS[0];
   const env = DEVOPS_ENV[project.id] ?? [];
   const envCount = env.reduce((n, g) => n + g.vars.length, 0);
+  const ui = DEVOPS_UI[project.id];
 
   return (
     <>
@@ -115,6 +120,8 @@ export default async function DevopsPage({
             <Stat key={fact.label} {...fact} />
           ))}
         </div>
+
+        {ui && <ProjectUi ui={ui} />}
 
         <div className="mt-10">
           <SectionGrid sections={project.sections} />
