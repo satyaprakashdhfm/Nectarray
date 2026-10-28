@@ -140,6 +140,13 @@ export const ANIMATIONS: AnimationEntry[] = [
     with: ["SiteParts.tsx"],
   },
   {
+    id: "ecommerce-toy-film-hero",
+    category: "ecommerce",
+    name: "Toy shop hero: a film of the toys being made, with a shuffling card stack",
+    note: "A short rendered film fills the whole hero: the story picture comes alive (corn popping, a flask bubbling, a pot on the flame, bricks of plant plastic shining), then a 3D printer prints a cow, a duck, a sheep and a pig one by one, layer by layer, and each walks across a sunny meadow. The headline and buttons sit on the film's calm sky, and one stack of bestseller and new cards shuffles in the top corner, clear of the action, pausing on hover. A pause button sits bottom left, and the film stays still for reduced motion. On a phone the film comes first, then the words and the cards. Made for Minimals (3D-printed toys); the film and photos live in public/animations/toy-film/. Toy, craft and handmade shops, and any product with a making-of story.",
+    file: "EcommerceToyFilmHero.tsx",
+  },
+  {
     id: "commerce-city-site",
     category: "ecommerce",
     name: "Full same-day delivery website, the city alive",

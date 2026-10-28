@@ -15,6 +15,7 @@ import { DeedsOriginalSite } from "./heroes/DeedsOriginalSite";
 import { LawJourneySite } from "./heroes/LawJourneySite";
 import { EcommerceColourPicker } from "./heroes/EcommerceColourPicker";
 import { EcommerceMaskReveal } from "./heroes/EcommerceMaskReveal";
+import { EcommerceToyFilmHero } from "./heroes/EcommerceToyFilmHero";
 import { EducationCountUp } from "./heroes/EducationCountUp";
 import { EducationLearningPath } from "./heroes/EducationLearningPath";
 import { FintechCardFan } from "./heroes/FintechCardFan";
@@ -87,6 +88,7 @@ export const HEROES: Record<string, ComponentType> = {
   "ecommerce-colour-picker": EcommerceColourPicker,
   "jewellery-site": JewellerySite,
   "jewellery-look-zoom": JewelleryLookZoom,
+  "ecommerce-toy-film-hero": EcommerceToyFilmHero,
   "agency-rolling-words": AgencyRollingWords,
   "agency-marquee-magnetic": AgencyMarqueeMagnetic,
   "education-count-up": EducationCountUp,
