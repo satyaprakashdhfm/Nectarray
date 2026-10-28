@@ -665,6 +665,11 @@ export const clientProjects = pgTable(
      * delivered and cleared if it moves back; the Timeline counts on it.
      */
     deliveredOn: date("delivered_on"),
+    /**
+     * The three client meetings every project has, in order: the planned
+     * day and whether it was held (see lib/business projectMeetings).
+     */
+    meetings: jsonb().notNull().default([]),
     note: text(),
     createdAt: now(),
   },

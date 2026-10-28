@@ -387,6 +387,92 @@ export const devopsProject = (id: string) =>
 
 /* -------------------------------------------------------------------- */
 
+/**
+ * The General tab: decisions that hold for every project rather than one.
+ * From the "Backend decision" box at the top of projects-architecture.md.
+ */
+export const DEVOPS_GENERAL: DevopsPage = {
+  title: "General",
+  lede: "Rules that apply to every project, before any one of them is built.",
+  sections: [
+    {
+      id: "backend-default",
+      wide: true,
+      title: "Why a backend? Inside Next.js, or a separate one",
+      blocks: [
+        {
+          kind: "p",
+          text: "Default: keep the backend inside the Next.js app. API routes (app/api/*), server actions and server-only code (lib/server/*) run on Next.js's own Node.js server. One service, one deploy, one set of variables, the lowest bill. Enough for a shop or site taking hundreds of orders a day.",
+        },
+        {
+          kind: "tip",
+          text: "Secrets never reach the browser: mark server files import 'server-only', so the build fails if browser code imports one.",
+        },
+      ],
+    },
+    {
+      id: "backend-when",
+      wide: true,
+      title: "When we need a separate backend",
+      blocks: [
+        {
+          kind: "p",
+          text: "Move to a separate backend (Node.js + Express, or Rust + Axum, as its own Railway service) as soon as any one of these is true.",
+        },
+        {
+          kind: "table",
+          head: ["#", "Case", "Why the Next.js server stops being enough"],
+          rows: [
+            ["1", "A second client: mobile app, POS tablet, partner or store portal", "They all need one shared API. Next.js routes are shaped around its own pages and cookies."],
+            ["2", "Heavy or long background work: scheduled jobs, pollers, queues, retries, big exports, PDF or image processing", "It runs inside the web server, so it slows pages down and is killed on every deploy or restart."],
+            ["3", "More than one server copy (scaling out for traffic)", "Every copy runs the in-process jobs, so trackers and pollers run twice and bookings or emails can repeat. Jobs need a single worker."],
+            ["4", "Many webhooks and integrations: payment, courier, POS, WhatsApp, each needing raw bodies, ordering or retries", "Easier to control in Express: middleware order, raw-body parsers, one place to log."],
+            ["5", "Long-lived connections: WebSockets, live tracking, chat streams", "Route handlers are not built to hold these open."],
+            ["6", "Separate teams or release cycles for frontend and backend", "The API can be deployed and versioned without rebuilding the site."],
+            ["7", "Hosting on Vercel with jobs or long requests", "Functions time out and have no always-on process for jobs."],
+          ],
+        },
+      ],
+    },
+    {
+      id: "backend-not",
+      title: "When we don't",
+      blocks: [
+        {
+          kind: "list",
+          items: [
+            "A website, landing pages or a blog, even with a contact form or an enquiry email.",
+            "A shop with one storefront and its admin: cart, checkout, one payment gateway, order emails.",
+            "An admin panel or dashboard used only through its own pages.",
+            "A light job or two that can miss a run safely, on a single copy of the server.",
+          ],
+        },
+        {
+          kind: "tip",
+          text: "Stay ready: keep all logic in lib/server/*, apart from pages and routes. Splitting out later is then rewiring (an Express server imports the same files), not a rewrite.",
+        },
+      ],
+    },
+    {
+      id: "backend-projects",
+      title: "Where each project stands",
+      blocks: [
+        {
+          kind: "table",
+          head: ["Project", "Backend", "Why"],
+          rows: [
+            ["ADC", "Separate (Express)", "Cases 1, 2 and 4: store portal, POS relay, status poller, four webhook types"],
+            ["Mobile Dashboard", "Separate (Rust, Axum)", "Admin and store portals share one API (case 1); also our Rust vs Node test"],
+            ["LegallyYours", "Separate API service", "The web app calls it with x-admin-key"],
+            ["Nectarray", "Inside Next.js", "The Python judge is a helper, not the app's backend"],
+            ["Minimals", "Inside Next.js", "Watch case 3: the 30-minute Delhivery tracking job runs in the web server. Move it to a worker or Railway cron before a second copy"],
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 export const DEVOPS_STACK: DevopsPage = {
   title: "Stack",
   lede: "The languages, frameworks and infrastructure under every project, and why each one is there.",

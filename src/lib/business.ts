@@ -135,3 +135,29 @@ export const rupees = new Intl.NumberFormat("en-IN", {
 
 export const num = (value: string | number | null | undefined) =>
   value == null || value === "" ? 0 : Number(value);
+
+/** One of a project's client meetings: the planned day, and if it was held. */
+export type ProjectMeeting = { on: string | null; held: boolean };
+
+/** Every project is planned around three client meetings. */
+export const MEETING_COUNT = 3;
+
+/**
+ * A project's meetings, always three, whatever the stored JSON holds: an
+ * older row has none, and anything malformed reads as not planned.
+ */
+export function projectMeetings(raw: unknown): ProjectMeeting[] {
+  const list = Array.isArray(raw) ? raw : [];
+  return Array.from({ length: MEETING_COUNT }, (_, i) => {
+    const m = list[i] as Partial<ProjectMeeting> | undefined;
+    const on =
+      typeof m?.on === "string" && /^\d{4}-\d{2}-\d{2}$/.test(m.on)
+        ? m.on
+        : null;
+    return { on, held: m?.held === true };
+  });
+}
+
+/** Whole days from `from` to `to`, both yyyy-mm-dd; negative if earlier. */
+export const daysBetween = (from: string, to: string) =>
+  Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000);

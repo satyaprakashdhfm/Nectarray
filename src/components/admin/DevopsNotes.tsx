@@ -4,19 +4,30 @@ import { Block } from "@/components/admin/MarketingNotes";
 import type { EnvGroup, Risk } from "@/lib/content/devops-env";
 import type { NoteSection } from "@/lib/content/marketing-notes";
 
+/** A section's anchor: its part first, as ids repeat across parts. */
+export const sectionId = (part: string, id: string) => `${part}-${id}`;
+
 /**
  * Sections two to a row from 1280px so a wide screen is not half empty;
  * diagrams and other `wide` sections take the whole row. Each section is a
  * size container: its term boxes go three across only when the section
  * itself is wide enough, not when the screen is.
  */
-export function SectionGrid({ sections }: { sections: NoteSection[] }) {
+export function SectionGrid({
+  sections,
+  part,
+}: {
+  sections: NoteSection[];
+  /** The part these sit in, so each section gets an id the page can link to. */
+  part?: string;
+}) {
   return (
     <div className="grid gap-x-10 gap-y-10 xl:grid-cols-2">
       {sections.map((section) => (
         <section
           key={section.id}
-          className={`@container min-w-0 ${section.wide ? "xl:col-span-2" : ""}`}
+          id={part ? sectionId(part, section.id) : undefined}
+          className={`@container min-w-0 scroll-mt-32 ${section.wide ? "xl:col-span-2" : ""}`}
         >
           <h3 className="text-ink flex items-center gap-2.5 text-[1rem] font-semibold">
             <span className="bg-brand h-4 w-1 rounded-full" aria-hidden />

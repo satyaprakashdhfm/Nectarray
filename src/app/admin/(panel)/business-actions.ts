@@ -16,6 +16,7 @@ import { requireAdmin } from "@/lib/auth/access";
 import {
   BLOG_STATUSES,
   CAMPAIGN_STATUSES,
+  MEETING_COUNT,
   PLATFORMS,
   PROJECT_SERVICES,
   PROJECT_STATUSES,
@@ -162,6 +163,30 @@ export async function topUpProject(form: FormData) {
   await db
     .update(clientProjects)
     .set({ value: sql`coalesce(${clientProjects.value}, 0) + ${extra}` })
+    .where(eq(clientProjects.id, id));
+  done();
+}
+
+/**
+ * A project's three client meetings: each a planned day (blank clears it)
+ * and a tick once it was held.
+ */
+export async function setProjectMeetings(form: FormData) {
+  await requireAdmin();
+  const id = text(form, "id");
+  if (!id) throw new Error("Missing project.");
+  const meetings = Array.from({ length: MEETING_COUNT }, (_, i) => {
+    const on = text(form, `meeting_${i + 1}`);
+    if (on && !/^\d{4}-\d{2}-\d{2}$/.test(on))
+      throw new Error(`Meeting ${i + 1} needs a real date.`);
+    return {
+      on: on || null,
+      held: form.get(`meeting_${i + 1}_held`) === "on",
+    };
+  });
+  await db
+    .update(clientProjects)
+    .set({ meetings })
     .where(eq(clientProjects.id, id));
   done();
 }

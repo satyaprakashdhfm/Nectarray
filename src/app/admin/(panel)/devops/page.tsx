@@ -7,9 +7,13 @@ import {
   Part,
   RiskLegend,
   SectionGrid,
+  sectionId,
 } from "@/components/admin/DevopsNotes";
+import { OnThisPage, type TocItem } from "@/components/admin/OnThisPage";
+import type { DevopsPage } from "@/lib/content/devops";
 import {
   DEVOPS_DESIGN,
+  DEVOPS_GENERAL,
   DEVOPS_KNOWLEDGE,
   DEVOPS_PROJECTS,
   DEVOPS_STACK,
@@ -28,13 +32,33 @@ const PARTS = [
   { id: "knowledge", label: "General knowledge" },
 ];
 
+/** The first tab: rules for every project, such as when to split a backend. */
+const GENERAL = "general";
+
+/** A part of the page and its sections, as the "On this page" list shows it. */
+const tocPart = (
+  id: string,
+  page: DevopsPage,
+  label = page.title,
+): TocItem => ({
+  id,
+  label,
+  children: page.sections.map((s) => ({
+    id: sectionId(id, s.id),
+    label: s.title,
+  })),
+});
+
 /**
- * DevOps on one page. A bar under the header jumps between its parts: the
- * chosen project (UI / UX first, then architecture, versions, deploy, data,
- * cost, open items),
- * that project's environment variables, then the stack, system design and
- * general knowledge shared by all of them. The project is picked by tabs
- * (?project=), so a link can point straight at one.
+ * DevOps on one page: the General tab (the default) or the chosen project
+ * (UI / UX first, then architecture, versions, deploy, data, cost, open
+ * items), that project's environment variables, then the stack, system
+ * design and general knowledge shared by all of them. The project is picked
+ * by tabs (?project=), so a link can point straight at one.
+ *
+ * "On this page" runs down the right on wide screens, every part with its
+ * sections and the one being read marked; narrower screens get a bar of the
+ * parts under the header instead.
  */
 export default async function DevopsPage({
   searchParams,
@@ -42,10 +66,33 @@ export default async function DevopsPage({
   searchParams: Promise<{ project?: string }>;
 }) {
   const { project: id } = await searchParams;
-  const project = devopsProject(id ?? "") ?? DEVOPS_PROJECTS[0];
-  const env = DEVOPS_ENV[project.id] ?? [];
+  const project = devopsProject(id ?? "");
+  const env = project ? (DEVOPS_ENV[project.id] ?? []) : [];
   const envCount = env.reduce((n, g) => n + g.vars.length, 0);
-  const ui = DEVOPS_UI[project.id];
+  const ui = project && DEVOPS_UI[project.id];
+  const parts = project
+    ? PARTS
+    : PARTS.filter((part) => part.id !== "ui" && part.id !== "env");
+
+  const toc: TocItem[] = [
+    project
+      ? {
+          id: "project",
+          label: project.label,
+          children: [
+            ...(ui ? [{ id: "ui", label: "UI / UX" }] : []),
+            ...project.sections.map((s) => ({
+              id: sectionId("project", s.id),
+              label: s.title,
+            })),
+          ],
+        }
+      : tocPart("project", DEVOPS_GENERAL),
+    ...(project ? [{ id: "env", label: "Environment variables" }] : []),
+    tocPart("stack", DEVOPS_STACK),
+    tocPart("design", DEVOPS_DESIGN),
+    tocPart("knowledge", DEVOPS_KNOWLEDGE),
+  ];
 
   return (
     <>
@@ -54,106 +101,158 @@ export default async function DevopsPage({
         lede="Every project we run: how it is built, deployed and backed up, what it costs, where each key comes from, and what we are learning."
       />
 
-      <nav
-        aria-label="On this page"
-        className="bg-mist/90 border-line sticky top-[72px] z-10 -mx-4 mt-6 border-b px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6 xl:mx-0 xl:px-0"
-      >
-        <ul className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto">
-          {PARTS.map((part) => (
-            <li key={part.id} className="shrink-0">
-              <a
-                href={`#${part.id}`}
-                className="text-ink-soft hover:bg-surface hover:text-ink block rounded-full px-3 py-1 text-[0.8125rem] font-semibold transition-colors"
-              >
-                {part.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-10">
+        <div className="min-w-0">
+          <nav
+            aria-label="Parts of this page"
+            className="bg-mist/90 border-line sticky top-[72px] z-10 -mx-4 mt-6 border-b px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6 xl:hidden"
+          >
+            <ul className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto">
+              {parts.map((part) => (
+                <li key={part.id} className="shrink-0">
+                  <a
+                    href={`#${part.id}`}
+                    className="text-ink-soft hover:bg-surface hover:text-ink block rounded-full px-3 py-1 text-[0.8125rem] font-semibold transition-colors"
+                  >
+                    {part.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-      <section id="project" className="mt-6 scroll-mt-32">
-        <ul className="tab-bar" aria-label="Projects">
-          {DEVOPS_PROJECTS.map((p) => (
-            <li key={p.id}>
-              <Link
-                href={`${ADMIN}/devops?project=${p.id}`}
-                aria-current={p.id === project.id ? "page" : undefined}
-                className="tab"
-                scroll={false}
-              >
-                {p.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+          <section id="project" className="mt-6 scroll-mt-32">
+            <ul className="tab-bar" aria-label="Projects">
+              <li>
+                <Link
+                  href={`${ADMIN}/devops?project=${GENERAL}`}
+                  aria-current={project ? undefined : "page"}
+                  className="tab"
+                  scroll={false}
+                >
+                  General
+                </Link>
+              </li>
+              {DEVOPS_PROJECTS.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    href={`${ADMIN}/devops?project=${p.id}`}
+                    aria-current={p.id === project?.id ? "page" : undefined}
+                    className="tab"
+                    scroll={false}
+                  >
+                    {p.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
-        <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <div className="min-w-0">
-            <h2 className="display text-ink text-[1.5rem]">{project.label}</h2>
-            <p className="text-ink-soft mt-1 max-w-3xl text-[0.875rem]">
-              {project.blurb}
-            </p>
-          </div>
-          <p className="text-ink-faint flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem]">
-            <span className="bg-brand-wash text-brand-deep rounded-full px-2.5 py-0.5 font-semibold">
-              {project.status}
-            </span>
-            <span>{project.repo}</span>
-            <span>Checked {project.checked}</span>
-            {project.url && (
-              <Link
-                href={project.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-brand-deep hover:text-brand inline-flex items-center gap-0.5 font-semibold"
-              >
-                {project.url.replace(/^https:\/\/(www\.)?/, "")}
-                <ArrowUpRight className="size-3" aria-hidden />
-              </Link>
+            {project ? (
+              <>
+                <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                  <div className="min-w-0">
+                    <h2 className="display text-ink text-[1.5rem]">
+                      {project.label}
+                    </h2>
+                    <p className="text-ink-soft mt-1 max-w-3xl text-[0.875rem]">
+                      {project.blurb}
+                    </p>
+                  </div>
+                  <p className="text-ink-faint flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem]">
+                    <span className="bg-brand-wash text-brand-deep rounded-full px-2.5 py-0.5 font-semibold">
+                      {project.status}
+                    </span>
+                    <span>{project.repo}</span>
+                    <span>Checked {project.checked}</span>
+                    {project.url && (
+                      <Link
+                        href={project.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-brand-deep hover:text-brand inline-flex items-center gap-0.5 font-semibold"
+                      >
+                        {project.url.replace(/^https:\/\/(www\.)?/, "")}
+                        <ArrowUpRight className="size-3" aria-hidden />
+                      </Link>
+                    )}
+                  </p>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+                  {project.facts.map((fact) => (
+                    <Stat key={fact.label} {...fact} />
+                  ))}
+                </div>
+
+                {ui && <ProjectUi ui={ui} />}
+
+                <div className="mt-10">
+                  <SectionGrid sections={project.sections} part="project" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mt-6">
+                  <h2 className="display text-ink text-[1.5rem]">
+                    {DEVOPS_GENERAL.title}
+                  </h2>
+                  <p className="text-ink-soft mt-1 max-w-3xl text-[0.875rem]">
+                    {DEVOPS_GENERAL.lede}
+                  </p>
+                </div>
+                <div className="mt-8">
+                  <SectionGrid
+                    sections={DEVOPS_GENERAL.sections}
+                    part="project"
+                  />
+                </div>
+              </>
             )}
-          </p>
+          </section>
+
+          {project && (
+            <Part
+              id="env"
+              title={`Environment variables · ${project.label}`}
+              lede={`${envCount} entries. Open one to see where to get it, the dashboard, where we keep it and which file reads it. Names only, never values.`}
+            >
+              <RiskLegend />
+              <div className="mt-5">
+                <EnvList groups={env} />
+              </div>
+            </Part>
+          )}
+
+          <Part id="stack" title={DEVOPS_STACK.title} lede={DEVOPS_STACK.lede}>
+            <SectionGrid sections={DEVOPS_STACK.sections} part="stack" />
+          </Part>
+
+          <Part
+            id="design"
+            title={DEVOPS_DESIGN.title}
+            lede={DEVOPS_DESIGN.lede}
+          >
+            <SectionGrid sections={DEVOPS_DESIGN.sections} part="design" />
+          </Part>
+
+          <Part
+            id="knowledge"
+            title={DEVOPS_KNOWLEDGE.title}
+            lede={DEVOPS_KNOWLEDGE.lede}
+          >
+            <SectionGrid
+              sections={DEVOPS_KNOWLEDGE.sections}
+              part="knowledge"
+            />
+          </Part>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-          {project.facts.map((fact) => (
-            <Stat key={fact.label} {...fact} />
-          ))}
-        </div>
-
-        {ui && <ProjectUi ui={ui} />}
-
-        <div className="mt-10">
-          <SectionGrid sections={project.sections} />
-        </div>
-      </section>
-
-      <Part
-        id="env"
-        title={`Environment variables · ${project.label}`}
-        lede={`${envCount} entries. Open one to see where to get it, the dashboard, where we keep it and which file reads it. Names only, never values.`}
-      >
-        <RiskLegend />
-        <div className="mt-5">
-          <EnvList groups={env} />
-        </div>
-      </Part>
-
-      <Part id="stack" title={DEVOPS_STACK.title} lede={DEVOPS_STACK.lede}>
-        <SectionGrid sections={DEVOPS_STACK.sections} />
-      </Part>
-
-      <Part id="design" title={DEVOPS_DESIGN.title} lede={DEVOPS_DESIGN.lede}>
-        <SectionGrid sections={DEVOPS_DESIGN.sections} />
-      </Part>
-
-      <Part
-        id="knowledge"
-        title={DEVOPS_KNOWLEDGE.title}
-        lede={DEVOPS_KNOWLEDGE.lede}
-      >
-        <SectionGrid sections={DEVOPS_KNOWLEDGE.sections} />
-      </Part>
+        <aside className="hidden xl:block">
+          <div className="sticky top-[88px] mt-6 max-h-[calc(100vh-104px)] [scrollbar-width:thin] overflow-y-auto pb-6">
+            <OnThisPage items={toc} />
+          </div>
+        </aside>
+      </div>
     </>
   );
 }
