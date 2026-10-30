@@ -59,6 +59,7 @@ export function Footer() {
             <ul className="space-y-3">
               {[
                 { label: "How we work", href: "/engagements" },
+                { label: "Omniproof", href: "/omniproof" },
                 { label: "Blog", href: "/blog" },
                 { label: "Contact", href: "/contact" },
                 { label: "Student login", href: "/dashboard" },

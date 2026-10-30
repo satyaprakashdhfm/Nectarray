@@ -45,6 +45,7 @@ export const nav: Link[] = [
   { label: "Software", href: "/software" },
   { label: "Agentic AI", href: "/agentic-ai" },
   { label: "Academy", href: "/academy" },
+  { label: "Omniproof", href: "/omniproof" },
   { label: "Blog", href: "/blog" },
 ];
 
