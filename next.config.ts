@@ -36,6 +36,30 @@ const nextConfig: NextConfig = {
   },
 
   /*
+   * Articles taken down on 30 Oct 2026, when the blog was cut back to the
+   * Jev one. Google had them indexed, so they send people to the blog
+   * rather than to a 404.
+   */
+  async redirects() {
+    return [
+      "ai-agent-development-company",
+      "ai-agent-vs-chatbot-vs-automation",
+      "custom-software-development-cost-india",
+      "choose-custom-software-development-company",
+      "custom-software-vs-off-the-shelf",
+      "data-science-course-with-placement",
+      "data-analytics-vs-data-science-course",
+      "python-sql-roadmap-first-data-job",
+      "digital-marketing-for-small-business",
+      "social-media-marketing-agency-small-business",
+    ].map((slug) => ({
+      source: `/blog/${slug}`,
+      destination: "/blog",
+      permanent: true,
+    }));
+  },
+
+  /*
    * Lesson screenshots and the files the lessons hand out. Files in public/
    * are served with `max-age=0`, so every lesson view asked the server again
    * about every image on it, one round trip each. A day's freshness, then a

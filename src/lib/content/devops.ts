@@ -2,10 +2,11 @@
  * The DevOps section of the admin: every project we run, the languages and
  * frameworks under them, how their code is laid out, and what we are
  * learning about running them. A short, kept-current version of
- * D:\Projects\projects-architecture.md (the long one keeps the details).
+ * D:\Projects\architecture.md (the long one keeps the details).
  *
- * Admin only. Update a project's entry when it changes, and the "Checked"
- * date with it.
+ * Admin only. Change architecture.md first (a change-log row with the date
+ * and the project), then the project's entry here, its "Checked" date and
+ * the change log in DEVOPS_GENERAL.
  */
 
 import type { NoteSection } from "@/lib/content/marketing-notes";
@@ -37,7 +38,7 @@ export const DEVOPS_PROJECTS: DevopsProject[] = [
     url: "https://nectarray.com",
     repo: "github.com/satyaprakashdhfm/Nectarray",
     status: "Live",
-    checked: "24 Oct 2026",
+    checked: "30 Oct 2026",
     facts: [
       { label: "Hosting", value: "Railway", hint: "Singapore, 1 replica each" },
       { label: "Stack", value: "Next.js 16 + Python", hint: "Node 24, FastAPI judge" },
@@ -320,7 +321,7 @@ Webhooks (Razorpay, Petpooja, Shiprocket, WhatsApp) ──► adc-backend`,
       "Admin and store portals for a mobile-phone wholesale business: stock by IMEI, bills, daybook, transfers. Our first Rust backend.",
     repo: "github.com/satyaprakashdhfm/Mobile_Dashboard",
     status: "Setting up on Railway",
-    checked: "24 Oct 2026",
+    checked: "30 Oct 2026",
     facts: [
       { label: "Hosting", value: "Railway", hint: "Project created 23 Oct 2026" },
       { label: "Stack", value: "Rust + Next.js 16", hint: "Axum API, shadcn frontend" },
@@ -380,6 +381,349 @@ Webhooks (Razorpay, Petpooja, Shiprocket, WhatsApp) ──► adc-backend`,
       },
     ],
   },
+
+  /* ------------------------------------------------------------------ */
+  {
+    id: "legallyyours",
+    label: "LegallyYours",
+    blurb:
+      "Property records, registration and legal services for Karnataka, Andhra Pradesh and Telangana, with portal bots that fetch government records.",
+    repo: "github.com/satyaprakashdhfm/LegallyYours",
+    status: "Pre-launch",
+    checked: "24 Oct 2026",
+    facts: [
+      { label: "Hosting", value: "Railway", hint: "web + api sleep when idle" },
+      { label: "Stack", value: "Next.js 16 + Fastify 5", hint: "npm workspaces monorepo" },
+      { label: "Database", value: "Postgres 18", hint: "Private only, no backup yet" },
+      { label: "Bots", value: "Chromium + Gemini", hint: "Run on the local PC (Indian IP)" },
+    ],
+    sections: [
+      {
+        id: "architecture",
+        wide: true,
+        title: "Architecture",
+        blocks: [
+          {
+            kind: "code",
+            text: `Browser ──► web (Next.js, sleeps) ──API_URL──► api (Fastify, sleeps) ──► Postgres 18 (private only)
+                                                └─ bot worker (Chromium + Gemini computer use):
+                                                   off on Railway, runs on the local PC`,
+          },
+          {
+            kind: "list",
+            items: [
+              "Monorepo: apps/api, apps/web, packages/contracts (shared Zod schemas), packages/db (Drizzle schema, SQL migrations, catalogue seed).",
+              "Web never touches the database: every page and action calls the API's /v1 routes server-side.",
+              "Pre-deploy node apps/api/dist/release.js applies migrations and upserts the catalogue.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "versions",
+        title: "Versions",
+        blocks: [
+          {
+            kind: "table",
+            head: ["Part", "Version"],
+            rows: [
+              ["API", "Fastify 5.12, Drizzle 0.45.4, postgres.js 3.4.9, zod 4.6.7, argon2, playwright-core 1.64"],
+              ["Web", "Next.js 16.4.3, React 19.3, Tailwind 4.3.3"],
+              ["Node", "engines >=22"],
+              ["Tests", "Vitest 5 against a throwaway database"],
+            ],
+          },
+        ],
+      },
+      {
+        id: "open",
+        title: "Open items",
+        blocks: [
+          {
+            kind: "list",
+            items: [
+              "F1 (critical): ADMIN_KEY is not set on Railway, so admin is open. Set it on web and api before launch.",
+              "Set AUTOMATION_WORKER=off on api so it can sleep.",
+              "Before launch: Razorpay instead of the free pay route (F3), remove the demo account (F4), CI (F5), R2 backups, a custom domain.",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------ */
+  {
+    id: "minimals",
+    label: "Minimals",
+    blurb:
+      "Shop for 3D-printed Bio-PLA animal toys, with its own admin for orders, stock, coupons, gifts, reviews and shipments.",
+    repo: "github.com/satyaprakashdhfm/Minimalstoys",
+    status: "Deploying from main",
+    checked: "30 Oct 2026",
+    facts: [
+      { label: "Hosting", value: "Railway", hint: "Project minimalastoys, root /web" },
+      { label: "Stack", value: "Next.js 15", hint: "Plain JavaScript, React 19.1" },
+      { label: "Database", value: "Postgres", hint: "One docs table of JSON + media" },
+      { label: "CI / backup", value: "None yet", hint: "Add both before launch" },
+    ],
+    sections: [
+      {
+        id: "architecture",
+        wide: true,
+        title: "Architecture",
+        blocks: [
+          {
+            kind: "code",
+            text: `Browser ──► Minimalstoys (Next.js 15, Railway) ──► Postgres (docs + media tables)
+                                               └──► Razorpay, Delhivery, MSG91, Resend, Google, GA4, Meta Ads
+Delhivery booking + tracking sweeps run inside the web server (instrumentation.js)`,
+          },
+          {
+            kind: "list",
+            items: [
+              "All server logic in web/lib/server/. Without DATABASE_URL it falls back to a JSON file (demo mode).",
+              "Every write goes through one transaction(fn), so order numbers and stock never race.",
+              "Prices are always recalculated on the server.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "open",
+        title: "Open items",
+        blocks: [
+          {
+            kind: "list",
+            items: [
+              "Backend decision case 3: move the Delhivery sweeps to a worker or Railway cron before a second replica.",
+              "Remove ADMIN_TEST_LOGIN before launch.",
+              "CI (lint, test, build) and R2 backups.",
+              "Upgrade to Next.js 16; pin Node >=24.",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------ */
+  {
+    id: "tattv",
+    label: "tattv.shop",
+    blurb:
+      "Men's jewellery shop with its own admin. The store is built on develop; main shows the coming-soon page.",
+    repo: "github.com/satyaprakashdhfm/tattv.shop",
+    status: "Building on develop",
+    checked: "30 Oct 2026",
+    facts: [
+      { label: "Hosting", value: "Railway", hint: "tattv-develop + tattv.shop services" },
+      { label: "Stack", value: "Next.js 16", hint: "TypeScript, Tailwind 4" },
+      { label: "Database", value: "Postgres", hint: "Schema at boot, photos in media" },
+      { label: "Checkout", value: "Razorpay + COD", hint: "COD takes an advance" },
+    ],
+    sections: [
+      {
+        id: "architecture",
+        wide: true,
+        title: "Architecture",
+        blocks: [
+          {
+            kind: "code",
+            text: `Browser ──► tattv-develop (Next.js 16, Railway) ──► Postgres (Railway)
+                                               └──► Razorpay, Delhivery, MSG91, Search Console
+Delhivery tracking sweep runs inside the web server (instrumentation.ts)`,
+          },
+          {
+            kind: "list",
+            items: [
+              "Schema made and migrated at boot in lib/server/db.ts: additive only.",
+              "The server re-prices every order, locks stock rows and verifies the Razorpay signature before confirming.",
+              "Order numbers from order_number_seq, TTV-104830 onwards.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "open",
+        title: "Open items",
+        blocks: [
+          {
+            kind: "list",
+            items: [
+              "Customer sign-in on /account is still a browser-only demo.",
+              "Placeholder policy text to replace before launch.",
+              "At launch: merge develop into main; add CI and R2 backups.",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------ */
+  {
+    id: "adoora",
+    label: "Adoora Legal Services",
+    blurb:
+      "Law firm website plus a client and lawyer portal with encrypted documents, built around Bar Council of India rules.",
+    url: "https://www.adooralegalservices.com",
+    repo: "github.com/satyaprakashdhfm/Adoora_Legal_Services",
+    status: "Live",
+    checked: "30 Oct 2026",
+    facts: [
+      { label: "Hosting", value: "Railway", hint: "Singapore; main = prod, dev = staging" },
+      { label: "Stack", value: "Next.js 16 + Express 5", hint: "Prisma 7 on the API" },
+      { label: "Database", value: "Postgres", hint: "Plus an S3 bucket of ciphertext" },
+      { label: "Sign-in", value: "Google + OTP", hint: "MSG91 for OTP" },
+    ],
+    sections: [
+      {
+        id: "architecture",
+        wide: true,
+        title: "Architecture",
+        blocks: [
+          {
+            kind: "code",
+            text: `Browser ──► adoora-web (Next.js 16) ──/api/* rewrite, private network──► adoora-api (Express 5 + Prisma 7)
+                                                                        ├──► Postgres
+                                                                        ├──► Railway bucket (encrypted documents)
+                                                                        └──► Google OAuth, MSG91, Resend, eCourts`,
+          },
+          {
+            kind: "list",
+            items: [
+              "Two independent apps in one repo (apps/web, apps/api), no npm workspace.",
+              "Public pages are prerendered; /login, /dashboard and /admin need the API.",
+              "Documents are encrypted before upload; losing DOCUMENT_ENCRYPTION_KEY loses every document.",
+              "npm start on the API runs prisma migrate deploy first.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "railway",
+        title: "Railway services",
+        blocks: [
+          {
+            kind: "table",
+            head: ["Service", "Branch", "Data"],
+            rows: [
+              ["adoora-coming-soon (www.adooralegalservices.com)", "main", "None"],
+              ["adoora-api-prod", "main", "Postgres-CJo6, bucket documents-prod"],
+              ["adoora-web (staging)", "dev", "None"],
+              ["adoora-api (staging)", "dev", "Postgres, bucket documents"],
+            ],
+          },
+        ],
+      },
+      {
+        id: "open",
+        title: "Open items",
+        blocks: [
+          {
+            kind: "list",
+            items: [
+              "Real lawyer profiles and Bar enrolment numbers; confirm office addresses; policies signed off.",
+              "Virus scanning of uploads before the portal opens widely.",
+              "CI and off-site backups of the database and documents bucket.",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------ */
+  {
+    id: "deeds",
+    label: "Deeds & Co",
+    blurb:
+      "Law firm website with an article editor, careers, enquiries and a lead pipeline built from trending judgments.",
+    repo: "github.com/satyaprakashdhfm/Deeds_and_Co",
+    status: "Built",
+    checked: "30 Oct 2026",
+    facts: [
+      { label: "Hosting", value: "Vercel", hint: "bom1; not in our Vercel team" },
+      { label: "Stack", value: "Next.js 16 + Prisma 7", hint: "GSAP, Lenis, three.js hero" },
+      { label: "Database", value: "Supabase Postgres", hint: "deeds schema, own role" },
+      { label: "Jobs", value: "Vercel Cron", hint: "Weekly, Monday 06:00 IST" },
+    ],
+    sections: [
+      {
+        id: "architecture",
+        wide: true,
+        title: "Architecture",
+        blocks: [
+          {
+            kind: "code",
+            text: `Browser ──► Next.js 16 (Vercel, bom1) ──► Supabase Postgres (deeds schema, pooler :6543)
+                                     └──► Resend, Gemini (drafts + cover images), Search Console
+Vercel Cron ──► /api/cron/weekly (trending judgments → article drafts)`,
+          },
+          {
+            kind: "list",
+            items: [
+              "Prisma schema: articles, enquiries, careers, leads, job runs, audit log, settings.",
+              "The admin login (ID, password hash, session secret) lives in the database.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "open",
+        title: "Open items",
+        blocks: [
+          {
+            kind: "list",
+            items: [
+              "Record which Vercel account hosts it.",
+              "Add an R2 database dump like the other projects.",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------ */
+  {
+    id: "verona",
+    label: "Verona Arts",
+    blurb:
+      "Online art store for paintings: catalogue, cart, Razorpay checkout, Google sign-in and an admin dashboard.",
+    repo: "github.com/satyaprakashdhfm/the_art_house",
+    status: "Built, quiet since 12 Oct",
+    checked: "30 Oct 2026",
+    facts: [
+      { label: "Hosting", value: "Vercel", hint: "Project the-art-house" },
+      { label: "Stack", value: "Next.js 16 + Supabase", hint: "Auth, storage, RLS" },
+      { label: "Database", value: "Supabase", hint: "verona-arts, Mumbai" },
+      { label: "Payments", value: "Razorpay", hint: "Order emails via Resend" },
+    ],
+    sections: [
+      {
+        id: "architecture",
+        wide: true,
+        title: "Architecture",
+        blocks: [
+          {
+            kind: "code",
+            text: `Browser ──► Next.js 16 (Vercel) ──► Supabase verona-arts: Postgres + Auth + bucket media
+                             └──► Razorpay, Resend`,
+          },
+          {
+            kind: "list",
+            items: [
+              "Admins are emails in the admins table, enforced by row-level security, not only the app.",
+              "placeOrder re-prices the cart from the database before creating the Razorpay order.",
+              "The only project still on Supabase + Vercel: decide whether to move it to Railway.",
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const devopsProject = (id: string) =>
@@ -393,8 +737,56 @@ export const devopsProject = (id: string) =>
  */
 export const DEVOPS_GENERAL: DevopsPage = {
   title: "General",
-  lede: "Rules that apply to every project, before any one of them is built.",
+  lede: "Every project at a glance, what changed and when, and the rules that apply before any one of them is built.",
   sections: [
+    {
+      id: "all-projects",
+      wide: true,
+      title: "All projects",
+      blocks: [
+        {
+          kind: "table",
+          head: ["Project", "Status", "Hosting", "Stack", "Database", "Updated"],
+          rows: [
+            ["ADC (A Dough Cookie)", "Live · adoughcookie.com", "Railway", "Next.js 16 + Express 4", "Postgres 18, PITR + nightly R2", "24 Oct 2026"],
+            ["Nectarray", "Live · nectarray.com", "Railway", "Next.js 16 + Python judge", "Postgres 17, R2 every 3 days", "30 Oct 2026"],
+            ["LegallyYours", "Pre-launch", "Railway (sleeps)", "Next.js 16 + Fastify 5", "Postgres 18, no backup", "24 Oct 2026"],
+            ["Mobile Dashboard", "Setting up", "Railway", "Rust (Axum) + Next.js 16", "Postgres 17", "30 Oct 2026"],
+            ["Minimals", "Deploying from main", "Railway", "Next.js 15", "Postgres (JSON docs)", "30 Oct 2026"],
+            ["tattv.shop", "Building on develop", "Railway", "Next.js 16", "Postgres", "30 Oct 2026"],
+            ["Adoora Legal Services", "Live · adooralegalservices.com", "Railway", "Next.js 16 + Express 5", "Postgres + S3 bucket", "30 Oct 2026"],
+            ["Deeds & Co", "Built", "Vercel (other account)", "Next.js 16 + Prisma 7", "Supabase Postgres", "30 Oct 2026"],
+            ["Verona Arts", "Built", "Vercel", "Next.js 16 + Supabase", "Supabase", "30 Oct 2026"],
+            ["F1 digital twin", "Local learning project", "None", "Python, Warp, Dash", "Files", "30 Oct 2026"],
+          ],
+        },
+        {
+          kind: "tip",
+          text: "The full notes live in D:\\Projects\\architecture.md. Change that first, with a change-log row, then this page.",
+        },
+      ],
+    },
+    {
+      id: "changelog",
+      wide: true,
+      title: "Change log",
+      blocks: [
+        {
+          kind: "table",
+          head: ["Date", "Project", "What changed"],
+          rows: [
+            ["30 Oct 2026", "All", "architecture.md covers all 10 projects, with dated update rules; six new project tabs here"],
+            ["30 Oct 2026", "Nectarray", "Blog cut back to the Jev article; the other ten redirect to /blog"],
+            ["28 Oct 2026", "Nectarray", "DevOps General tab with the backend decision; project meetings"],
+            ["27 Oct 2026", "Nectarray", "UI / UX first in every project: palettes, fonts, type sizes"],
+            ["24 Oct 2026", "LegallyYours", "Serverless on, env check after Railway's breach, security audit"],
+            ["24 Oct 2026", "Nectarray", "CI, R2 backups, healthcheck, security audit, architecture review"],
+            ["24 Oct 2026", "ADC", "CI, down alerts, Railway settings and versions checked"],
+            ["23 Oct 2026", "ADC", "Staging removed; runtime and cost measured"],
+          ],
+        },
+      ],
+    },
     {
       id: "backend-default",
       wide: true,
@@ -465,7 +857,10 @@ export const DEVOPS_GENERAL: DevopsPage = {
             ["Mobile Dashboard", "Separate (Rust, Axum)", "Admin and store portals share one API (case 1); also our Rust vs Node test"],
             ["LegallyYours", "Separate API service", "The web app calls it with x-admin-key"],
             ["Nectarray", "Inside Next.js", "The Python judge is a helper, not the app's backend"],
+            ["Adoora Legal Services", "Separate (Express 5)", "Case 1: public site, client portal and lawyer portal share one API"],
             ["Minimals", "Inside Next.js", "Watch case 3: the 30-minute Delhivery tracking job runs in the web server. Move it to a worker or Railway cron before a second copy"],
+            ["tattv.shop", "Inside Next.js", "Watch case 3: same Delhivery tracking sweep inside the web server"],
+            ["Deeds & Co, Verona Arts", "Inside Next.js", "Deeds runs its weekly job as a Vercel Cron, which is the right shape"],
           ],
         },
       ],
@@ -486,8 +881,9 @@ export const DEVOPS_STACK: DevopsPage = {
           kind: "table",
           head: ["Language", "Where", "Why"],
           rows: [
-            ["TypeScript", "Nectarray, ADC (both sides), Mobile Dashboard frontend", "One language for UI and server; types catch mistakes before deploy"],
+            ["TypeScript", "Every web app except Minimals (plain JavaScript)", "One language for UI and server; types catch mistakes before deploy"],
             ["Rust", "Mobile Dashboard backend", "No garbage collector, one small binary, low RAM. Under test against Node (see Knowledge)"],
+            ["Python", "F1 digital twin, browser-bench", "Simulation, data and agent tests"],
             ["Python", "Nectarray Backend (judge + LaTeX)", "Runs student code; FastAPI is quick to write"],
             ["SQL", "Postgres in every project", "The data lives here; migrations are plain SQL"],
           ],
@@ -502,12 +898,15 @@ export const DEVOPS_STACK: DevopsPage = {
           kind: "table",
           head: ["Name", "Used for", "Projects"],
           rows: [
-            ["Next.js 16 + React 19", "Pages, server rendering, API routes", "All three"],
-            ["Tailwind CSS 4", "Styling", "All three"],
-            ["Express 4", "REST API", "ADC"],
+            ["Next.js 16 + React 19", "Pages, server rendering, API routes", "Every project (Minimals still on 15)"],
+            ["Tailwind CSS 4", "Styling", "All but Minimals (plain CSS tokens)"],
+            ["Express 4 / 5", "REST API", "ADC (4), Adoora (5)"],
+            ["Fastify 5", "REST API", "LegallyYours"],
             ["Axum 0.8 + Tokio", "REST API (async Rust)", "Mobile Dashboard"],
             ["FastAPI", "Judge and LaTeX service", "Nectarray"],
-            ["Drizzle ORM", "Typed SQL in TypeScript", "Nectarray, ADC"],
+            ["Drizzle ORM", "Typed SQL in TypeScript", "Nectarray, ADC, LegallyYours"],
+            ["Prisma 7", "Typed database client", "Adoora, Deeds & Co"],
+            ["Supabase", "Postgres, auth and storage as a service", "Deeds & Co (database only), Verona Arts"],
             ["SQLx", "Compile-checked SQL in Rust", "Mobile Dashboard"],
             ["Vercel AI SDK 7", "Gemini and Groq calls", "Nectarray, ADC"],
             ["Expo + React Native", "Android app", "Nectarray"],
@@ -526,7 +925,7 @@ export const DEVOPS_STACK: DevopsPage = {
           rows: [
             ["Runtime", "Node 24 LTS", "Pin engines >=24 everywhere"],
             ["Database", "PostgreSQL 17 / 18 on Railway", "pg_dump client must be ≥ server major"],
-            ["Hosting", "Railway (Singapore)", "Railpack for Node apps, Dockerfile for Rust, Python, Workspace"],
+            ["Hosting", "Railway (Singapore); Vercel for Deeds & Co and Verona Arts", "Railpack for Node apps, Dockerfile for Rust, Python, Workspace"],
             ["CI", "GitHub Actions", "Lint, typecheck, test, build on every push"],
             ["Backups", "Cloudflare R2 nectarray-backup", "One folder per project, restore checked monthly"],
             ["Email", "Resend (Nectarray), ZeptoMail (ADC)", "Alerts and transactional mail"],

@@ -83,63 +83,6 @@ const BLOG_TARGETS: Record<string, { main?: string; also: string[] }> = {
     main: "jev langchain",
     also: ["jev model", "typesafe ai jev", "langchain decision model"],
   },
-  "ai-agent-development-company": {
-    main: "hire ai agent development company",
-    also: ["ai agent development cost", "ai agent developers india"],
-  },
-  "ai-agent-vs-chatbot-vs-automation": {
-    main: "ai agent vs chatbot",
-    also: ["ai agent vs automation", "chatbot vs ai agent for business"],
-  },
-  "custom-software-development-cost-india": {
-    main: "custom software development cost in india",
-    also: ["custom software development services", "custom software application"],
-  },
-  "choose-custom-software-development-company": {
-    main: "custom software development company",
-    also: [
-      "top custom software development companies",
-      "custom software development agency",
-      "custom application development company",
-    ],
-  },
-  "custom-software-vs-off-the-shelf": {
-    main: "bespoke software development",
-    also: ["bespoke software development company", "custom software vs off the shelf"],
-  },
-  "data-science-course-with-placement": {
-    main: "data science course with placement guarantee",
-    also: [
-      "best data science course with placement guarantee",
-      "data science job guarantee program",
-      "data science course job guarantee",
-    ],
-  },
-  "data-analytics-vs-data-science-course": {
-    main: "data analytics course with placement",
-    also: [
-      "best data analytics courses with placement",
-      "data analytics courses online with placement",
-    ],
-  },
-  "python-sql-roadmap-first-data-job": {
-    main: "python and sql roadmap",
-    also: ["python and sql and agentic ai course online", "python sql for data jobs"],
-  },
-  "digital-marketing-for-small-business": {
-    main: "digital marketing for small business",
-    also: [
-      "digital marketing companies for small business",
-      "small business digital marketing firm",
-    ],
-  },
-  "social-media-marketing-agency-small-business": {
-    main: "social media marketing agency for small business",
-    also: [
-      "social media marketing companies for small business",
-      "social media agency for small businesses",
-    ],
-  },
 };
 
 const serviceOf = (s: BlogService): ServiceId => s;

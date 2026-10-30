@@ -157,37 +157,39 @@ export default async function BlogPostPage({
           </div>
         </article>
 
-        <section className="shell mt-16">
-          <h2 className="text-ink text-[1.25rem] font-semibold">Read next</h2>
-          <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {more.map((p) => (
-              <li key={p.slug}>
-                <Link
-                  href={`/blog/${p.slug}`}
-                  className="group border-line bg-surface hover:border-brand flex h-full flex-col overflow-hidden rounded-2xl border transition-colors"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- SVG illustration */}
-                  <img
-                    src={`/blog/${p.slug}/cover.svg`}
-                    alt=""
-                    width={1200}
-                    height={630}
-                    loading="lazy"
-                    className="bg-mist aspect-[1200/630] w-full object-cover"
-                  />
-                  <div className="p-5">
-                    <p className="text-brand-deep text-[0.75rem] font-semibold tracking-[0.08em] uppercase">
-                      {BLOG_SERVICES[p.service].label}
-                    </p>
-                    <p className="text-ink group-hover:text-brand-deep mt-1.5 text-[1rem] leading-snug font-semibold transition-colors">
-                      {p.title}
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {more.length > 0 && (
+          <section className="shell mt-16">
+            <h2 className="text-ink text-[1.25rem] font-semibold">Read next</h2>
+            <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {more.map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/blog/${p.slug}`}
+                    className="group border-line bg-surface hover:border-brand flex h-full flex-col overflow-hidden rounded-2xl border transition-colors"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- SVG illustration */}
+                    <img
+                      src={`/blog/${p.slug}/cover.svg`}
+                      alt=""
+                      width={1200}
+                      height={630}
+                      loading="lazy"
+                      className="bg-mist aspect-[1200/630] w-full object-cover"
+                    />
+                    <div className="p-5">
+                      <p className="text-brand-deep text-[0.75rem] font-semibold tracking-[0.08em] uppercase">
+                        {BLOG_SERVICES[p.service].label}
+                      </p>
+                      <p className="text-ink group-hover:text-brand-deep mt-1.5 text-[1rem] leading-snug font-semibold transition-colors">
+                        {p.title}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </main>
       <PageCta />
       <Footer />

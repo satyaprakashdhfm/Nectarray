@@ -70,9 +70,9 @@ export default async function DevopsPage({
   const env = project ? (DEVOPS_ENV[project.id] ?? []) : [];
   const envCount = env.reduce((n, g) => n + g.vars.length, 0);
   const ui = project && DEVOPS_UI[project.id];
-  const parts = project
-    ? PARTS
-    : PARTS.filter((part) => part.id !== "ui" && part.id !== "env");
+  const parts = PARTS.filter(
+    (part) => (part.id !== "ui" || ui) && (part.id !== "env" || envCount > 0),
+  );
 
   const toc: TocItem[] = [
     project
@@ -88,7 +88,7 @@ export default async function DevopsPage({
           ],
         }
       : tocPart("project", DEVOPS_GENERAL),
-    ...(project ? [{ id: "env", label: "Environment variables" }] : []),
+    ...(envCount > 0 ? [{ id: "env", label: "Environment variables" }] : []),
     tocPart("stack", DEVOPS_STACK),
     tocPart("design", DEVOPS_DESIGN),
     tocPart("knowledge", DEVOPS_KNOWLEDGE),
@@ -210,7 +210,7 @@ export default async function DevopsPage({
             )}
           </section>
 
-          {project && (
+          {project && envCount > 0 && (
             <Part
               id="env"
               title={`Environment variables · ${project.label}`}

@@ -45,13 +45,15 @@ export default async function BlogIndex() {
 
           <Card post={lead} minutes={minutes[lead.slug]} wide />
 
-          <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {rest.map((post) => (
-              <li key={post.slug}>
-                <Card post={post} minutes={minutes[post.slug]} />
-              </li>
-            ))}
-          </ul>
+          {rest.length > 0 && (
+            <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {rest.map((post) => (
+                <li key={post.slug}>
+                  <Card post={post} minutes={minutes[post.slug]} />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </main>
       <PageCta />
