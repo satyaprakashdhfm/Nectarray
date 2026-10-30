@@ -328,6 +328,18 @@ html {
 }
 
 /*
+ * Big screens. The site is sized in rem, so growing the root grows every
+ * page in proportion: on a 27 to 40 inch display the layout reads as it does
+ * on a laptop, only larger, instead of a 1280px column in a sea of margin.
+ * 16px up to 1920px wide, then about 19px at 2560 and 25.6px at 3840.
+ */
+@media (min-width: 1920px) {
+  html {
+    font-size: calc(0.5vw + 6.4px);
+  }
+}
+
+/*
  * The height of the app chrome, in one place.
  *
  * The dashboard header and the section tabs under it are both sticky, so

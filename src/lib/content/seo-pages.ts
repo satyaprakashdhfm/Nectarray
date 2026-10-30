@@ -1,5 +1,5 @@
 import type { ServiceId } from "@/lib/business";
-import { BLOG_POSTS, type BlogService } from "@/lib/content/blog";
+import { OMNI_ARTICLES } from "@/lib/content/omniproof";
 
 /**
  * Every page meant to be found on Google, with the one search it is written
@@ -14,7 +14,7 @@ import { BLOG_POSTS, type BlogService } from "@/lib/content/blog";
 export type SeoPage = {
   path: string;
   title: string;
-  kind: "Home" | "Service page" | "Blog post";
+  kind: "Home" | "Service page" | "Omniproof piece";
   service: ServiceId | null;
   /** YYYY-MM-DD, where known. */
   liveSince?: string;
@@ -77,27 +77,34 @@ const SERVICE_PAGES: SeoPage[] = [
   },
 ];
 
-/** Per article: its main search, where it differs from the post's keyword, and its close ones. */
-const BLOG_TARGETS: Record<string, { main?: string; also: string[] }> = {
+/** Per Omniproof piece: its main search, its close ones, and the practice it serves. */
+const OMNI_TARGETS: Record<
+  string,
+  { main: string; also: string[]; service: ServiceId | null }
+> = {
   "jev-langchain-decision-model": {
     main: "jev langchain",
     also: ["jev model", "typesafe ai jev", "langchain decision model"],
+    service: "ai",
+  },
+  "mathematics-gets-a-flashlight": {
+    main: "ai solves math problems",
+    also: ["quasi riemann hypothesis ai", "navier stokes ai proof", "lean proof ai"],
+    service: null,
   },
 };
 
-const serviceOf = (s: BlogService): ServiceId => s;
-
 export const SEO_PAGES: SeoPage[] = [
   ...SERVICE_PAGES,
-  ...BLOG_POSTS.map((post) => {
-    const target = BLOG_TARGETS[post.slug];
+  ...OMNI_ARTICLES.map((a) => {
+    const target = OMNI_TARGETS[a.slug];
     return {
-      path: `/blog/${post.slug}`,
-      title: post.title,
-      kind: "Blog post" as const,
-      service: serviceOf(post.service),
-      liveSince: post.date,
-      main: target?.main ?? post.keyword,
+      path: `/omniproof/${a.slug}`,
+      title: a.title,
+      kind: "Omniproof piece" as const,
+      service: target?.service ?? null,
+      liveSince: a.date,
+      main: target?.main ?? a.title.toLowerCase(),
       also: target?.also ?? [],
     };
   }),

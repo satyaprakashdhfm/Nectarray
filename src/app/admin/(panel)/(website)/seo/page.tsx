@@ -268,7 +268,7 @@ export default async function AdminSeoPage({
                         <input
                           name="url"
                           defaultValue={p.url ?? ""}
-                          placeholder="/blog/… or https://"
+                          placeholder="/omniproof/… or https://"
                           className={`${field} w-48`}
                         />
                       </AutoSaveForm>

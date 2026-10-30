@@ -66,7 +66,7 @@ export default function ArticleScreen() {
             label="Open on the website"
             kind="secondary"
             icon="external"
-            onPress={() => WebBrowser.openBrowserAsync(`${SITE_URL}/blog/${post.slug}`)}
+            onPress={() => WebBrowser.openBrowserAsync(`${SITE_URL}/omniproof/${post.slug}`)}
           />
         </View>
       </Screen>

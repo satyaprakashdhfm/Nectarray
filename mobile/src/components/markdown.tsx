@@ -23,7 +23,7 @@ export function Markdown({ source }: { source: string }) {
 }
 
 function openLink(href: string) {
-  const blog = href.match(/^(?:https?:\/\/(?:www\.)?nectarray\.com)?\/blog\/([\w-]+)\/?$/);
+  const blog = href.match(/^(?:https?:\/\/(?:www\.)?nectarray\.com)?\/(?:blog|omniproof)\/([\w-]+)\/?$/);
   if (blog) {
     router.push({ pathname: '/blog/[slug]', params: { slug: blog[1] } });
     return;

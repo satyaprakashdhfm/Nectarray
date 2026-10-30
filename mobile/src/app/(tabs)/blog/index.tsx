@@ -19,7 +19,7 @@ export default function BlogScreen() {
 
   return (
     <Screen>
-      <Txt variant="display">Blog</Txt>
+      <Txt variant="display">Omniproof</Txt>
       <Txt tone="soft" style={{ marginTop: Space.sm }}>
         What we have learned building software, agents and campaigns, and teaching it.
       </Txt>

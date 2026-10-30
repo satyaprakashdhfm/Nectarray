@@ -28,7 +28,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf="graduationcap" md="school" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="blog">
-        <NativeTabs.Trigger.Label>Blog</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Omniproof</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="doc.text" md="article" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="contact">

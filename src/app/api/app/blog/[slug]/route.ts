@@ -1,28 +1,29 @@
-import { readPost, readingMinutes } from "@/lib/blog";
-import { BLOG_POSTS, postBySlug } from "@/lib/content/blog";
+import { OMNI_ARTICLES, omniBySlug } from "@/lib/content/omniproof";
+import { readOmni, readingMinutes } from "@/lib/omniproof";
 
 /**
- * One article's markdown, for the Android app.
+ * One Omniproof article's markdown, for the Android app. The route keeps its
+ * old /blog name so installed copies of the app still find it.
  *
- * Built at deploy time for every post, like the article pages themselves, so
- * the app reads exactly the text /blog/<slug> renders. Pictures inside it are
- * site paths (/blog/<slug>/...), which the app resolves against the site.
+ * Built at deploy time for every article, like the pages themselves, so the
+ * app reads exactly the text /omniproof/<slug> renders. Pictures inside it are
+ * site paths (/omniproof/<slug>/...), which the app resolves against the site.
  */
 export const dynamic = "force-static";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({ slug: post.slug }));
+  return OMNI_ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
-  const post = postBySlug((await params).slug);
+  const post = omniBySlug((await params).slug);
   if (!post) return Response.json({ error: "Not found." }, { status: 404 });
 
-  const markdown = await readPost(post.slug);
+  const markdown = await readOmni(post.slug);
   return Response.json({
     slug: post.slug,
     minutes: readingMinutes(markdown),

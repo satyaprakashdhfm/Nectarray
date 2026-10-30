@@ -60,7 +60,6 @@ export function Footer() {
               {[
                 { label: "How we work", href: "/engagements" },
                 { label: "Omniproof", href: "/omniproof" },
-                { label: "Blog", href: "/blog" },
                 { label: "Contact", href: "/contact" },
                 { label: "Student login", href: "/dashboard" },
               ].map((item) => (

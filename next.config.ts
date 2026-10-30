@@ -52,11 +52,20 @@ const nextConfig: NextConfig = {
       "python-sql-roadmap-first-data-job",
       "digital-marketing-for-small-business",
       "social-media-marketing-agency-small-business",
-    ].map((slug) => ({
-      source: `/blog/${slug}`,
-      destination: "/blog",
-      permanent: true,
-    }));
+    ]
+      .map((slug) => ({
+        source: `/blog/${slug}`,
+        destination: "/omniproof",
+        permanent: true,
+      }))
+      .concat(
+        {
+          source: "/blog/jev-langchain-decision-model/:path*",
+          destination: "/omniproof/jev-langchain-decision-model/:path*",
+          permanent: true,
+        },
+        { source: "/blog", destination: "/omniproof", permanent: true },
+      );
   },
 
   /*

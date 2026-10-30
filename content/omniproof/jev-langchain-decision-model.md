@@ -18,7 +18,7 @@ Two properties make this useful inside an agent. Jev evaluates every question in
 
 TypeSafe's own figures put Jev at up to 200 times faster and 400 times cheaper than comparable language models on classification tasks. Those are the vendor's numbers. LangChain's independent tests, below, are smaller but more concrete.
 
-![A request enters Jev with three questions. Confident answers go straight to code; an answer below 0.7 confidence goes to a language model.](/blog/jev-langchain-decision-model/diagram.svg "Cheap by default, frontier on exception: Jev takes the decision, and only uncertain cases go to a large model.")
+![A request enters Jev with three questions. Confident answers go straight to code; an answer below 0.7 confidence goes to a language model.](/omniproof/jev-langchain-decision-model/diagram.svg "Cheap by default, frontier on exception: Jev takes the decision, and only uncertain cases go to a large model.")
 
 ## What LangChain's tests found
 

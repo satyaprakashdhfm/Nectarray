@@ -7,8 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { company } from "@/lib/content";
 import { OMNI_ARTICLES, fieldById, omniBySlug } from "@/lib/content/omniproof";
-import { postDate, readingMinutes } from "@/lib/blog";
-import { readOmni } from "@/lib/omniproof";
+import { postDate, readOmni, readingMinutes } from "@/lib/omniproof";
 import { siteUrl } from "@/lib/seo";
 
 export const dynamicParams = false;
@@ -111,6 +110,17 @@ export default async function OmniArticlePage({
             <p className="text-ink-faint mt-4 text-[0.875rem]">
               {company.name} · {postDate(article.date)} · {minutes} min read
             </p>
+
+            {article.cover && (
+              // eslint-disable-next-line @next/next/no-img-element -- an SVG illustration; next/image adds nothing for vectors
+              <img
+                src={article.cover.src}
+                alt={article.cover.alt}
+                width={1200}
+                height={630}
+                className="border-line bg-mist mt-8 aspect-[1200/630] w-full rounded-2xl border object-cover"
+              />
+            )}
 
             <div className="mt-10">
               <Markdown>{body}</Markdown>

@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { ProofGraph } from "@/components/omniproof/ProofGraph";
-import { OMNI_ARTICLES, fieldById } from "@/lib/content/omniproof";
-import { postDate, readingMinutes } from "@/lib/blog";
-import { readOmni } from "@/lib/omniproof";
+import { FieldRows } from "@/components/omniproof/FieldRows";
+import { OmniMap } from "@/components/omniproof/OmniMap";
+import { OMNI_ARTICLES } from "@/lib/content/omniproof";
+import { postDate, readOmni, readingMinutes } from "@/lib/omniproof";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -45,49 +43,24 @@ export default async function OmniproofIndex() {
             Where curiosity meets impact. Every piece is a five-minute read on
             something LLMs and people solved together, what it is worth to
             business and to society, and which fields it lands in. Pick a field
-            on the map to follow its links.
+            on the map to fly into it, then a subfield to reach its pieces.
           </p>
+        </div>
 
-          <div className="mt-10">
-            <ProofGraph />
-          </div>
+        {/* The map runs wider than the text: it is the thing to play with. */}
+        <div className="mx-auto mt-10 w-full max-w-[120rem] px-3 sm:px-5 lg:px-8">
+          <OmniMap />
+        </div>
 
-          <h2 className="text-ink mt-16 text-[1.25rem] font-semibold">
-            All pieces
-          </h2>
-          <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {OMNI_ARTICLES.map((a) => {
-              const field = fieldById(a.field);
-              return (
-                <li key={a.slug}>
-                  <Link
-                    href={`/omniproof/${a.slug}`}
-                    className="group border-line bg-surface hover:border-brand flex h-full flex-col rounded-2xl border p-5 transition-colors"
-                  >
-                    <p
-                      className="text-[0.75rem] font-semibold tracking-[0.08em] uppercase"
-                      style={{ color: field.color }}
-                    >
-                      {field.label}
-                    </p>
-                    <p className="text-ink group-hover:text-brand-deep mt-1.5 text-[1.0625rem] leading-snug font-semibold transition-colors">
-                      {a.title}
-                    </p>
-                    <p className="text-ink-soft mt-2 flex-1 text-[0.9375rem] leading-relaxed">
-                      {a.description}
-                    </p>
-                    <p className="text-ink-faint mt-4 flex items-center justify-between text-[0.8125rem]">
-                      {postDate(a.date)} · {minutes[a.slug]} min read
-                      <ArrowRight
-                        className="text-brand-deep size-4"
-                        aria-hidden
-                      />
-                    </p>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <div className="shell mt-8">
+          <FieldRows
+            dates={Object.fromEntries(
+              OMNI_ARTICLES.map((a) => [
+                a.slug,
+                `${postDate(a.date)} · ${minutes[a.slug]} min`,
+              ]),
+            )}
+          />
         </div>
       </main>
       <Footer />

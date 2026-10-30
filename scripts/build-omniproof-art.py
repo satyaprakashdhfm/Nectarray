@@ -1,7 +1,7 @@
 """
-Draws the blog's covers and diagrams as SVG, into public/blog/<slug>/.
+Draws the Omniproof covers and diagrams as SVG, into public/omniproof/<slug>/.
 
-    python scripts/build-blog-art.py
+    python scripts/build-omniproof-art.py
 
 Every picture is drawn here from shapes and text in the site's brand colours,
 so they stay sharp at any size, weigh a few kilobytes, and can be changed by
@@ -12,7 +12,7 @@ the dark ground; diagrams are 1200 wide on white, to sit inside an article.
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-ROOT = Path(__file__).resolve().parent.parent / "public" / "blog"
+ROOT = Path(__file__).resolve().parent.parent / "public" / "omniproof"
 
 INK = "#0e1b26"
 SOFT = "#4a5a67"
@@ -110,7 +110,7 @@ def cover(slug, service, lines, art, alt):
     for line in lines:
         body.append(t(64, y, line, 52, "#ffffff", 700))
         y += 64
-    body.append(t(64, 566, "nectarray.com/blog", 18, "#ffffff", 500, extra='fill-opacity="0.45"'))
+    body.append(t(64, 566, "nectarray.com/omniproof", 18, "#ffffff", 500, extra='fill-opacity="0.45"'))
     body.append(f'<g transform="translate(640 60)">{art}</g>')
     write(slug, "cover.svg", svg(1200, 630, "".join(body), alt, defs))
 

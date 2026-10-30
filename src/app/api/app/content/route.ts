@@ -12,7 +12,7 @@ import {
   process,
   software,
 } from "@/lib/content";
-import { BLOG_POSTS, BLOG_SERVICES } from "@/lib/content/blog";
+import { FIELDS, OMNI_ARTICLES } from "@/lib/content/omniproof";
 
 /**
  * Everything the Android app shows, in one response.
@@ -112,19 +112,21 @@ export function GET() {
       lede: contact.lede,
       interests: contact.interests,
     },
+    // Still called `blog` for installed copies of the app; it now carries
+    // Omniproof, with the fields standing in for the old practice filters.
     blog: {
-      services: Object.fromEntries(
-        Object.entries(BLOG_SERVICES).map(([id, s]) => [id, s.label]),
+      services: Object.fromEntries(FIELDS.map((f) => [f.id, f.label])),
+      posts: OMNI_ARTICLES.map(
+        ({ slug, title, description, date, field, cover }) => ({
+          slug,
+          title,
+          description,
+          date,
+          service: field,
+          coverAlt: cover?.alt ?? "",
+          cover: cover?.src ?? "/og.png",
+        }),
       ),
-      posts: BLOG_POSTS.map(({ slug, title, description, date, service, coverAlt }) => ({
-        slug,
-        title,
-        description,
-        date,
-        service,
-        coverAlt,
-        cover: `/blog/${slug}/cover.svg`,
-      })),
     },
   });
 }
