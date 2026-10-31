@@ -1,6 +1,7 @@
 import { PageHead } from "@/components/admin/Business";
 import { WebNotesEditor } from "@/components/admin/WebNotesEditor";
 import { getWebNotes } from "@/lib/web-notes";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
  * one in, side by side on a wide screen.
  */
 export default async function AdminWebPage() {
+  await adminPage();
   const [learnings, steps] = await Promise.all([
     getWebNotes("learning"),
     getWebNotes("step"),

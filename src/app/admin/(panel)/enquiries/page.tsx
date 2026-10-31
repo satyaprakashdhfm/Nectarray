@@ -1,6 +1,7 @@
 import { desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { academyEnquiries } from "@/lib/db/schema";
+import { adminPage } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -62,6 +63,7 @@ const day = (value: string) =>
  * cover.
  */
 export default async function AdminEnquiriesPage() {
+  await adminPage();
   const rows = (await db
     .select({
       id: academyEnquiries.id,

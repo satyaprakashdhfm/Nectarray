@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { placementProfiles, users } from "@/lib/db/schema";
 import { displayName } from "@/lib/utils";
 import { defaultIntro } from "@/lib/resume";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ const day = (value: Date | null | undefined) =>
  * latest resume.
  */
 export default async function AdminPlacementPage() {
+  await adminPage();
   const [rows, templateTex] = await Promise.all([
     db
       .select({

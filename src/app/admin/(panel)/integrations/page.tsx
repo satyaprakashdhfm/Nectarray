@@ -7,6 +7,7 @@ import { CHECKED, SHEETS } from "@/lib/price-book";
 import { COMMUNICATIONS, PROVIDERS } from "@/lib/price-book-providers";
 import { baseSheet, withEdits } from "@/lib/price-book-store";
 import { estimateEngineers, estimateItems } from "@/lib/project-estimate";
+import { adminPage } from "@/lib/auth/access";
 
 const ESTIMATE = "estimate";
 
@@ -20,6 +21,7 @@ export default async function AdminIntegrationsPage({
 }: {
   searchParams: Promise<{ sheet?: string }>;
 }) {
+  await adminPage();
   const { sheet: slug } = await searchParams;
   const tabs = [
     ...SHEETS.map((s) => ({ slug: s.slug, title: s.title })),

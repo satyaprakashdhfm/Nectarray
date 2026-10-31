@@ -6,11 +6,13 @@ import { HrQuestionsEditor } from "@/components/admin/HrQuestionsEditor";
 import { db } from "@/lib/db";
 import { hrQuestions } from "@/lib/db/schema";
 import { getHrQuestions } from "@/lib/hr-questions";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
 /** The HR questions and answers on every student's placement page. */
 export default async function AdminHrQuestionsPage() {
+  await adminPage();
   const [questions, [{ saved }]] = await Promise.all([
     getHrQuestions(),
     db.select({ saved: count() }).from(hrQuestions),

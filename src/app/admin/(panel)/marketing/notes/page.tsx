@@ -2,12 +2,14 @@ import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { PageHead } from "@/components/admin/Business";
 import { MARKETING_NOTES, NOTE_GROUPS } from "@/lib/content/marketing-notes";
+import { adminPage } from "@/lib/auth/access";
 
 /**
  * Marketing notes: one card per tool or idea, grouped into research and
  * search, measuring, paid and reach. Each opens its own page.
  */
-export default function MarketingNotesPage() {
+export default async function MarketingNotesPage() {
+  await adminPage();
   return (
     <>
       <PageHead

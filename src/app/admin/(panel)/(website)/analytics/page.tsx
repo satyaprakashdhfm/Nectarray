@@ -14,6 +14,7 @@ import {
   getRealtime,
 } from "@/lib/analytics-report";
 import { isService } from "@/lib/business";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function AdminAnalyticsPage({
 }: {
   searchParams: Promise<{ service?: string }>;
 }) {
+  await adminPage();
   const { service: wanted } = await searchParams;
   const service = wanted && isService(wanted) ? wanted : null;
 

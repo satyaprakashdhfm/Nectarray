@@ -8,6 +8,7 @@ import { placementProfiles, users } from "@/lib/db/schema";
 import { displayName } from "@/lib/utils";
 import { compilerConfigured, compileResume } from "@/lib/latex-compile";
 import { asResumeFiles } from "@/lib/resume";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function AdminPlacementProfile({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await adminPage();
   const { id } = await params;
 
   const [person] = await db

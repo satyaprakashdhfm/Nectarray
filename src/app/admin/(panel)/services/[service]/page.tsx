@@ -14,6 +14,7 @@ import { NewProjectForm, ProjectsTable } from "@/components/admin/Projects";
 import { SERVICES, TAB_SERVICES, rupees } from "@/lib/business";
 import { loadMoney, totals } from "@/lib/business-data";
 import { loadProjectLinks } from "@/lib/project-data";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function ServicePage({
 }: {
   params: Promise<{ service: string }>;
 }) {
+  await adminPage();
   const { service: id } = await params;
   const recorded = TAB_SERVICES[id];
   const service =

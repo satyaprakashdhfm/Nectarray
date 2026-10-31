@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { ADMIN, ADMIN_HIDDEN } from "@/lib/admin-path";
 import { validAppReturn, validChallenge } from "@/lib/auth/app-codes";
-import { sameSecret } from "@/lib/auth/session";
+import { adminRealmTag, sameSecret } from "@/lib/auth/session";
 import {
   authorizeUrl,
   googleConfigured,
@@ -125,7 +125,12 @@ export async function GET(request: Request) {
   };
   response.cookies.set("na_oauth_state", state, options);
   response.cookies.set("na_oauth_verifier", verifier, options);
-  response.cookies.set("na_oauth_realm", realm, options);
+  // Not the word "admin": a value the callback can check came from here.
+  response.cookies.set(
+    "na_oauth_realm",
+    realm === "admin" ? adminRealmTag(state) : "student",
+    options,
+  );
   if (fromApp) {
     response.cookies.set("na_oauth_app_return", appReturn!, options);
     response.cookies.set("na_oauth_app_challenge", appChallenge!, options);

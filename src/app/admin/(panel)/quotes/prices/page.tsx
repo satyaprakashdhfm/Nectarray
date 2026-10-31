@@ -3,11 +3,13 @@ import { PageHead } from "@/components/admin/Business";
 import { QuotesNav } from "@/components/admin/QuotesNav";
 import { StandardPrices } from "@/components/admin/StandardPrices";
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
 /** Our price for each thing we sell, which every quote starts from. */
 export default async function AdminQuotePricesPage() {
+  await adminPage();
   const [{ body, customised }, { template }] = await Promise.all([
     getQuoteDefaults(),
     getQuoteTemplate(),

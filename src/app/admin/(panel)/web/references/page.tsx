@@ -1,11 +1,13 @@
 import { PageHead } from "@/components/admin/Business";
 import { WebNotesEditor } from "@/components/admin/WebNotesEditor";
 import { getWebNotes } from "@/lib/web-notes";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
 /** Places to look at real components and real sites before building one. */
 export default async function AdminWebReferencesPage() {
+  await adminPage();
   const references = await getWebNotes("reference");
   return (
     <>

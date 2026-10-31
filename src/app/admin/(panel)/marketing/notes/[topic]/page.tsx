@@ -9,6 +9,7 @@ import {
   SourceLinks,
 } from "@/components/admin/MarketingNotes";
 import { MARKETING_NOTES, noteTopic } from "@/lib/content/marketing-notes";
+import { adminPage } from "@/lib/auth/access";
 
 /**
  * One marketing topic: the connect / fill / get boxes, a jump list of its
@@ -20,6 +21,7 @@ export default async function MarketingNoteTopicPage({
 }: {
   params: Promise<{ topic: string }>;
 }) {
+  await adminPage();
   const { topic: id } = await params;
   const topic = noteTopic(id);
   if (!topic) notFound();

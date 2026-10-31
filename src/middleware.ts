@@ -162,5 +162,13 @@ export const config = {
    */
   // api/health is left out: Railway's healthcheck calls it on its own
   // hostname, and a redirect to the canonical one would read as a failure.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health|.*\\..*).*)"],
+  //
+  // /admin is listed again on its own because the first pattern skips any
+  // path with a dot in it: /admin/lessons/a.b would otherwise reach the
+  // panel's layout directly, and its redirect to the login page names the
+  // hidden address.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\..*).*)",
+    "/admin/:path*",
+  ],
 };

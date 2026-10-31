@@ -24,6 +24,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { displayName } from "@/lib/utils";
+import { adminPage } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -100,6 +101,7 @@ const day = (value: string | Date | null | undefined) =>
  * and they were spread across three pages and the database.
  */
 export default async function AdminStudentsPage() {
+  await adminPage();
   const [people, enrolmentRows, cohorts, codes, questions, progress, batches] =
     await Promise.all([
       // Admins have accounts too, but they are not students: not listed,

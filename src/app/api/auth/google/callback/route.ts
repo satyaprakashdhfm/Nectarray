@@ -13,6 +13,7 @@ import {
   validChallenge,
 } from "@/lib/auth/app-codes";
 import {
+  adminRealmTag,
   attachCookies,
   sameSecret,
   startSession,
@@ -82,8 +83,13 @@ export async function GET(request: Request) {
   const jar = await cookies();
   const state = jar.get("na_oauth_state")?.value ?? "";
   const verifier = jar.get("na_oauth_verifier")?.value ?? "";
+  // Admin only when /start said so for this very state (adminRealmTag); a
+  // hand-set cookie is a student sign-in, and fails to the student page.
   const realm: Realm =
-    jar.get("na_oauth_realm")?.value === "admin" ? "admin" : "student";
+    state &&
+    sameSecret(jar.get("na_oauth_realm")?.value ?? "", adminRealmTag(state))
+      ? "admin"
+      : "student";
 
   // Set only when the Android app started this sign-in, and checked again
   // here: a cookie is not proof of anything until it passes the same test.

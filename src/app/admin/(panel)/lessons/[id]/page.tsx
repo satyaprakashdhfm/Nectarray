@@ -12,6 +12,7 @@ import { db } from "@/lib/db";
 import { lessons } from "@/lib/db/schema";
 import { getLesson, stripLeadingHeading } from "@/lib/lessons";
 import { tocEntries } from "@/lib/toc";
+import { adminPage } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -45,6 +46,7 @@ export default async function AdminLessonPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ edit?: string }>;
 }) {
+  await adminPage();
   const [{ id }, { edit }] = await Promise.all([params, searchParams]);
   const lesson = await getLesson(id);
 

@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { ADMIN } from "@/lib/admin-path";
 import { isId } from "@/lib/drive";
+import { adminPage } from "@/lib/auth/access";
 
 /** An old Drive link: the Drive is on the project's own page now. */
 export default async function AdminProjectDrivePage({
@@ -10,6 +11,7 @@ export default async function AdminProjectDrivePage({
   params: Promise<{ projectId: string }>;
   searchParams: Promise<{ folder?: string }>;
 }) {
+  await adminPage();
   const [{ projectId }, { folder }] = await Promise.all([params, searchParams]);
   if (!isId(projectId)) notFound();
   const at = isId(folder) ? `?folder=${folder}` : "";

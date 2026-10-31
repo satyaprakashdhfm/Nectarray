@@ -9,6 +9,7 @@ import {
   lessons as lessonsTable,
   modules as modulesTable,
 } from "@/lib/db/schema";
+import { adminPage } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -36,6 +37,7 @@ export default async function AdminNotesIndex({
 }: {
   searchParams: Promise<{ module?: string; new?: string }>;
 }) {
+  await adminPage();
   const { module: wanted, new: adding } = await searchParams;
 
   // Students and whoever is teaching read the same notes; the old teaching

@@ -107,14 +107,11 @@ const str = (value: unknown, max: number) =>
 export async function POST(request: Request) {
   /*
    * Public, and every call is a paid model call and a row. Five an address
-   * per ten minutes is more than any applicant needs; the hourly ceiling
-   * caps the bill even if the address is forged.
+   * per ten minutes is more than any applicant needs. The hourly ceiling
+   * further down caps the bill even if the address is forged; it skips only
+   * the model call, so a flood can never stop a real enquiry being recorded.
    */
-  if (
-    limited(`fit:${clientIp(request)}`, 5, 10 * 60_000) ||
-    limited("fit:all", 60, 60 * 60_000)
-  )
-    return tooMany();
+  if (limited(`fit:${clientIp(request)}`, 5, 10 * 60_000)) return tooMany();
 
   let body: Body;
   try {
@@ -144,17 +141,23 @@ export async function POST(request: Request) {
   let reply = "";
 
   try {
-    const { object } = await generateObject({
-      model: google(MODEL),
-      schema: Answer,
-      prompt: PROMPT.replace("{brief}", courseBrief())
-        .replace("{background}", enquiry.background || "not given")
-        .replace("{experience}", enquiry.experience || "not given")
-        .replace("{goal}", enquiry.goal || "not given")
-        .replace("{timeline}", enquiry.timeline || "not given"),
-    });
-    fit = object.fit;
-    reply = object.reply;
+    // Counted only for a valid enquiry, and over the ceiling the enquiry is
+    // still kept below, just without an automatic reply.
+    if (!limited("fit:all", 60, 60 * 60_000)) {
+      // Replacer functions: as a plain string, "$&" in somebody's answer
+      // would be expanded by replace() rather than kept as typed.
+      const { object } = await generateObject({
+        model: google(MODEL),
+        schema: Answer,
+        prompt: PROMPT.replace("{brief}", () => courseBrief())
+          .replace("{background}", () => enquiry.background || "not given")
+          .replace("{experience}", () => enquiry.experience || "not given")
+          .replace("{goal}", () => enquiry.goal || "not given")
+          .replace("{timeline}", () => enquiry.timeline || "not given"),
+      });
+      fit = object.fit;
+      reply = object.reply;
+    }
   } catch (error) {
     // The enquiry still has to be recorded and the applicant still has to be
     // told something. A missing key or a model timeout is our problem, not

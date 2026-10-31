@@ -1,5 +1,7 @@
 import "server-only";
 import { cache } from "react";
+import { redirect } from "next/navigation";
+import { ADMIN } from "@/lib/admin-path";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cohorts, enrolments, users, type User } from "@/lib/db/schema";
@@ -136,6 +138,24 @@ export async function requireAdmin(): Promise<User> {
   if (!gate.verified) throw new AccessError(401);
   return gate.user;
 }
+
+/**
+ * The gate for a panel page or sub-layout: an admin all the way in, or a
+ * redirect to sign in or to enter the emailed code.
+ *
+ * Every page.tsx and layout.tsx under admin/(panel) calls this itself. The
+ * panel's layout is not enough on its own: a client navigation (or a forged
+ * Next-Router-State-Tree header) renders only the segments below the ones the
+ * client says it already has, so the layout's check does not run and the
+ * page's data would go out in the RSC payload unguarded.
+ */
+export const adminPage = cache(async (): Promise<User> => {
+  const gate = await adminGate();
+  if (!gate.user || !gate.admin) redirect(`${ADMIN}/login`);
+  // Google said yes; the emailed code for this session is still owed.
+  if (!gate.verified) redirect(`${ADMIN}/verify`);
+  return gate.user;
+});
 
 /**
  * Where the panel's visitor stands: nobody, somebody who is not an admin, an

@@ -10,6 +10,7 @@ import {
   modules as modulesTable,
 } from "@/lib/db/schema";
 import { setLessonRelease } from "../actions";
+import { adminPage } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time. See the panel layout — the
@@ -28,6 +29,7 @@ export default async function AdminUnlockingPage({
 }: {
   searchParams: Promise<{ batch?: string }>;
 }) {
+  await adminPage();
   const { batch } = await searchParams;
 
   const batches = await db

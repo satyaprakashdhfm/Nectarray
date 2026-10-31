@@ -8,6 +8,7 @@ import { calendarView } from "@/lib/work-view";
 import { cn } from "@/lib/utils";
 import { TaskBoard } from "./board";
 import { TimelineView } from "./timeline";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function AdminTasksPage({
     person?: string;
   }>;
 }) {
+  await adminPage();
   const params = await searchParams;
   const tab = params.tab === "timeline" ? "timeline" : "board";
 

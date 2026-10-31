@@ -22,6 +22,7 @@ import {
 import { DEVOPS_ENV } from "@/lib/content/devops-env";
 import { DEVOPS_UI } from "@/lib/content/devops-ui";
 import { ProjectUi } from "@/components/admin/ProjectUi";
+import { adminPage } from "@/lib/auth/access";
 
 const PARTS = [
   { id: "project", label: "Project" },
@@ -65,6 +66,7 @@ export default async function DevopsPage({
 }: {
   searchParams: Promise<{ project?: string }>;
 }) {
+  await adminPage();
   const { project: id } = await searchParams;
   const project = devopsProject(id ?? "");
   const env = project ? (DEVOPS_ENV[project.id] ?? []) : [];

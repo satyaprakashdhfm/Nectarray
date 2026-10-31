@@ -37,10 +37,15 @@ export async function adminProject(
   return project ?? new Response("Not found", { status: 404 });
 }
 
-/** A project's working file, passwords readable. */
+/**
+ * A project's working file, passwords readable. Checks for an admin itself,
+ * since it opens the vault: whichever page or route calls it, nobody else
+ * gets the plaintext.
+ */
 export async function loadProjectSheets(
   projectId: string,
 ): Promise<ProjectSheets> {
+  await requireAdmin();
   let row;
   try {
     [row] = await db

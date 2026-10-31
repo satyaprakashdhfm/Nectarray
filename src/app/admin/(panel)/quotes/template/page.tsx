@@ -4,6 +4,7 @@ import { QuotesNav } from "@/components/admin/QuotesNav";
 import { TemplateEditor } from "@/components/admin/TemplateEditor";
 import { scopeFor } from "@/lib/quotes";
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ const SAMPLE_REFS = ["website", "admin", "kt-sessions", "maintenance"];
 
 /** Sections, headings and starting wording for every quotation. */
 export default async function AdminQuoteTemplatePage() {
+  await adminPage();
   const [{ template, customised }, { body }] = await Promise.all([
     getQuoteTemplate(),
     getQuoteDefaults(),

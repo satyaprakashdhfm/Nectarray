@@ -4,6 +4,7 @@ import { NotesRail, type RailModule } from "@/components/dashboard/NotesRail";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lessons, modules as modulesTable } from "@/lib/db/schema";
+import { adminPage } from "@/lib/auth/access";
 
 /** Short tab labels, same convention as the student rail. */
 const SHORT: Record<string, string> = {
@@ -28,6 +29,7 @@ export default async function AdminNotesLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await adminPage();
   const rows = await db
     .select({
       id: modulesTable.id,

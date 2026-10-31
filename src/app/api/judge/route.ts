@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { practiceProgress, practiceQuestions } from "@/lib/db/schema";
-import { currentUser } from "@/lib/auth/session";
+import { AccessError, requireEnrolled } from "@/lib/auth/access";
 import { isCorrect } from "@/lib/judge";
 import { getProblem } from "@/lib/python-tests";
 import { wakeFetch } from "@/lib/wake-fetch";
@@ -59,9 +59,19 @@ function rateLimited(userId: string): boolean {
 type Body = { questionId?: unknown; source?: unknown };
 
 export async function POST(request: Request) {
-  const user = await currentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  // Enrolled, like every other practice route: being signed in is not
+  // enough, and a withdrawn student's access ends here too.
+  let user;
+  try {
+    user = await requireEnrolled();
+  } catch (error) {
+    if (error instanceof AccessError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    }
+    throw error;
   }
 
   if (!RUNNER_URL || !RUNNER_TOKEN) {
@@ -108,7 +118,12 @@ export async function POST(request: Request) {
   const [row] = await db
     .select({ slug: practiceQuestions.slug })
     .from(practiceQuestions)
-    .where(eq(practiceQuestions.id, questionId))
+    .where(
+      and(
+        eq(practiceQuestions.id, questionId),
+        eq(practiceQuestions.isPublished, true),
+      ),
+    )
     .limit(1);
 
   const problem = row?.slug ? await getProblem(row.slug) : null;

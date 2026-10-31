@@ -6,6 +6,7 @@ import { NewProjectForm, ProjectsTable } from "@/components/admin/Projects";
 import { PROJECT_SERVICES, TAB_SERVICES, lineOf, rupees } from "@/lib/business";
 import { lastMonths, loadMoney, totals } from "@/lib/business-data";
 import { loadProjectLinks } from "@/lib/project-data";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ const IDS = PROJECT_SERVICES.flatMap((s) => TAB_SERVICES[s.id]);
  * the same record, not a copy.
  */
 export default async function DevelopmentPage() {
+  await adminPage();
   const [money, payments] = await Promise.all([
     loadMoney(),
     db.select().from(clientPayments).orderBy(desc(clientPayments.receivedOn)),

@@ -16,6 +16,7 @@ import { QuotesNav } from "@/components/admin/QuotesNav";
 import { createQuote } from "@/app/admin/(panel)/quote-actions";
 import { num, rupees } from "@/lib/business";
 import { getQuoteDefaults } from "@/lib/quotes-data";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,7 @@ async function loadQuotes() {
 
 /** Every quote, newest first, and the form that starts the next one. */
 export default async function AdminQuotesPage() {
+  await adminPage();
   const [quotes, defaults] = await Promise.all([
     loadQuotes(),
     getQuoteDefaults(),

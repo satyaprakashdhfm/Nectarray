@@ -16,6 +16,7 @@ both kinds of untrusted work.
 """
 
 import asyncio
+import ctypes
 import json
 import os
 import pathlib
@@ -31,13 +32,42 @@ import latex
 
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
+
+def _not_dumpable() -> None:
+    """Closes this process's /proc files to the student code it starts.
+
+    The runner shares this service's user, and to the kernel the same user may
+    read /proc/<this pid>/environ, which still holds the tokens as they were
+    at start-up, whatever os.environ says now. A process that is not dumpable
+    has its /proc files owned by root instead. Linux only; elsewhere (local
+    development outside Docker) there is no runner sharing a user to worry
+    about.
+    """
+    try:
+        ctypes.CDLL(None).prctl(4, 0, 0, 0, 0)  # PR_SET_DUMPABLE, 0
+    except Exception:
+        pass
+
+
+_not_dumpable()
+
 # The one credential per capability. Set on both this service and the web
 # app; without it the matching endpoint refuses every request rather than
 # running code, or compiling a document, for strangers. Deliberately two
 # tokens rather than one shared: a leaked judge token cannot compile a
 # document, and a leaked LaTeX token cannot run code.
-TOKEN = os.environ.get("JUDGE_TOKEN", "")
-LATEX_TOKEN = os.environ.get("LATEX_TOKEN", "")
+#
+# Taken out of the environment as they are read: the runner below executes
+# student code, and anything left in os.environ would be one `import os`
+# away from being printed back to whoever sent it.
+TOKEN = os.environ.pop("JUDGE_TOKEN", "")
+LATEX_TOKEN = os.environ.pop("LATEX_TOKEN", "")
+
+# All the runner is given: no variable from this service reaches it.
+RUNNER_ENV = {
+    "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin"),
+    "LANG": "C.UTF-8",
+}
 
 # Wall clock, over the top of the child's own CPU limit. A process asleep or
 # blocked on a syscall burns no CPU and would otherwise never be stopped.
@@ -133,6 +163,7 @@ async def run(request: RunRequest, x_judge_token: str = Header(default="")) -> d
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        env=RUNNER_ENV,
         # Its own process group, so a timeout kills any children too.
         start_new_session=True,
     )

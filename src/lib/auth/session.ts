@@ -5,6 +5,7 @@ import type { NextResponse } from "next/server";
 import { and, eq, getTableColumns, gt, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sessions, users, type User } from "@/lib/db/schema";
+import { ADMIN } from "@/lib/admin-path";
 
 /**
  * Who is signed in, and how they got that way.
@@ -72,6 +73,21 @@ export function sameSecret(a: string, b: string): boolean {
   const left = Buffer.from(a);
   const right = Buffer.from(b);
   return left.length === right.length && timingSafeEqual(left, right);
+}
+
+/**
+ * What the sign-in start stores as the realm cookie for an admin sign-in,
+ * tied to that sign-in's state and to the panel's address.
+ *
+ * The callback sends a failed admin sign-in back to the panel's own login
+ * page, which names the hidden address. A bare "admin" cookie could be set by
+ * anybody to learn it; this value can only have come from /start, which
+ * asks for the address before it will begin an admin sign-in.
+ */
+export function adminRealmTag(state: string): string {
+  return createHash("sha256")
+    .update(`admin-realm:${state}:${ADMIN}`)
+    .digest("base64url");
 }
 
 /**
@@ -162,10 +178,9 @@ export async function currentUser(
 ): Promise<User | null> {
   const token = (await cookies()).get(NAMES[realm].session)?.value;
   if (!token) return null;
-  return userForToken(
-    token,
-    realm === "admin" ? null : () => void extend(token, realm),
-  );
+  return realm === "admin"
+    ? userForToken(token, null, true)
+    : userForToken(token, () => void extend(token, realm), false);
 }
 
 /**
@@ -185,6 +200,7 @@ export async function adminSession(): Promise<{
     .select({
       user: userColumns,
       verifiedAt: sessions.verifiedAt,
+      createdAt: sessions.createdAt,
       expiresAt: sessions.expiresAt,
     })
     .from(sessions)
@@ -204,6 +220,11 @@ export async function adminSession(): Promise<{
    * five hours left; anything longer was made for another door.
    */
   if (row.expiresAt.getTime() - Date.now() > ADMIN_LIFETIME_MS + 60_000)
+    return null;
+  // And five hours from when it was made, whatever its expiry says since: a
+  // row pushed out by another door must not come back as a panel session in
+  // its last five hours.
+  if (Date.now() - row.createdAt.getTime() > ADMIN_LIFETIME_MS + 60_000)
     return null;
   return {
     user: row.user as User,
@@ -231,10 +252,15 @@ export async function markVerified(tokenHash: string): Promise<void> {
 async function userForToken(
   token: string,
   onHalfUsed: (() => void) | null,
+  panelDoor: boolean,
 ): Promise<User | null> {
   const { batchId: _batch, ...userColumns } = getTableColumns(users);
   const rows = await db
-    .select({ user: userColumns, expiresAt: sessions.expiresAt })
+    .select({
+      user: userColumns,
+      expiresAt: sessions.expiresAt,
+      verifiedAt: sessions.verifiedAt,
+    })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(
@@ -247,6 +273,10 @@ async function userForToken(
 
   const row = rows[0];
   if (!row) return null;
+  // Only the panel's own sessions ever have the emailed code entered. Such a
+  // token is no good at the student cookie or as the app's bearer token,
+  // either of which would push it out to thirty days.
+  if (!panelDoor && row.verifiedAt !== null) return null;
 
   // Past halfway, push it out again. A weekly visitor should never be asked
   // to sign in twice, and rewriting on every request would be a write per
@@ -268,12 +298,16 @@ export function bearerToken(request: Request): string | null {
 export async function bearerUser(request: Request): Promise<User | null> {
   const token = bearerToken(request);
   if (!token) return null;
-  return userForToken(token, () => {
-    void db
-      .update(sessions)
-      .set({ expiresAt: new Date(Date.now() + LIFETIME_MS) })
-      .where(eq(sessions.tokenHash, hash(token)));
-  });
+  return userForToken(
+    token,
+    () => {
+      void db
+        .update(sessions)
+        .set({ expiresAt: new Date(Date.now() + LIFETIME_MS) })
+        .where(eq(sessions.tokenHash, hash(token)));
+    },
+    false,
+  );
 }
 
 /** Signs the app out: the session row goes, and the token with it. */

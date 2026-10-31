@@ -5,6 +5,7 @@ import { cohortRoom } from "@/lib/meeting";
 import { asc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cohorts as cohortsTable } from "@/lib/db/schema";
+import { adminPage } from "@/lib/auth/access";
 
 /*
  * Rendered per request, never at build time.
@@ -19,6 +20,7 @@ import { cohorts as cohortsTable } from "@/lib/db/schema";
 export const dynamic = "force-dynamic";
 
 export default async function AdminCohortPage() {
+  await adminPage();
   const cohorts = (
     await db.select().from(cohortsTable).orderBy(asc(cohortsTable.createdAt))
   ).map((cohort) => ({

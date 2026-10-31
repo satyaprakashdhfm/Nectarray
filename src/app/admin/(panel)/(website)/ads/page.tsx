@@ -33,6 +33,7 @@ import {
   deleteCampaign,
   updateCampaign,
 } from "../../business-actions";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,7 @@ export default async function AdminAdsPage({
 }: {
   searchParams: Promise<{ service?: string }>;
 }) {
+  await adminPage();
   const { service: wanted } = await searchParams;
   const service = wanted && isService(wanted) ? wanted : null;
 

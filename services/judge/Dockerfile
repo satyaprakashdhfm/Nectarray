@@ -42,4 +42,6 @@ RUN useradd --create-home --shell /usr/sbin/nologin judge \
 USER judge
 
 EXPOSE 8080
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# exec, so no shell stays behind as the parent: its /proc/<pid>/environ would
+# still hold the tokens, readable by student code running as the same user.
+CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]

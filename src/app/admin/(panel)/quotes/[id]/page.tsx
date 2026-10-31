@@ -8,6 +8,7 @@ import { clientProjects, quotations } from "@/lib/db/schema";
 import { QuoteBuilder } from "@/components/admin/QuoteBuilder";
 import { cleanBody, syncWithStandards } from "@/lib/quotes";
 import { getQuoteDefaults, getQuoteTemplate } from "@/lib/quotes-data";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function AdminQuotePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await adminPage();
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const [quote] = await db

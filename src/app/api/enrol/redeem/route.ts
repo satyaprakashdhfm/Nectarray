@@ -60,6 +60,10 @@ export async function POST(request: Request) {
           and(
             eq(enrolmentCodes.code, code),
             isNull(enrolmentCodes.redeemedBy),
+            // Both marks, not just the one: the Supabase copy kept
+            // redeemed_at but blanked redeemed_by, and a deleted user nulls
+            // redeemed_by too. Either way the code was already spent.
+            isNull(enrolmentCodes.redeemedAt),
             or(
               isNull(enrolmentCodes.expiresAt),
               gt(enrolmentCodes.expiresAt, new Date()),

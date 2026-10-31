@@ -9,6 +9,7 @@ import {
 import { ALL_COMPONENTS } from "@/lib/content/ui-library-all";
 import { WEB_DOMAINS } from "@/lib/content/web-domains";
 import { getDomainSites } from "@/lib/web-domains";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function AdminWebElementsPage({
     domain?: string;
   }>;
 }) {
+  await adminPage();
   const { category: wanted, q = "", type, domain: wantedDomain } =
     await searchParams;
   const current = UI_CATEGORIES.find((c) => c.id === wanted);

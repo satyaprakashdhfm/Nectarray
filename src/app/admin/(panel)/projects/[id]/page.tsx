@@ -24,6 +24,7 @@ import { currentMonth } from "@/lib/project-details";
 import { points } from "@/lib/quote-html";
 import { cleanBody, serviceTab } from "@/lib/quotes";
 import { vaultReady } from "@/lib/vault";
+import { adminPage } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export default async function AdminProjectPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ folder?: string }>;
 }) {
+  await adminPage();
   const [{ id }, { folder }] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const [project] = await db

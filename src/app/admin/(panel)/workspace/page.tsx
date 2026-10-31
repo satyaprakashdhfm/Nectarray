@@ -3,6 +3,7 @@ import { PageHead } from "@/components/admin/Business";
 import { DeployBoard } from "@/components/admin/workspace/DeployBoard";
 import { Incidents } from "@/components/admin/workspace/Incidents";
 import { Workspace } from "@/components/admin/workspace/Workspace";
+import { adminPage } from "@/lib/auth/access";
 
 export const metadata: Metadata = {
   title: "Workspace | NectArray Admin",
@@ -15,7 +16,8 @@ export const metadata: Metadata = {
  * Above them, anything down (Incidents) and what is deploying on Railway and
  * Vercel right now (DeployBoard).
  */
-export default function AdminWorkspacePage() {
+export default async function AdminWorkspacePage() {
+  await adminPage();
   return (
     <>
       <PageHead

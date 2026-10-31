@@ -3,6 +3,7 @@ import path from "node:path";
 import { AnimationLibrary } from "@/components/admin/AnimationLibrary";
 import { PageHead } from "@/components/admin/Business";
 import { ANIMATIONS, ANIMATION_CATEGORIES } from "@/lib/content/animations";
+import { adminPage } from "@/lib/auth/access";
 
 const HEROES_DIR = path.join(
   process.cwd(),
@@ -22,6 +23,7 @@ export default async function AdminWebAnimationsPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
+  await adminPage();
   const { category: wanted } = await searchParams;
   const current =
     ANIMATION_CATEGORIES.find((c) => c.id === wanted) ??

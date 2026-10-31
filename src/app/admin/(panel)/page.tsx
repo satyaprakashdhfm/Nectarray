@@ -32,6 +32,7 @@ import {
   monthLabel,
 } from "@/lib/project-details";
 import { cn } from "@/lib/utils";
+import { adminPage } from "@/lib/auth/access";
 
 /* Rendered per request: it is all live figures from the database. */
 export const dynamic = "force-dynamic";
@@ -68,6 +69,7 @@ export default async function AdminRevenuePage({
 }: {
   searchParams: Promise<{ service?: string }>;
 }) {
+  await adminPage();
   const { service } = await searchParams;
   const line = REVENUE_LINES.some((l) => l.id === service)
     ? (service as string)
