@@ -6,14 +6,17 @@ import { Markdown } from "@/components/dashboard/Markdown";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { company } from "@/lib/content";
-import { OMNI_ARTICLES, fieldById, omniBySlug } from "@/lib/content/omniproof";
-import { postDate, readOmni, readingMinutes } from "@/lib/omniproof";
+import { fieldById } from "@/lib/content/omniproof";
+import { getOmni, postDate, readingMinutes } from "@/lib/omniproof";
 import { siteUrl } from "@/lib/seo";
 
-export const dynamicParams = false;
+/** Pieces are edited in the admin, so each one is read on each visit. */
+export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return OMNI_ARTICLES.map((a) => ({ slug: a.slug }));
+/** A published piece, or nothing: drafts and archived pieces are not public. */
+async function published(slug: string) {
+  const article = await getOmni(slug);
+  return article?.status === "published" ? article : null;
 }
 
 export async function generateMetadata({
@@ -21,7 +24,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const article = omniBySlug((await params).slug);
+  const article = await published((await params).slug);
   if (!article) return {};
   const path = `/omniproof/${article.slug}`;
   return {
@@ -49,10 +52,10 @@ export default async function OmniArticlePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const article = omniBySlug((await params).slug);
+  const article = await published((await params).slug);
   if (!article) notFound();
 
-  const body = await readOmni(article.slug);
+  const { body } = article;
   const field = fieldById(article.field);
   const minutes = readingMinutes(
     [body, ...article.lands.map((l) => l.impact)].join(" "),

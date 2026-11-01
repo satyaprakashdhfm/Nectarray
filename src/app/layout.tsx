@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk, Source_Serif_4 } from "next/font/google";
 import { Analytics, TagManagerNoScript } from "@/components/Analytics";
+import { siteThemeScript } from "@/lib/site-theme";
 import { company } from "@/lib/content";
 import { siteDescription, siteUrl } from "@/lib/seo";
 import "./globals.css";
@@ -144,6 +145,7 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: revealFlag }} />
+        <script dangerouslySetInnerHTML={{ __html: siteThemeScript }} />
       </head>
       <body>
         <TagManagerNoScript />

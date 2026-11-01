@@ -57,7 +57,7 @@ const TOP: Tab[] = [
     href: `${ADMIN}/ads`,
     label: "Our website",
     icon: Globe,
-    also: [`${ADMIN}/analytics`, `${ADMIN}/seo`],
+    also: [`${ADMIN}/analytics`, `${ADMIN}/seo`, `${ADMIN}/omniproof`],
   },
   { href: `${ADMIN}/development`, label: "All projects", icon: Layers },
   { href: `${ADMIN}/quotes`, label: "Quotations", icon: FileText },

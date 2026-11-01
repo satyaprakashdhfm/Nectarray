@@ -12,7 +12,8 @@ import {
   process,
   software,
 } from "@/lib/content";
-import { FIELDS, OMNI_ARTICLES } from "@/lib/content/omniproof";
+import { FIELDS } from "@/lib/content/omniproof";
+import { publishedOmni } from "@/lib/omniproof";
 
 /**
  * Everything the Android app shows, in one response.
@@ -20,14 +21,16 @@ import { FIELDS, OMNI_ARTICLES } from "@/lib/content/omniproof";
  * The app has no copy of its own: it reads the same content modules the
  * website renders, so changing a line in src/lib/content changes it on the
  * site and in the app on the next deploy, without a new Play Store release.
- * It is built once at deploy time, since none of it depends on who asks.
+ * Read per request, since the Omniproof pieces in it are edited in the admin;
+ * nothing in it depends on who asks.
  *
  * `version` lets the app tell its own cached copy from a newer one. Raise it
  * when the shape changes, and teach the app the new shape first.
  */
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
-export function GET() {
+export async function GET() {
+  const omni = await publishedOmni();
   return Response.json({
     version: 1,
     company: {
@@ -116,7 +119,7 @@ export function GET() {
     // Omniproof, with the fields standing in for the old practice filters.
     blog: {
       services: Object.fromEntries(FIELDS.map((f) => [f.id, f.label])),
-      posts: OMNI_ARTICLES.map(
+      posts: omni.map(
         ({ slug, title, description, date, field, cover }) => ({
           slug,
           title,

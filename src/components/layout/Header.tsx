@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { EnrolButton } from "@/components/auth/EnrolButton";
 import { Logo } from "@/components/layout/Logo";
+import { SiteThemeToggle, useSiteTheme } from "@/components/layout/SiteTheme";
 import { useEscapeKey, useLockBodyScroll } from "@/hooks";
 import { nav } from "@/lib/content";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,10 @@ export function Header({
   /** Dark glass, for a page that runs on a dark ground. */
   dark?: boolean;
 }) {
-  const tone = TONES[dark ? "dark" : "light"];
+  // A dark page, or a visitor who picked the dark theme, gets the dark glass.
+  const siteTheme = useSiteTheme();
+  const darkBar = dark || siteTheme === "dark";
+  const tone = TONES[darkBar ? "dark" : "light"];
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [clear, setClear] = useState(clearAtTop);
@@ -129,7 +133,7 @@ export function Header({
     >
       <div
         data-solid={!clear || open}
-        data-tone={dark ? "dark" : undefined}
+        data-tone={darkBar ? "dark" : undefined}
         className="glass-bar mx-auto flex h-[var(--bar-h)] max-w-[78rem] items-center justify-between gap-6 rounded-full pr-[0.6em] pl-[1.3em] min-[1800px]:max-w-[84rem]"
       >
         <Logo
@@ -191,6 +195,8 @@ export function Header({
             </span>
           </Link>
 
+          <SiteThemeToggle className={tone.burger} />
+
           <button
             type="button"
             onClick={() => setOpen((isOpen) => !isOpen)}
@@ -215,7 +221,7 @@ export function Header({
         id="mobile-nav"
         hidden={!open}
         data-solid
-        data-tone={dark ? "dark" : undefined}
+        data-tone={darkBar ? "dark" : undefined}
         className="glass-bar mx-auto mt-2 max-w-[78rem] rounded-3xl lg:hidden"
       >
         <nav className="flex flex-col px-5 py-3" aria-label="Mobile">

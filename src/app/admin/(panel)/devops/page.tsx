@@ -1,7 +1,7 @@
 import { ADMIN } from "@/lib/admin-path";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { PageHead, Stat } from "@/components/admin/Business";
+import { PageHead } from "@/components/admin/Business";
 import {
   EnvList,
   Part,
@@ -20,6 +20,8 @@ import {
   devopsProject,
 } from "@/lib/content/devops";
 import { DEVOPS_ENV } from "@/lib/content/devops-env";
+import { SEC_DOMAINS, SECURITY_FINDINGS } from "@/lib/content/devops-security";
+import { SecurityLog } from "@/components/admin/SecurityLog";
 import { DEVOPS_UI } from "@/lib/content/devops-ui";
 import { ProjectUi } from "@/components/admin/ProjectUi";
 import { adminPage } from "@/lib/auth/access";
@@ -27,6 +29,7 @@ import { adminPage } from "@/lib/auth/access";
 const PARTS = [
   { id: "project", label: "Project" },
   { id: "ui", label: "UI / UX" },
+  { id: "security", label: "Cybersecurity" },
   { id: "env", label: "Environment variables" },
   { id: "stack", label: "Stack" },
   { id: "design", label: "System design" },
@@ -72,8 +75,18 @@ export default async function DevopsPage({
   const env = project ? (DEVOPS_ENV[project.id] ?? []) : [];
   const envCount = env.reduce((n, g) => n + g.vars.length, 0);
   const ui = project && DEVOPS_UI[project.id];
+  const findings = SECURITY_FINDINGS.filter(
+    (f) => !project || f.project === project.id,
+  );
+  // Stack, System design and General knowledge cover every project at once,
+  // so they sit on the General tab only: on a project tab they repeated what
+  // its own Architecture and Versions already say.
+  const shared = ["stack", "design", "knowledge"];
   const parts = PARTS.filter(
-    (part) => (part.id !== "ui" || ui) && (part.id !== "env" || envCount > 0),
+    (part) =>
+      (part.id !== "ui" || ui) &&
+      (part.id !== "env" || envCount > 0) &&
+      (!project || !shared.includes(part.id)),
   );
 
   const toc: TocItem[] = [
@@ -90,10 +103,21 @@ export default async function DevopsPage({
           ],
         }
       : tocPart("project", DEVOPS_GENERAL),
+    {
+      id: "security",
+      label: "Cybersecurity",
+      children: SEC_DOMAINS.filter((d) =>
+        findings.some((f) => f.domain === d.id),
+      ).map((d) => ({ id: `sec-${d.id}`, label: d.label })),
+    },
     ...(envCount > 0 ? [{ id: "env", label: "Environment variables" }] : []),
-    tocPart("stack", DEVOPS_STACK),
-    tocPart("design", DEVOPS_DESIGN),
-    tocPart("knowledge", DEVOPS_KNOWLEDGE),
+    ...(project
+      ? []
+      : [
+          tocPart("stack", DEVOPS_STACK),
+          tocPart("design", DEVOPS_DESIGN),
+          tocPart("knowledge", DEVOPS_KNOWLEDGE),
+        ]),
   ];
 
   return (
@@ -152,14 +176,9 @@ export default async function DevopsPage({
             {project ? (
               <>
                 <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                  <div className="min-w-0">
-                    <h2 className="display text-ink text-[1.5rem]">
-                      {project.label}
-                    </h2>
-                    <p className="text-ink-soft mt-1 max-w-3xl text-[0.875rem]">
-                      {project.blurb}
-                    </p>
-                  </div>
+                  <h2 className="display text-ink text-[1.5rem]">
+                    {project.label}
+                  </h2>
                   <p className="text-ink-faint flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem]">
                     <span className="bg-brand-wash text-brand-deep rounded-full px-2.5 py-0.5 font-semibold">
                       {project.status}
@@ -178,12 +197,6 @@ export default async function DevopsPage({
                       </Link>
                     )}
                   </p>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-                  {project.facts.map((fact) => (
-                    <Stat key={fact.label} {...fact} />
-                  ))}
                 </div>
 
                 {ui && <ProjectUi ui={ui} />}
@@ -212,6 +225,29 @@ export default async function DevopsPage({
             )}
           </section>
 
+          <Part
+            id="security"
+            title={
+              project ? `Cybersecurity · ${project.label}` : "Cybersecurity"
+            }
+            lede={
+              project
+                ? "Every security finding in this project, what we did about it, and the domain and subdomain of security it belongs to."
+                : "Every security finding across all projects, grouped by the domain of security it belongs to, so a bug fixed in one project is checked for in the next."
+            }
+          >
+            <SecurityLog
+              findings={findings}
+              projects={
+                project
+                  ? undefined
+                  : Object.fromEntries(
+                      DEVOPS_PROJECTS.map((p) => [p.id, p.label]),
+                    )
+              }
+            />
+          </Part>
+
           {project && envCount > 0 && (
             <Part
               id="env"
@@ -225,28 +261,36 @@ export default async function DevopsPage({
             </Part>
           )}
 
-          <Part id="stack" title={DEVOPS_STACK.title} lede={DEVOPS_STACK.lede}>
-            <SectionGrid sections={DEVOPS_STACK.sections} part="stack" />
-          </Part>
+          {!project && (
+            <>
+              <Part
+                id="stack"
+                title={DEVOPS_STACK.title}
+                lede={DEVOPS_STACK.lede}
+              >
+                <SectionGrid sections={DEVOPS_STACK.sections} part="stack" />
+              </Part>
 
-          <Part
-            id="design"
-            title={DEVOPS_DESIGN.title}
-            lede={DEVOPS_DESIGN.lede}
-          >
-            <SectionGrid sections={DEVOPS_DESIGN.sections} part="design" />
-          </Part>
+              <Part
+                id="design"
+                title={DEVOPS_DESIGN.title}
+                lede={DEVOPS_DESIGN.lede}
+              >
+                <SectionGrid sections={DEVOPS_DESIGN.sections} part="design" />
+              </Part>
 
-          <Part
-            id="knowledge"
-            title={DEVOPS_KNOWLEDGE.title}
-            lede={DEVOPS_KNOWLEDGE.lede}
-          >
-            <SectionGrid
-              sections={DEVOPS_KNOWLEDGE.sections}
-              part="knowledge"
-            />
-          </Part>
+              <Part
+                id="knowledge"
+                title={DEVOPS_KNOWLEDGE.title}
+                lede={DEVOPS_KNOWLEDGE.lede}
+              >
+                <SectionGrid
+                  sections={DEVOPS_KNOWLEDGE.sections}
+                  part="knowledge"
+                />
+              </Part>
+            </>
+          )}
         </div>
 
         <aside className="hidden xl:block">

@@ -1,9 +1,12 @@
 import type { MetadataRoute } from "next";
-import { OMNI_ARTICLES } from "@/lib/content/omniproof";
+import { publishedOmni } from "@/lib/omniproof";
 import { siteUrl } from "@/lib/seo";
 
+/** Omniproof pieces come from the database, so the map is built per request. */
+export const dynamic = "force-dynamic";
+
 /** Served at /sitemap.xml — one entry per route. */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date();
 
   const routes: Array<[string, number]> = [
@@ -29,7 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
-    ...OMNI_ARTICLES.map((a) => ({
+    ...(await publishedOmni()).map((a) => ({
       url: `${siteUrl}/omniproof/${a.slug}`,
       lastModified: new Date(a.date),
       changeFrequency: "yearly" as const,

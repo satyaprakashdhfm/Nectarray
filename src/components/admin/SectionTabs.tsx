@@ -3,13 +3,20 @@ import { ADMIN } from "@/lib/admin-path";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartLine, Megaphone, Search, type LucideIcon } from "lucide-react";
+import {
+  Atom,
+  ChartLine,
+  Megaphone,
+  Search,
+  type LucideIcon,
+} from "lucide-react";
 
 type Tab = { href: string; label: string; icon: LucideIcon };
 
 /**
  * Pages that share one sidebar entry, as tabs across the top: our own
- * website (what the ads cost and bring, who visits, how it does in search).
+ * website (what the ads cost and bring, who visits, how it does in search,
+ * and the Omniproof pieces we write for it).
  */
 const SECTIONS: Record<string, { label: string; tabs: Tab[] }> = {
   website: {
@@ -18,6 +25,7 @@ const SECTIONS: Record<string, { label: string; tabs: Tab[] }> = {
       { href: `${ADMIN}/ads`, label: "Ads", icon: Megaphone },
       { href: `${ADMIN}/analytics`, label: "Analytics", icon: ChartLine },
       { href: `${ADMIN}/seo`, label: "SEO", icon: Search },
+      { href: `${ADMIN}/omniproof`, label: "Omniproof", icon: Atom },
     ],
   },
 };

@@ -169,6 +169,65 @@
 }
 
 /* --------------------------------------------------------------------------
+   Public site: dark theme
+
+   The visitor's own choice, from the sun/moon in the site header
+   (components/layout/SiteTheme.tsx), set as data-site-theme on <html> before
+   first paint. The same near-black tokens as the admin's dark theme above,
+   so the site and the panel read as one product. Only where data-ui-theme is
+   absent: inside the dashboard and the admin their own switch decides.
+-------------------------------------------------------------------------- */
+
+:root[data-site-theme="dark"]:not([data-ui-theme]) {
+  color-scheme: dark;
+  --color-canvas: #0b0c0e;
+  --color-surface: #16181d;
+  --color-mist: #101216;
+  --color-mist-deep: #0b0d10;
+  --color-line: #2b2e35;
+  --color-line-soft: #212429;
+
+  --color-cta-fg: #0b0c0e;
+
+  --color-ink: #eceef1;
+  --color-ink-soft: #a6a9b2;
+  --color-ink-faint: #8a8d96;
+
+  /* Night bands sit a step below the page, so they still read as bands. */
+  --color-night: #060708;
+  --color-night-soft: #141519;
+  --color-night-line: #26282e;
+
+  --color-brand-wash: #10222c;
+  --color-leaf-wash: #16241a;
+  --color-amber-wash: #261d12;
+  --color-teal-wash: #12241f;
+
+  --color-brand-deep: #4cc0f0;
+  --color-brand-solid: #4cc0f0;
+  --color-leaf-deep: #7ed957;
+  --color-amber-deep: #f5a44a;
+  --color-teal-deep: #35cfc7;
+  --color-danger: #ff8f80;
+}
+
+:root[data-site-theme="dark"]:not([data-ui-theme]) .card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: var(--color-line);
+}
+
+:root[data-site-theme="dark"]:not([data-ui-theme]) .card-hover:hover {
+  box-shadow: none;
+  border-color: color-mix(in srgb, var(--color-brand) 40%, transparent);
+}
+
+:root[data-site-theme="dark"]:not([data-ui-theme]) .grid-paper {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+}
+
+/* --------------------------------------------------------------------------
    Public site: dark ocean, glass
 
    The marketing pages run dark, in the hero's own water — deep navy with a
@@ -1798,7 +1857,7 @@ dialog.pop[open]::backdrop {
 }
 
 /* --------------------------------------------------------------------------
-   Omniproof root graph (see components/omniproof/ProofGraph.tsx). Runs on
+   Omniproof root graph (see components/omniproof/OmniMap.tsx). Runs on
    first paint, not on scroll: branches draw in, landing links fade in and
    drift, pulses ride the paths. All of it stops for reduced motion.
    -------------------------------------------------------------------------- */
@@ -1831,9 +1890,11 @@ dialog.pop[open]::backdrop {
     opacity: 1;
   }
 }
+/* One dash and gap, in the map's units at the current zoom (OmniMap sets it),
+   so the drift stays seamless however far in the camera is. */
 @keyframes omni-flow {
   to {
-    stroke-dashoffset: -22;
+    stroke-dashoffset: var(--omni-flow, -22);
   }
 }
 @keyframes omni-breathe {

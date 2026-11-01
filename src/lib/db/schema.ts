@@ -974,6 +974,42 @@ export const serviceIncidents = pgTable(
   ],
 );
 
+/**
+ * Omniproof articles, as written or edited in the admin (Website → Omniproof).
+ *
+ * The pieces bundled in content/omniproof/ are the starting set. A row here
+ * with the same slug replaces the bundled one, so editing a bundled piece
+ * copies it in on the first save; a row with a new slug is a new piece.
+ * Only `published` rows reach the public site.
+ */
+export const omniproofArticles = pgTable("omniproof_articles", {
+  slug: text().primaryKey(),
+  title: text().notNull(),
+  description: text().notNull().default(""),
+  /** The date shown on the piece, YYYY-MM-DD. */
+  date: date().notNull(),
+  /** A FieldId from lib/content/omniproof. */
+  field: text().notNull(),
+  subfield: text().notNull(),
+  /** The few words on its leaf in the map. */
+  short: text().notNull(),
+  /** Markdown, rendered by the same Markdown component as everywhere else. */
+  body: text().notNull().default(""),
+  coverSrc: text("cover_src"),
+  coverAlt: text("cover_alt"),
+  sourceLabel: text("source_label").notNull().default(""),
+  sourceHref: text("source_href").notNull().default(""),
+  /** Where it lands: [{ field, impact }]. */
+  lands: jsonb()
+    .$type<{ field: string; impact: string }[]>()
+    .notNull()
+    .default([]),
+  /** draft · published · archived */
+  status: text().notNull().default("draft"),
+  createdAt: now(),
+  updatedAt: now(),
+});
+
 // ---------------------------------------------------------------------------
 //  Relations, for the query builder
 // ---------------------------------------------------------------------------

@@ -38,7 +38,7 @@ export const DEVOPS_PROJECTS: DevopsProject[] = [
     url: "https://nectarray.com",
     repo: "github.com/satyaprakashdhfm/Nectarray",
     status: "Live",
-    checked: "30 Oct 2026",
+    checked: "1 Nov 2026",
     facts: [
       { label: "Hosting", value: "Railway", hint: "Singapore, 1 replica each" },
       { label: "Stack", value: "Next.js 16 + Python", hint: "Node 24, FastAPI judge" },
@@ -163,6 +163,8 @@ Railway webhooks (all projects) ──► /api/hooks/railway     Uptime checker 
               "Project-scoped, read-only Railway and Vercel tokens (F9).",
               "engines: node >=24; remove vercel.json and supabase/.",
               "UptimeRobot outside Railway; optional CSP header.",
+              "31 Oct audit owner checks: AI agent tool confirmation, App Link for app sign-in, Workspace token scope and branch protection, judge network (see Cybersecurity).",
+              "Judge: run student code as its own user (S2 remainder).",
             ],
           },
         ],
@@ -749,7 +751,7 @@ export const DEVOPS_GENERAL: DevopsPage = {
           head: ["Project", "Status", "Hosting", "Stack", "Database", "Updated"],
           rows: [
             ["ADC (A Dough Cookie)", "Live · adoughcookie.com", "Railway", "Next.js 16 + Express 4", "Postgres 18, PITR + nightly R2", "24 Oct 2026"],
-            ["Nectarray", "Live · nectarray.com", "Railway", "Next.js 16 + Python judge", "Postgres 17, R2 every 3 days", "30 Oct 2026"],
+            ["Nectarray", "Live · nectarray.com", "Railway", "Next.js 16 + Python judge", "Postgres 17, R2 every 3 days", "1 Nov 2026"],
             ["LegallyYours", "Pre-launch", "Railway (sleeps)", "Next.js 16 + Fastify 5", "Postgres 18, no backup", "24 Oct 2026"],
             ["Mobile Dashboard", "Setting up", "Railway", "Rust (Axum) + Next.js 16", "Postgres 17", "30 Oct 2026"],
             ["Minimals", "Deploying from main", "Railway", "Next.js 15", "Postgres (JSON docs)", "30 Oct 2026"],
@@ -776,6 +778,9 @@ export const DEVOPS_GENERAL: DevopsPage = {
           head: ["Date", "Project", "What changed"],
           rows: [
             ["30 Oct 2026", "All", "architecture.md covers all 10 projects, with dated update rules; six new project tabs here"],
+            ["1 Nov 2026", "Nectarray", "Omniproof editable in the admin; public dark theme; DevOps Cybersecurity part; project tabs stop repeating the shared parts"],
+            ["31 Oct 2026", "Nectarray", "Second security audit: 1 critical, 2 medium, 4 low fixed (see Cybersecurity)"],
+            ["30 Oct 2026", "Nectarray", "Blog replaced by Omniproof; every /blog URL redirects there"],
             ["30 Oct 2026", "Nectarray", "Blog cut back to the Jev article; the other ten redirect to /blog"],
             ["28 Oct 2026", "Nectarray", "DevOps General tab with the backend decision; project meetings"],
             ["27 Oct 2026", "Nectarray", "UI / UX first in every project: palettes, fonts, type sizes"],

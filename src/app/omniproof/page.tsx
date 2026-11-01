@@ -3,8 +3,12 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { FieldRows } from "@/components/omniproof/FieldRows";
 import { OmniMap } from "@/components/omniproof/OmniMap";
-import { OMNI_ARTICLES } from "@/lib/content/omniproof";
-import { postDate, readOmni, readingMinutes } from "@/lib/omniproof";
+import {
+  omniCard,
+  postDate,
+  publishedOmni,
+  readingMinutes,
+} from "@/lib/omniproof";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -14,18 +18,16 @@ export const metadata: Metadata = pageMetadata({
   path: "/omniproof",
 });
 
+/** Pieces are edited in the admin, so the page reads them on each visit. */
+export const dynamic = "force-dynamic";
+
 /**
  * The Omniproof index: the name, the theme line, then the root graph straight
  * away (no scroll reveal), then every article, newest first.
  */
 export default async function OmniproofIndex() {
-  const minutes = Object.fromEntries(
-    await Promise.all(
-      OMNI_ARTICLES.map(
-        async (a) => [a.slug, readingMinutes(await readOmni(a.slug))] as const,
-      ),
-    ),
-  );
+  const entries = await publishedOmni();
+  const articles = entries.map(omniCard);
 
   return (
     <>
@@ -49,15 +51,16 @@ export default async function OmniproofIndex() {
 
         {/* The map runs wider than the text: it is the thing to play with. */}
         <div className="mx-auto mt-10 w-full max-w-[120rem] px-3 sm:px-5 lg:px-8">
-          <OmniMap />
+          <OmniMap articles={articles} />
         </div>
 
         <div className="shell mt-8">
           <FieldRows
+            articles={articles}
             dates={Object.fromEntries(
-              OMNI_ARTICLES.map((a) => [
+              entries.map((a) => [
                 a.slug,
-                `${postDate(a.date)} · ${minutes[a.slug]} min`,
+                `${postDate(a.date)} · ${readingMinutes(a.body)} min`,
               ]),
             )}
           />

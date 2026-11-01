@@ -72,12 +72,18 @@ openers, no closing one-liner that restates the article.
 2. Entry: add an object to the top of `OMNI_ARTICLES` in
    `src/lib/content/omniproof.ts`:
    - `title` (under 60 characters), `description` (one or two sentences),
-     `date` (YYYY-MM-DD, today), `field`, `short` (leaf label in the graph,
-     about 22 characters), `source` (`label`, `href`).
+     `date` (YYYY-MM-DD, today), `field`, `subfield` (one of that field's
+     subfield ids in `FIELDS`), `short` (leaf label in the graph, about 22
+     characters), `source` (`label`, `href`), and `cover` (`src`, `alt`) only
+     if there is art for it.
    - `lands`: two to four entries, `{ field, impact }`, one per other field it
      reaches. Each `impact` is one or two sentences on what changes there.
      Never list the home field.
 3. Check: `npx tsc --noEmit` and `npx eslint src/lib/content/omniproof.ts`,
    then open `/omniproof` and the article to see the new leaf and links.
+
+Pieces can also be written straight into the admin (Our website →
+Omniproof): start one there and paste the markdown body; the panels take the
+same fields. Use the files above when the piece should ship with the code.
 
 Report the word count and the fields it lands in when done.

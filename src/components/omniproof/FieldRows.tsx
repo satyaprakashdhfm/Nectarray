@@ -3,26 +3,27 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  FIELDS,
-  OMNI_ARTICLES,
-  type Field,
-  type OmniArticle,
-} from "@/lib/content/omniproof";
+import { FIELDS, type Field, type OmniArticle } from "@/lib/content/omniproof";
 
 /**
  * Below the map: one row per field. The field's name and arrows on top, its
  * one-line pitch and subfields on the left, and its pieces in a row that
  * scrolls sideways and snaps card by card.
  */
-export function FieldRows({ dates }: { dates: Record<string, string> }) {
+export function FieldRows({
+  articles,
+  dates,
+}: {
+  articles: OmniArticle[];
+  dates: Record<string, string>;
+}) {
   return (
     <div className="divide-line divide-y">
       {FIELDS.map((f) => (
         <Row
           key={f.id}
           field={f}
-          articles={OMNI_ARTICLES.filter((a) => a.field === f.id)}
+          articles={articles.filter((a) => a.field === f.id)}
           dates={dates}
         />
       ))}
