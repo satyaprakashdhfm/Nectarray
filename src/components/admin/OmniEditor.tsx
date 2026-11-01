@@ -268,7 +268,7 @@ export function OmniEditor({
           <Panel title="On the map">
             <div className="grid grid-cols-2 gap-3">
               <label className="col-span-2">
-                <span className={label}>Field</span>
+                <span className={label}>Domain</span>
                 <select
                   value={draft.field}
                   onChange={(e) => {
@@ -290,7 +290,7 @@ export function OmniEditor({
                 </select>
               </label>
               <label className="col-span-2">
-                <span className={label}>Subfield</span>
+                <span className={label}>Subdomain</span>
                 <select
                   value={draft.subfield}
                   onChange={(e) => set("subfield", e.target.value)}
@@ -330,9 +330,9 @@ export function OmniEditor({
 
           <Panel title="Where this lands">
             <p className={`${hint} mt-0 mb-3`}>
-              One line for each field the result reaches: what it changes there.
-              Leave a field empty if it does not land there. These draw the
-              links between fields on the map.
+              One line for each domain the result reaches: what it changes there.
+              Leave a domain empty if it does not land there. These draw the
+              links between domains on the map.
             </p>
             <div className="grid gap-3">
               {FIELDS.filter((f) => f.id !== draft.field).map((f) => (
@@ -398,7 +398,7 @@ export function OmniEditor({
               />
             </label>
             <p className={hint}>
-              Optional. Without one the card shows the field’s colour and the
+              Optional. Without one the card shows the domain’s colour and the
               short name.
             </p>
           </Panel>

@@ -36,7 +36,7 @@ export const FIELDS: Field[] = [
   {
     id: "mathematics",
     label: "Mathematics",
-    blurb: "The tool every other field borrows. Powerless alone, decisive in use.",
+    blurb: "The tool every other domain borrows. Powerless alone, decisive in use.",
     color: "#1fa5de",
     subfields: [
       { id: "number-theory", label: "Number theory", blurb: "Primes, zeros and the patterns under them." },
@@ -173,27 +173,28 @@ export const OMNI_ARTICLES: OmniArticle[] = [
     ],
   },
   {
-    slug: "jev-langchain-decision-model",
-    title: "Jev in LangChain: a decision model for the choices your agent makes",
+    slug: "decision-brain-beside-the-llm",
+    title: "A brain for the split second: why LLMs need a decision model beside them",
     description:
-      "TypeSafe AI's Jev answers typed questions with probabilities instead of writing text. What it is, where it beats an LLM, and how to use it from LangChain and LangGraph.",
-    date: "2026-09-27",
+      "An LLM thinks like a whole brain, and slowly. Robots, cars and aircraft also need a small model that only decides. Why, and how Figure's Helix and the ACAS Xu collision system already split the work.",
+    date: "2026-11-01",
     field: "computer-science",
     subfield: "agents",
-    short: "Jev decision model",
-    cover: {
-      src: "/omniproof/jev-langchain-decision-model/cover.svg",
-      alt: "A stream of messages entering a small decision model that sends each one down one of three labelled paths.",
-    },
+    short: "The decision brain",
     source: {
-      label: "LangChain's posts on Jev and langchain-typesafe",
-      href: "https://blog.langchain.com/",
+      label: "Figure AI, Helix: a vision-language-action model",
+      href: "https://www.figure.ai/news/helix",
     },
     lands: [
       {
+        field: "physics",
+        impact:
+          "Control is physics on a deadline. A 200-times-a-second decision model under a slower LLM is how robots, vehicles and drones keep up with the world they move through.",
+      },
+      {
         field: "economics",
         impact:
-          "Cheap by default, frontier on exception: routine routing and guardrail calls move to a model LangChain measured at a fraction of an LLM's cost per call, which changes what an agent costs to run.",
+          "Cheap by default, large model on exception: routine decisions move to a small model, so an AI system costs less to run and gives the same answer twice.",
       },
     ],
   },

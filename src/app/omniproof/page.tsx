@@ -42,10 +42,10 @@ export default async function OmniproofIndex() {
             The proofline of everything.
           </p>
           <p className="text-ink-soft mt-3 max-w-2xl text-[1.0625rem] leading-relaxed">
-            Where curiosity meets impact. Every piece is a five-minute read on
+            Where curiosity meets impact. Every page is a five-minute read on
             something LLMs and people solved together, what it is worth to
-            business and to society, and which fields it lands in. Pick a field
-            on the map to fly into it, then a subfield to reach its pieces.
+            business and to society, and which domains it lands in. Pick a domain
+            on the map to fly into it, then a subdomain to reach its pages.
           </p>
         </div>
 

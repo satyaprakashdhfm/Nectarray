@@ -61,7 +61,13 @@ const nextConfig: NextConfig = {
       .concat(
         {
           source: "/blog/jev-langchain-decision-model/:path*",
-          destination: "/omniproof/jev-langchain-decision-model/:path*",
+          destination: "/omniproof/decision-brain-beside-the-llm",
+          permanent: true,
+        },
+        {
+          // The Jev piece, rewritten as the decision-brain piece (1 Nov 2026).
+          source: "/omniproof/jev-langchain-decision-model",
+          destination: "/omniproof/decision-brain-beside-the-llm",
           permanent: true,
         },
         { source: "/blog", destination: "/omniproof", permanent: true },

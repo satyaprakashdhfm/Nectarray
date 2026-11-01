@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Markdown } from "@/components/dashboard/Markdown";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { DecisionLoop } from "@/components/omniproof/DecisionLoop";
 import { company } from "@/lib/content";
 import { fieldById } from "@/lib/content/omniproof";
 import { getOmni, postDate, readingMinutes } from "@/lib/omniproof";
@@ -47,6 +48,11 @@ export async function generateMetadata({
  * the article's `lands` (the same data the root graph links with), then the
  * source it was built on.
  */
+/** Animated figures, shown in place of a cover, by slug. */
+const FIGURES: Record<string, () => React.ReactNode> = {
+  "decision-brain-beside-the-llm": DecisionLoop,
+};
+
 export default async function OmniArticlePage({
   params,
 }: {
@@ -56,6 +62,7 @@ export default async function OmniArticlePage({
   if (!article) notFound();
 
   const { body } = article;
+  const Figure = FIGURES[article.slug];
   const field = fieldById(article.field);
   const minutes = readingMinutes(
     [body, ...article.lands.map((l) => l.impact)].join(" "),
@@ -114,7 +121,9 @@ export default async function OmniArticlePage({
               {company.name} · {postDate(article.date)} · {minutes} min read
             </p>
 
-            {article.cover && (
+            {Figure ? (
+              <Figure />
+            ) : article.cover && (
               // eslint-disable-next-line @next/next/no-img-element -- an SVG illustration; next/image adds nothing for vectors
               <img
                 src={article.cover.src}
@@ -165,8 +174,8 @@ export default async function OmniArticlePage({
                 {article.source.label}
                 <ArrowUpRight className="size-3.5" aria-hidden />
               </a>
-              . Results are described as the guests reported them; several were
-              still being checked by the wider community at the time of writing.
+              . Results are described as their authors reported them; some were
+              still being checked by others at the time of writing.
             </p>
           </div>
         </article>

@@ -64,7 +64,7 @@ export default async function AdminOmniproofPage({
         </label>
         <label>
           <span className="text-ink mb-1.5 block text-[0.8125rem] font-semibold">
-            Field
+            Domain
           </span>
           <select name="field" className={`${field} w-full sm:w-48`}>
             {FIELDS.map((f) => (

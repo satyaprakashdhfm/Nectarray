@@ -54,9 +54,9 @@ function check(draft: OmniDraft): string | null {
   if (draft.title.trim().length < 5) return "Give the piece a title.";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)) return "Pick a date.";
   const field = FIELDS.find((f) => f.id === draft.field);
-  if (!field) return "Pick a field.";
+  if (!field) return "Pick a domain.";
   if (!field.subfields.some((s) => s.id === draft.subfield))
-    return "Pick a subfield of that field.";
+    return "Pick a subdomain of that domain.";
   if (!draft.short.trim()) return "Give it a short name for the map.";
   if (draft.body.length > 60_000) return "The body is too long.";
   if (!safeHref(draft.coverSrc.trim()) || !safeHref(draft.sourceHref.trim()))
