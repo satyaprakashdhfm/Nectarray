@@ -12,21 +12,22 @@ import {
 } from "@/lib/content/omniproof";
 
 /*
- * The Omniproof map, in 3D. The root (LLMs, with people) sits at the centre;
- * the six domains ring it, each opening outward into its subdomains, and the
- * articles hang off those. A dashed link runs straight from an article to
- * every other domain it lands in, through the space between, so a link never
- * has to route back round the map.
+ * The Omniproof map, as an orbit. LLMs (with people) sit at the centre; the
+ * six domains sit evenly on one ring round them, seen a little from above.
+ * Each article stands on its domain. A dashed arc rises from an article and
+ * comes down on every other domain it lands in, over the ring rather than
+ * through the middle.
  *
- * Drag to turn it, pinch or ctrl + wheel (or the buttons) to zoom. Click a
- * domain and the camera turns and flies to it; click a subdomain to go in
- * again. The breadcrumb or Escape steps back out.
+ * Drag sideways to turn the ring (up and down tilts it, within limits, so it
+ * never flips). Click a domain and it turns to the front and the camera
+ * flies in; its subdomains open round it as a ring of satellites. Click one
+ * to go in again. The breadcrumb or Escape steps back out.
  *
- * No 3D library: every point is turned and projected in a few lines of maths
+ * No 3D library: each point is turned and projected in a few lines of maths
  * and drawn as one SVG in screen pixels, so words stay the same size at any
- * zoom. It only redraws while something moves. The slow idle turn runs while
- * the map is on screen and nobody is using it, and never under reduced
- * motion.
+ * zoom. It redraws only while something moves. The slow idle turn runs only
+ * while the map is on screen and nobody is using it, and never under
+ * reduced motion.
  */
 
 type V = [number, number, number];
@@ -37,71 +38,59 @@ type Focus =
 type Cam = { yaw: number; pitch: number; zoom: number; pivot: V };
 /** The container in pixels, and the size markers are drawn at. */
 type View = { w: number; h: number; fit: number; px: number };
+type At = { x: number; y: number; z: number; k: number };
 
-const R_DOMAIN = 300;
-const SUB_OUT = 175;
-const SUB_SPREAD = 80;
-const ART_OUT = 125;
-const ART_GAP = 24;
-/** Camera distance: larger is flatter. */
+const RING = 330;
+/** Satellites round a domain, and how far out its articles stand. */
+const SAT = 78;
+const ART = 140;
+const ART_GAP = 30;
 const DEPTH = 2400;
-const ZOOM: Record<Focus["level"], number> = { 0: 1, 1: 2.1, 2: 3.3 };
+const PITCH = { min: -1.05, max: -0.12, rest: -0.42 };
+const ZOOM: Record<Focus["level"], number> = { 0: 1, 1: 2.3, 2: 3.4 };
 
 const add = (a: V, b: V): V => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const mul = (a: V, k: number): V => [a[0] * k, a[1] * k, a[2] * k];
-const len = (a: V) => Math.hypot(a[0], a[1], a[2]);
-const norm = (a: V): V => mul(a, 1 / (len(a) || 1));
-const cross = (a: V, b: V): V => [
-  a[1] * b[2] - a[2] * b[1],
-  a[2] * b[0] - a[0] * b[2],
-  a[0] * b[1] - a[1] * b[0],
-];
 const mean = (ps: V[]): V =>
   mul(ps.reduce((s, p) => add(s, p), [0, 0, 0] as V), 1 / ps.length);
 
-/** Domains round the root, alternately a little above and below. */
+const angle = (i: number) => (i / FIELDS.length) * Math.PI * 2;
 const DP = Object.fromEntries(
-  FIELDS.map((f, i) => {
-    const a = (i / FIELDS.length) * Math.PI * 2 - Math.PI / 2;
-    return [
-      f.id,
-      [R_DOMAIN * Math.cos(a), (i % 2 ? 1 : -1) * 95, R_DOMAIN * Math.sin(a)],
-    ];
-  }),
+  FIELDS.map((f, i) => [
+    f.id,
+    [RING * Math.cos(angle(i)), 0, RING * Math.sin(angle(i))],
+  ]),
 ) as Record<FieldId, V>;
 
-/** Subdomains on a small circle, further out along their domain's line. */
+/**
+ * A point in the upright plane through a domain, square to the ring: what
+ * faces the viewer when that domain is turned to the front. `b` is the angle
+ * round the domain, 0 to the right, and `r` the distance out.
+ */
+function around(field: FieldId, b: number, r: number): V {
+  const [x, , z] = DP[field];
+  const t: V = [-z / RING, 0, x / RING];
+  return add(DP[field], add(mul(t, Math.cos(b) * r), [0, -Math.sin(b) * r, 0]));
+}
+/** Subdomains spread over the upper half, so articles stand above the ring. */
+const subAngle = (k: number, n: number) =>
+  Math.PI * (n === 1 ? 0.5 : 0.12 + (0.76 * k) / (n - 1));
 const SP: Record<string, V> = Object.fromEntries(
-  FIELDS.flatMap((f) => {
-    const d = norm(DP[f.id]);
-    const u1 = norm(cross(d, [0, 1, 0]));
-    const u2 = cross(u1, d);
-    const n = f.subfields.length;
-    return f.subfields.map((s, k) => {
-      const b = (k / n) * Math.PI * 2 + Math.PI / 4;
-      const ring = add(
-        mul(u1, Math.cos(b) * SUB_SPREAD),
-        mul(u2, Math.sin(b) * SUB_SPREAD),
-      );
-      return [`${f.id}/${s.id}`, add(add(DP[f.id], mul(d, SUB_OUT)), ring)];
-    });
-  }),
+  FIELDS.flatMap((f) =>
+    f.subfields.map((s, k) => [
+      `${f.id}/${s.id}`,
+      around(f.id, subAngle(k, f.subfields.length), SAT),
+    ]),
+  ),
 );
 
-/**
- * The turn that puts a point to the right of the pivot, angled a little
- * towards the viewer, so whatever grows outward from it spreads across the
- * screen instead of straight at the camera.
- */
-function orient(p: V, tilt = 0.45) {
-  const rho = Math.hypot(p[0], p[2]);
-  const a = Math.min(rho, len(p) * Math.cos(tilt));
-  const b = -Math.sqrt(Math.max(0, rho * rho - a * a));
-  const yaw = Math.atan2(p[2], p[0]) - Math.atan2(b, a);
-  return { yaw, pitch: Math.atan2(-p[1], -b) };
-}
+/** The turn that brings a domain to the front of the ring. */
+const frontYaw = (field: FieldId) => {
+  const [x, , z] = DP[field];
+  return Math.atan2(x, -z);
+};
 
-function project(p: V, cam: Cam, view: View) {
+function project(p: V, cam: Cam, view: View): At {
   const x = p[0] - cam.pivot[0];
   const y = p[1] - cam.pivot[1];
   const z = p[2] - cam.pivot[2];
@@ -118,9 +107,9 @@ function project(p: V, cam: Cam, view: View) {
   return { x: view.w / 2 + x1 * s, y: view.h / 2 + y2 * s, z: z2, k };
 }
 
-/** Far things fade: nearest at full strength, the far side at under half. */
+/** The back of the ring fades: front at full strength, back at about half. */
 const depth = (z: number) =>
-  0.4 + 0.6 * Math.max(0, Math.min(1, (650 - z) / 1300));
+  0.45 + 0.55 * Math.max(0, Math.min(1, (RING - z) / (2 * RING)));
 
 const ease = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
@@ -128,7 +117,7 @@ const turn = (from: number, to: number) =>
   ((((to - from + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) -
   Math.PI;
 
-const START: Cam = { yaw: 0.5, pitch: -0.32, zoom: 1, pivot: [0, 0, 0] };
+const START: Cam = { yaw: 0.35, pitch: PITCH.rest, zoom: 1, pivot: [0, 0, 0] };
 
 export function OmniMap({ articles }: { articles: OmniArticle[] }) {
   const router = useRouter();
@@ -152,24 +141,21 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
   /** Set by a drag, so the click that ends it does not also open a node. */
   const dragged = useRef(false);
 
-  // Where each article sits, and how many land in each domain from elsewhere.
+  // Where each article stands, and how many land in each domain.
   const { leaves, arrivals, perField, perSub } = useMemo(() => {
     const leaves = articles
       .filter((a) => SP[`${a.field}/${a.subfield}`] !== undefined)
       .map((a, _, all) => {
+        const f = fieldById(a.field);
+        const n = f.subfields.length;
+        const k = f.subfields.findIndex((s) => s.id === a.subfield);
         const sibs = all.filter(
           (b) => b.field === a.field && b.subfield === a.subfield,
         );
-        const k = sibs.indexOf(a);
-        const sp = SP[`${a.field}/${a.subfield}`];
-        const d = norm(sp);
-        const side = norm(cross(d, [0, 1, 0]));
+        const i = sibs.indexOf(a);
         return {
           ...a,
-          p: add(
-            add(sp, mul(d, ART_OUT)),
-            mul(side, (k - (sibs.length - 1) / 2) * ART_GAP),
-          ),
+          p: around(a.field, subAngle(k, n), ART + i * ART_GAP),
         };
       });
     const arrivals = Object.fromEntries(
@@ -219,36 +205,38 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
       touched.current = performance.now();
       setFocus(next);
       if (next.level === 0) {
-        flyTo({ ...START, yaw: camRef.current.yaw, zoom: ZOOM[0] });
+        flyTo({ ...START, yaw: camRef.current.yaw });
         return;
       }
       const portrait = (viewRef.current?.w ?? 1) < (viewRef.current?.h ?? 1);
+      const yaw = frontYaw(next.field);
       if (next.level === 1) {
-        const p = DP[next.field];
-        const kids = fieldById(next.field).subfields.map(
+        const sats = fieldById(next.field).subfields.map(
           (s) => SP[`${next.field}/${s.id}`],
         );
         flyTo({
-          ...orient(p),
-          zoom: ZOOM[1] * (portrait ? 0.8 : 1),
-          pivot: mean([p, ...kids]),
+          yaw,
+          pitch: -0.16,
+          zoom: ZOOM[1] * (portrait ? 0.75 : 1),
+          pivot: mean([DP[next.field], ...sats]),
         });
         return;
       }
-      const p = SP[`${next.field}/${next.sub}`];
+      const sat = SP[`${next.field}/${next.sub}`];
       const kids = leaves
         .filter((a) => a.field === next.field && a.subfield === next.sub)
         .map((a) => a.p);
       flyTo({
-        ...orient(p),
-        zoom: ZOOM[2] * (portrait ? 0.8 : 1),
-        pivot: mean([p, ...(kids.length ? kids : [add(p, mul(norm(p), 60))])]),
+        yaw,
+        pitch: -0.16,
+        zoom: ZOOM[2] * (portrait ? 0.75 : 1),
+        pivot: mean([sat, ...kids]),
       });
     },
     [flyTo, leaves],
   );
 
-  // Track the container's size; the whole map fits it at zoom 1.
+  // Track the container's size; the whole ring fits it at zoom 1.
   useEffect(() => {
     const el = wrap.current;
     if (!el) return;
@@ -260,7 +248,7 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
       const v = {
         w,
         h,
-        fit: Math.min(w / 1300, h / 1050),
+        fit: Math.min(w / 1000, h / 760),
         px: (rem / 16) * (w < 640 ? 0.85 : 1),
       };
       viewRef.current = v;
@@ -292,7 +280,7 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
       last = now;
       if (now - touched.current < 4000 || flying.current) return;
       const c = camRef.current;
-      setCam({ ...c, yaw: c.yaw + dt * 0.00012 });
+      setCam({ ...c, yaw: c.yaw + dt * 0.0001 });
     };
     raf = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(raf);
@@ -304,7 +292,7 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
       window.cancelAnimationFrame(anim.current ?? 0);
       flying.current = false;
       const c = camRef.current;
-      setCam({ ...c, zoom: Math.min(6, Math.max(0.55, c.zoom * factor)) });
+      setCam({ ...c, zoom: Math.min(6, Math.max(0.6, c.zoom * factor)) });
     },
     [setCam],
   );
@@ -359,8 +347,8 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
     const c = camRef.current;
     setCam({
       ...c,
-      yaw: c.yaw - dx * 0.007,
-      pitch: Math.max(-1.45, Math.min(1.45, c.pitch + dy * 0.007)),
+      yaw: c.yaw - dx * 0.006,
+      pitch: Math.max(PITCH.min, Math.min(PITCH.max, c.pitch + dy * 0.004)),
     });
   };
   const onPointerUp = (e: React.PointerEvent) => {
@@ -414,42 +402,38 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
           (a) => focus.level === 1 || a.subfield === focus.sub,
         );
 
-  // What is in focus decides what is bright; the rest steps back a little.
+  // What is in focus decides what is bright; the rest steps back.
   const inField = (id: FieldId) =>
     focus.level === 0 ? hover === null || hover === id : focus.field === id;
   const inSub = (id: FieldId, sub: string) =>
     focus.level !== 2 ? inField(id) : focus.field === id && focus.sub === sub;
-  const dim = (on: boolean) => (on ? 1 : focus.level === 0 ? 0.45 : 0.18);
+  const dim = (on: boolean) => (on ? 1 : focus.level === 0 ? 0.4 : 0.15);
+  /** Subdomains show only for the domain that is open or pointed at. */
+  const open = (id: FieldId) =>
+    (focus.level !== 0 && focus.field === id) ||
+    (focus.level === 0 && hover === id);
 
   const v = view;
   const u = (n: number) => n * (v?.px ?? 1);
-  const P = (p: V) => (v ? project(p, cam, v) : { x: 0, y: 0, z: 0, k: 1 });
+  const P = (p: V): At => (v ? project(p, cam, v) : { x: 0, y: 0, z: 0, k: 1 });
   const root = P([0, 0, 0]);
-  const domains = FIELDS.map((f) => ({ f, at: P(DP[f.id]) }));
-  const subs = FIELDS.flatMap((f) =>
-    f.subfields.map((s) => ({ f, s, at: P(SP[`${f.id}/${s.id}`]) })),
-  );
-  const subAt = Object.fromEntries(
-    subs.map((x) => [`${x.f.id}/${x.s.id}`, x.at]),
-  );
-  const domAt = Object.fromEntries(domains.map((x) => [x.f.id, x.at]));
-  const arts = leaves.map((a) => ({ a, at: P(a.p) }));
-  const line = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-    `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
-  const subLabels = (id: FieldId) =>
-    cam.zoom >= 2.4 || hover === id || (focus.level !== 0 && focus.field === id);
+  const domAt = Object.fromEntries(
+    FIELDS.map((f) => [f.id, P(DP[f.id])]),
+  ) as Record<FieldId, At>;
 
-  type Node =
-    | { kind: "domain"; z: number; f: (typeof FIELDS)[number]; at: ReturnType<typeof P> }
-    | { kind: "sub"; z: number; x: (typeof subs)[number] }
-    | { kind: "art"; z: number; x: (typeof arts)[number] }
-    | { kind: "root"; z: number };
-  const nodes: Node[] = [
-    { kind: "root" as const, z: root.z },
-    ...domains.map((d) => ({ kind: "domain" as const, z: d.at.z, ...d })),
-    ...subs.map((x) => ({ kind: "sub" as const, z: x.at.z, x })),
-    ...arts.map((x) => ({ kind: "art" as const, z: x.at.z, x })),
-  ].sort((a, b) => b.z - a.z);
+  // The orbit, as a closed path through the projected ring.
+  const ring = (() => {
+    if (!v) return "";
+    const pts = Array.from({ length: 73 }, (_, i) => {
+      const a = (i / 72) * Math.PI * 2;
+      return P([RING * Math.cos(a), 0, RING * Math.sin(a)]);
+    });
+    return pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+  })();
+  const line = (a: At, b: At) => `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
+
+  // Far side first, so the front of the ring draws on top.
+  const order = [...FIELDS].sort((a, b) => domAt[b.id].z - domAt[a.id].z);
 
   return (
     <div
@@ -461,7 +445,7 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
         viewBox={v ? `0 0 ${v.w} ${v.h}` : "0 0 1 1"}
         className="block size-full cursor-grab touch-pan-y active:cursor-grabbing sm:touch-none"
         role="group"
-        aria-label="Omniproof map, in 3D. LLMs at the centre branch into six domains, each domain into subdomains, each subdomain into articles; dashed links run from an article to the other domains it lands in."
+        aria-label="Omniproof map. LLMs at the centre, six domains on a ring round them, each with its subdomains and articles; dashed arcs run from an article to the other domains it lands in."
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -470,7 +454,7 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
       >
         <defs>
           <radialGradient id="omni-root-glow">
-            <stop offset="0%" stopColor="#1fa5de" stopOpacity="0.22" />
+            <stop offset="0%" stopColor="#1fa5de" stopOpacity="0.2" />
             <stop offset="100%" stopColor="#1fa5de" stopOpacity="0" />
           </radialGradient>
           <pattern
@@ -486,154 +470,239 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
 
         {v && (
           <>
-            <circle
-              cx={root.x}
-              cy={root.y}
-              r={u(130) * root.k}
-              fill="url(#omni-root-glow)"
-              className="omni-breathe"
+            {/* The orbit and the spokes to it. */}
+            <path
+              d={ring}
+              fill="none"
+              className="stroke-line"
+              strokeWidth={u(1.5)}
+              style={{ opacity: focus.level === 0 ? 1 : 0.5 }}
             />
-
-            {/* Root to domains, domains to subdomains, subdomains to articles. */}
-            {domains.map(({ f, at }, i) => (
+            {FIELDS.map((f, i) => (
               <g
                 key={f.id}
-                style={{ opacity: dim(inField(f.id)) * depth(at.z) }}
+                style={{
+                  opacity: dim(inField(f.id)) * depth(domAt[f.id].z) * 0.7,
+                }}
                 className="transition-opacity duration-500"
               >
                 <path
-                  d={line(root, at)}
+                  d={line(root, domAt[f.id])}
                   pathLength={1}
                   fill="none"
                   stroke={f.color}
-                  strokeWidth={u(2.25)}
+                  strokeWidth={u(1.5)}
                   className="omni-draw"
                   style={{ animationDelay: `${i * 90}ms` }}
                 />
-                {f.subfields.map((s) => {
-                  const sa = subAt[`${f.id}/${s.id}`];
-                  const n = perSub(f.id, s.id).length;
-                  return (
-                    <path
-                      key={s.id}
-                      d={line(at, sa)}
-                      fill="none"
-                      stroke={f.color}
-                      strokeWidth={u(1.4)}
-                      strokeOpacity={n ? 0.85 : 0.4}
-                      strokeDasharray={n ? undefined : `${u(4)} ${u(5)}`}
-                      style={{ opacity: inSub(f.id, s.id) ? 1 : 0.5 }}
-                      className="omni-fade"
-                    />
-                  );
-                })}
               </g>
             ))}
-            {arts.map(({ a, at }) => {
-              const f = fieldById(a.field);
-              return (
-                <path
-                  key={a.slug}
-                  d={line(subAt[`${a.field}/${a.subfield}`], at)}
-                  fill="none"
-                  stroke={f.color}
-                  strokeWidth={u(1.75)}
-                  style={{
-                    opacity: dim(inSub(a.field, a.subfield)) * depth(at.z),
-                  }}
-                  className="omni-fade transition-opacity duration-500"
-                />
-              );
-            })}
+            <circle
+              cx={root.x}
+              cy={root.y}
+              r={u(110) * root.k}
+              fill="url(#omni-root-glow)"
+              className="omni-breathe"
+              style={{ opacity: focus.level === 0 ? 1 : 0 }}
+            />
+            <g
+              role="button"
+              tabIndex={0}
+              aria-label="Show every domain"
+              className="cursor-pointer transition-opacity duration-500 outline-none"
+              style={{ opacity: focus.level === 0 ? 1 : 0.12 }}
+              onClick={() => go({ level: 0 })}
+              onKeyDown={(e) => e.key === "Enter" && go({ level: 0 })}
+            >
+              <rect
+                x={root.x - u(44)}
+                y={root.y - u(27)}
+                width={u(88)}
+                height={u(54)}
+                rx={u(16)}
+                className="fill-ink"
+              />
+              <text
+                x={root.x}
+                y={root.y + u(3)}
+                textAnchor="middle"
+                className="fill-canvas font-semibold tracking-tight"
+                style={{ fontSize: u(20) }}
+              >
+                LLM
+              </text>
+              <text
+                x={root.x}
+                y={root.y + u(18)}
+                textAnchor="middle"
+                className="fill-canvas opacity-70"
+                style={{ fontSize: u(9.5) }}
+              >
+                + people
+              </text>
+            </g>
 
-            {/* Landing links: straight across, bowed towards the centre. */}
+            {/* Landing arcs: up from the article, over, down on the domain. */}
             {leaves.map((a) =>
               a.lands.map((l) => {
                 const to = fieldById(l.field);
                 const from = P(a.p);
                 const end = domAt[l.field];
-                const c = P(mul(add(a.p, DP[l.field]), 0.32));
+                const mid = mul(add(a.p, DP[l.field]), 0.5);
+                // Lower when zoomed in, so the arcs stay on screen.
+                const c = P(add(mul(mid, 0.6), [0, -240 / Math.sqrt(cam.zoom), 0]));
                 const lit =
                   focus.level === 0
                     ? hover === null || hover === a.field || hover === l.field
                     : focus.field === a.field || focus.field === l.field;
                 return (
-                  <path
+                  <g
                     key={`${a.slug}-${l.field}`}
-                    d={`M ${from.x} ${from.y} Q ${c.x} ${c.y} ${end.x} ${end.y}`}
-                    fill="none"
-                    stroke={to.color}
-                    strokeWidth={u(1.5)}
-                    strokeDasharray={`${u(5)} ${u(6)}`}
-                    className="omni-fade omni-flow transition-opacity duration-500"
-                    style={
-                      {
-                        opacity: (lit ? 0.85 : 0.25) * depth(c.z),
-                        animationDelay: "900ms",
-                        "--omni-flow": -u(22),
-                      } as React.CSSProperties
-                    }
-                  />
+                    style={{ opacity: lit ? 0.75 : 0.15 }}
+                    className="transition-opacity duration-500"
+                  >
+                    <path
+                      d={`M ${from.x} ${from.y} Q ${c.x} ${c.y} ${end.x} ${end.y}`}
+                      fill="none"
+                      stroke={to.color}
+                      strokeWidth={u(1.4)}
+                      strokeDasharray={`${u(5)} ${u(6)}`}
+                      className="omni-flow"
+                      style={
+                        {
+                          animationDelay: "900ms",
+                          "--omni-flow": -u(22),
+                        } as React.CSSProperties
+                      }
+                    />
+                  </g>
                 );
               }),
             )}
 
-            {/* Nodes, far side first so near ones draw on top. */}
-            {nodes.map((n) => {
-              if (n.kind === "root")
-                return (
-                  <g
-                    key="root"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Show every domain"
-                    className="cursor-pointer outline-none"
-                    style={{ opacity: focus.level === 0 ? 1 : 0.55 }}
-                    onClick={() => go({ level: 0 })}
-                    onKeyDown={(e) => e.key === "Enter" && go({ level: 0 })}
-                  >
-                    <rect
-                      x={root.x - u(48)}
-                      y={root.y - u(30)}
-                      width={u(96)}
-                      height={u(60)}
-                      rx={u(18)}
-                      className="fill-ink"
-                    />
-                    <text
-                      x={root.x}
-                      y={root.y + u(4)}
-                      textAnchor="middle"
-                      className="fill-canvas font-semibold tracking-tight"
-                      style={{ fontSize: u(22) }}
-                    >
-                      LLM
-                    </text>
-                    <text
-                      x={root.x}
-                      y={root.y + u(20)}
-                      textAnchor="middle"
-                      className="fill-canvas opacity-70"
-                      style={{ fontSize: u(10) }}
-                    >
-                      + people
-                    </text>
-                  </g>
-                );
+            {/* Each domain with what stands on it, back of the ring first. */}
+            {order.map((f) => {
+              const at = domAt[f.id];
+              const count = perField(f.id).length;
+              const fade = depth(at.z);
+              const shown = open(f.id);
+              const r = u(9) * Math.sqrt(at.k);
+              return (
+                <g
+                  key={f.id}
+                  style={{ opacity: dim(inField(f.id)) * fade }}
+                  className="transition-opacity duration-500"
+                >
+                  {/* Subdomains: a ring of satellites, when open. */}
+                  {f.subfields.map((s) => {
+                    const sa = P(SP[`${f.id}/${s.id}`]);
+                    const n = perSub(f.id, s.id).length;
+                    const go2 = () => go({ level: 2, field: f.id, sub: s.id });
+                    return (
+                      <g
+                        key={s.id}
+                        role="button"
+                        tabIndex={shown ? 0 : -1}
+                        aria-label={`${f.label}, ${s.label}: ${n} article${n === 1 ? "" : "s"}. Zoom in.`}
+                        className="cursor-pointer transition-opacity duration-300 outline-none"
+                        style={{
+                          opacity: shown ? (inSub(f.id, s.id) ? 1 : 0.4) : 0,
+                          pointerEvents: shown ? "auto" : "none",
+                        }}
+                        onClick={go2}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            go2();
+                          }
+                        }}
+                      >
+                        <path
+                          d={line(at, sa)}
+                          stroke={f.color}
+                          strokeWidth={u(1.25)}
+                          strokeOpacity={n ? 0.8 : 0.4}
+                          strokeDasharray={n ? undefined : `${u(3)} ${u(4)}`}
+                        />
+                        <circle cx={sa.x} cy={sa.y} r={u(12)} fill="transparent" />
+                        <circle
+                          cx={sa.x}
+                          cy={sa.y}
+                          r={u(n ? 4.5 : 3.5)}
+                          fill={n ? f.color : "var(--color-surface)"}
+                          stroke={f.color}
+                          strokeWidth={u(1.4)}
+                        />
+                        <text
+                          x={sa.x}
+                          y={sa.y - u(10)}
+                          textAnchor="middle"
+                          className="fill-ink-soft font-medium"
+                          style={{ fontSize: u(11.5) }}
+                        >
+                          {s.label}
+                          {n === 0 && (
+                            <tspan className="fill-ink-faint font-normal">
+                              {" "}
+                              · soon
+                            </tspan>
+                          )}
+                        </text>
+                      </g>
+                    );
+                  })}
 
-              if (n.kind === "domain") {
-                const { f, at } = n;
-                const count = perField(f.id).length;
-                const on = hover === f.id || focusField?.id === f.id;
-                const r = u(8) * Math.sqrt(at.k);
-                return (
+                  {/* Articles standing on the domain. */}
+                  {perField(f.id).map((a) => {
+                    const pa = P(a.p);
+                    const base = shown ? P(SP[`${a.field}/${a.subfield}`]) : at;
+                    const read = () => router.push(`/omniproof/${a.slug}`);
+                    return (
+                      <g
+                        key={a.slug}
+                        role="link"
+                        tabIndex={0}
+                        aria-label={`Read: ${a.title}`}
+                        className="group cursor-pointer transition-opacity duration-500 outline-none"
+                        style={{ opacity: inSub(a.field, a.subfield) ? 1 : 0.35 }}
+                        onClick={read}
+                        onKeyDown={(e) => e.key === "Enter" && read()}
+                        onMouseEnter={() => setHover(a.field)}
+                        onMouseLeave={() => setHover(null)}
+                      >
+                        <path
+                          d={line(base, pa)}
+                          stroke={f.color}
+                          strokeWidth={u(1.5)}
+                        />
+                        <circle
+                          cx={pa.x}
+                          cy={pa.y}
+                          r={u(12)}
+                          fill={f.color}
+                          fillOpacity={0.14}
+                          className="omni-breathe"
+                        />
+                        <circle cx={pa.x} cy={pa.y} r={u(5.5)} fill={f.color} />
+                        <text
+                          x={pa.x}
+                          y={pa.y - u(16)}
+                          textAnchor="middle"
+                          className="fill-ink group-hover:fill-brand-deep font-semibold"
+                          style={{ fontSize: u(13) }}
+                        >
+                          {a.short} →
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* The domain itself. */}
                   <g
-                    key={f.id}
                     role="button"
                     tabIndex={0}
                     aria-label={`${f.label}: ${count} article${count === 1 ? "" : "s"}. Zoom in.`}
-                    className="cursor-pointer transition-opacity duration-500 outline-none"
-                    style={{ opacity: dim(inField(f.id)) * depth(at.z) }}
+                    className="cursor-pointer outline-none"
                     onClick={() => go({ level: 1, field: f.id })}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -646,141 +715,46 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
                     onFocus={() => setHover(f.id)}
                     onBlur={() => setHover(null)}
                   >
+                    <circle cx={at.x} cy={at.y} r={u(26)} fill="transparent" />
                     {arrivals[f.id] > 0 && (
                       <circle
                         cx={at.x}
                         cy={at.y}
-                        r={r + u(8)}
+                        r={r + u(7)}
                         fill={f.color}
-                        fillOpacity={0.14}
+                        fillOpacity={0.15}
                         className="omni-breathe"
                       />
                     )}
                     <circle
                       cx={at.x}
                       cy={at.y}
-                      r={r + u(4)}
+                      r={r}
                       fill={f.color}
-                      fillOpacity={on ? 0.25 : 0}
+                      stroke="var(--color-surface)"
+                      strokeWidth={u(2)}
                     />
-                    <circle cx={at.x} cy={at.y} r={r} fill={f.color} />
                     <text
-                      x={at.x + r + u(8)}
-                      y={at.y + u(1)}
-                      className="fill-ink font-medium"
-                      style={{ fontSize: u(16) }}
+                      x={at.x}
+                      y={at.y + r + u(18)}
+                      textAnchor="middle"
+                      className="fill-ink font-semibold"
+                      style={{ fontSize: u(15) }}
                     >
                       {f.label}
                     </text>
                     <text
-                      x={at.x + r + u(8)}
-                      y={at.y + u(15)}
+                      x={at.x}
+                      y={at.y + r + u(32)}
+                      textAnchor="middle"
                       className="fill-ink-faint"
                       style={{ fontSize: u(10.5) }}
                     >
                       {count
-                        ? `${count} piece${count === 1 ? "" : "s"}`
-                        : "in the works"}{" "}
-                      · {f.subfields.length} subdomains
+                        ? `${count} page${count === 1 ? "" : "s"}`
+                        : "in the works"}
                     </text>
                   </g>
-                );
-              }
-
-              if (n.kind === "sub") {
-                const { f, s, at } = n.x;
-                const count = perSub(f.id, s.id).length;
-                const open = () => go({ level: 2, field: f.id, sub: s.id });
-                return (
-                  <g
-                    key={`${f.id}/${s.id}`}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`${f.label}, ${s.label}: ${count} article${count === 1 ? "" : "s"}. Zoom in.`}
-                    className="cursor-pointer transition-opacity duration-500 outline-none"
-                    style={{
-                      opacity: dim(inSub(f.id, s.id)) * depth(at.z),
-                    }}
-                    onClick={open}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        open();
-                      }
-                    }}
-                  >
-                    <circle cx={at.x} cy={at.y} r={u(12)} fill="transparent" />
-                    <circle
-                      cx={at.x}
-                      cy={at.y}
-                      r={u(count ? 4.5 : 3.5) * Math.sqrt(at.k)}
-                      fill={count ? f.color : "transparent"}
-                      stroke={f.color}
-                      strokeWidth={u(1.4)}
-                    />
-                    {subLabels(f.id) && (
-                      <text
-                        x={at.x + u(10)}
-                        y={at.y + u(4)}
-                        className="fill-ink-soft font-medium"
-                        style={{ fontSize: u(12) }}
-                      >
-                        {s.label}
-                        {count === 0 && (
-                          <tspan
-                            className="fill-ink-faint font-normal"
-                            style={{ fontSize: u(10) }}
-                          >
-                            {" "}
-                            · soon
-                          </tspan>
-                        )}
-                      </text>
-                    )}
-                  </g>
-                );
-              }
-
-              const { a, at } = n.x;
-              const f = fieldById(a.field);
-              const open = () => router.push(`/omniproof/${a.slug}`);
-              return (
-                <g
-                  key={a.slug}
-                  role="link"
-                  tabIndex={0}
-                  aria-label={`Read: ${a.title}`}
-                  className="group cursor-pointer transition-opacity duration-500 outline-none"
-                  style={{
-                    opacity: dim(inSub(a.field, a.subfield)) * depth(at.z),
-                  }}
-                  onClick={open}
-                  onKeyDown={(e) => e.key === "Enter" && open()}
-                  onMouseEnter={() => setHover(a.field)}
-                  onMouseLeave={() => setHover(null)}
-                >
-                  <circle
-                    cx={at.x}
-                    cy={at.y}
-                    r={u(12)}
-                    fill={f.color}
-                    fillOpacity={0.14}
-                    className="omni-breathe"
-                  />
-                  <circle
-                    cx={at.x}
-                    cy={at.y}
-                    r={u(5.5) * Math.sqrt(at.k)}
-                    fill={f.color}
-                  />
-                  <text
-                    x={at.x + u(15)}
-                    y={at.y + u(4.5)}
-                    className="fill-ink group-hover:fill-brand-deep font-semibold"
-                    style={{ fontSize: u(13) }}
-                  >
-                    {a.short} →
-                  </text>
                 </g>
               );
             })}
@@ -865,7 +839,7 @@ export function OmniMap({ articles }: { articles: OmniArticle[] }) {
           </div>
         ) : (
           <p className="border-line bg-surface/90 text-ink-soft rounded-full border px-3 py-1.5 text-[0.8125rem] shadow-sm backdrop-blur">
-            Drag to turn · click a domain to fly in · pinch to zoom
+            Drag to turn · click a domain to open it · pinch to zoom
           </p>
         )}
       </div>
