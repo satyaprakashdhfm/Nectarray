@@ -1918,23 +1918,10 @@ dialog.pop[open]::backdrop {
 }
 
 /*
- * Admin Knowledge base — notebooks rendered through Markdown's rich mode.
- * Everything else (prose, code cards, tables, figures) is the `.notes`
- * look above; these are only the things notebooks have and lessons don't.
+ * Admin Knowledge base. Its notes are written like the academy's and use
+ * the `.notes` look above; these are the only additions — an embedded PDF,
+ * wide equations, and figures kept at their own size.
  */
-.kb-note .kb-html {
-  margin: 1rem 0;
-  max-width: 100%;
-  overflow-x: auto;
-  font-size: 0.8125rem;
-}
-.kb-note .kb-html table {
-  margin: 0;
-}
-.kb-note .kb-html .table-scroll {
-  margin: 0;
-}
-.kb-note iframe.kb-report,
 .kb-note iframe.kb-pdf {
   display: block;
   width: 100%;
@@ -1949,13 +1936,12 @@ dialog.pop[open]::backdrop {
   overflow-y: hidden;
   padding: 0.25rem 0;
 }
-/* Notebook images keep their width attribute, but never overflow. */
+/* Images keep any width they were given, but never overflow. A plot is
+   drawn at its own size; stretching a small one to the column blurs it. */
 .kb-note img {
   max-width: 100%;
   height: auto;
 }
-/* A plot is drawn at its own size; stretching a small one to the column
-   only blurs it. */
 .kb-note .notes-figure img {
   width: auto;
   margin: 0 auto;

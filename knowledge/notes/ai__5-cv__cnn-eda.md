@@ -18,7 +18,7 @@ Index:
 15. Opencv
 16. pytorch
 17. keras- tensorflow
-18. 
+18.
 
 # Compound Scaling in Neural Networks 🔬
 
@@ -926,7 +926,7 @@ Would you like to dive deeper into **how to extract these features** or **how CN
 - **Perceptual Hashing (pHash, aHash, dHash)**: Converts images into hash values for similarity detection.  
 
 ### **5. Autoencoder Representations**  
-- **Latent Space Encoding**: Compress images into lower-dimensional embeddings using autoencoders for anomaly detection.  
+- **Latent Space Encoding**: Compress images into lower-dimensional embeddings using autoencoders for anomaly detection.
 
 ---
 ---
@@ -1102,7 +1102,6 @@ Data augmentation helps increase the diversity of the training dataset, making C
 
 ---
 ---
- 
 
 ---
 ---
@@ -1129,9 +1128,7 @@ Yes, CNNs **do require hyperparameter tuning** to achieve optimal performance. S
 ### **Does PyTorch Lightning Handle Hyperparameter Tuning?**
 PyTorch Lightning **makes training easier** but does **not automatically tune hyperparameters**. However, it **integrates well** with hyperparameter tuning frameworks like:  
 - **Optuna** → Auto-optimizes learning rates, dropout rates, etc.  
-- **Ray Tune** → Scales tuning across multiple GPUs.  
-
- 
+- **Ray Tune** → Scales tuning across multiple GPUs.
 
 ---
 ---
@@ -1291,7 +1288,7 @@ Autoencoders consist of two main components:
 7. Is there a class imbalance in the number of images per category?
 8. What are the most common objects detected in the images?
 9. Are there patterns in metadata, such as capture date, location, or resolution?
-10. Do images have similarities in background, lighting, or occlusion within classes? 
+10. Do images have similarities in background, lighting, or occlusion within classes?
 
 ---
 
@@ -1938,7 +1935,7 @@ In computer vision tasks, PyTorch provides a range of **functions and utilities*
 
 ---
 
- the **methods** and **functions** commonly used for plotting images and generating videos in computer vision with PyTorch and related libraries:
+the **methods** and **functions** commonly used for plotting images and generating videos in computer vision with PyTorch and related libraries:
 
 
 ### **1. Plotting Images** (Matplotlib + PyTorch)
@@ -2117,8 +2114,6 @@ In computer vision tasks, PyTorch provides a range of **functions and utilities*
 - **Visualization**: `imshow()`, `array_to_img()`, `summary()`.
 - **Saving/Loading Models**: `model.save()`, `load_model()`.
 - **Transfer Learning**: `VGG16()`, `ResNet50()`, `model.layers`.
-
- 
 
 ---
 ---
@@ -2310,7 +2305,7 @@ Deep learning models like **MiDaS, DPT, and NeRF** have improved depth estimatio
 2. **Hungarian Algorithm** – Matches detections to existing tracked objects efficiently.  
 3. **Appearance Embeddings** – Uses a **deep learning-based** feature extractor (e.g., CNN or ReID network) to improve tracking robustness in case of occlusions.  
 4. **IoU and Mahalanobis Distance** – Helps associate detections with existing tracks using spatial information.  
-5. **Re-Identification (ReID)** – Allows tracking objects even if they temporarily disappear from view.  
+5. **Re-Identification (ReID)** – Allows tracking objects even if they temporarily disappear from view.
 
 why the fuck i am not automatin my taks...like as agent to search all over internet with differnet prompts and get information about image segmentation and object detections...and get some codes based on methods it got and check with our iamge and check which method is best....
 

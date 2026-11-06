@@ -755,7 +755,7 @@ They serve two different purposes:
 
 - AVG(): Average. 
 
-- MIN(), MAX(): Minimum, maximum. 
+- MIN(), MAX(): Minimum, maximum.
 
 ---
 ---
@@ -772,7 +772,7 @@ They serve two different purposes:
 
 - IF(expr, true, false) shorthand in MySQL. 
 
-- IFNULL(a,b), NULLIF(a,b) null handling. 
+- IFNULL(a,b), NULLIF(a,b) null handling.
 
 ---
 ---
@@ -806,9 +806,7 @@ REVOKE UPDATE ON db.table FROM 'user';
 START TRANSACTION; 
 UPDATE accounts SET balance = balance - 100 WHERE id = 1; 
 UPDATE accounts SET balance = balance + 100 WHERE id = 2; 
-COMMIT; 
-
- 
+COMMIT;
 
 ---
 ---

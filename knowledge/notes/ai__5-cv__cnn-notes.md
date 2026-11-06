@@ -33,7 +33,7 @@
 - tgan (2018) 
 - EfficientNet (2019)
 - denoising diffusion (2020)  
-- dall e (2021)  
+- dall e (2021)
 
 Deep Learning Libraries:
 
@@ -1751,7 +1751,7 @@ MobileNet is a lightweight CNN architecture designed for efficient computation o
 ✅ **Fewer Parameters** (small storage and memory footprint).  
 ✅ **Efficient for Edge Devices** (runs well on mobile, IoT).  
 
-MobileNet is widely used in **real-time applications** like object detection, face recognition, and mobile vision tasks. 
+MobileNet is widely used in **real-time applications** like object detection, face recognition, and mobile vision tasks.
 
 ---
 ---
@@ -1767,7 +1767,7 @@ MobileNet is widely used in **real-time applications** like object detection, fa
    - Uses **skip connections** when the stride is 1.  
 3. The bottleneck happens in the **final projection layer**, where channels are **compressed** after expansion.  
 4. EfficientNet stacks multiple MBConv blocks with different **kernel sizes (3×3, 5×5), channel depths, and strides** to form the architecture.  
-5. MBConv improves **computational efficiency**, **accuracy**, and **feature representation** while keeping the model lightweight.  
+5. MBConv improves **computational efficiency**, **accuracy**, and **feature representation** while keeping the model lightweight.
 
 ### **Impact of MBConv in 2 Key Points:**  
 
@@ -1779,7 +1779,7 @@ MobileNet is widely used in **real-time applications** like object detection, fa
 2. **Enhances Representations While Keeping Model Lightweight**  
    - Depthwise convolutions reduce computational cost, and **SE blocks** improve feature recalibration.  
    - Skip connections (when stride = 1) help retain important information like in ResNets.  
-   - This results in **better accuracy with fewer FLOPs** compared to standard convolutions.  
+   - This results in **better accuracy with fewer FLOPs** compared to standard convolutions.
 
 # EfficientNet Architecture Overview
 ![image.png](kb-media:ef9f9b902660cbbfc741.png)
@@ -1909,7 +1909,6 @@ Detectron 2's flexibility and robust architecture make it suitable for a variety
 ---
 ---
 
- 
 # DETR (DEtection TRansformer)
 
 ## Overview
@@ -2167,7 +2166,6 @@ $$\text{Output Size} = \frac{\text{Input Size} + 2 \times \text{Padding} - \text
 ### Summary of VAE Architecture
 VAEs leverage convolutional layers to encode input images into a latent space while maintaining probabilistic characteristics. The decoder then reconstructs images from this latent representation, making use of the learned distributions for effective image generation.
 
- 
 # Generative Adversarial Networks (GANs) Architecture
 
 ## Overview
@@ -2228,8 +2226,6 @@ Both the generator and discriminator can have their layers structured similarly 
 
 ### Total Parameters for GAN
 * Total parameters for a simple GAN architecture can vary, typically ranging from a few thousand to several million depending on the architecture depth and complexity.
-
- 
 
 ---
 ---

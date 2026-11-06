@@ -7,27 +7,6 @@ gc.collect()
 torch.cuda.empty_cache()
 ```
 
-```result title="Error"
----------------------------------------------------------------------------
-RuntimeError                              Traceback (most recent call last)
-<ipython-input-27-28ab0c8cb1b4> in <cell line: 0>()
-      4 # Delete model and optimizer
-      5 gc.collect()
-----> 6 torch.cuda.empty_cache()
-
-/usr/local/lib/python3.11/dist-packages/torch/cuda/memory.py in empty_cache()
-    190     """
-    191     if is_initialized():
---> 192         torch._C._cuda_emptyCache()
-    193 
-    194 
-
-RuntimeError: CUDA error: device-side assert triggered
-CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
-For debugging consider passing CUDA_LAUNCH_BLOCKING=1
-Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
-```
-
 ```python
 import torch
 
@@ -42,431 +21,31 @@ print(f"🟢 GPU Free Memory: {gpu_free:.2f} GB")
 print(f"🟡 GPU Allocated Memory: {gpu_memory:.2f} GB")
 print(f"🔴 GPU Reserved Memory: {gpu_reserved:.2f} GB")
 ```
-
-```result
+```output
 🔥 GPU Total Memory: 15.83 GB
 🟢 GPU Free Memory: 7.03 GB
 🟡 GPU Allocated Memory: 8.38 GB
 🔴 GPU Reserved Memory: 8.66 GB
 ```
 
-```python
-!pip install gdown  # Install gdown if not already installed
-!pip install transformers datasets accelerate bitsandbytes
-!pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-!pip install sentencepiece
-!pip install jsonlines
-!pip install huggingface_hub
-!pip install flash-attn --no-build-isolation
-!pip install trl
-!pip install peft
-!pip install faiss-cpu sentence-transformers
-!pip install ijson
-```
-
-```result
-Requirement already satisfied: gdown in /usr/local/lib/python3.11/dist-packages (5.2.0)
-Requirement already satisfied: beautifulsoup4 in /usr/local/lib/python3.11/dist-packages (from gdown) (4.13.3)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from gdown) (3.17.0)
-Requirement already satisfied: requests[socks] in /usr/local/lib/python3.11/dist-packages (from gdown) (2.32.3)
-Requirement already satisfied: tqdm in /usr/local/lib/python3.11/dist-packages (from gdown) (4.67.1)
-Requirement already satisfied: soupsieve>1.2 in /usr/local/lib/python3.11/dist-packages (from beautifulsoup4->gdown) (2.6)
-Requirement already satisfied: typing-extensions>=4.0.0 in /usr/local/lib/python3.11/dist-packages (from beautifulsoup4->gdown) (4.12.2)
-Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests[socks]->gdown) (3.4.1)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests[socks]->gdown) (3.10)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests[socks]->gdown) (2.3.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests[socks]->gdown) (2025.1.31)
-Requirement already satisfied: PySocks!=1.5.7,>=1.5.6 in /usr/local/lib/python3.11/dist-packages (from requests[socks]->gdown) (1.7.1)
-Requirement already satisfied: transformers in /usr/local/lib/python3.11/dist-packages (4.48.3)
-Collecting datasets
-  Downloading datasets-3.3.2-py3-none-any.whl.metadata (19 kB)
-Requirement already satisfied: accelerate in /usr/local/lib/python3.11/dist-packages (1.3.0)
-Collecting bitsandbytes
-  Downloading bitsandbytes-0.45.3-py3-none-manylinux_2_24_x86_64.whl.metadata (5.0 kB)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from transformers) (3.17.0)
-Requirement already satisfied: huggingface-hub<1.0,>=0.24.0 in /usr/local/lib/python3.11/dist-packages (from transformers) (0.28.1)
-Requirement already satisfied: numpy>=1.17 in /usr/local/lib/python3.11/dist-packages (from transformers) (1.26.4)
-Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.11/dist-packages (from transformers) (24.2)
-Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.11/dist-packages (from transformers) (6.0.2)
-Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.11/dist-packages (from transformers) (2024.11.6)
-Requirement already satisfied: requests in /usr/local/lib/python3.11/dist-packages (from transformers) (2.32.3)
-Requirement already satisfied: tokenizers<0.22,>=0.21 in /usr/local/lib/python3.11/dist-packages (from transformers) (0.21.0)
-Requirement already satisfied: safetensors>=0.4.1 in /usr/local/lib/python3.11/dist-packages (from transformers) (0.5.2)
-Requirement already satisfied: tqdm>=4.27 in /usr/local/lib/python3.11/dist-packages (from transformers) (4.67.1)
-Requirement already satisfied: pyarrow>=15.0.0 in /usr/local/lib/python3.11/dist-packages (from datasets) (17.0.0)
-Collecting dill<0.3.9,>=0.3.0 (from datasets)
-  Downloading dill-0.3.8-py3-none-any.whl.metadata (10 kB)
-Requirement already satisfied: pandas in /usr/local/lib/python3.11/dist-packages (from datasets) (2.2.2)
-Collecting xxhash (from datasets)
-  Downloading xxhash-3.5.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (12 kB)
-Collecting multiprocess<0.70.17 (from datasets)
-  Downloading multiprocess-0.70.16-py311-none-any.whl.metadata (7.2 kB)
-Requirement already satisfied: fsspec<=2024.12.0,>=2023.1.0 in /usr/local/lib/python3.11/dist-packages (from fsspec[http]<=2024.12.0,>=2023.1.0->datasets) (2024.10.0)
-Requirement already satisfied: aiohttp in /usr/local/lib/python3.11/dist-packages (from datasets) (3.11.12)
-Requirement already satisfied: psutil in /usr/local/lib/python3.11/dist-packages (from accelerate) (5.9.5)
-Requirement already satisfied: torch>=2.0.0 in /usr/local/lib/python3.11/dist-packages (from accelerate) (2.5.1+cu124)
-Requirement already satisfied: aiohappyeyeballs>=2.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets) (2.4.6)
-Requirement already satisfied: aiosignal>=1.1.2 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets) (1.3.2)
-Requirement already satisfied: attrs>=17.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets) (25.1.0)
-Requirement already satisfied: frozenlist>=1.1.1 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets) (1.5.0)
-Requirement already satisfied: multidict<7.0,>=4.5 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets) (6.1.0)
-Requirement already satisfied: propcache>=0.2.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets) (0.2.1)
-Requirement already satisfied: yarl<2.0,>=1.17.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets) (1.18.3)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub<1.0,>=0.24.0->transformers) (4.12.2)
-Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests->transformers) (3.4.1)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests->transformers) (3.10)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests->transformers) (2.3.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests->transformers) (2025.1.31)
-Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate) (3.4.2)
-Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate) (3.1.5)
-Collecting nvidia-cuda-nvrtc-cu12==12.4.127 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cuda_nvrtc_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
-Collecting nvidia-cuda-runtime-cu12==12.4.127 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cuda_runtime_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
-Collecting nvidia-cuda-cupti-cu12==12.4.127 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cuda_cupti_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
-Collecting nvidia-cudnn-cu12==9.1.0.70 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
-Collecting nvidia-cublas-cu12==12.4.5.8 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cublas_cu12-12.4.5.8-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
-Collecting nvidia-cufft-cu12==11.2.1.3 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
-Collecting nvidia-curand-cu12==10.3.5.147 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_curand_cu12-10.3.5.147-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
-Collecting nvidia-cusolver-cu12==11.6.1.9 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
-Collecting nvidia-cusparse-cu12==12.3.1.170 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
-Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate) (2.21.5)
-Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate) (12.4.127)
-Collecting nvidia-nvjitlink-cu12==12.4.127 (from torch>=2.0.0->accelerate)
-  Downloading nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
-Requirement already satisfied: triton==3.1.0 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate) (3.1.0)
-Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate) (1.13.1)
-Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch>=2.0.0->accelerate) (1.3.0)
-Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.11/dist-packages (from pandas->datasets) (2.8.2)
-Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.11/dist-packages (from pandas->datasets) (2025.1)
-Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.11/dist-packages (from pandas->datasets) (2025.1)
-Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from python-dateutil>=2.8.2->pandas->datasets) (1.17.0)
-Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch>=2.0.0->accelerate) (3.0.2)
-Downloading datasets-3.3.2-py3-none-any.whl (485 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 485.4/485.4 kB 28.9 MB/s eta 0:00:00
-Downloading bitsandbytes-0.45.3-py3-none-manylinux_2_24_x86_64.whl (76.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 76.1/76.1 MB 13.0 MB/s eta 0:00:00
-Downloading dill-0.3.8-py3-none-any.whl (116 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 116.3/116.3 kB 11.4 MB/s eta 0:00:00
-Downloading multiprocess-0.70.16-py311-none-any.whl (143 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 143.5/143.5 kB 15.2 MB/s eta 0:00:00
-Downloading nvidia_cublas_cu12-12.4.5.8-py3-none-manylinux2014_x86_64.whl (363.4 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 363.4/363.4 MB 4.0 MB/s eta 0:00:00
-Downloading nvidia_cuda_cupti_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (13.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.8/13.8 MB 106.2 MB/s eta 0:00:00
-Downloading nvidia_cuda_nvrtc_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (24.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.6/24.6 MB 89.4 MB/s eta 0:00:00
-Downloading nvidia_cuda_runtime_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (883 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 883.7/883.7 kB 58.1 MB/s eta 0:00:00
-Downloading nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl (664.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 664.8/664.8 MB 2.1 MB/s eta 0:00:00
-Downloading nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl (211.5 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 211.5/211.5 MB 5.5 MB/s eta 0:00:00
-Downloading nvidia_curand_cu12-10.3.5.147-py3-none-manylinux2014_x86_64.whl (56.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.3/56.3 MB 12.1 MB/s eta 0:00:00
-Downloading nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl (127.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 127.9/127.9 MB 6.4 MB/s eta 0:00:00
-Downloading nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl (207.5 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 207.5/207.5 MB 5.6 MB/s eta 0:00:00
-Downloading nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (21.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 21.1/21.1 MB 85.3 MB/s eta 0:00:00
-Downloading xxhash-3.5.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (194 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 194.8/194.8 kB 18.3 MB/s eta 0:00:00
-Installing collected packages: xxhash, nvidia-nvjitlink-cu12, nvidia-curand-cu12, nvidia-cufft-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, dill, nvidia-cusparse-cu12, nvidia-cudnn-cu12, multiprocess, nvidia-cusolver-cu12, datasets, bitsandbytes
-  Attempting uninstall: nvidia-nvjitlink-cu12
-    Found existing installation: nvidia-nvjitlink-cu12 12.5.82
-    Uninstalling nvidia-nvjitlink-cu12-12.5.82:
-      Successfully uninstalled nvidia-nvjitlink-cu12-12.5.82
-  Attempting uninstall: nvidia-curand-cu12
-    Found existing installation: nvidia-curand-cu12 10.3.6.82
-    Uninstalling nvidia-curand-cu12-10.3.6.82:
-      Successfully uninstalled nvidia-curand-cu12-10.3.6.82
-  Attempting uninstall: nvidia-cufft-cu12
-    Found existing installation: nvidia-cufft-cu12 11.2.3.61
-    Uninstalling nvidia-cufft-cu12-11.2.3.61:
-      Successfully uninstalled nvidia-cufft-cu12-11.2.3.61
-  Attempting uninstall: nvidia-cuda-runtime-cu12
-    Found existing installation: nvidia-cuda-runtime-cu12 12.5.82
-    Uninstalling nvidia-cuda-runtime-cu12-12.5.82:
-      Successfully uninstalled nvidia-cuda-runtime-cu12-12.5.82
-  Attempting uninstall: nvidia-cuda-nvrtc-cu12
-    Found existing installation: nvidia-cuda-nvrtc-cu12 12.5.82
-    Uninstalling nvidia-cuda-nvrtc-cu12-12.5.82:
-      Successfully uninstalled nvidia-cuda-nvrtc-cu12-12.5.82
-  Attempting uninstall: nvidia-cuda-cupti-cu12
-    Found existing installation: nvidia-cuda-cupti-cu12 12.5.82
-    Uninstalling nvidia-cuda-cupti-cu12-12.5.82:
-      Successfully uninstalled nvidia-cuda-cupti-cu12-12.5.82
-  Attempting uninstall: nvidia-cublas-cu12
-    Found existing installation: nvidia-cublas-cu12 12.5.3.2
-    Uninstalling nvidia-cublas-cu12-12.5.3.2:
-      Successfully uninstalled nvidia-cublas-cu12-12.5.3.2
-  Attempting uninstall: nvidia-cusparse-cu12
-    Found existing installation: nvidia-cusparse-cu12 12.5.1.3
-    Uninstalling nvidia-cusparse-cu12-12.5.1.3:
-      Successfully uninstalled nvidia-cusparse-cu12-12.5.1.3
-  Attempting uninstall: nvidia-cudnn-cu12
-    Found existing installation: nvidia-cudnn-cu12 9.3.0.75
-    Uninstalling nvidia-cudnn-cu12-9.3.0.75:
-      Successfully uninstalled nvidia-cudnn-cu12-9.3.0.75
-  Attempting uninstall: nvidia-cusolver-cu12
-    Found existing installation: nvidia-cusolver-cu12 11.6.3.83
-    Uninstalling nvidia-cusolver-cu12-11.6.3.83:
-      Successfully uninstalled nvidia-cusolver-cu12-11.6.3.83
-Successfully installed bitsandbytes-0.45.3 datasets-3.3.2 dill-0.3.8 multiprocess-0.70.16 nvidia-cublas-cu12-12.4.5.8 nvidia-cuda-cupti-cu12-12.4.127 nvidia-cuda-nvrtc-cu12-12.4.127 nvidia-cuda-runtime-cu12-12.4.127 nvidia-cudnn-cu12-9.1.0.70 nvidia-cufft-cu12-11.2.1.3 nvidia-curand-cu12-10.3.5.147 nvidia-cusolver-cu12-11.6.1.9 nvidia-cusparse-cu12-12.3.1.170 nvidia-nvjitlink-cu12-12.4.127 xxhash-3.5.0
-Looking in indexes: https://download.pytorch.org/whl/cpu
-Requirement already satisfied: torch in /usr/local/lib/python3.11/dist-packages (2.5.1+cu124)
-Requirement already satisfied: torchvision in /usr/local/lib/python3.11/dist-packages (0.20.1+cu124)
-Requirement already satisfied: torchaudio in /usr/local/lib/python3.11/dist-packages (2.5.1+cu124)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from torch) (3.17.0)
-Requirement already satisfied: typing-extensions>=4.8.0 in /usr/local/lib/python3.11/dist-packages (from torch) (4.12.2)
-Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch) (3.4.2)
-Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch) (3.1.5)
-Requirement already satisfied: fsspec in /usr/local/lib/python3.11/dist-packages (from torch) (2024.10.0)
-Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch) (12.4.127)
-Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch) (12.4.127)
-Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch) (12.4.127)
-Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /usr/local/lib/python3.11/dist-packages (from torch) (9.1.0.70)
-Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /usr/local/lib/python3.11/dist-packages (from torch) (12.4.5.8)
-Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /usr/local/lib/python3.11/dist-packages (from torch) (11.2.1.3)
-Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /usr/local/lib/python3.11/dist-packages (from torch) (10.3.5.147)
-Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /usr/local/lib/python3.11/dist-packages (from torch) (11.6.1.9)
-Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /usr/local/lib/python3.11/dist-packages (from torch) (12.3.1.170)
-Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch) (2.21.5)
-Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch) (12.4.127)
-Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch) (12.4.127)
-Requirement already satisfied: triton==3.1.0 in /usr/local/lib/python3.11/dist-packages (from torch) (3.1.0)
-Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch) (1.13.1)
-Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch) (1.3.0)
-Requirement already satisfied: numpy in /usr/local/lib/python3.11/dist-packages (from torchvision) (1.26.4)
-Requirement already satisfied: pillow!=8.3.*,>=5.3.0 in /usr/local/lib/python3.11/dist-packages (from torchvision) (11.1.0)
-Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch) (3.0.2)
-Requirement already satisfied: sentencepiece in /usr/local/lib/python3.11/dist-packages (0.2.0)
-Collecting jsonlines
-  Downloading jsonlines-4.0.0-py3-none-any.whl.metadata (1.6 kB)
-Requirement already satisfied: attrs>=19.2.0 in /usr/local/lib/python3.11/dist-packages (from jsonlines) (25.1.0)
-Downloading jsonlines-4.0.0-py3-none-any.whl (8.7 kB)
-Installing collected packages: jsonlines
-Successfully installed jsonlines-4.0.0
-Requirement already satisfied: huggingface_hub in /usr/local/lib/python3.11/dist-packages (0.28.1)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from huggingface_hub) (3.17.0)
-Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.11/dist-packages (from huggingface_hub) (2024.10.0)
-Requirement already satisfied: packaging>=20.9 in /usr/local/lib/python3.11/dist-packages (from huggingface_hub) (24.2)
-Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.11/dist-packages (from huggingface_hub) (6.0.2)
-Requirement already satisfied: requests in /usr/local/lib/python3.11/dist-packages (from huggingface_hub) (2.32.3)
-Requirement already satisfied: tqdm>=4.42.1 in /usr/local/lib/python3.11/dist-packages (from huggingface_hub) (4.67.1)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.11/dist-packages (from huggingface_hub) (4.12.2)
-Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface_hub) (3.4.1)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface_hub) (3.10)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface_hub) (2.3.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface_hub) (2025.1.31)
-Collecting flash-attn
-  Downloading flash_attn-2.7.4.post1.tar.gz (6.0 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.0/6.0 MB 88.7 MB/s eta 0:00:00
-  Preparing metadata (setup.py) ... done
-Requirement already satisfied: torch in /usr/local/lib/python3.11/dist-packages (from flash-attn) (2.5.1+cu124)
-Requirement already satisfied: einops in /usr/local/lib/python3.11/dist-packages (from flash-attn) (0.8.1)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (3.17.0)
-Requirement already satisfied: typing-extensions>=4.8.0 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (4.12.2)
-Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (3.4.2)
-Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (3.1.5)
-Requirement already satisfied: fsspec in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (2024.10.0)
-Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (12.4.127)
-Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (12.4.127)
-Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (12.4.127)
-Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (9.1.0.70)
-Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (12.4.5.8)
-Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (11.2.1.3)
-Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (10.3.5.147)
-Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (11.6.1.9)
-Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (12.3.1.170)
-Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (2.21.5)
-Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (12.4.127)
-Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (12.4.127)
-Requirement already satisfied: triton==3.1.0 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (3.1.0)
-Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch->flash-attn) (1.13.1)
-Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch->flash-attn) (1.3.0)
-Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch->flash-attn) (3.0.2)
-Building wheels for collected packages: flash-attn
-  Building wheel for flash-attn (setup.py) ... done
-  Created wheel for flash-attn: filename=flash_attn-2.7.4.post1-cp311-cp311-linux_x86_64.whl size=187815463 sha256=d944fc7d2f962bce83fc4708c2fc0c21eaf8255962a0b350ae919362a51b7ef2
-  Stored in directory: /root/.cache/pip/wheels/3d/88/d8/284b89f56af7d5bf366b10d6b8e251ac8a7c7bf3f04203fb4f
-Successfully built flash-attn
-Installing collected packages: flash-attn
-Successfully installed flash-attn-2.7.4.post1
-Collecting trl
-  Downloading trl-0.15.1-py3-none-any.whl.metadata (11 kB)
-Requirement already satisfied: accelerate>=0.34.0 in /usr/local/lib/python3.11/dist-packages (from trl) (1.3.0)
-Requirement already satisfied: datasets>=2.21.0 in /usr/local/lib/python3.11/dist-packages (from trl) (3.3.2)
-Requirement already satisfied: rich in /usr/local/lib/python3.11/dist-packages (from trl) (13.9.4)
-Requirement already satisfied: transformers>=4.46.0 in /usr/local/lib/python3.11/dist-packages (from trl) (4.48.3)
-Requirement already satisfied: numpy<3.0.0,>=1.17 in /usr/local/lib/python3.11/dist-packages (from accelerate>=0.34.0->trl) (1.26.4)
-Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.11/dist-packages (from accelerate>=0.34.0->trl) (24.2)
-Requirement already satisfied: psutil in /usr/local/lib/python3.11/dist-packages (from accelerate>=0.34.0->trl) (5.9.5)
-Requirement already satisfied: pyyaml in /usr/local/lib/python3.11/dist-packages (from accelerate>=0.34.0->trl) (6.0.2)
-Requirement already satisfied: torch>=2.0.0 in /usr/local/lib/python3.11/dist-packages (from accelerate>=0.34.0->trl) (2.5.1+cu124)
-Requirement already satisfied: huggingface-hub>=0.21.0 in /usr/local/lib/python3.11/dist-packages (from accelerate>=0.34.0->trl) (0.28.1)
-Requirement already satisfied: safetensors>=0.4.3 in /usr/local/lib/python3.11/dist-packages (from accelerate>=0.34.0->trl) (0.5.2)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (3.17.0)
-Requirement already satisfied: pyarrow>=15.0.0 in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (17.0.0)
-Requirement already satisfied: dill<0.3.9,>=0.3.0 in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (0.3.8)
-Requirement already satisfied: pandas in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (2.2.2)
-Requirement already satisfied: requests>=2.32.2 in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (2.32.3)
-Requirement already satisfied: tqdm>=4.66.3 in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (4.67.1)
-Requirement already satisfied: xxhash in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (3.5.0)
-Requirement already satisfied: multiprocess<0.70.17 in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (0.70.16)
-Requirement already satisfied: fsspec<=2024.12.0,>=2023.1.0 in /usr/local/lib/python3.11/dist-packages (from fsspec[http]<=2024.12.0,>=2023.1.0->datasets>=2.21.0->trl) (2024.10.0)
-Requirement already satisfied: aiohttp in /usr/local/lib/python3.11/dist-packages (from datasets>=2.21.0->trl) (3.11.12)
-Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.11/dist-packages (from transformers>=4.46.0->trl) (2024.11.6)
-Requirement already satisfied: tokenizers<0.22,>=0.21 in /usr/local/lib/python3.11/dist-packages (from transformers>=4.46.0->trl) (0.21.0)
-Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.11/dist-packages (from rich->trl) (3.0.0)
-Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.11/dist-packages (from rich->trl) (2.18.0)
-Requirement already satisfied: aiohappyeyeballs>=2.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.21.0->trl) (2.4.6)
-Requirement already satisfied: aiosignal>=1.1.2 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.21.0->trl) (1.3.2)
-Requirement already satisfied: attrs>=17.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.21.0->trl) (25.1.0)
-Requirement already satisfied: frozenlist>=1.1.1 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.21.0->trl) (1.5.0)
-Requirement already satisfied: multidict<7.0,>=4.5 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.21.0->trl) (6.1.0)
-Requirement already satisfied: propcache>=0.2.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.21.0->trl) (0.2.1)
-Requirement already satisfied: yarl<2.0,>=1.17.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.21.0->trl) (1.18.3)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.21.0->accelerate>=0.34.0->trl) (4.12.2)
-Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.11/dist-packages (from markdown-it-py>=2.2.0->rich->trl) (0.1.2)
-Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests>=2.32.2->datasets>=2.21.0->trl) (3.4.1)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests>=2.32.2->datasets>=2.21.0->trl) (3.10)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests>=2.32.2->datasets>=2.21.0->trl) (2.3.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests>=2.32.2->datasets>=2.21.0->trl) (2025.1.31)
-Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (3.4.2)
-Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (3.1.5)
-Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (12.4.127)
-Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (12.4.127)
-Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (12.4.127)
-Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (9.1.0.70)
-Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (12.4.5.8)
-Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (11.2.1.3)
-Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (10.3.5.147)
-Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (11.6.1.9)
-Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (12.3.1.170)
-Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (2.21.5)
-Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (12.4.127)
-Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (12.4.127)
-Requirement already satisfied: triton==3.1.0 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (3.1.0)
-Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch>=2.0.0->accelerate>=0.34.0->trl) (1.13.1)
-Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch>=2.0.0->accelerate>=0.34.0->trl) (1.3.0)
-Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.11/dist-packages (from pandas->datasets>=2.21.0->trl) (2.8.2)
-Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.11/dist-packages (from pandas->datasets>=2.21.0->trl) (2025.1)
-Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.11/dist-packages (from pandas->datasets>=2.21.0->trl) (2025.1)
-Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from python-dateutil>=2.8.2->pandas->datasets>=2.21.0->trl) (1.17.0)
-Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch>=2.0.0->accelerate>=0.34.0->trl) (3.0.2)
-Downloading trl-0.15.1-py3-none-any.whl (318 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 318.9/318.9 kB 13.8 MB/s eta 0:00:00
-Installing collected packages: trl
-Successfully installed trl-0.15.1
-Requirement already satisfied: peft in /usr/local/lib/python3.11/dist-packages (0.14.0)
-Requirement already satisfied: numpy>=1.17 in /usr/local/lib/python3.11/dist-packages (from peft) (1.26.4)
-Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.11/dist-packages (from peft) (24.2)
-Requirement already satisfied: psutil in /usr/local/lib/python3.11/dist-packages (from peft) (5.9.5)
-Requirement already satisfied: pyyaml in /usr/local/lib/python3.11/dist-packages (from peft) (6.0.2)
-Requirement already satisfied: torch>=1.13.0 in /usr/local/lib/python3.11/dist-packages (from peft) (2.5.1+cu124)
-Requirement already satisfied: transformers in /usr/local/lib/python3.11/dist-packages (from peft) (4.48.3)
-Requirement already satisfied: tqdm in /usr/local/lib/python3.11/dist-packages (from peft) (4.67.1)
-Requirement already satisfied: accelerate>=0.21.0 in /usr/local/lib/python3.11/dist-packages (from peft) (1.3.0)
-Requirement already satisfied: safetensors in /usr/local/lib/python3.11/dist-packages (from peft) (0.5.2)
-Requirement already satisfied: huggingface-hub>=0.25.0 in /usr/local/lib/python3.11/dist-packages (from peft) (0.28.1)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.25.0->peft) (3.17.0)
-Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.25.0->peft) (2024.10.0)
-Requirement already satisfied: requests in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.25.0->peft) (2.32.3)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.25.0->peft) (4.12.2)
-Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (3.4.2)
-Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (3.1.5)
-Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (12.4.127)
-Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (12.4.127)
-Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (12.4.127)
-Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (9.1.0.70)
-Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (12.4.5.8)
-Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (11.2.1.3)
-Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (10.3.5.147)
-Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (11.6.1.9)
-Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (12.3.1.170)
-Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (2.21.5)
-Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (12.4.127)
-Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (12.4.127)
-Requirement already satisfied: triton==3.1.0 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (3.1.0)
-Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch>=1.13.0->peft) (1.13.1)
-Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch>=1.13.0->peft) (1.3.0)
-Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.11/dist-packages (from transformers->peft) (2024.11.6)
-Requirement already satisfied: tokenizers<0.22,>=0.21 in /usr/local/lib/python3.11/dist-packages (from transformers->peft) (0.21.0)
-Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch>=1.13.0->peft) (3.0.2)
-Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.25.0->peft) (3.4.1)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.25.0->peft) (3.10)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.25.0->peft) (2.3.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.25.0->peft) (2025.1.31)
-Collecting faiss-cpu
-  Downloading faiss_cpu-1.10.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (4.4 kB)
-Requirement already satisfied: sentence-transformers in /usr/local/lib/python3.11/dist-packages (3.4.1)
-Requirement already satisfied: numpy<3.0,>=1.25.0 in /usr/local/lib/python3.11/dist-packages (from faiss-cpu) (1.26.4)
-Requirement already satisfied: packaging in /usr/local/lib/python3.11/dist-packages (from faiss-cpu) (24.2)
-Requirement already satisfied: transformers<5.0.0,>=4.41.0 in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (4.48.3)
-Requirement already satisfied: tqdm in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (4.67.1)
-Requirement already satisfied: torch>=1.11.0 in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (2.5.1+cu124)
-Requirement already satisfied: scikit-learn in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (1.6.1)
-Requirement already satisfied: scipy in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (1.13.1)
-Requirement already satisfied: huggingface-hub>=0.20.0 in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (0.28.1)
-Requirement already satisfied: Pillow in /usr/local/lib/python3.11/dist-packages (from sentence-transformers) (11.1.0)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (3.17.0)
-Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (2024.10.0)
-Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (6.0.2)
-Requirement already satisfied: requests in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (2.32.3)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.20.0->sentence-transformers) (4.12.2)
-Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (3.4.2)
-Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (3.1.5)
-Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)
-Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)
-Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)
-Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (9.1.0.70)
-Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.5.8)
-Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (11.2.1.3)
-Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (10.3.5.147)
-Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (11.6.1.9)
-Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.3.1.170)
-Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (2.21.5)
-Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)
-Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (12.4.127)
-Requirement already satisfied: triton==3.1.0 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (3.1.0)
-Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch>=1.11.0->sentence-transformers) (1.13.1)
-Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch>=1.11.0->sentence-transformers) (1.3.0)
-Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.11/dist-packages (from transformers<5.0.0,>=4.41.0->sentence-transformers) (2024.11.6)
-Requirement already satisfied: tokenizers<0.22,>=0.21 in /usr/local/lib/python3.11/dist-packages (from transformers<5.0.0,>=4.41.0->sentence-transformers) (0.21.0)
-Requirement already satisfied: safetensors>=0.4.1 in /usr/local/lib/python3.11/dist-packages (from transformers<5.0.0,>=4.41.0->sentence-transformers) (0.5.2)
-Requirement already satisfied: joblib>=1.2.0 in /usr/local/lib/python3.11/dist-packages (from scikit-learn->sentence-transformers) (1.4.2)
-Requirement already satisfied: threadpoolctl>=3.1.0 in /usr/local/lib/python3.11/dist-packages (from scikit-learn->sentence-transformers) (3.5.0)
-Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch>=1.11.0->sentence-transformers) (3.0.2)
-Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (3.4.1)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (3.10)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (2.3.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (2025.1.31)
-Downloading faiss_cpu-1.10.0-cp311-cp311-manylinux_2_28_x86_64.whl (30.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 30.7/30.7 MB 15.7 MB/s eta 0:00:00
-Installing collected packages: faiss-cpu
-Successfully installed faiss-cpu-1.10.0
-Collecting ijson
-  Downloading ijson-3.3.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (21 kB)
-Downloading ijson-3.3.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (119 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 119.2/119.2 kB 12.0 MB/s eta 0:00:00
-Installing collected packages: ijson
-Successfully installed ijson-3.3.0
+```bash
+pip install gdown  # Install gdown if not already installed
+pip install transformers datasets accelerate bitsandbytes
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip install sentencepiece
+pip install jsonlines
+pip install huggingface_hub
+pip install flash-attn --no-build-isolation
+pip install trl
+pip install peft
+pip install faiss-cpu sentence-transformers
+pip install ijson
 ```
 
 ```python
 !gdown "https://drive.google.com/uc?id=1WrSQRdNh8AwmwDBtySzEBVyh43ITcEFM" -O data.csv
 ```
-
-```result
+```output
 Downloading...
 From (original): https://drive.google.com/uc?id=1WrSQRdNh8AwmwDBtySzEBVyh43ITcEFM
 From (redirected): https://drive.google.com/uc?id=1WrSQRdNh8AwmwDBtySzEBVyh43ITcEFM&confirm=t&uuid=479a2fcc-c381-4045-aa25-2bd72cd82207
@@ -490,83 +69,13 @@ df = df.rename(columns={'link': 'source'})
 df.head()
 ```
 
-<div class="kb-html">
-  <div id="df-222deaf0-09c2-4e28-b3a4-69da74dc47f5" class="colab-df-container">
-    <div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>ingredients</th>
-      <th>directions</th>
-      <th>source</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>No-Bake Nut Cookies</td>
-      <td>["1 c. firmly packed brown sugar", "1/2 c. eva...</td>
-      <td>["In a heavy 2-quart saucepan, mix brown sugar...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=44874</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Jewell Ball'S Chicken</td>
-      <td>["1 small jar chipped beef, cut up", "4 boned ...</td>
-      <td>["Place chipped beef on bottom of baking dish....</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=699419</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Creamy Corn</td>
-      <td>["2 (16 oz.) pkg. frozen corn", "1 (8 oz.) pkg...</td>
-      <td>["In a slow cooker, combine all ingredients. C...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=10570</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Chicken Funny</td>
-      <td>["1 large whole chicken", "2 (10 1/2 oz.) cans...</td>
-      <td>["Boil and debone chicken.", "Put bite size pi...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=897570</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Reeses Cups(Candy)</td>
-      <td>["1 c. peanut butter", "3/4 c. graham cracker ...</td>
-      <td>["Combine first four ingredients and press in ...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=659239</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-    <div class="colab-df-buttons">
-  <div class="colab-df-container">
-    <button class="colab-df-convert" onclick="convertToInteractive('df-222deaf0-09c2-4e28-b3a4-69da74dc47f5')"
-            title="Convert this dataframe to an interactive table."
-            style="display:none;">
-  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
-    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
-  </svg>
-    </button>
-  </div>
-<div id="df-b61e808f-2959-4bb6-b171-cccccfeee0c2">
-  <button class="colab-df-quickchart" onclick="quickchart('df-b61e808f-2959-4bb6-b171-cccccfeee0c2')"
-            title="Suggest charts"
-            style="display:none;">
-<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
-     width="24px">
-    <g>
-        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-    </g>
-</svg>
-  </button>
-</div>
-    </div>
-  </div>
-</div>
+|  | title | ingredients | directions | source |
+|---|---|---|---|---|
+| 0 | No-Bake Nut Cookies | ["1 c. firmly packed brown sugar", "1/2 c. eva... | ["In a heavy 2-quart saucepan, mix brown sugar... | www.cookbooks.com/Recipe-Details.aspx?id=44874 |
+| 1 | Jewell Ball'S Chicken | ["1 small jar chipped beef, cut up", "4 boned ... | ["Place chipped beef on bottom of baking dish.... | www.cookbooks.com/Recipe-Details.aspx?id=699419 |
+| 2 | Creamy Corn | ["2 (16 oz.) pkg. frozen corn", "1 (8 oz.) pkg... | ["In a slow cooker, combine all ingredients. C... | www.cookbooks.com/Recipe-Details.aspx?id=10570 |
+| 3 | Chicken Funny | ["1 large whole chicken", "2 (10 1/2 oz.) cans... | ["Boil and debone chicken.", "Put bite size pi... | www.cookbooks.com/Recipe-Details.aspx?id=897570 |
+| 4 | Reeses Cups(Candy) | ["1 c. peanut butter", "3/4 c. graham cracker ... | ["Combine first four ingredients and press in ... | www.cookbooks.com/Recipe-Details.aspx?id=659239 |
 
 ```python
 df.to_csv("cleaned_recipe_data.csv", index=False)
@@ -614,8 +123,7 @@ with open("qa_dataset.json", "w", encoding="utf-8") as f:
 
 print("Q&A dataset saved as qa_dataset.json")
 ```
-
-```result
+```output
 Q&A dataset saved as qa_dataset.json
 ```
 
@@ -632,8 +140,7 @@ with open(sample_file, "r", encoding="utf-8") as f:
             break
         print(f"🔹 Entry {i+1}:\n{json.dumps(entry, indent=4, ensure_ascii=False)}\n")
 ```
-
-```result
+```output
 🔹 Entry 1:
 {
     "question": "What is the ingredients for No-Bake Nut Cookies?",
@@ -644,10 +151,7 @@ with open(sample_file, "r", encoding="utf-8") as f:
 {
     "question": "What is the directions for No-Bake Nut Cookies?",
     "answer": "In a heavy 2-quart saucepan, mix brown sugar, nuts, evaporated milk and butter or margarine., Stir over medium heat until mixture bubbles all over top., Boil and stir 5 minutes more. Take off heat., Stir in vanilla and cereal; mix well., Using 2 teaspoons, drop and shape into 30 clusters on wax paper., Let stand until firm, about 30 minutes."
-}
-
-🔹 Entry 3:
-{
+… (4 more lines)
     "question": "What is the source for No-Bake Nut Cookies?",
     "answer": "www.cookbooks.com/Recipe-Details.aspx?id=44874"
 }
@@ -659,10 +163,6 @@ with open(sample_file, "r", encoding="utf-8") as f:
 from huggingface_hub import login
 
 login()
-```
-
-```result
-VBox(children=(HTML(value='<center> <img\nsrc=https://huggingface.co/front/assets/huggingface_logo-noborder.sv…
 ```
 
 ```python
@@ -680,17 +180,7 @@ try:
 except Exception as e:
     print("❌ Authentication failed:", e)
 ```
-
-```result
-/usr/local/lib/python3.11/dist-packages/huggingface_hub/utils/_auth.py:94: UserWarning: 
-The secret `HF_TOKEN` does not exist in your Colab secrets.
-To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.
-You will be able to reuse this secret in all of your notebooks.
-Please note that authentication is recommended but still optional to access public models or datasets.
-  warnings.warn(
-```
-
-```result
+```output
 {'type': 'user', 'id': '63514be9a8822aadf57354dc', 'name': 'satya3485', 'fullname': 'satyaprakashreddy', 'canPay': False, 'periodEnd': None, 'isPro': False, 'avatarUrl': '/avatars/65663c5eb3568865c2eb262e2dc70da8.svg', 'orgs': [], 'auth': {'type': 'access_token', 'accessToken': {'displayName': 'fuckyou', 'role': 'fineGrained', 'createdAt': '2025-02-23T04:22:06.996Z', 'fineGrained': {'canReadGatedRepos': True, 'global': ['inference.serverless.write', 'discussion.write', 'post.write'], 'scoped': [{'entity': {'_id': '65143cd8e31c0e2e3df713e5', 'type': 'model', 'name': 'mistralai/Mistral-7B-Instruct-v0.1'}, 'permissions': ['repo.content.read', 'discussion.write', 'repo.write']}, {'entity': {'_id': '63514be9a8822aadf57354dc', 'type': 'user', 'name': 'satya3485'}, 'permissions': ['repo.content.read', 'repo.write', 'inference.endpoints.infer.write', 'inference.endpoints.write', 'user.webhooks.read', 'user.webhooks.write', 'collection.read', 'collection.write', 'discussion.write', 'user.billing.read']}]}}}}
 ```
 
@@ -732,65 +222,18 @@ model = get_peft_model(model, lora_config)
 
 print("✅ Mistral-7B loaded with LoRA fine-tuning enabled.")
 ```
-
-```result
-/usr/local/lib/python3.11/dist-packages/huggingface_hub/utils/_auth.py:94: UserWarning: 
-The secret `HF_TOKEN` does not exist in your Colab secrets.
-To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.
-You will be able to reuse this secret in all of your notebooks.
-Please note that authentication is recommended but still optional to access public models or datasets.
-  warnings.warn(
-```
-
-```result
+```output
 tokenizer_config.json:   0%|          | 0.00/2.10k [00:00<?, ?B/s]
-```
-
-```result
 tokenizer.model:   0%|          | 0.00/493k [00:00<?, ?B/s]
-```
-
-```result
 tokenizer.json:   0%|          | 0.00/1.80M [00:00<?, ?B/s]
-```
-
-```result
 special_tokens_map.json:   0%|          | 0.00/414 [00:00<?, ?B/s]
-```
-
-```result
 config.json:   0%|          | 0.00/571 [00:00<?, ?B/s]
-```
-
-```result
-The `load_in_4bit` and `load_in_8bit` arguments are deprecated and will be removed in the future versions. Please, pass a `BitsAndBytesConfig` object in `quantization_config` argument instead.
-```
-
-```result
 model.safetensors.index.json:   0%|          | 0.00/25.1k [00:00<?, ?B/s]
-```
-
-```result
 Downloading shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 model-00001-of-00002.safetensors:   0%|          | 0.00/9.94G [00:00<?, ?B/s]
-```
-
-```result
 model-00002-of-00002.safetensors:   0%|          | 0.00/4.54G [00:00<?, ?B/s]
-```
-
-```result
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 generation_config.json:   0%|          | 0.00/116 [00:00<?, ?B/s]
-```
-
-```result
 ✅ Mistral-7B loaded with LoRA fine-tuning enabled.
 ```
 
@@ -851,111 +294,26 @@ trainer.train()
 
 print("✅ Fine-tuning completed successfully!")
 ```
-
-```result
+```output
 Converting train dataset to ChatML:   0%|          | 0/800 [00:00<?, ? examples/s]
-```
-
-```result
 Applying chat template to train dataset:   0%|          | 0/800 [00:00<?, ? examples/s]
-```
-
-```result
 Tokenizing train dataset:   0%|          | 0/800 [00:00<?, ? examples/s]
-```
-
-```result
 Tokenizing train dataset:   0%|          | 0/800 [00:00<?, ? examples/s]
-```
-
-```result
 Converting eval dataset to ChatML:   0%|          | 0/200 [00:00<?, ? examples/s]
-```
-
-```result
 Applying chat template to eval dataset:   0%|          | 0/200 [00:00<?, ? examples/s]
-```
-
-```result
 Tokenizing eval dataset:   0%|          | 0/200 [00:00<?, ? examples/s]
-```
-
-```result
 Tokenizing eval dataset:   0%|          | 0/200 [00:00<?, ? examples/s]
-```
-
-```result
-wandb: WARNING The `run_name` is currently set to the same value as `TrainingArguments.output_dir`. If this was not intended, please specify a different run name by setting the `TrainingArguments.run_name` parameter.
-```
-
-```result
-<IPython.core.display.Javascript object>
-```
-
-```result
-wandb: Logging into wandb.ai. (Learn how to deploy a W&B server locally: https://wandb.me/wandb-server)
-wandb: You can find your API key in your browser here: https://wandb.ai/authorize
-wandb: Paste an API key from your profile and hit enter:
-```
-
-```result
  ··········
-```
-
-```result
-wandb: WARNING If you're specifying your api key in code, ensure this code is not shared publicly.
-wandb: WARNING Consider setting the WANDB_API_KEY environment variable, or running `wandb login` from the command line.
-wandb: Appending key for api.wandb.ai to your netrc file: /root/.netrc
-wandb: Currently logged in as: sp7386101 (sp7386101-srm-institute-of-science-and-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
-wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
-```
-
-<div class="kb-html">
 Tracking run with wandb version 0.19.6
-</div>
-
-<div class="kb-html">
-Run data is saved locally in <code>/content/wandb/run-20250225_124605-tjsmhl7j</code>
-</div>
-
-<div class="kb-html">
-Syncing run <strong><a href='https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface/runs/tjsmhl7j' target="_blank">./results</a></strong> to <a href='https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface' target="_blank">Weights & Biases</a> (<a href='https://wandb.me/developer-guide' target="_blank">docs</a>)<br>
-</div>
-
-<div class="kb-html">
- View project at <a href='https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface' target="_blank">https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface</a>
-</div>
-
-<div class="kb-html">
- View run at <a href='https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface/runs/tjsmhl7j' target="_blank">https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface/runs/tjsmhl7j</a>
-</div>
-
-```result
-/usr/local/lib/python3.11/dist-packages/bitsandbytes/nn/modules.py:451: UserWarning: Input type into Linear4bit is torch.float16, but bnb_4bit_compute_dtype=torch.float32 (default). This will lead to slow inference or training speed.
-  warnings.warn(
-```
-
-<div class="kb-html">
-    <div>
-      <progress value='400' max='400' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [400/400 13:12, Epoch 2/2]
-    </div>
-    <table border="1" class="dataframe">
-  <thead>
- <tr style="text-align: left;">
-      <th>Step</th>
-      <th>Training Loss</th>
-      <th>Validation Loss</th>
-    </tr>
-  </thead>
-  <tbody>
-  </tbody>
-</table><p>
-</div>
-
-```result
+Run data is saved locally in /content/wandb/run-20250225_124605-tjsmhl7j
+Syncing run ./results to Weights & Biases (docs)
+View project at https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface
+View run at https://wandb.ai/sp7386101-srm-institute-of-science-and-technology/huggingface/runs/tjsmhl7j
 ✅ Fine-tuning completed successfully!
 ```
+
+| Step | Training Loss | Validation Loss |
+|---|---|---|
 
 ```python
 #7e168d39419c3a9caad4b3ede3d0f64d71502331
@@ -972,8 +330,7 @@ tokenizer.save_pretrained(save_path)
 
 print(f"✅ Model saved at {save_path}")
 ```
-
-```result
+```output
 ✅ Model saved at ./mistral_lora_finetuned_duplicate
 ```
 
@@ -991,8 +348,7 @@ print(f"🟢 GPU Free Memory: {gpu_free:.2f} GB")
 print(f"🟡 GPU Allocated Memory: {gpu_memory:.2f} GB")
 print(f"🔴 GPU Reserved Memory: {gpu_reserved:.2f} GB")
 ```
-
-```result
+```output
 🔥 GPU Total Memory: 15.83 GB
 🟢 GPU Free Memory: 7.50 GB
 🟡 GPU Allocated Memory: 4.54 GB
@@ -1038,17 +394,7 @@ print(f"Prompt: {prompt}")
 print("\nGenerated Recipe:\n")
 print(generated_text)
 ```
-
-```result
-/usr/local/lib/python3.11/dist-packages/huggingface_hub/utils/_auth.py:94: UserWarning: 
-The secret `HF_TOKEN` does not exist in your Colab secrets.
-To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.
-You will be able to reuse this secret in all of your notebooks.
-Please note that authentication is recommended but still optional to access public models or datasets.
-  warnings.warn(
-```
-
-```result
+```output
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
 ```
 
@@ -1064,12 +410,7 @@ print(f"Prompt: {prompt}")
 print("\nGenerated Recipe:\n")
 print(generated_text)
 ```
-
-```result
-Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
-```
-
-```result
+```output
 Prompt: What is the source of Scalloped Corn?
 
 Generated Recipe:
@@ -1129,13 +470,7 @@ avg_loss, ppl = evaluate_model(model_end, eval_samples, tokenizer)
 print(f"Validation Loss: {avg_loss:.4f}")
 print(f"Perplexity (PPL): {ppl:.4f}")
 ```
-
-```result
-Evaluating:   0%|          | 0/30 [00:00<?, ?it/s]Asking to truncate to max_length but no maximum length is provided and the model has no predefined maximum length. Default to no truncation.
-Evaluating: 100%|██████████| 30/30 [00:02<00:00, 13.37it/s]
-```
-
-```result
+```output
 Validation Loss: 3.0446
 Perplexity (PPL): 21.0008
 ```
@@ -1144,233 +479,19 @@ Perplexity (PPL): 21.0008
 df.head(30)
 ```
 
-<div class="kb-html">
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>title</th>
-      <th>ingredients</th>
-      <th>directions</th>
-      <th>source</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>No-Bake Nut Cookies</td>
-      <td>['1 c. firmly packed brown sugar', '1/2 c. eva...</td>
-      <td>['In a heavy 2-quart saucepan, mix brown sugar...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=44874</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Jewell Ball'S Chicken</td>
-      <td>['1 small jar chipped beef, cut up', '4 boned ...</td>
-      <td>['Place chipped beef on bottom of baking dish....</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=699419</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Creamy Corn</td>
-      <td>['2 (16 oz.) pkg. frozen corn', '1 (8 oz.) pkg...</td>
-      <td>['In a slow cooker, combine all ingredients. C...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=10570</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Chicken Funny</td>
-      <td>['1 large whole chicken', '2 (10 1/2 oz.) cans...</td>
-      <td>['Boil and debone chicken.', 'Put bite size pi...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=897570</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Reeses Cups(Candy)</td>
-      <td>['1 c. peanut butter', '3/4 c. graham cracker ...</td>
-      <td>['Combine first four ingredients and press in ...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=659239</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>Cheeseburger Potato Soup</td>
-      <td>['6 baking potatoes', '1 lb. of extra lean gro...</td>
-      <td>['Wash potatoes; prick several times with a fo...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=20115</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>Rhubarb Coffee Cake</td>
-      <td>['1 1/2 c. sugar', '1/2 c. butter', '1 egg', '...</td>
-      <td>['Cream sugar and butter.', 'Add egg and beat ...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=210288</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>Scalloped Corn</td>
-      <td>['1 can cream-style corn', '1 can whole kernel...</td>
-      <td>['Mix together both cans of corn, crackers, eg...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=876969</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>Nolan'S Pepper Steak</td>
-      <td>['1 1/2 lb. round steak (1-inch thick), cut in...</td>
-      <td>['Roll steak strips in flour.', 'Brown in skil...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=375254</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>Millionaire Pie</td>
-      <td>['1 large container Cool Whip', '1 large can c...</td>
-      <td>['Empty Cool Whip into a bowl.', 'Drain juice ...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=794547</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>Double Cherry Delight</td>
-      <td>['1 (17 oz.) can dark sweet pitted cherries', ...</td>
-      <td>['Drain cherries, measuring syrup.', 'Cut cher...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=703381</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>Buckeye Candy</td>
-      <td>['1 box powdered sugar', '8 oz. soft butter', ...</td>
-      <td>['Mix sugar, butter and peanut butter.', 'Roll...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=886785</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>Quick Barbecue Wings</td>
-      <td>['chicken wings (as many as you need for dinne...</td>
-      <td>['Clean wings.', 'Flour and fry until done.', ...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=768311</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>Taco Salad Chip Dip</td>
-      <td>['8 oz. Ortega taco sauce', '8 oz. sour cream'...</td>
-      <td>['Mix taco sauce, sour cream and cream cheese....</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=806409</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>Pink Stuff(Frozen Dessert)</td>
-      <td>['1 can pie filling (cherry or strawberry)', '...</td>
-      <td>['Mix all ingredients together.', 'Pour into a...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=982483</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>Fresh Strawberry Pie</td>
-      <td>['1 baked pie shell', '1 qt. cleaned strawberr...</td>
-      <td>['Mix water, cornstarch, sugar and salt in sau...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=161321</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>Easy German Chocolate Cake</td>
-      <td>['1/2 pkg. chocolate fudge cake mix without pu...</td>
-      <td>['Mix according to directions and add oil.', '...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=983179</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>Broccoli Salad</td>
-      <td>['1 large head broccoli (about 1 1/2 lb.)', '1...</td>
-      <td>['Trim off large leaves of broccoli and remove...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=50992</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>Strawberry Whatever</td>
-      <td>['1 lb. frozen strawberries in juice', '1 smal...</td>
-      <td>['Mix Jell-O in boiling water.', 'Add strawber...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=718063</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>Eggless Milkless Applesauce Cake</td>
-      <td>['3/4 c. sugar', '1/2 c. shortening', '1 1/2 c...</td>
-      <td>['Mix Crisco with applesauce, nuts and raisins...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=343158</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>Grandma Hanrath'S Banana Breadfort Collins, Co...</td>
-      <td>['1 c. sugar', '1/2 c. shortening', '2 eggs (a...</td>
-      <td>['Cream sugar and shortening.', 'Add eggs, sal...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=1072247</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>Chocolate Frango Mints</td>
-      <td>["1 pkg. devil's food cake mix", '1 pkg. choco...</td>
-      <td>['Mix ingredients together for 5 minutes.', 'S...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=958474</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>Cuddy Farms Marinated Turkey</td>
-      <td>['2 c. 7-Up or Sprite', '1 c. vegetable oil', ...</td>
-      <td>['Buy whole turkey breast; remove all skin and...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=9449</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>Spaghetti Sauce To Can</td>
-      <td>['1/2 bushel tomatoes', '1 c. oil', '1/4 c. mi...</td>
-      <td>['Cook ground or chopped peppers and onions in...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=1059279</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>Prize-Winning Meat Loaf</td>
-      <td>['1 1/2 lb. ground beef', '1 c. tomato juice',...</td>
-      <td>['Mix well.', 'Press firmly into an 8 1/2 x 4 ...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=923674</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>Smothered Round Steak(Servings: 4)</td>
-      <td>['2 lb. round steak', '1/2 tsp. ground black p...</td>
-      <td>['Alex Patout says, "Smothering is a multipurp...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=982859</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>Corral Barbecued Beef Steak Strips</td>
-      <td>['2 lb. round steak 1/2 to 3/4-inch thick, sli...</td>
-      <td>['Brown strips in cooking oil.', 'Pour off dri...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=420402</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>Easy Fudge</td>
-      <td>['1 (14 oz.) can sweetened condensed milk', '1...</td>
-      <td>['Butter a square pan, 8 x 8 x 2-inches.', 'He...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=812407</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>Taco-Filled Green Pepper</td>
-      <td>['1 lb. Ground Beef', '1 pkg. taco seasoning',...</td>
-      <td>['In a large skillet, brown the ground beef. D...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=39004</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>One Hour Rolls</td>
-      <td>['1 c. milk', '2 Tbsp. sugar', '1 pkg. dry yea...</td>
-      <td>['Put flour into a large mixing bowl.', 'Combi...</td>
-      <td>www.cookbooks.com/Recipe-Details.aspx?id=294341</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
+|  | title | ingredients | directions | source |
+|---|---|---|---|---|
+| 0 | No-Bake Nut Cookies | ['1 c. firmly packed brown sugar', '1/2 c. eva... | ['In a heavy 2-quart saucepan, mix brown sugar... | www.cookbooks.com/Recipe-Details.aspx?id=44874 |
+| 1 | Jewell Ball'S Chicken | ['1 small jar chipped beef, cut up', '4 boned ... | ['Place chipped beef on bottom of baking dish.... | www.cookbooks.com/Recipe-Details.aspx?id=699419 |
+| 2 | Creamy Corn | ['2 (16 oz.) pkg. frozen corn', '1 (8 oz.) pkg... | ['In a slow cooker, combine all ingredients. C... | www.cookbooks.com/Recipe-Details.aspx?id=10570 |
+| 3 | Chicken Funny | ['1 large whole chicken', '2 (10 1/2 oz.) cans... | ['Boil and debone chicken.', 'Put bite size pi... | www.cookbooks.com/Recipe-Details.aspx?id=897570 |
+| 4 | Reeses Cups(Candy) | ['1 c. peanut butter', '3/4 c. graham cracker ... | ['Combine first four ingredients and press in ... | www.cookbooks.com/Recipe-Details.aspx?id=659239 |
+| 5 | Cheeseburger Potato Soup | ['6 baking potatoes', '1 lb. of extra lean gro... | ['Wash potatoes; prick several times with a fo... | www.cookbooks.com/Recipe-Details.aspx?id=20115 |
+| 6 | Rhubarb Coffee Cake | ['1 1/2 c. sugar', '1/2 c. butter', '1 egg', '... | ['Cream sugar and butter.', 'Add egg and beat ... | www.cookbooks.com/Recipe-Details.aspx?id=210288 |
+| 7 | Scalloped Corn | ['1 can cream-style corn', '1 can whole kernel... | ['Mix together both cans of corn, crackers, eg... | www.cookbooks.com/Recipe-Details.aspx?id=876969 |
+| 8 | Nolan'S Pepper Steak | ['1 1/2 lb. round steak (1-inch thick), cut in... | ['Roll steak strips in flour.', 'Brown in skil... | www.cookbooks.com/Recipe-Details.aspx?id=375254 |
+| 9 | Millionaire Pie | ['1 large container Cool Whip', '1 large can c... | ['Empty Cool Whip into a bowl.', 'Drain juice ... | www.cookbooks.com/Recipe-Details.aspx?id=794547 |
+| … 20 more rows |  |  |  |  |
 
 ---
 
@@ -1446,21 +567,13 @@ torch.cuda.empty_cache()
 
 print("✅ Model loaded with 4-bit quantization to reduce memory usage.")
 ```
-
-```result
+```output
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 ✅ Model loaded with 4-bit quantization to reduce memory usage.
 ```
 
-```python
-!pip install ijson
-```
-
-```result
-Requirement already satisfied: ijson in /usr/local/lib/python3.11/dist-packages (3.3.0)
+```bash
+pip install ijson
 ```
 
 ```python
@@ -1500,8 +613,7 @@ with open(rag_file, "w", encoding="utf-8") as f:
 
 print(f"✅ Successfully saved {len(rag_data)} entries in {rag_file}.")
 ```
-
-```result
+```output
 ✅ Successfully saved 1000 entries in rag_dataset.json.
 ```
 
@@ -1525,8 +637,7 @@ with open(rag_file, "r", encoding="utf-8") as f:
     except json.JSONDecodeError as e:
         print(f"❌ JSON Decode Error: {e}")
 ```
-
-```result
+```output
 ✅ Loaded 1000 entries from rag_dataset.json.
 
 🔹 Entry 1:
@@ -1537,24 +648,7 @@ with open(rag_file, "r", encoding="utf-8") as f:
 
 🔹 Entry 2:
 {
-    "question": "What is the directions for No-Bake Nut Cookies?",
-    "answer": "In a heavy 2-quart saucepan, mix brown sugar, nuts, evaporated milk and butter or margarine., Stir over medium heat until mixture bubbles all over top., Boil and stir 5 minutes more. Take off heat., Stir in vanilla and cereal; mix well., Using 2 teaspoons, drop and shape into 30 clusters on wax paper., Let stand until firm, about 30 minutes."
-}
-
-🔹 Entry 3:
-{
-    "question": "What is the source for No-Bake Nut Cookies?",
-    "answer": "www.cookbooks.com/Recipe-Details.aspx?id=44874"
-}
-
-🔹 Entry 4:
-{
-    "question": "What is the ingredients for Jewell Ball'S Chicken?",
-    "answer": "1 small jar chipped beef, cut up, 4 boned chicken breasts, 1 can cream of mushroom soup, 1 carton sour cream"
-}
-
-🔹 Entry 5:
-{
+… (18 more lines)
     "question": "What is the directions for Jewell Ball'S Chicken?",
     "answer": "Place chipped beef on bottom of baking dish., Place chicken on top of beef., Mix soup and cream together; pour over chicken. Bake, uncovered, at 275° for 3 hours."
 }
@@ -1622,8 +716,7 @@ print("📄 Retrieved Documents:\n")
 for idx, doc in enumerate(retrieved_docs, 1):
     print(f"{idx}. {doc}\n")
 ```
-
-```result
+```output
 📜 Extracted 1000 questions and 1000 answers.
 First 5 answers: ['1 c. firmly packed brown sugar, 1/2 c. evaporated milk, 1/2 tsp. vanilla, 1/2 c. broken nuts (pecans), 2 Tbsp. butter or margarine, 3 1/2 c. bite size shredded rice biscuits', 'In a heavy 2-quart saucepan, mix brown sugar, nuts, evaporated milk and butter or margarine., Stir over medium heat until mixture bubbles all over top., Boil and stir 5 minutes more. Take off heat., Stir in vanilla and cereal; mix well., Using 2 teaspoons, drop and shape into 30 clusters on wax paper., Let stand until firm, about 30 minutes.', 'www.cookbooks.com/Recipe-Details.aspx?id=44874', '1 small jar chipped beef, cut up, 4 boned chicken breasts, 1 can cream of mushroom soup, 1 carton sour cream', 'Place chipped beef on bottom of baking dish., Place chicken on top of beef., Mix soup and cream together; pour over chicken. Bake, uncovered, at 275° for 3 hours.']
 📏 Embedding matrix shape: (1000, 384)
@@ -1759,12 +852,8 @@ for doc, score in retrieve_relevant_docs(query):
 
 print("\n🤖 Mistral's Response:", response)
 ```
-
-```result
+```output
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 ✅ Fine-Tuned Mistral Loaded!
 ✅ Pretrained SentenceTransformer Loaded!
 ✅ FAISS index loaded successfully!
@@ -1774,11 +863,7 @@ Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
 - What is the ingredients for No-Bake Nut Cookies? (Score: 0.0044)
 - What is the source for No-Bake Nut Cookies? (Score: 0.2998)
 - What is the ingredients for Peanut Butter Cup Cookies? (Score: 0.4072)
-
-🤖 Mistral's Response: Answer the query using the retrieved context:
-
-What is the source for No-Bake Nut Cookies?
-What is the ingredients for Peanut Butter Cup Cookies?
+… (5 more lines)
 
 Query: What are the ingredients for No-Bake Nut Cookies?
 Answer: 1 c. sugar, 1/2 c. margarine, 1/2 c. peanut butter, 1/4 c. cream, 1/2 c. flour, 1 pkg. chocolate chips, 1/2 c. chopped nuts and 10 graham crackers crushed., Mix together first 3 ingredients in saucepan over medium heat., Melt margarine and peanut butter., Add all ingredients., Spoon out on cookie sheet., Chill 20 min. in refrigerator.
@@ -1818,12 +903,8 @@ faiss_index.add(document_embeddings)  # Add embeddings to FAISS index
 faiss.write_index(faiss_index, faiss_index_path)
 print(f"✅ FAISS index saved to {faiss_index_path}")
 ```
-
-```result
+```output
 Batches:   0%|          | 0/32 [00:00<?, ?it/s]
-```
-
-```result
 ✅ FAISS index saved to faiss_index.bin
 ```
 
@@ -1831,53 +912,12 @@ Batches:   0%|          | 0/32 [00:00<?, ?it/s]
 faiss_index = faiss.read_index("faiss_index.bin")
 print("✅ FAISS index loaded successfully!")
 ```
-
-```result
+```output
 ✅ FAISS index loaded successfully!
 ```
 
-```python
-!pip install evaluate
-```
-
-```result
-Collecting evaluate
-  Downloading evaluate-0.4.3-py3-none-any.whl.metadata (9.2 kB)
-Requirement already satisfied: datasets>=2.0.0 in /usr/local/lib/python3.11/dist-packages (from evaluate) (3.3.2)
-Requirement already satisfied: numpy>=1.17 in /usr/local/lib/python3.11/dist-packages (from evaluate) (1.26.4)
-Requirement already satisfied: dill in /usr/local/lib/python3.11/dist-packages (from evaluate) (0.3.8)
-Requirement already satisfied: pandas in /usr/local/lib/python3.11/dist-packages (from evaluate) (2.2.2)
-Requirement already satisfied: requests>=2.19.0 in /usr/local/lib/python3.11/dist-packages (from evaluate) (2.32.3)
-Requirement already satisfied: tqdm>=4.62.1 in /usr/local/lib/python3.11/dist-packages (from evaluate) (4.67.1)
-Requirement already satisfied: xxhash in /usr/local/lib/python3.11/dist-packages (from evaluate) (3.5.0)
-Requirement already satisfied: multiprocess in /usr/local/lib/python3.11/dist-packages (from evaluate) (0.70.16)
-Requirement already satisfied: fsspec>=2021.05.0 in /usr/local/lib/python3.11/dist-packages (from fsspec[http]>=2021.05.0->evaluate) (2024.10.0)
-Requirement already satisfied: huggingface-hub>=0.7.0 in /usr/local/lib/python3.11/dist-packages (from evaluate) (0.28.1)
-Requirement already satisfied: packaging in /usr/local/lib/python3.11/dist-packages (from evaluate) (24.2)
-Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from datasets>=2.0.0->evaluate) (3.17.0)
-Requirement already satisfied: pyarrow>=15.0.0 in /usr/local/lib/python3.11/dist-packages (from datasets>=2.0.0->evaluate) (17.0.0)
-Requirement already satisfied: aiohttp in /usr/local/lib/python3.11/dist-packages (from datasets>=2.0.0->evaluate) (3.11.12)
-Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.11/dist-packages (from datasets>=2.0.0->evaluate) (6.0.2)
-Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub>=0.7.0->evaluate) (4.12.2)
-Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests>=2.19.0->evaluate) (3.4.1)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests>=2.19.0->evaluate) (3.10)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests>=2.19.0->evaluate) (2.3.0)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests>=2.19.0->evaluate) (2025.1.31)
-Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.11/dist-packages (from pandas->evaluate) (2.8.2)
-Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.11/dist-packages (from pandas->evaluate) (2025.1)
-Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.11/dist-packages (from pandas->evaluate) (2025.1)
-Requirement already satisfied: aiohappyeyeballs>=2.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.0.0->evaluate) (2.4.6)
-Requirement already satisfied: aiosignal>=1.1.2 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.0.0->evaluate) (1.3.2)
-Requirement already satisfied: attrs>=17.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.0.0->evaluate) (25.1.0)
-Requirement already satisfied: frozenlist>=1.1.1 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.0.0->evaluate) (1.5.0)
-Requirement already satisfied: multidict<7.0,>=4.5 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.0.0->evaluate) (6.1.0)
-Requirement already satisfied: propcache>=0.2.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.0.0->evaluate) (0.2.1)
-Requirement already satisfied: yarl<2.0,>=1.17.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->datasets>=2.0.0->evaluate) (1.18.3)
-Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from python-dateutil>=2.8.2->pandas->evaluate) (1.17.0)
-Downloading evaluate-0.4.3-py3-none-any.whl (84 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.0/84.0 kB 6.6 MB/s eta 0:00:00
-Installing collected packages: evaluate
-Successfully installed evaluate-0.4.3
+```bash
+pip install evaluate
 ```
 
 ```python
@@ -1908,20 +948,10 @@ print("BLEU Score:", bleu_score)
 for query, response in zip(test_queries, responses):
     print(f"\n🔍 Query: {query}\n🤖 Model Response: {response}")
 ```
-
-```result
+```output
 Downloading builder script:   0%|          | 0.00/5.94k [00:00<?, ?B/s]
-```
-
-```result
 Downloading extra modules:   0%|          | 0.00/1.55k [00:00<?, ?B/s]
-```
-
-```result
 Downloading extra modules:   0%|          | 0.00/3.34k [00:00<?, ?B/s]
-```
-
-```result
 BLEU Score: {'bleu': 0.021781050756019417, 'precisions': [0.07713498622589532, 0.024930747922437674, 0.013927576601671309, 0.008403361344537815], 'brevity_penalty': 1.0, 'length_ratio': 8.642857142857142, 'translation_length': 363, 'reference_length': 42}
 
 🔍 Query: What are the ingredients for No-Bake Nut Cookies?
@@ -1929,25 +959,7 @@ BLEU Score: {'bleu': 0.021781050756019417, 'precisions': [0.07713498622589532, 0
 
 What is the source for No-Bake Nut Cookies?
 What is the ingredients for Peanut Butter Cup Cookies?
-
-Query: What are the ingredients for No-Bake Nut Cookies?
-Answer: 1/2 c. sugar, 1/2 c. milk, 1 1/2 tbsp. butter, 1/4 c. boiling water, 3 1/2 tsp. Toll House chocolate chips, 1/2 c. chopped peanuts, 1 c. chopped dates, 1 c. crushed graham crackers, 1/2 c. peanut butter
-
-Query: What are the ingredients for No-Bake Nut Cookies?
-Answer: 1/2 c. sugar, 1/2 c. milk, 1 1/2 tbsp. butter, 1/4 c. boiling water, 3 1/2 tsp. Toll House chocolate chips, 1/2 c. chopped peanuts, 1 c. chopped dates, 1 c. crushed graham crackers, 1/2 c
-
-🔍 Query: How do you prepare Peanut Butter Cup Cookies?
-🤖 Model Response: Answer the query using the retrieved context:
-
-What is the directions for Peanut Butter Cup Cookies?
-What is the directions for Crazy Peanut Butter Cookies?
-What is the source for Peanut Butter Cup Cookies?
-
-Query: How do you prepare Peanut Butter Cup Cookies?
-Answer: Mix butter, peanut butter and sugar; add eggs, vanilla and flour. Stir in peanut butter cups. Use 1 tablespoon of dough for each cookie, shape into ball and roll in powdered sugar. Bake at 325° for 8 to 10 minutes. Yields 48 to 50.
-
-Query: What is the directions for Crazy Peanut Butter Cookies?
-Answer: Mix all ingredients together. Roll into ball and roll in powdered sugar. Bake at 325° for 8 to 10 minutes. Yields 48 to 50.
+… (19 more lines)
 
 Query: Where did you find the source for Peanut Butter Cup Cookies?
 Answer: www.cookbooks.com/Recipe-Details.aspx?id=1
@@ -2071,12 +1083,8 @@ for doc, score in retrieve_relevant_docs(query):
 
 print("\n🤖 Mistral's Response:", response)
 ```
-
-```result
+```output
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 ✅ Fine-Tuned Mistral Loaded!
 ✅ Pretrained SentenceTransformer Loaded!
 ✅ FAISS index loaded successfully!
@@ -2086,11 +1094,7 @@ Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
 - What is the ingredients for No-Bake Nut Cookies? (Score: 0.0044)
 - What is the source for No-Bake Nut Cookies? (Score: 0.2998)
 - What is the ingredients for Peanut Butter Cup Cookies? (Score: 0.4072)
-
-🤖 Mistral's Response: Answer the query using the retrieved context:
-
-What is the source for No-Bake Nut Cookies?
-What is the ingredients for Peanut Butter Cup Cookies?
+… (5 more lines)
 
 Query: What are the ingredients for No-Bake Nut Cookies?
 Answer: 1 1/2 c. peanut butter, 1 c. sugar, 1 c. milk, 1/2 tsp. salt, 1 tsp. vanilla, 2 c. chopped nuts, 1 1/2 c. shredded coconut, 1 1/2 c. quick-cook oats, 1 1/2 tsp. softened butter, 1 1/2 c. milk, 1/2 c. brown sugar, 1/2 c. flour, 1/2 tsp. salt, 1/2 tsp. vanilla, 1 1/2 tsp. baking soda, 1 1/2 tsp. buttermilk, 1 1/2 c. quick-cook oats, 1 1/2 c. chopped nuts, 1 1/2 c
@@ -2486,21 +1490,8 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-
-```result
-/usr/local/lib/python3.11/dist-packages/huggingface_hub/utils/_auth.py:94: UserWarning: 
-The secret `HF_TOKEN` does not exist in your Colab secrets.
-To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.
-You will be able to reuse this secret in all of your notebooks.
-Please note that authentication is recommended but still optional to access public models or datasets.
-  warnings.warn(
-```
-
-```result
+```output
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 ✅ Fine-Tuned Mistral Loaded!
 ✅ Pretrained SentenceTransformer Loaded!
 ✅ FAISS index loaded successfully!
@@ -2509,120 +1500,7 @@ Falling back to default PPOConfig
 Error using PPOTrainer: PPOConfig.__init__() missing 1 required positional argument: 'output_dir'
 Falling back to custom RLHF implementation
 🚀 Starting Custom RLHF Training...
-```
-
-```result
-/usr/local/lib/python3.11/dist-packages/peft/tuners/lora/bnb.py:355: UserWarning: Merge lora module to 4-bit linear may get different generations due to rounding errors.
-  warnings.warn(
-```
-
-```result
 Epoch 1/3
-```
-
-```result
-Processing queries:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result title="Error"
----------------------------------------------------------------------------
-TypeError                                 Traceback (most recent call last)
-<ipython-input-1-f6fe31195eac> in get_compatible_ppo_config()
-    201         # Try with minimal parameters first
---> 202         return PPOConfig(
-    203             learning_rate=1.5e-5,
-
-TypeError: PPOConfig.__init__() missing 1 required positional argument: 'output_dir'
-
-During handling of the above exception, another exception occurred:
-
-TypeError                                 Traceback (most recent call last)
-<ipython-input-1-f6fe31195eac> in main()
-    344         try:
---> 345             ppo_config = get_compatible_ppo_config()
-    346 
-
-<ipython-input-1-f6fe31195eac> in get_compatible_ppo_config()
-    209         print("Falling back to default PPOConfig")
---> 210         return PPOConfig()
-    211 
-
-TypeError: PPOConfig.__init__() missing 1 required positional argument: 'output_dir'
-
-During handling of the above exception, another exception occurred:
-
-AttributeError                            Traceback (most recent call last)
-/usr/local/lib/python3.11/dist-packages/peft/peft_model.py in __getattr__(self, name)
-    823         try:
---> 824             return super().__getattr__(name)  # defer to nn.Module's logic
-    825         except AttributeError:
-
-/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py in __getattr__(self, name)
-   1930                 return modules[name]
--> 1931         raise AttributeError(
-   1932             f"'{type(self).__name__}' object has no attribute '{name}'"
-
-AttributeError: 'PeftModelForCausalLM' object has no attribute 'device'
-
-During handling of the above exception, another exception occurred:
-
-AttributeError                            Traceback (most recent call last)
-/usr/local/lib/python3.11/dist-packages/peft/tuners/lora/model.py in __getattr__(self, name)
-    370         try:
---> 371             return super().__getattr__(name)  # defer to nn.Module's logic
-    372         except AttributeError:
-
-/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py in __getattr__(self, name)
-   1930                 return modules[name]
--> 1931         raise AttributeError(
-   1932             f"'{type(self).__name__}' object has no attribute '{name}'"
-
-AttributeError: 'LoraModel' object has no attribute 'device'
-
-During handling of the above exception, another exception occurred:
-
-AttributeError                            Traceback (most recent call last)
-<ipython-input-1-f6fe31195eac> in <cell line: 0>()
-    386 
-    387 if __name__ == "__main__":
---> 388     main()
-
-<ipython-input-1-f6fe31195eac> in main()
-    368             print("Falling back to custom RLHF implementation")
-    369             # Use custom RLHF training
---> 370             rlhf_model = custom_rlhf_training(model, tokenizer, rlhf_dataset)
-    371 
-    372     # Test the model
-
-<ipython-input-1-f6fe31195eac> in custom_rlhf_training(model, tokenizer, dataset, learning_rate, n_epochs)
-    240 
-    241                 prompt = f"Answer the query using the retrieved context:\n\n{context}\n\nQuery: {query}\nAnswer:"
---> 242                 query_tensor = tokenizer(prompt, return_tensors="pt").to(rlhf_model.device)
-    243 
-    244                 # Generate initial response
-
-/usr/local/lib/python3.11/dist-packages/peft/peft_model.py in __getattr__(self, name)
-    826             if name == "base_model":  # see #1892: prevent infinite recursion if class is not initialized
-    827                 raise
---> 828             return getattr(self.base_model, name)
-    829 
-    830     @contextmanager
-
-/usr/local/lib/python3.11/dist-packages/peft/tuners/lora/model.py in __getattr__(self, name)
-    373             if name == "model":  # see #1892: prevent infinite recursion if class is not initialized
-    374                 raise
---> 375             return getattr(self.model, name)
-    376 
-    377     def get_peft_config_as_dict(self, inference: bool = False):
-
-/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py in __getattr__(self, name)
-   1929             if name in modules:
-   1930                 return modules[name]
--> 1931         raise AttributeError(
-   1932             f"'{type(self).__name__}' object has no attribute '{name}'"
-   1933         )
-
-AttributeError: 'AutoModelForCausalLMWithValueHead' object has no attribute 'device'
 ```
 
 ```python
@@ -2665,21 +1543,8 @@ torch.cuda.empty_cache()
 
 print("✅ Fine-Tuned Mistral Loaded!")
 ```
-
-```result
-/usr/local/lib/python3.11/dist-packages/huggingface_hub/utils/_auth.py:94: UserWarning: 
-The secret `HF_TOKEN` does not exist in your Colab secrets.
-To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.
-You will be able to reuse this secret in all of your notebooks.
-Please note that authentication is recommended but still optional to access public models or datasets.
-  warnings.warn(
-```
-
-```result
+```output
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 ✅ Fine-Tuned Mistral Loaded!
 ```
 
@@ -2707,8 +1572,7 @@ with open(dataset_path, "r", encoding="utf-8") as f:
     rag_data = json.load(f)
 documents = [entry["question"] for entry in rag_data]
 ```
-
-```result
+```output
 ✅ Pretrained SentenceTransformer Loaded!
 ✅ FAISS index loaded successfully!
 ```
@@ -2758,40 +1622,14 @@ print(f"Reward score for the recipe title: {reward_title}")
 print(f"Reward score for the ingredients: {reward_ingredients}")
 print(f"Reward score for the directions: {reward_directions}")
 ```
-
-```result
+```output
 config.json:   0%|          | 0.00/665 [00:00<?, ?B/s]
-```
-
-```result
 model.safetensors:   0%|          | 0.00/548M [00:00<?, ?B/s]
-```
-
-```result
 generation_config.json:   0%|          | 0.00/124 [00:00<?, ?B/s]
-```
-
-```result
 tokenizer_config.json:   0%|          | 0.00/26.0 [00:00<?, ?B/s]
-```
-
-```result
 vocab.json:   0%|          | 0.00/1.04M [00:00<?, ?B/s]
-```
-
-```result
 merges.txt:   0%|          | 0.00/456k [00:00<?, ?B/s]
-```
-
-```result
 tokenizer.json:   0%|          | 0.00/1.36M [00:00<?, ?B/s]
-```
-
-```result
-`loss_type=None` was set in the config but it is unrecognised.Using the default loss: `ForCausalLMLoss`.
-```
-
-```result
 Reward score for the recipe title: -5.332228183746338
 Reward score for the ingredients: -2.198429822921753
 Reward score for the directions: -2.918705940246582
@@ -2931,22 +1769,11 @@ print("Retrieved documents:")
 for doc in retrieved_documents:
     print(doc)
 ```
-
-```result
+```output
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 ✅ Fine-Tuned Mistral Loaded!
 ✅ Pretrained SentenceTransformer Loaded!
 ✅ FAISS index loaded successfully!
-```
-
-```result
-`loss_type=None` was set in the config but it is unrecognised.Using the default loss: `ForCausalLMLoss`.
-```
-
-```result
 Reward score for the recipe title: -5.332228183746338
 Reward score for the ingredients: -2.198429822921753
 Reward score for the directions: -2.918705940246582
@@ -3089,16 +1916,9 @@ print(f"Generated Answer: {generated_answer}")
 
 print("Execution Complete!")
 ```
-
-```result
+```output
 Loading Fine-Tuned Mistral Model...
-```
-
-```result
 Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
-```
-
-```result
 ✅ Fine-Tuned Mistral Loaded!
 Loading SentenceTransformer for embedding generation...
 ✅ Pretrained SentenceTransformer Loaded!
@@ -3106,26 +1926,8 @@ Loading FAISS Index...
 ✅ FAISS index loaded successfully!
 Loaded 1000 documents from the dataset.
 Loading GPT-2 Reward Model...
-```
-
-```result
-The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
-Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
-The attention mask is not set and cannot be inferred from input because pad token is same as eos token. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
-```
-
-```result
 ✅ GPT-2 Reward Model Loaded!
-Performing Query and Reward Calculation...
-Reward score for the recipe title: -5.332228183746338
-Reward score for the ingredients: -2.198429822921753
-Reward score for the directions: -2.918705940246582
-Performing FAISS Search with Query...
-Retrieved documents:
-1. What is the directions for No-Bake Nut Cookies?
-2. What is the source for No-Bake Nut Cookies?
-3. What is the ingredients for No-Bake Nut Cookies?
-Generating answer using Fine-Tuned Mistral...
+… (10 more lines)
 Generated Answer: No-Bake Nut Cookies What is the directions for No-Bake Nut Cookies? What is the source for No-Bake Nut Cookies? What is the ingredients for No-Bake Nut Cookies?
 ### Answer: 1/2 c. margarine, 2 Tbsp. peanut butter (smooth or crunchy), 3 Tbsps. unsweetened cocoa powder (not hot chocolate) or 4 oz. semi-sweet chocolate chips, melted in microwave or double-boiler, then cooled to lukewarm (about 90° F. on thermometer inserted in center of chocolate). Mix all ingredients together
 Execution Complete!
@@ -3222,8 +2024,7 @@ perform_faiss_search_and_generate_answer(recipe_title_3)
 
 print("Execution Complete!")
 ```
-
-```result
+```output
 Example 1 (Chocolate Chip Cookies) Reward scores:
 Reward score for the recipe title: -5.023141384124756
 Reward score for the ingredients: -1.543581485748291
@@ -3234,58 +2035,7 @@ Reward score for the recipe title: -3.7151474952697754
 Reward score for the ingredients: -1.830509901046753
 Reward score for the directions: -1.8119031190872192
 
-Example 3 (Chicken Alfredo) Reward scores:
-Reward score for the recipe title: -6.002618312835693
-Reward score for the ingredients: -2.3091678619384766
-Reward score for the directions: -2.3142621517181396
-
-
-Performing FAISS Search for Query: Chocolate Chip Cookies
-```
-
-```result
-The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
-Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
-```
-
-```result
-Retrieved documents:
-1. What is the source for Chicago Crunchy Chocolate Chip Cookies?
-2. What is the ingredients for Chicago Crunchy Chocolate Chip Cookies?
-3. What is the directions for Chicago Crunchy Chocolate Chip Cookies?
-```
-
-```result
-The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
-Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
-```
-
-```result
-Generated Answer: Chocolate Chip Cookies What is the source for Chicago Crunchy Chocolate Chip Cookies? What is the ingredients for Chicago Crunchy Chocolate Chip Cookies? What is the directions for Chicago Crunchy Chocolate Chip Cookies? http://www.cookbooks.com/Recipe-Details.aspx?id=10597577&source=link
-
-Performing FAISS Search for Query: Spaghetti Bolognese
-Retrieved documents:
-1. What is the source for Summer Spaghetti?
-2. What is the source for Chicken Spaghetti?
-3. What is the source for Baked Spaghetti?
-```
-
-```result
-The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
-Setting `pad_token_id` to `eos_token_id`:2 for open-end generation.
-```
-
-```result
-Generated Answer: Spaghetti Bolognese What is the source for Summer Spaghetti? What is the source for Chicken Spaghetti? What is the source for Baked Spaghetti?
-### Answer: www.cookbooks.com/Recipe-Details.aspx?id=10595774&source=link
-1. Preheat oven to 350°.
-2. In a large skillet, cook ground beef over medium-high heat until browned, breaking it into small pieces with a spoon, about 8 minutes. Drain off fat. Add onion, garlic and bell pepper; cook and stir until vegetables are crisp-t
-
-Performing FAISS Search for Query: Chicken Alfredo
-Retrieved documents:
-1. What is the ingredients for Chicken Spaghetti?
-2. What is the ingredients for Casserole Italiano?
-3. What is the ingredients for Spaghetti Sauce To Can?
+… (28 more lines)
 Generated Answer: Chicken Alfredo What is the ingredients for Chicken Spaghetti? What is the ingredients for Casserole Italiano? What is the ingredients for Spaghetti Sauce To Can?
 ### Answer: 1 lb. boneless, skinless chicken breast, cut into bite-sized pieces, 2 Tbsp. olive oil or melted butter, salt and pepper to taste., 3/4 c. butter or margarine (softened), 8 oz. cream cheese, softened., (2 cans) Campbell's Condensed Cream of Mushroom Soup, undiluted, (1 can) condensed cream of broccoli soup (not creamed),
 Execution Complete!

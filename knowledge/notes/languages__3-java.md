@@ -1,4 +1,3 @@
- 
 1. **`char[]` prints like a String** – JVM implicitly converts it to a String.
 2. **`int[]` prints object hashcode** – because it inherits `Object.toString()`.
 3. **String is immutable** – methods like `toUpperCase()` don’t modify the original.
@@ -11,8 +10,6 @@
 10. **Use `Arrays.toString()` to print arrays** – for readable output.
 11. **`final` makes variables constant** – they can't be reassigned.
 12. **Autoboxing** – Java auto-converts `int` to `Integer` when needed.
-
- 
 
 ✅ Fixed Version:
 
@@ -418,8 +415,7 @@ sb.toString();                 // Converts back to normal string
 
 // StringBuffer is same as StringBuilder, but thread-safe (synchronized)
 ```
-
-```result
+```output
 YlroW iH
 ```
 
@@ -510,19 +506,10 @@ void printAll(int... nums) {
 printAll(1, 2, 3);  // Call
 ```
 
-```result title="Error"
----------------------------------------------------------------------------
-java.util.NoSuchElementException: null
-	at java.base/java.util.ArrayList$Itr.next(ArrayList.java:1052)
-	at java.base/java.util.Collections.max(Collections.java:698)
-	at .(#131:2)
-```
-
 ---
 ---
 
 ```java
-
 // 1. Reverse digits of a number
 public static int reverseDigits(int n) {
     int rev = 0;
@@ -663,8 +650,7 @@ System.out.print("Fibonacci (7 terms): "); printFibonacci(7); System.out.println
 System.out.println("GCD(12, 18): " + gcd(12, 18));
 System.out.println("LCM(12, 18): " + lcm(12, 18));
 ```
-
-```result
+```output
 Reverse: 4321
 Palindrome: true
 Reverse String: olleh
@@ -887,8 +873,6 @@ Arg 1: 123
 Arg 2: Test
 ```
 
- 
-
 ```java
 class Example {
     // Instance variable (belongs to each object)
@@ -939,15 +923,11 @@ obj1.showParameterVar(99);  // Parameter variable
 System.out.println("obj1.instanceVar = " + obj1.instanceVar); // Instance variable
 System.out.println("Example.staticVar = " + Example.staticVar); // Static variable
 ```
-
-```result
+```output
 Constructor called
 Instance Method
 instanceVar = 10
 staticVar = 20
-```
-
-```result
 Static Method
 staticVar = 20
 Local variable = 5
@@ -987,8 +967,7 @@ for (Student s : students) {
     System.out.println(s); // calls s.toString()
 }
 ```
-
-```result
+```output
 Student{name='Alice', age=20}
 Student{name='Bob', age=22}
 Student{name='Charlie', age=19}
@@ -1040,8 +1019,7 @@ Person p = new Person("Alice");
 p = null;
 System.gc(); // May trigger finalize(), but not immediately or reliably
 ```
-
-```result
+```output
 Constructor called for Alice
 Destructor called for Alice
 ```
@@ -1137,8 +1115,7 @@ class Dog implements Animal, Pet {
 Dog myDog = new Dog();
 myDog.sound(); // Calls the single implementation for both interfaces
 ```
-
-```result
+```output
 Brand: Dell
 Battery Life: 10 hours
 Animal is eating
@@ -1354,8 +1331,7 @@ Abstraction:
 - Promotes code reusability and flexibility.
 */
 ```
-
-```result
+```output
 Brand: Toyota
 Car started with key ignition.
 Brand: Honda
@@ -1443,8 +1419,7 @@ SmartTV tv = new SmartTV();
 tv.turnOn();
 tv.showSize(); // ✅ Allowed
 ```
-
-```result
+```output
 Laptop turning on...
 Laptop shutting down...
 Laptop turning on...
@@ -1558,8 +1533,7 @@ acc.showBranch();
 // System.out.println(acc.accountNumber); // ❌ Not allowed
 // acc.showPrivateInfo(); // ❌ Not allowed
 ```
-
-```result
+```output
 Private Info: 123456
 Account Number: 123456
 Account Holder: Alice
@@ -1656,9 +1630,8 @@ As noted by Oracle, *“Java objects reside in an area called the heap...When th
 ---
 
 ```java
-System.out.println("Hello, World!");  
+System.out.println("Hello, World!");
 ```
-
-```result
+```output
 Hello, World!
 ```

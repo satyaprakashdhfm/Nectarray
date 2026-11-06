@@ -31,6 +31,7 @@ a SUBJECTS entry if it is a new top-level folder, and run this again.
 from __future__ import annotations
 
 import base64
+import html as htmllib
 import hashlib
 import json
 import mimetypes
@@ -42,6 +43,7 @@ import sys
 import tempfile
 import urllib.parse
 import urllib.request
+from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent / "knowledge"
@@ -423,109 +425,210 @@ def jupyter_markdown(text: str) -> str:
     return "\n".join(out)
 
 
-def clean_html(html: str) -> str:
-    """Output HTML (mostly DataFrames) made safe to sit inside markdown."""
-    html = re.sub(r"<style\b.*?</style>", "", html, flags=re.S | re.I)
-    html = re.sub(r"<script\b.*?</script>", "", html, flags=re.S | re.I)
-    # A blank line ends a raw HTML block in markdown and the rest would be
-    # read as text, so none survive.
-    html = "\n".join(line for line in html.splitlines() if line.strip())
-    return html
+# ------------------------------------------------------------------ notes
+#
+# A notebook is turned into notes the way the academy lessons are written,
+# not dumped cell by cell: prose, then a program and what it prints as one
+# card (a fence followed by an ```output fence), then any figure it drew.
+# What only a notebook needs — tracebacks, warnings, install logs, widget
+# placeholders, `<Figure size …>` reprs, Colab plumbing — is left out of the
+# page. The notebook itself stays in knowledge/source/ as the backup.
+
+# Reprs that stand in for a figure or a widget and say nothing on a page.
+NOISE = re.compile(
+    r"^\s*(<Figure size|<matplotlib[.\s]|\[<matplotlib|<Axes|<AxesSubplot|<seaborn\.|"
+    r"Text\(\d|<BarContainer|<IPython\.|HBox\(|VBox\(|FloatProgress\(|IntProgress\(|"
+    r"<Response \[|<generator object|<function |<module |<built-in method)"
+)
+# Lines that only set a notebook up.
+SETUP_LINE = re.compile(
+    r"^\s*(%matplotlib|%load_ext|%config|%%capture|%reload_ext|%autoreload|"
+    r"from google\.colab import \w+\s*$|drive\.mount\(|warnings\.filterwarnings\()"
+)
+INSTALL_LINE = re.compile(r"^\s*[!%](pip3?|conda|apt(-get)?|npm|uv)\s+(install|-q|update)\b")
+COLAB_BADGE = re.compile(r"<a\b[^>]*>\s*<img\b[^>]*colab-badge[^>]*>\s*</a>|\[!\[Open In Colab\][^\n]*", re.I | re.S)
+
+MAX_OUTPUT_LINES = 16
+MAX_TABLE_ROWS = 10
 
 
-SRCDOC = re.compile(r"<iframe\b[^>]*\bsrcdoc=\"(.*?)\"[^>]*>\s*</iframe>", re.S | re.I)
+def clean_text(text: str) -> str:
+    """Program output as a terminal would have left it, trimmed if long."""
+    text = ANSI.sub("", text)
+    # A progress bar rewrites its line with \r; only the last state stays.
+    text = "\n".join(line.split("\r")[-1] for line in text.split("\n"))
+    lines = text.rstrip().split("\n")
+    if len(lines) > MAX_OUTPUT_LINES:
+        cut = len(lines) - 13
+        lines = lines[:10] + [f"… ({cut} more lines)"] + lines[-3:]
+    return "\n".join(lines).strip("\n")
 
 
-def html_output(html: str) -> str:
-    m = SRCDOC.search(html)
-    if m:
-        # A whole report (pandas-profiling and the like) inlined as srcdoc.
-        # Kept as its own file and framed, so the page stays light.
-        import html as htmllib
+class _Tables(HTMLParser):
+    """Rows of the first <table> in a piece of HTML (a pandas DataFrame)."""
 
-        doc = htmllib.unescape(m.group(1))
-        name = store_bytes(doc.encode("utf-8"), ".html")
-        return (
-            f'<iframe src="kb-media:{name}" title="Embedded report" class="kb-report" loading="lazy"></iframe>\n\n'
-            f"[Open the full report in a new tab](kb-media:{name})"
-        )
-    return '<div class="kb-html">\n' + clean_html(html) + "\n</div>"
+    def __init__(self):
+        super().__init__()
+        self.depth = 0
+        self.done = False
+        self.head: list[list[str]] = []
+        self.body: list[list[str]] = []
+        self.row: list[str] | None = None
+        self.cell: list[str] | None = None
+        self.in_head = False
 
+    def handle_starttag(self, tag, attrs):
+        if self.done:
+            return
+        if tag == "table":
+            self.depth += 1
+        elif self.depth == 1:
+            if tag == "thead":
+                self.in_head = True
+            elif tag == "tr":
+                self.row = []
+            elif tag in ("td", "th"):
+                self.cell = []
 
-def output_md(out: dict, where: str) -> str | None:
-    kind = out.get("output_type")
-    if kind == "stream":
-        text = ANSI.sub("", joined(out.get("text")))
-        return fence(text, "result") if text.strip() else None
-    if kind == "error":
-        tb = "\n".join(ANSI.sub("", line) for line in out.get("traceback", []))
-        text = tb or f"{out.get('ename')}: {out.get('evalue')}"
-        return fence(text, "result", 'title="Error"')
-    data = out.get("data") or {}
-    for mime in ("image/png", "image/jpeg", "image/gif", "image/webp"):
-        if mime in data:
-            ext = {"image/png": ".png", "image/jpeg": ".jpg", "image/gif": ".gif", "image/webp": ".webp"}[mime]
-            name = store_bytes(base64.b64decode(joined(data[mime])), ext)
-            return f"![Output](kb-media:{name})"
-    if "image/svg+xml" in data:
-        name = store_bytes(joined(data["image/svg+xml"]).encode(), ".svg")
-        return f"![Output](kb-media:{name})"
-    if "text/html" in data:
-        return html_output(joined(data["text/html"]))
-    if "text/markdown" in data:
-        return joined(data["text/markdown"])
-    if "text/latex" in data:
-        latex = joined(data["text/latex"]).strip()
-        return latex if latex.startswith("$") else f"$$\n{latex}\n$$"
-    if "application/vnd.plotly.v1+json" in data:
-        name = store_bytes(json.dumps(data["application/vnd.plotly.v1+json"]).encode(), ".json")
-        plain = joined(data.get("text/plain", ""))
-        note = f"Interactive Plotly figure — [figure data](kb-media:{name}); open the original notebook to see it drawn."
-        return note + ("\n\n" + fence(plain, "result") if plain.strip() else "")
-    if "text/plain" in data:
-        text = ANSI.sub("", joined(data["text/plain"]))
-        return fence(text, "result") if text.strip() else None
-    if data:
-        warnings.append(f"{where}: output kept only in the original ({', '.join(data)})")
-    return None
+    def handle_endtag(self, tag):
+        if self.done:
+            return
+        if tag == "table":
+            self.depth -= 1
+            if self.depth == 0:
+                self.done = True
+        elif self.depth == 1:
+            if tag == "thead":
+                self.in_head = False
+            elif tag in ("td", "th") and self.cell is not None and self.row is not None:
+                self.row.append(" ".join("".join(self.cell).split()))
+                self.cell = None
+            elif tag == "tr" and self.row is not None:
+                (self.head if self.in_head else self.body).append(self.row)
+                self.row = None
+
+    def handle_data(self, data):
+        if self.cell is not None:
+            self.cell.append(data)
 
 
-# ------------------------------------------------------------------ converters
+def table_md(html: str) -> str | None:
+    parser = _Tables()
+    parser.feed(html)
+    rows = parser.head + parser.body
+    if not rows:
+        return None
+    header = parser.head[0] if parser.head else rows[0]
+    body = parser.body if parser.head else rows[1:]
+    width = max(len(r) for r in [header, *body])
+    # pandas puts the index name in a second header row; fold it in.
+    if len(parser.head) > 1 and parser.head[1] and parser.head[1][0] and not header[0]:
+        header = [parser.head[1][0], *header[1:]]
+
+    def line(cells):
+        cells = [c.replace("|", "\\|") for c in cells] + [""] * (width - len(cells))
+        return "| " + " | ".join(cells) + " |"
+
+    out = [line(header), "|" + "---|" * width]
+    shown = body[:MAX_TABLE_ROWS]
+    out += [line(r) for r in shown]
+    if len(body) > len(shown):
+        out.append(line([f"… {len(body) - len(shown)} more rows"]))
+    return "\n".join(out)
 
 
-def notebook_md(path: Path, rel: str) -> tuple[str, dict]:
+def html_text(html: str) -> str:
+    html = re.sub(r"<(script|style)\b.*?</\1>", "", html, flags=re.S | re.I)
+    html = re.sub(r"<br\s*/?>|</p>|</div>|</li>|</tr>", "\n", html, flags=re.I)
+    return htmllib.unescape(re.sub(r"<[^>]+>", "", html))
+
+
+def cell_outputs(outputs: list, where: str) -> tuple[str, list[str]]:
+    """What a code cell printed, and the figures/tables it showed."""
+    printed: list[str] = []
+    shown: list[str] = []
+    for out in outputs:
+        kind = out.get("output_type")
+        if kind == "stream":
+            if out.get("name") == "stderr":
+                continue  # warnings and progress logs
+            printed.append(joined(out.get("text")))
+            continue
+        if kind == "error":
+            continue  # a traceback is a notebook's business, not the notes'
+        data = out.get("data") or {}
+        image = next((m for m in ("image/png", "image/jpeg", "image/gif", "image/webp") if m in data), None)
+        if image:
+            ext = {"image/png": ".png", "image/jpeg": ".jpg", "image/gif": ".gif", "image/webp": ".webp"}[image]
+            name = store_bytes(base64.b64decode(joined(data[image])), ext)
+            shown.append(f"![Figure](kb-media:{name})")
+        elif "image/svg+xml" in data:
+            name = store_bytes(joined(data["image/svg+xml"]).encode(), ".svg")
+            shown.append(f"![Figure](kb-media:{name})")
+        elif "text/html" in data:
+            html = joined(data["text/html"])
+            if "srcdoc=" in html:
+                continue  # a whole saved report page (pandas-profiling)
+            table = table_md(html) if "<table" in html.lower() else None
+            if table:
+                shown.append(table)
+            else:
+                text = html_text(html).strip()
+                if text and not NOISE.match(text):
+                    printed.append(text + "\n")
+        elif "text/markdown" in data:
+            shown.append(joined(data["text/markdown"]))
+        elif "text/latex" in data:
+            latex = joined(data["text/latex"]).strip()
+            shown.append(latex if latex.startswith("$") else f"$$\n{latex}\n$$")
+        elif "text/plain" in data:
+            text = joined(data["text/plain"])
+            if text.strip() and not NOISE.match(text):
+                printed.append(text.rstrip("\n") + "\n")
+    return clean_text("".join(printed)), shown
+
+
+def code_cell_md(src: str, outputs: list, lang: str, where: str) -> list[str]:
+    lines = [l for l in src.rstrip().split("\n") if not SETUP_LINE.match(l)]
+    code = "\n".join(lines).strip("\n")
+    if not code.strip():
+        return []
+    body = [l for l in code.split("\n") if l.strip()]
+    if all(INSTALL_LINE.match(l) for l in body):
+        # An install cell reads as the command to run, without its log.
+        return [fence("\n".join(re.sub(r"^\s*[!%]", "", l) for l in body), "bash")]
+    printed, shown = cell_outputs(outputs, where)
+    parts = [fence(code, lang)]
+    if printed:
+        # Directly after the program, so the page joins the two into one
+        # card with Code and Output tabs, as in the academy notes.
+        parts[0] += "\n" + fence(printed, "output")
+    return parts + shown
+
+
+def notebook_md(path: Path, rel: str) -> str:
     raw = path.read_text(encoding="utf-8", errors="replace")
     if not raw.strip():
-        return "> [!NOTE]\n> This notebook is empty in the archive.\n", {"cells": 0}
+        return ""
     nb = json.loads(raw)
     meta = nb.get("metadata", {})
     lang = (meta.get("language_info", {}).get("name") or meta.get("kernelspec", {}).get("language") or "python").lower()
     lang = {"java": "java", "javascript": "javascript", "typescript": "typescript"}.get(lang, "python" if "python" in lang else lang)
 
     parts: list[str] = []
-    cells = nb.get("cells", [])
-    images = 0
-    for i, cell in enumerate(cells):
+    for i, cell in enumerate(nb.get("cells", [])):
         where = f"{rel} cell {i}"
         src = joined(cell.get("source"))
         kind = cell.get("cell_type")
         if kind == "markdown":
-            if src.strip():
-                parts.append(jupyter_markdown(rewrite_images(src, path.parent, cell.get("attachments") or {}, where)))
+            text = COLAB_BADGE.sub("", src).strip()
+            if text:
+                parts.append(jupyter_markdown(rewrite_images(text, path.parent, cell.get("attachments") or {}, where)))
         elif kind == "code":
-            if src.strip():
-                parts.append(fence(src, lang))
-            for out in cell.get("outputs", []):
-                block = output_md(out, where)
-                if block:
-                    images += block.count("kb-media:")
-                    parts.append(block)
-        else:  # raw
-            if src.strip():
-                parts.append(fence(src, "text"))
-    body = "\n\n".join(p.strip("\n") for p in parts) + "\n"
-    images += body.count("kb-media:")  # rough, for the index only
-    return body, {"cells": len(cells)}
+            parts.extend(code_cell_md(src, cell.get("outputs", []), lang, where))
+        elif src.strip():  # raw cell: plain text in the notes
+            parts.append(src.strip())
+    return ("\n\n".join(p.strip("\n") for p in parts) + "\n") if parts else ""
 
 
 def text_md(path: Path) -> str:
@@ -638,7 +741,7 @@ def build():
     for subject in SUBJECTS:
         sections: list[dict] = []
 
-        def add(section: str, title: str, slug_parts: list[str], body: str, source: str | None, kind: str, extra: dict | None = None):
+        def add(section: str, title: str, slug_parts: list[str], body: str, source: str | None, kind: str):
             nonlocal count
             note_id = "/".join([subject["slug"], *[slugify(s) for s in slug_parts]])
             base, n = note_id, 2
@@ -653,26 +756,26 @@ def build():
                 sec = {"title": section, "notes": []}
                 sections.append(sec)
             title = TITLES.get(source or "", title)
-            sec["notes"].append({"id": note_id, "title": title, "file": file, "kind": kind, "source": source, **(extra or {})})
+            sec["notes"].append({"id": note_id, "title": title, "file": file, "kind": kind, "source": source})
             count += 1
 
         def walk(folder: Path, crumbs: list[str], slug_parts: list[str]):
             section = " › ".join(crumbs) if crumbs else subject["title"]
             entries = sorted(folder.iterdir(), key=lambda p: (p.is_dir(), natural_key(p.name)))
             loose: list[Path] = []
-            checkpoints: list[Path] = []
             for p in entries:
                 rel = p.relative_to(SRC).as_posix()
                 if p.is_dir():
                     if p.name == ".ipynb_checkpoints":
-                        checkpoints.extend(sorted(p.iterdir(), key=lambda q: natural_key(q.name)))
+                        continue  # Jupyter's autosaves: in the archive, not on the site
                     elif is_project(p):
                         add(section, f"{p.name} (code project)", [*slug_parts, p.name], project_md(p), rel, "project")
                     else:
                         walk(p, [*crumbs, section_label(p.name)], [*slug_parts, p.name])
                 elif p.suffix.lower() == NOTEBOOK:
-                    body, info = notebook_md(p, rel)
-                    add(section, pretty(p.name), [*slug_parts, p.name], body, rel, "notebook", info)
+                    body = notebook_md(p, rel)
+                    if body.strip():  # an empty notebook is not a note
+                        add(section, pretty(p.name), [*slug_parts, p.name], body, rel, "note")
                 elif p.suffix.lower() in {".txt", ".md"} or (p.suffix == "" and p.stat().st_size > 0 and folder == SRC):
                     add(section, pretty(p.name), [*slug_parts, p.name], text_md(p), rel, "text")
                 else:
@@ -681,23 +784,15 @@ def build():
                 title = "Files" if crumbs else f"Files — {subject['title']}"
                 body = "\n\n".join(file_entry(p) for p in loose) + "\n"
                 add(section, title, [*slug_parts, "files"], body, None, "files")
-            if checkpoints:
-                body = (
-                    "Earlier autosaved versions Jupyter kept beside the notebooks in this folder. "
-                    "They differ from the notebooks above, so they are kept; each renders below in full.\n\n"
-                )
-                for p in checkpoints:
-                    nb_body, _ = notebook_md(p, p.relative_to(SRC).as_posix())
-                    body += f"# {pretty(p.name.replace('-checkpoint', ''))} (earlier version)\n\n[Download {p.name}]({kb_file(p.relative_to(SRC).as_posix())})\n\n{nb_body}\n"
-                add(section, "Earlier versions (checkpoints)", [*slug_parts, "checkpoints"], body, None, "checkpoints")
 
         for top in subject["paths"]:
             p = SRC / top
             if p.is_dir():
                 walk(p, [], [])
             elif p.suffix.lower() == NOTEBOOK:
-                body, info = notebook_md(p, top)
-                add(subject["title"], pretty(p.name), [p.name], body, top, "notebook", info)
+                body = notebook_md(p, top)
+                if body.strip():
+                    add(subject["title"], pretty(p.name), [p.name], body, top, "note")
             else:
                 add(subject["title"], pretty(p.name) if p.suffix else "Temporary notes", [p.name], text_md(p), top, "text")
 

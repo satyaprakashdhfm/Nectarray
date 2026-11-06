@@ -826,7 +826,7 @@ By adjusting the sampling method (like greedy sampling, temperature sampling, or
 ---
 ---
 
- ## 1. **Performance Metrics**:
+## 1. **Performance Metrics**:
    - **Perplexity**: Measures how well a probability model predicts a sample. Lower perplexity indicates better performance.
    - **BLEU Score**: Used for evaluating machine translation, comparing the model output with one or more reference translations. Higher scores indicate better performance.
    - **ROUGE Score**: Commonly used for summarization tasks, it measures the overlap between the model-generated output and reference summaries. Higher scores indicate better performance.
@@ -860,8 +860,6 @@ By adjusting the sampling method (like greedy sampling, temperature sampling, or
 | Training Time                 | 10 hours                     | 12 hours                     |
 | F1 Score (for classification) | 0.85                       | 0.88                         |
 | Human Evaluation (score out of 5) | 3.5                     | 4.2                          |
-
- 
 
 ---
 ---

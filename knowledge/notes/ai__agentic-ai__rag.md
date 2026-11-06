@@ -779,7 +779,6 @@ Recommendation: Alternative treatment
 10. **Knowledge Types**: All five types (declarative, procedural, episodic, semantic, operational) needed for autonomy
 
 ```python
-
 from typing import List, Dict, TypedDict
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter

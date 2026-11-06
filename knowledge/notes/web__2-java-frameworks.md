@@ -329,7 +329,7 @@ Let me know if you want a side-by-side example of XML vs annotation config!
 
 - annotation types:
     1. stereotype annotations
-    2. 
+    2.
 
 ---
 ---
@@ -393,8 +393,6 @@ public class User {
 
 User user = entityManager.find(User.class, 1);
 ```
-
- 
 
 ---
 

@@ -1,4 +1,4 @@
 - quantization:
 - LORA and QLORA : 
 - using lamini fine tuning:
-- 
+-

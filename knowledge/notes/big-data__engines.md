@@ -117,7 +117,6 @@ model = lr.fit(df)
 | **Ease of Use**    | Complex Scala/Python code                                                                    | API methods (select, filter, groupBy)          | SQL syntax                                   |
 | **Performance**    | Slowest (no query optimization)                                                              | Optimized by Catalyst                          | Optimized + integrated with DataFrame engine |
 | **Industry Usage** | Complex data preprocessing in ML pipelines (e.g., parsing raw logs, custom graph algorithms) | ETL jobs, feature engineering, batch analytics | BI dashboards, reporting, ad-hoc analytics   |
- 
 
 ## - Spark RDD:
 - rdd reading and writing a file

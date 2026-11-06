@@ -305,7 +305,6 @@ https://www.youtube.com/watch?v=MXaJ7sa7q-8&list=PL0KQuRyPJoe6KjlUM6iNYgt8d0DwI-
 
  ---
 
- 
 1. Simple Random Sampling:
    - Every member of the population has an equal chance of being selected
    - Unbiased, but can be impractical for large populations
@@ -441,7 +440,7 @@ plt.savefig('frequency_distribution_charts.png', dpi=300)
 plt.show()
 ```
 
-![Output](kb-media:9a177cbdc6e29be8b027.png)
+![Figure](kb-media:9a177cbdc6e29be8b027.png)
 
 ## 3. Representing Frequency Distributions
 https://youtu.be/ZyUzRVa6hCM?si=LAggLu8WeCOyqxiE
@@ -697,8 +696,6 @@ Dispersion:
    - When comparing datasets, besides central tendency (mean, median), and dispersion (variance, standard deviation), skewness and kurtosis also become relevant.
      - **Skewness** indicates the symmetry of the data distribution. Positive skew means the tail is on the right, and negative skew means it’s on the left.
      - **Kurtosis** indicates the "tailedness" of the distribution. High kurtosis means more data is in the tails (outliers), while low kurtosis means the data is more evenly distributed around the mean.
-
- 
 
 ### Summary of "Explanatory and Response Variables, Correlation 
 https://youtu.be/DAH8DyLXdjM?si=dWdyQNfvLPVfcpOO
@@ -1103,7 +1100,7 @@ if __name__ == "__main__":
     plot_distributions()
 ```
 
-![Output](kb-media:38b022e2fd3523c142da.png)
+![Figure](kb-media:38b022e2fd3523c142da.png)
 
 I apologize for the confusion. You're right, let's present everything neatly without repeating content. Here's a clean, comprehensive notebook-style presentation of the probability distributions, including both the descriptive information and the plotting code:
 
@@ -1776,21 +1773,21 @@ plot_regression()
 plot_residuals()
 ```
 
-![Output](kb-media:8cc5da0e680597979595.png)
+![Figure](kb-media:8cc5da0e680597979595.png)
 
-![Output](kb-media:ea3b4459759880a1583c.png)
+![Figure](kb-media:ea3b4459759880a1583c.png)
 
-![Output](kb-media:010bf05c70278c7ac379.png)
+![Figure](kb-media:010bf05c70278c7ac379.png)
 
-![Output](kb-media:348105e300cd1afbf2fd.png)
+![Figure](kb-media:348105e300cd1afbf2fd.png)
 
-![Output](kb-media:f3bab93ddc29a2d5b317.png)
+![Figure](kb-media:f3bab93ddc29a2d5b317.png)
 
-![Output](kb-media:b2f434002ee52cd36db8.png)
+![Figure](kb-media:b2f434002ee52cd36db8.png)
 
-![Output](kb-media:e729e526f7c6b52e15d5.png)
+![Figure](kb-media:e729e526f7c6b52e15d5.png)
 
-![Output](kb-media:ca521ce3d7512f8f80c1.png)
+![Figure](kb-media:ca521ce3d7512f8f80c1.png)
 
 | **Test**                        | **Type**             | **Null Hypothesis (H₀)**                                      | **Alternative Hypothesis (H₁)**                                | **Example Question**                                                            | **When to Use**                                                                 | **Why Use This Test**                                                       | **Application in EDA**                                                   |
 |---------------------------------|---------------------|--------------------------------------------------------------|---------------------------------------------------------------|---------------------------------------------------------------------------------|--------------------------------------------------------------------------------|--------------------------------------------------------------------------|-------------------------------------------------------------------------| 
@@ -1807,8 +1804,6 @@ plot_residuals()
 | **Friedman Test**              | **Two-tailed**      | H₀: The distributions of the related groups are equal        | H₁: At least one distribution is different                      | Does the ranking of participants in a competition differ across multiple rounds? | When comparing three or more related groups.                                | To assess differences in ranks across related samples.                     | Useful for analyzing repeated measures.                                 |
 | **Regression Analysis**         | **Two-tailed**      | H₀: There is no relationship between the variables           | H₁: There is a relationship between the variables              | Does study time have an effect on exam scores?                                 | When investigating relationships between a dependent variable and one or more independent variables. | To understand how changes in independent variables affect a dependent variable. | Essential for feature importance in predictive modeling.                |
 | **Correlation Analysis**        | **Two-tailed**      | H₀: ρ = 0 (no correlation between the two variables)        | H₁: ρ ≠ 0 (there is a correlation between the two variables)  | Is there a correlation between exercise frequency and weight loss?              | When examining the strength and direction of a linear relationship between two continuous variables. | To determine the degree to which one variable is related to another.      | Helps in identifying features that have linear relationships with the target variable. |
-
- 
 
 In essence, plot_regression() and plot_residuals() are crucial tools in the process of hypothesis testing within the context of regression analysis. They provide visual support for the statistical tests we perform on regression models.
 

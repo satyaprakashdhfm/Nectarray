@@ -1,7 +1,3 @@
-```python
-%matplotlib inline
-```
-
 # A demo of K-Means clustering on the handwritten digits data
 
 In this example we compare the various initialization strategies for K-means in
@@ -39,8 +35,7 @@ data, labels = load_digits(return_X_y=True)
 
 print(f"# digits: {n_digits}; # samples: {n_samples}; # features {n_features}")
 ```
-
-```result
+```output
 # digits: 10; # samples: 1797; # features 64
 ```
 
@@ -143,8 +138,7 @@ bench_k_means(kmeans=kmeans, name="PCA-based", data=data, labels=labels)
 
 print(82 * "_")
 ```
-
-```result
+```output
 __________________________________________________________________________________
 init		time	inertia	homo	compl	v-meas	ARI	AMI	silhouette
 k-means++	1.208s	69662	0.680	0.719	0.699	0.570	0.695	0.182
@@ -214,4 +208,4 @@ plt.yticks(())
 plt.show()
 ```
 
-![Output](kb-media:79507b94ac14a2c4ffaa.png)
+![Figure](kb-media:79507b94ac14a2c4ffaa.png)

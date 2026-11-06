@@ -23,8 +23,7 @@ from sklearn.tree import DecisionTreeRegressor
 regressor = DecisionTreeRegressor(random_state = 0)
 regressor.fit(X, y)
 ```
-
-```result
+```output
 DecisionTreeRegressor(ccp_alpha=0.0, criterion='mse', max_depth=None,
                       max_features=None, max_leaf_nodes=None,
                       min_impurity_decrease=0.0, min_impurity_split=None,
@@ -38,8 +37,7 @@ DecisionTreeRegressor(ccp_alpha=0.0, criterion='mse', max_depth=None,
 ```python
 regressor.predict([[6.5]])
 ```
-
-```result
+```output
 array([150000.])
 ```
 
@@ -56,4 +54,4 @@ plt.ylabel('Salary')
 plt.show()
 ```
 
-![Output](kb-media:7f0b733796109984447a.png)
+![Figure](kb-media:7f0b733796109984447a.png)

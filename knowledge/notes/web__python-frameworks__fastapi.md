@@ -1487,7 +1487,7 @@ is_past = datetime(2020, 1, 1) < datetime.now()
 ---
 
 - type hinting: mypy just a meta data like typing libraray
-- type checking ( data validation) : while running check and raise error 
+- type checking ( data validation) : while running check and raise error
 
 # Python typing Library - Quick Notes
 

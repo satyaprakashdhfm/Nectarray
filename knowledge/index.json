@@ -13,9 +13,8 @@
        "id": "ai/models-vocabulary",
        "title": "Models vocabulary",
        "file": "ai__models-vocabulary.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/models_vocabulary.ipynb",
-       "cells": 2
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/models_vocabulary.ipynb"
       }
      ]
     },
@@ -26,25 +25,22 @@
        "id": "ai/0-data-preprocessin/notes-eda",
        "title": "EDA notes",
        "file": "ai__0-data-preprocessin__notes-eda.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/0.DATA PREPROCESSIN/NOTES_EDA.ipynb",
-       "cells": 32
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/0.DATA PREPROCESSIN/NOTES_EDA.ipynb"
       },
       {
        "id": "ai/0-data-preprocessin/notes-statics",
        "title": "Statistics notes",
        "file": "ai__0-data-preprocessin__notes-statics.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/0.DATA PREPROCESSIN/NOTES_STATICS.ipynb",
-       "cells": 46
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/0.DATA PREPROCESSIN/NOTES_STATICS.ipynb"
       },
       {
        "id": "ai/0-data-preprocessin/python-libraries",
        "title": "Python libraries",
        "file": "ai__0-data-preprocessin__python-libraries.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/0.DATA PREPROCESSIN/python_libraries.ipynb",
-       "cells": 20
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/0.DATA PREPROCESSIN/python_libraries.ipynb"
       }
      ]
     },
@@ -67,9 +63,8 @@
        "id": "ai/1-ml/notes-ml",
        "title": "Machine learning notes",
        "file": "ai__1-ml__notes-ml.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/NOTES_ML.ipynb",
-       "cells": 45
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/NOTES_ML.ipynb"
       }
      ]
     },
@@ -80,80 +75,64 @@
        "id": "ai/1-ml/1-ml-regression/decision-tree-regression",
        "title": "Decision tree regression",
        "file": "ai__1-ml__1-ml-regression__decision-tree-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/decision_tree_regression.ipynb",
-       "cells": 11
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/decision_tree_regression.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/linear-regression-ml-implementation-ipynb",
        "title": "Linear Regression ML Implementation",
        "file": "ai__1-ml__1-ml-regression__linear-regression-ml-implementation-ipynb.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/Linear Regression ML Implementation.ipynb.ipynb",
-       "cells": 55
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/Linear Regression ML Implementation.ipynb.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/logistic-regression-practice-project",
        "title": "Logistic Regression Practice Project",
        "file": "ai__1-ml__1-ml-regression__logistic-regression-practice-project.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/Logistic Regression Practice Project.ipynb",
-       "cells": 52
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/Logistic Regression Practice Project.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/logistic-regression",
        "title": "Logistic regression",
        "file": "ai__1-ml__1-ml-regression__logistic-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/logistic_regression.ipynb",
-       "cells": 27
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/logistic_regression.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/multiple-linear-regression",
        "title": "Multiple linear regression",
        "file": "ai__1-ml__1-ml-regression__multiple-linear-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/multiple_linear_regression.ipynb",
-       "cells": 15
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/multiple_linear_regression.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/polynomial-regression",
        "title": "Polynomial regression",
        "file": "ai__1-ml__1-ml-regression__polynomial-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/polynomial_regression.ipynb",
-       "cells": 19
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/polynomial_regression.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/random-forest-regression",
        "title": "Random forest regression",
        "file": "ai__1-ml__1-ml-regression__random-forest-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/random_forest_regression.ipynb",
-       "cells": 11
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/random_forest_regression.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/regression-basic-class",
        "title": "Regression basic class",
        "file": "ai__1-ml__1-ml-regression__regression-basic-class.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/regression basic class.ipynb",
-       "cells": 19
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/regression basic class.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/support-vector-regression",
        "title": "Support vector regression",
        "file": "ai__1-ml__1-ml-regression__support-vector-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/support_vector_regression.ipynb",
-       "cells": 21
-      },
-      {
-       "id": "ai/1-ml/1-ml-regression/checkpoints",
-       "title": "Earlier versions (checkpoints)",
-       "file": "ai__1-ml__1-ml-regression__checkpoints.md",
-       "kind": "checkpoints",
-       "source": null
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/support_vector_regression.ipynb"
       }
      ]
     },
@@ -164,94 +143,70 @@
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/best-logistic-regression",
        "title": "Logistic regression (best version)",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__best-logistic-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/BEST--logistic regression.ipynb",
-       "cells": 60
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/BEST--logistic regression.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/decision-tree-classification",
        "title": "Decision tree classification",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__decision-tree-classification.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/decision_tree_classification.ipynb",
-       "cells": 27
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/decision_tree_classification.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/k-nearest-neighbors",
        "title": "K nearest neighbors",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__k-nearest-neighbors.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/k_nearest_neighbors.ipynb",
-       "cells": 27
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/k_nearest_neighbors.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/kernel-svm",
        "title": "Kernel svm",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__kernel-svm.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/kernel_svm.ipynb",
-       "cells": 27
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/kernel_svm.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/logistic-regression",
        "title": "Logistic regression",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__logistic-regression.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/logistic_regression.ipynb",
-       "cells": 30
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/logistic_regression.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/naive-bayes",
        "title": "Naive bayes",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__naive-bayes.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/naive_bayes.ipynb",
-       "cells": 27
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/naive_bayes.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/notes-ml",
        "title": "Classification notes",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__notes-ml.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/Notes_ML.ipynb",
-       "cells": 10
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/Notes_ML.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/random-forest-classification",
        "title": "Random forest classification",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__random-forest-classification.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/random_forest_classification.ipynb",
-       "cells": 28
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/random_forest_classification.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/support-vector-machine",
        "title": "Support vector machine",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__support-vector-machine.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/support_vector_machine.ipynb",
-       "cells": 28
-      },
-      {
-       "id": "ai/1-ml/1-ml-regression/2-ml-classification/untitled",
-       "title": "Untitled",
-       "file": "ai__1-ml__1-ml-regression__2-ml-classification__untitled.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/Untitled.ipynb",
-       "cells": 0
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/2.ML CLASSIFICATION/support_vector_machine.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/2-ml-classification/files",
        "title": "Files",
        "file": "ai__1-ml__1-ml-regression__2-ml-classification__files.md",
        "kind": "files",
-       "source": null
-      },
-      {
-       "id": "ai/1-ml/1-ml-regression/2-ml-classification/checkpoints",
-       "title": "Earlier versions (checkpoints)",
-       "file": "ai__1-ml__1-ml-regression__2-ml-classification__checkpoints.md",
-       "kind": "checkpoints",
        "source": null
       }
      ]
@@ -263,33 +218,29 @@
        "id": "ai/1-ml/1-ml-regression/3-ml-clustring/dbscan",
        "title": "DBscan",
        "file": "ai__1-ml__1-ml-regression__3-ml-clustring__dbscan.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/DBscan.ipynb",
-       "cells": 7
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/DBscan.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/3-ml-clustring/hierarchical-clustering",
        "title": "Hierarchical clustering",
        "file": "ai__1-ml__1-ml-regression__3-ml-clustring__hierarchical-clustering.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/hierarchical_clustering.ipynb",
-       "cells": 18
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/hierarchical_clustering.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/3-ml-clustring/k-means-clustering",
        "title": "K means clustering",
        "file": "ai__1-ml__1-ml-regression__3-ml-clustring__k-means-clustering.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/k_means_clustering.ipynb",
-       "cells": 15
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/k_means_clustering.ipynb"
       },
       {
        "id": "ai/1-ml/1-ml-regression/3-ml-clustring/plot-kmeans-digits",
        "title": "Plot kmeans digits",
        "file": "ai__1-ml__1-ml-regression__3-ml-clustring__plot-kmeans-digits.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/plot_kmeans_digits.ipynb",
-       "cells": 11
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/1.ML/1.ML REGRESSION/3.ML CLUSTRING/plot_kmeans_digits.ipynb"
       }
      ]
     },
@@ -300,17 +251,15 @@
        "id": "ai/4-dl/dlnotes",
        "title": "Deep learning notes",
        "file": "ai__4-dl__dlnotes.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/4.DL/DLnotes.ipynb",
-       "cells": 39
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/4.DL/DLnotes.ipynb"
       },
       {
        "id": "ai/4-dl/eda-dl",
        "title": "Deep learning EDA",
        "file": "ai__4-dl__eda-dl.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/4.DL/EDA_DL.ipynb",
-       "cells": 6
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/4.DL/EDA_DL.ipynb"
       }
      ]
     },
@@ -321,25 +270,22 @@
        "id": "ai/5-cv/cnn-eda",
        "title": "CNN EDA",
        "file": "ai__5-cv__cnn-eda.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/5.CV/cnn_eda.ipynb",
-       "cells": 53
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/5.CV/cnn_eda.ipynb"
       },
       {
        "id": "ai/5-cv/cnn-notes",
        "title": "CNN notes",
        "file": "ai__5-cv__cnn-notes.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/5.CV/cnn_notes.ipynb",
-       "cells": 72
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/5.CV/cnn_notes.ipynb"
       },
       {
        "id": "ai/5-cv/object-detection-of-chair-without-using-pretrained-ml-dl-cnn-models",
        "title": "Chair detection without pretrained models",
        "file": "ai__5-cv__object-detection-of-chair-without-using-pretrained-ml-dl-cnn-models.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/5.CV/Object_detection_of_chair_without_using_pretrained_ml|dl|cnn_models.ipynb",
-       "cells": 4
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/5.CV/Object_detection_of_chair_without_using_pretrained_ml|dl|cnn_models.ipynb"
       },
       {
        "id": "ai/5-cv/files",
@@ -357,17 +303,15 @@
        "id": "ai/6-nlp/nlp-eda",
        "title": "NLP EDA",
        "file": "ai__6-nlp__nlp-eda.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP EDA.ipynb",
-       "cells": 32
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP EDA.ipynb"
       },
       {
        "id": "ai/6-nlp/nlp-notes",
        "title": "NLP notes",
        "file": "ai__6-nlp__nlp-notes.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP Notes.ipynb",
-       "cells": 50
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP Notes.ipynb"
       }
      ]
     },
@@ -378,49 +322,43 @@
        "id": "ai/6-nlp/nlp-notebooks/1-llm-context-viewer",
        "title": "LLM context viewer",
        "file": "ai__6-nlp__nlp-notebooks__1-llm-context-viewer.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/1.LLM_context_viewer.ipynb",
-       "cells": 9
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/1.LLM_context_viewer.ipynb"
       },
       {
        "id": "ai/6-nlp/nlp-notebooks/2-reasoning",
        "title": "Reasoning",
        "file": "ai__6-nlp__nlp-notebooks__2-reasoning.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/2.Reasoning.ipynb",
-       "cells": 5
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/2.Reasoning.ipynb"
       },
       {
        "id": "ai/6-nlp/nlp-notebooks/3-security-llm",
        "title": "LLM security",
        "file": "ai__6-nlp__nlp-notebooks__3-security-llm.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/3.security_llm.ipynb",
-       "cells": 10
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/3.security_llm.ipynb"
       },
       {
        "id": "ai/6-nlp/nlp-notebooks/4-rag-rlfh-finetune",
        "title": "RAG, RLHF & fine-tuning",
        "file": "ai__6-nlp__nlp-notebooks__4-rag-rlfh-finetune.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/4.rag+rlfh+finetune.ipynb",
-       "cells": 50
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/4.rag+rlfh+finetune.ipynb"
       },
       {
        "id": "ai/6-nlp/nlp-notebooks/6-llm-distillation",
        "title": "LLM Distillation",
        "file": "ai__6-nlp__nlp-notebooks__6-llm-distillation.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/6_LLM_Distillation.ipynb",
-       "cells": 4
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/6_LLM_Distillation.ipynb"
       },
       {
        "id": "ai/6-nlp/nlp-notebooks/rag-with-knowledge-graph-neo4j",
        "title": "RAG with a knowledge graph (Neo4j)",
        "file": "ai__6-nlp__nlp-notebooks__rag-with-knowledge-graph-neo4j.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/RAG_With_Knowledge_graph(Neo4j).ipynb",
-       "cells": 56
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/6.NLP/NLP-NOTEBOOKS/RAG_With_Knowledge_graph(Neo4j).ipynb"
       }
      ]
     },
@@ -431,9 +369,8 @@
        "id": "ai/7-multimodels/models-architecture",
        "title": "Model architectures",
        "file": "ai__7-multimodels__models-architecture.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/7.MULTIMODELS/Models_architecture.ipynb",
-       "cells": 14
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/7.MULTIMODELS/Models_architecture.ipynb"
       }
      ]
     },
@@ -451,25 +388,22 @@
        "id": "ai/agentic-ai/langchain",
        "title": "LangChain",
        "file": "ai__agentic-ai__langchain.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/agentic_AI/langchain.ipynb",
-       "cells": 8
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/agentic_AI/langchain.ipynb"
       },
       {
        "id": "ai/agentic-ai/langgraph",
        "title": "LangGraph",
        "file": "ai__agentic-ai__langgraph.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/agentic_AI/langgraph.ipynb",
-       "cells": 4
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/agentic_AI/langgraph.ipynb"
       },
       {
        "id": "ai/agentic-ai/rag",
        "title": "RAG",
        "file": "ai__agentic-ai__rag.md",
-       "kind": "notebook",
-       "source": "18CSC305J-Artificial intellegence/agentic_AI/rag.ipynb",
-       "cells": 3
+       "kind": "note",
+       "source": "18CSC305J-Artificial intellegence/agentic_AI/rag.ipynb"
       },
       {
        "id": "ai/agentic-ai/demo-master",
@@ -495,33 +429,29 @@
        "id": "core-cs/18csc203j-coa",
        "title": "Computer Organisation & Architecture (18CSC203J)",
        "file": "core-cs__18csc203j-coa.md",
-       "kind": "notebook",
-       "source": "18CSE......... - ComputerScienceConcepts/18CSC203J-COA.ipynb",
-       "cells": 2
+       "kind": "note",
+       "source": "18CSE......... - ComputerScienceConcepts/18CSC203J-COA.ipynb"
       },
       {
        "id": "core-cs/18csc205j-os",
        "title": "Operating Systems (18CSC205J)",
        "file": "core-cs__18csc205j-os.md",
-       "kind": "notebook",
-       "source": "18CSE......... - ComputerScienceConcepts/18CSC205J-OS.ipynb",
-       "cells": 2
+       "kind": "note",
+       "source": "18CSE......... - ComputerScienceConcepts/18CSC205J-OS.ipynb"
       },
       {
        "id": "core-cs/18csc302j-cn",
        "title": "Computer Networks (18CSC302J)",
        "file": "core-cs__18csc302j-cn.md",
-       "kind": "notebook",
-       "source": "18CSE......... - ComputerScienceConcepts/18CSC302J-CN.ipynb",
-       "cells": 5
+       "kind": "note",
+       "source": "18CSE......... - ComputerScienceConcepts/18CSC302J-CN.ipynb"
       },
       {
        "id": "core-cs/18csc303j-dbms",
        "title": "DBMS (18CSC303J)",
        "file": "core-cs__18csc303j-dbms.md",
-       "kind": "notebook",
-       "source": "18CSE......... - ComputerScienceConcepts/18CSC303J-dbms.ipynb",
-       "cells": 4
+       "kind": "note",
+       "source": "18CSE......... - ComputerScienceConcepts/18CSC303J-dbms.ipynb"
       },
       {
        "id": "core-cs/files",
@@ -547,65 +477,57 @@
        "id": "languages/0-bash-scripting",
        "title": "Bash scripting",
        "file": "languages__0-bash-scripting.md",
-       "kind": "notebook",
-       "source": "Languages/0.bash_scripting.ipynb",
-       "cells": 5
+       "kind": "note",
+       "source": "Languages/0.bash_scripting.ipynb"
       },
       {
        "id": "languages/1-sql",
        "title": "SQL",
        "file": "languages__1-sql.md",
-       "kind": "notebook",
-       "source": "Languages/1. SQL.ipynb",
-       "cells": 27
+       "kind": "note",
+       "source": "Languages/1. SQL.ipynb"
       },
       {
        "id": "languages/2-python",
        "title": "Python",
        "file": "languages__2-python.md",
-       "kind": "notebook",
-       "source": "Languages/2. PYTHON.ipynb",
-       "cells": 68
+       "kind": "note",
+       "source": "Languages/2. PYTHON.ipynb"
       },
       {
        "id": "languages/3-java",
        "title": "Java",
        "file": "languages__3-java.md",
-       "kind": "notebook",
-       "source": "Languages/3. java.ipynb",
-       "cells": 49
+       "kind": "note",
+       "source": "Languages/3. java.ipynb"
       },
       {
        "id": "languages/4-1-html-css",
        "title": "HTML & CSS",
        "file": "languages__4-1-html-css.md",
-       "kind": "notebook",
-       "source": "Languages/4.1 html-css.ipynb",
-       "cells": 8
+       "kind": "note",
+       "source": "Languages/4.1 html-css.ipynb"
       },
       {
        "id": "languages/4-javascript",
        "title": "JavaScript",
        "file": "languages__4-javascript.md",
-       "kind": "notebook",
-       "source": "Languages/4. javascript.ipynb",
-       "cells": 48
+       "kind": "note",
+       "source": "Languages/4. javascript.ipynb"
       },
       {
        "id": "languages/5-dsa",
        "title": "DSA",
        "file": "languages__5-dsa.md",
-       "kind": "notebook",
-       "source": "Languages/5.DSA.ipynb",
-       "cells": 77
+       "kind": "note",
+       "source": "Languages/5.DSA.ipynb"
       },
       {
        "id": "languages/6-advance-dsa-graph-engineering",
        "title": "Advanced DSA (graph engineering)",
        "file": "languages__6-advance-dsa-graph-engineering.md",
-       "kind": "notebook",
-       "source": "Languages/6.ADVANCE_DSA(Graph_engineering).ipynb",
-       "cells": 18
+       "kind": "note",
+       "source": "Languages/6.ADVANCE_DSA(Graph_engineering).ipynb"
       }
      ]
     },
@@ -636,41 +558,29 @@
        "id": "web/2-java-frameworks",
        "title": "Java frameworks",
        "file": "web__2-java-frameworks.md",
-       "kind": "notebook",
-       "source": "Web/2.java_frameworks.ipynb",
-       "cells": 34
-      },
-      {
-       "id": "web/3-web3",
-       "title": "Web3",
-       "file": "web__3-web3.md",
-       "kind": "notebook",
-       "source": "Web/3.Web3.ipynb",
-       "cells": 0
+       "kind": "note",
+       "source": "Web/2.java_frameworks.ipynb"
       },
       {
        "id": "web/4-api",
        "title": "APIs",
        "file": "web__4-api.md",
-       "kind": "notebook",
-       "source": "Web/4.api.ipynb",
-       "cells": 5
+       "kind": "note",
+       "source": "Web/4.api.ipynb"
       },
       {
        "id": "web/browser",
        "title": "Browsers",
        "file": "web__browser.md",
-       "kind": "notebook",
-       "source": "Web/browser.ipynb",
-       "cells": 5
+       "kind": "note",
+       "source": "Web/browser.ipynb"
       },
       {
        "id": "web/web-overview",
        "title": "Web overview",
        "file": "web__web-overview.md",
-       "kind": "notebook",
-       "source": "Web/Web_overview.ipynb",
-       "cells": 9
+       "kind": "note",
+       "source": "Web/Web_overview.ipynb"
       }
      ]
     },
@@ -681,17 +591,15 @@
        "id": "web/js-frameworks/nodejs",
        "title": "Node.js",
        "file": "web__js-frameworks__nodejs.md",
-       "kind": "notebook",
-       "source": "Web/Js_frameworks/nodejs.ipynb",
-       "cells": 9
+       "kind": "note",
+       "source": "Web/Js_frameworks/nodejs.ipynb"
       },
       {
        "id": "web/js-frameworks/reactjs",
        "title": "React",
        "file": "web__js-frameworks__reactjs.md",
-       "kind": "notebook",
-       "source": "Web/Js_frameworks/reactjs.ipynb",
-       "cells": 7
+       "kind": "note",
+       "source": "Web/Js_frameworks/reactjs.ipynb"
       }
      ]
     },
@@ -702,17 +610,15 @@
        "id": "web/python-frameworks/fastapi",
        "title": "FastAPI",
        "file": "web__python-frameworks__fastapi.md",
-       "kind": "notebook",
-       "source": "Web/python_frameworks/fastapi.ipynb",
-       "cells": 12
+       "kind": "note",
+       "source": "Web/python_frameworks/fastapi.ipynb"
       },
       {
        "id": "web/python-frameworks/microservices",
        "title": "Microservices",
        "file": "web__python-frameworks__microservices.md",
-       "kind": "notebook",
-       "source": "Web/python_frameworks/MicroServices.ipynb",
-       "cells": 4
+       "kind": "note",
+       "source": "Web/python_frameworks/MicroServices.ipynb"
       }
      ]
     }
@@ -731,9 +637,8 @@
        "id": "software/software-development-and-systemdesign",
        "title": "Software Development & SystemDesign",
        "file": "software__software-development-and-systemdesign.md",
-       "kind": "notebook",
-       "source": "Software Development & SystemDesign.ipynb",
-       "cells": 14
+       "kind": "note",
+       "source": "Software Development & SystemDesign.ipynb"
       }
      ]
     }
@@ -752,41 +657,36 @@
        "id": "devops/ai-and-ml-ops",
        "title": "AI & ML ops",
        "file": "devops__ai-and-ml-ops.md",
-       "kind": "notebook",
-       "source": "Devops/ai&ml_ops.ipynb",
-       "cells": 2
+       "kind": "note",
+       "source": "Devops/ai&ml_ops.ipynb"
       },
       {
        "id": "devops/cloud",
        "title": "Cloud",
        "file": "devops__cloud.md",
-       "kind": "notebook",
-       "source": "Devops/cloud.ipynb",
-       "cells": 2
+       "kind": "note",
+       "source": "Devops/cloud.ipynb"
       },
       {
        "id": "devops/docker-and-k8s",
        "title": "Docker & Kubernetes",
        "file": "devops__docker-and-k8s.md",
-       "kind": "notebook",
-       "source": "Devops/docker&k8s.ipynb",
-       "cells": 8
+       "kind": "note",
+       "source": "Devops/docker&k8s.ipynb"
       },
       {
        "id": "devops/notes",
        "title": "DevOps notes",
        "file": "devops__notes.md",
-       "kind": "notebook",
-       "source": "Devops/Notes.ipynb",
-       "cells": 14
+       "kind": "note",
+       "source": "Devops/Notes.ipynb"
       },
       {
        "id": "devops/tools",
        "title": "Tools",
        "file": "devops__tools.md",
-       "kind": "notebook",
-       "source": "Devops/tools.ipynb",
-       "cells": 2
+       "kind": "note",
+       "source": "Devops/tools.ipynb"
       }
      ]
     }
@@ -805,17 +705,15 @@
        "id": "big-data/big-data-overview",
        "title": "Big data overview",
        "file": "big-data__big-data-overview.md",
-       "kind": "notebook",
-       "source": "18CSE489T - Bigdata & streaming analytics/Big_data_overview.ipynb",
-       "cells": 37
+       "kind": "note",
+       "source": "18CSE489T - Bigdata & streaming analytics/Big_data_overview.ipynb"
       },
       {
        "id": "big-data/engines",
        "title": "Engines",
        "file": "big-data__engines.md",
-       "kind": "notebook",
-       "source": "18CSE489T - Bigdata & streaming analytics/Engines.ipynb",
-       "cells": 12
+       "kind": "note",
+       "source": "18CSE489T - Bigdata & streaming analytics/Engines.ipynb"
       }
      ]
     }
@@ -834,9 +732,8 @@
        "id": "aptitude/aptitude",
        "title": "Aptitude",
        "file": "aptitude__aptitude.md",
-       "kind": "notebook",
-       "source": "Aptitude.ipynb",
-       "cells": 2
+       "kind": "note",
+       "source": "Aptitude.ipynb"
       }
      ]
     }
@@ -855,17 +752,15 @@
        "id": "placement/dsa",
        "title": "DSA practice",
        "file": "placement__dsa.md",
-       "kind": "notebook",
-       "source": "PLACEMENT_WORKS/DSA.ipynb",
-       "cells": 9
+       "kind": "note",
+       "source": "PLACEMENT_WORKS/DSA.ipynb"
       },
       {
        "id": "placement/factwise-answer",
        "title": "Factwise — answer",
        "file": "placement__factwise-answer.md",
-       "kind": "notebook",
-       "source": "PLACEMENT_WORKS/factwise_answer.ipynb",
-       "cells": 7
+       "kind": "note",
+       "source": "PLACEMENT_WORKS/factwise_answer.ipynb"
       },
       {
        "id": "placement/factwise-problem-django-txt",

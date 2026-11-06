@@ -291,7 +291,6 @@ Here's a concise overview of the main data types in Python:
 
 mutable vs immutable 
 - **Mutable objects allow in-place modification (like `my_list[5] = 6`), while "updating" immutable objects like strings (`my_string[5] = 's'`) is not allowed and instead requires creating a new object.**
- 
 
 While immutability and hashability often go hand-in-hand, they are not the same thing. Here’s a clearer explanation:
 
@@ -420,14 +419,6 @@ In Python, characters are just strings of length 1, so character methods are ess
 - **`float([x])`** - Converts a number or string to a floating-point number.
 - **`.as_integer_ratio()`** - Returns a tuple representing the fraction of the floating-point number.
 
-
-
-
-
-
-
- 
-
 Here’s a list of commonly used Python built-in functions and methods, arranged by their general frequency of use:
 
 1. **`len(s)`** - Returns the length (number of items) of an object.
@@ -533,7 +524,6 @@ print(f"{person2.name} is {person2.age} years old.")  # Output: Bob is 0 years o
 - Encapsulation,
 - Inheritance,
 - Data Abstraction,
- 
 
 ## Class: group of similar objects -- blue print  or templates in which objects are created
 
@@ -638,8 +628,7 @@ person1.is_adult(30)  # Output: True
 print(Person.get_number_of_people)
 print(Person.is_adult)
 ```
-
-```result
+```output
 Hello, my name is Alice and I am 30 years old.
 2
 True
@@ -675,8 +664,7 @@ class Vector:
 vec=Vector(2,3)+Vector(3,5)
 print(vec.x, vec.y)  # Output: 5 8
 ```
-
-```result
+```output
 <class '__main__.Person'>
 <class 'str'>
 5 8
@@ -796,8 +784,7 @@ print(intern_employee.greet())
 print(adult.greet())
 print(retired.greet())
 ```
-
-```result
+```output
 Hello, my name is John and I am 40 years old.
 Hi, I'm Alice, a student with ID S1234.
 Hello, I'm Bob, an employee with ID E5678.
@@ -963,8 +950,7 @@ p2 = Point(3, 4)
 p3 = p1 + p2
 print(f"({p3.x}, {p3.y})")  # Output: (4, 6)
 ```
-
-```result
+```output
 Duck flying
 Airplane flying
 Buddy says Woof!
@@ -975,10 +961,7 @@ Whiskers says Meow!
 Positional arguments:
 1
 2
-3
-
-Keyword arguments:
-name: Alice
+… (4 more lines)
 age: 30
 city: New York
 (4, 6)
@@ -1093,8 +1076,7 @@ scooter.show_brand()
 scooter.start()
 scooter.show_battery()
 ```
-
-```result
+```output
 Brand: Toyota
 Car started with key ignition.
 Brand: Honda
@@ -1216,8 +1198,7 @@ acc.show_branch()           # ✅ public
 # ⚠️ Still possible (name mangling, not true private)
 # print(acc._BankAccount__account_number)  # 😬 possible but discouraged
 ```
-
-```result
+```output
 Private Info: 123456
 Account Number: 123456
 Account Holder: Alice
@@ -1293,7 +1274,6 @@ A language feature (using `@`) that wraps a function or method to modify or exte
     2. function execution check
 
 ```python
-
 def outer(fuck):
     def inner(*args): # just a norma habit to write * args(for values), **kwargs (for extra keywrod arguments as a dictory like a=2 as {'a'=2})
         print('inner executed this before {}'.format(fuck.__name__))
@@ -1309,8 +1289,7 @@ def display_data(name, age):
 display()
 display_data('surya', 26)
 ```
-
-```result
+```output
 inner executed this before display_data
 Decorator1: there is a king with certain name and age
 display_info ran with arguments: surya, 26
@@ -1334,8 +1313,7 @@ def display_info(name,age):
 
 display_info('satya',25)
 ```
-
-```result
+```output
 Call executed this before display_info
 Decorator: there is a king with certain name and age
 here are name and age: satya, 25
@@ -1376,8 +1354,7 @@ def display_info(name, age): # display_info = my_logger(my_timer(display_info))
 
 display_info('satya', 26)
 ```
-
-```result
+```output
 display_info ran with arguments: satya, 26
 Ran display_info in: 0.000102996826171875 sec
 ```
@@ -1454,8 +1431,7 @@ try:
 except ZeroDivisionError:
     print("You cannot divide by zero!")
 ```
-
-```result
+```output
 You cannot divide by zero!
 ```
 
@@ -1469,8 +1445,7 @@ except FileNotFoundError as err:
 except Exception as e:
     print(f"An error occurred: {e}") # if file there then it should have printed Custom error: File is named 'curruptfile.txt'
 ```
-
-```result
+```output
 FileNotFoundError: [Errno 2] No such file or directory: 'curruptfile.txt'
 ```
 
@@ -1525,8 +1500,7 @@ do_something() # synchronous execution, each call waits for the previous one to 
 finish = time.perf_counter()
 print(f"Finished in {round(finish - start, 2)} second(s)")
 ```
-
-```result
+```output
 Sleeping for 1 second...
 Done sleeping!
 Sleeping for 1 second...
@@ -1557,8 +1531,7 @@ t2.join()  # Wait for the second thread to finish - making code synchronous agai
 finish = time.perf_counter()
 print(f"Threads finished at {round(finish - start, 2)} second(s)") # prints 0.0 without join because of going to next line without any waiting for sleep completion in python, lack of synchronization. # python and c++ are asynchronous by nature, but c is synchronous by nature.
 ```
-
-```result
+```output
 Thread is sleeping for 1 second...
 Thread is sleeping for 1 second...
 Thread done sleeping!
@@ -1587,8 +1560,7 @@ for t in threads:  # Wait for each thread to finish
 finish = time.perf_counter()
 print(f"Threads finished at {round(finish - start, 2)} second(s)")
 ```
-
-```result
+```output
 Thread is sleeping for 1.5 seconds...
 Thread is sleeping for 1.5 seconds...
 Thread is sleeping for 1.5 seconds...
@@ -1599,14 +1571,7 @@ Thread is sleeping for 1.5 seconds...
 Thread is sleeping for 1.5 seconds...
 Thread is sleeping for 1.5 seconds...
 Thread is sleeping for 1.5 seconds...
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
+… (8 more lines)
 Thread done sleeping!
 Thread done sleeping!
 Threads started at 1.5 second(s)
@@ -1634,8 +1599,7 @@ finish = time.perf_counter()
 print(f"Threads finished at {round(finish - start, 2)} second(s)")
 # checkout this function min(32, os.cpu_count() + 4).
 ```
-
-```result
+```output
 Thread is sleeping for 1 seconds...
 Thread is sleeping for 1 seconds...
 Thread is sleeping for 1 seconds...
@@ -1646,14 +1610,7 @@ Thread is sleeping for 1 seconds...
 Thread is sleeping for 1 seconds...
 Thread is sleeping for 1 seconds...
 Thread is sleeping for 1 seconds...
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
-Thread done sleeping!
+… (8 more lines)
 Thread done sleeping!
 Thread done sleeping!
 Threads started at 1.01 second(s)
@@ -1682,8 +1639,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
 finish = time.perf_counter()
 print(f"Threads finished at {round(finish - start, 2)} second(s)")
 ```
-
-```result
+```output
 Thread is sleeping for 5 seconds...
 Thread is sleeping for 4 seconds...
 Thread is sleeping for 3 seconds...
@@ -1740,8 +1696,7 @@ t2 = time.perf_counter()
 
 print(f'Finished in {t2-t1} seconds')
 ```
-
-```result
+```output
 photo-1516117172878-fd2c41f4a759.jpg was downloaded to downloaded_images...
 photo-1532009324734-20a7a5813719.jpg was downloaded to downloaded_images...
 photo-1524429656589-6633a470097c.jpg was downloaded to downloaded_images...
@@ -1789,30 +1744,18 @@ for p in process:  # Wait for each process to finish
 finish = time.perf_counter()
 print(f"Finished in {round(finish - start, 2)} second(s)")
 ```
-
-```result
+```output
 Sleeping for 1.5 second...Sleeping for 1.5 second...
 
 Sleeping for 1.5 second...Sleeping for 1.5 second...Sleeping for 1.5 second...
 
 
-Sleeping for 1.5 second...
-```
-
-```result
-Sleeping for 1.5 second...
+Sleeping for 1.5 second...Sleeping for 1.5 second...
 
 Sleeping for 1.5 second...Sleeping for 1.5 second...
 
 Sleeping for 1.5 second...
-Done sleeping! 
-Done sleeping! 
-Done sleeping! 
-Done sleeping! Done sleeping! 
-
-Done sleeping! Done sleeping! 
-
-Done sleeping! Done sleeping! Done sleeping! 
+… (8 more lines)
 
 
 Finished in 1.63 second(s)
@@ -1839,8 +1782,7 @@ with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
 finish = time.perf_counter()
 print(f"Finished in {round(finish - start, 2)} second(s)")
 ```
-
-```result
+```output
 Sleeping for 1.5 second...Sleeping for 1.5 second...Sleeping for 1.5 second...
 Sleeping for 1.5 second...Sleeping for 1.5 second...Sleeping for 1.5 second...Sleeping for 1.5 second...Sleeping for 1.5 second...
 
@@ -1851,14 +1793,7 @@ Sleeping for 1.5 second...
 
 
 Sleeping for 1.5 second...
-Done sleeping!
-Done sleeping!
-Done sleeping!Done sleeping!Done sleeping!Done sleeping!
-Done sleeping!Done sleeping!Done sleeping!Done sleeping!
-
-
-
-
+… (8 more lines)
 
 
 Finished in 1.63 second(s)
@@ -1919,8 +1854,7 @@ t2 = time.perf_counter()
 print(f'Finished in {t2-t1} seconds')
 # still feel like i/o bound because of reading and writing images is more than filtering.
 ```
-
-```result
+```output
 photo-1516117172878-fd2c41f4a759.jpg was processed...
 photo-1516972810927-80185027ca84.jpg was processed...
 photo-1524429656589-6633a470097c.jpg was processed...

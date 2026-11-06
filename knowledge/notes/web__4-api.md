@@ -10,8 +10,6 @@ The Java Standard Library (e.g. java.util, java.io, java.time, etc.) = Java API
 
 It’s a set of public, documented features that users can interact with, but not change internally.
 
-  
-
 0.0.0.0 ip worht ? 
 
  
@@ -1245,8 +1243,4 @@ Use SOAP if you require strict security and reliability (e.g., financial transac
 Use RPC (gRPC) if you need high performance and low-latency microservices. 
  
  
-Let me know if you want a deeper comparison on a specific aspect! 
-
- 
-
- 
+Let me know if you want a deeper comparison on a specific aspect!

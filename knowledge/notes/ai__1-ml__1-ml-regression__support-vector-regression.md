@@ -19,8 +19,7 @@ y = dataset.iloc[:, -1].values
 ```python
 print(X)
 ```
-
-```result
+```output
 [[ 1]
  [ 2]
  [ 3]
@@ -36,8 +35,7 @@ print(X)
 ```python
 print(y)
 ```
-
-```result
+```output
 [  45000   50000   60000   80000  110000  150000  200000  300000  500000
  1000000]
 ```
@@ -49,8 +47,7 @@ y = y.reshape(len(y),1)
 ```python
 print(y)
 ```
-
-```result
+```output
 [[  45000]
  [  50000]
  [  60000]
@@ -76,8 +73,7 @@ y = sc_y.fit_transform(y)
 ```python
 print(X)
 ```
-
-```result
+```output
 [[-1.5666989 ]
  [-1.21854359]
  [-0.87038828]
@@ -93,8 +89,7 @@ print(X)
 ```python
 print(y)
 ```
-
-```result
+```output
 [[-0.72004253]
  [-0.70243757]
  [-0.66722767]
@@ -114,13 +109,7 @@ from sklearn.svm import SVR
 regressor = SVR(kernel = 'rbf')
 regressor.fit(X, y)
 ```
-
-```result
-/usr/local/lib/python3.6/dist-packages/sklearn/utils/validation.py:760: DataConversionWarning: A column-vector y was passed when a 1d array was expected. Please change the shape of y to (n_samples, ), for example using ravel().
-  y = column_or_1d(y, warn=True)
-```
-
-```result
+```output
 SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='scale',
     kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
 ```
@@ -130,8 +119,7 @@ SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='scale',
 ```python
 sc_y.inverse_transform(regressor.predict(sc_X.transform([[6.5]])).reshape(-1,1))
 ```
-
-```result
+```output
 array([170370.0204065])
 ```
 
@@ -146,7 +134,7 @@ plt.ylabel('Salary')
 plt.show()
 ```
 
-![Output](kb-media:8ced90986d1a17087d22.png)
+![Figure](kb-media:8ced90986d1a17087d22.png)
 
 ## Visualising the SVR results (for higher resolution and smoother curve)
 
@@ -161,4 +149,4 @@ plt.ylabel('Salary')
 plt.show()
 ```
 
-![Output](kb-media:b209d7305ea9839a9ab6.png)
+![Figure](kb-media:b209d7305ea9839a9ab6.png)

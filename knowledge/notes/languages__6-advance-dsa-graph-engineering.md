@@ -207,8 +207,7 @@ g.add_edge("B", "C")
 # Displaying the graph
 g.display()
 ```
-
-```result
+```output
 A: ['B', 'C']
 B: ['A', 'C']
 C: ['A', 'B']
@@ -258,8 +257,7 @@ customDict = { "a" : ["b","c"],
 g = Graph(customDict)
 g.dfs("a")
 ```
-
-```result
+```output
 a
 c
 e
@@ -314,8 +312,7 @@ customGraph.addEdge("D", "F")
 
 customGraph.topologicalSort()
 ```
-
-```result
+```output
 ['B', 'D', 'A', 'C', 'E', 'F', 'G', 'H']
 ```
 
@@ -351,8 +348,7 @@ customDict = { "a" : ["b", "c"],
 g = Graph(customDict)
 print(g.bfs("a", "f"))
 ```
-
-```result
+```output
 ['a', 'b', 'd', 'f']
 ```
 
@@ -427,8 +423,7 @@ print(dijkstra(customGraph, "A"))
 # shortest path should be a b d e
 # but your code is giving a b e
 ```
-
-```result
+```output
 ({'A': 0, 'B': 2, 'C': 5, 'D': 3, 'E': 5, 'G': 14, 'F': 13}, defaultdict(<class 'list'>, {'B': ['A'], 'C': ['A'], 'D': ['B'], 'E': ['B'], 'G': ['E'], 'F': ['C']}))
 ```
 
@@ -529,8 +524,7 @@ nodes = ["A","B","C","D","E"]
 g = Graph(5, edges, nodes)
 g.primsAlgo()
 ```
-
-```result
+```output
 Edge : Weight
 A -> B: 10
 B -> D: 5
@@ -596,8 +590,7 @@ g.addEdge("E", "C", 20)
 
 g.kruskalAlgo()
 ```
-
-```result
+```output
 A - B: 5
 C - D: 6
 B - D: 8
@@ -669,16 +662,14 @@ customGraph.addEdge("F", "G", 7)
 
 print(dijkstra(customGraph, "A"))
 ```
-
-```result
+```output
 ({'A': 0, 'B': 2, 'C': 5, 'D': 3, 'E': 5, 'G': 14, 'F': 13}, defaultdict(<class 'list'>, {'B': ['A'], 'C': ['A'], 'D': ['B'], 'E': ['B'], 'G': ['E'], 'F': ['C']}))
 ```
 
 ```python
 pip install networkx
 ```
-
-```result
+```output
 Collecting networkx
   Downloading networkx-2.5.1-py3-none-any.whl (1.6 MB)
 Requirement already satisfied: decorator<5,>=4.3 in c:\users\surya\anaconda3\envs\moviebert34\lib\site-packages (from networkx) (4.4.2)
@@ -734,7 +725,7 @@ plt.axis('off')
 plt.show()
 ```
 
-![Output](kb-media:13d66fe20deac2f42248.png)
+![Figure](kb-media:13d66fe20deac2f42248.png)
 
 ```python
 import networkx as nx
@@ -779,8 +770,7 @@ num_customers = 5
 result = min_drinks_to_satisfy_customers(preferences, num_drinks, num_customers)
 print(result)  # Output: 2
 ```
-
-```result
+```output
 range(0, 5)
 range(5, 14)
 -3
@@ -844,12 +834,11 @@ num_customers = 5
 
 draw_bipartite_graph(preferences, num_drinks, num_customers)
 ```
-
-![Output](kb-media:399bc3918f90e8042b8d.png)
-
-```result
+```output
 -5
 ```
+
+![Figure](kb-media:399bc3918f90e8042b8d.png)
 
 ```python
 import networkx as nx
@@ -915,12 +904,11 @@ num_customers = 5
 
 draw_bipartite_graph(preferences, num_drinks, num_customers)
 ```
-
-![Output](kb-media:02e538b952055ab43cf8.png)
-
-```result
+```output
 -5
 ```
+
+![Figure](kb-media:02e538b952055ab43cf8.png)
 
 ```python
 def print_least_number(array, num_drinks, num_customers):
@@ -978,7 +966,6 @@ num_customers = 5
 result = print_least_number(preferences, num_drinks, num_customers)
 print(f"Output = {result}")  # Output = 2
 ```
-
-```result
+```output
 Output = 4
 ```

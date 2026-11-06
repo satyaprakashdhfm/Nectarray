@@ -1559,7 +1559,7 @@ plt.show() # shows the plot
 # plt.savefig('plot.png') saves plot as img
 ```
 
-![Output](kb-media:31eb163ead267d398c20.png)
+![Figure](kb-media:31eb163ead267d398c20.png)
 
 ### barcharts and data from csv
 
@@ -1571,11 +1571,7 @@ plt.bar(x - width/2, [4, 5, 6] ,color="b",width = width, label = "All devs")
 plt.bar(x + width/2, [5, 6, 8],color = "k",width= width, label = "python")
 ```
 
-```result
-<BarContainer object of 3 artists>
-```
-
-![Output](kb-media:9ff102d562ef4ca25ac6.png)
+![Figure](kb-media:9ff102d562ef4ca25ac6.png)
 
 ```python
 # Method 2: Object-Oriented (Recommended)
@@ -1584,7 +1580,7 @@ ax.plot([1, 2, 3], [4, 5, 6])
 plt.show()
 ```
 
-![Output](kb-media:0c144499ac5d159df2c8.png)
+![Figure](kb-media:0c144499ac5d159df2c8.png)
 
 ```python
 ### 1.2 Basic Plot Types
@@ -1635,13 +1631,13 @@ ax.set_ylabel('Frequency')
 plt.show()
 ```
 
-![Output](kb-media:3f3c446c006368a90929.png)
+![Figure](kb-media:3f3c446c006368a90929.png)
 
-![Output](kb-media:25a9879696dbc3c70fe4.png)
+![Figure](kb-media:25a9879696dbc3c70fe4.png)
 
-![Output](kb-media:984a0e62db93788fa432.png)
+![Figure](kb-media:984a0e62db93788fa432.png)
 
-![Output](kb-media:c748d157084b360c005b.png)
+![Figure](kb-media:c748d157084b360c005b.png)
 
 ### 1.3 Essential Customizations
 

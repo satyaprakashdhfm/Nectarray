@@ -207,7 +207,7 @@ parameters:
 
 with knn we can use average of k nearest neaghbour value as prediction regression.
 
-gussain naive bayes is also used for 
+gussain naive bayes is also used for
 
 ---
 ---
@@ -318,7 +318,6 @@ Example:
 ```python
 from sklearn.svm import SVC
 model = SVC(C=1.0, kernel='rbf', gamma='scale')
-
 ```
 
 ---
@@ -641,7 +640,6 @@ Example:
 ```python
 from sklearn.ensemble import AdaBoostClassifier
 model = AdaBoostClassifier(n_estimators=100, learning_rate=0.1)
-
 ```
 
 Gradient boosting and Xgboost required hyper parameter tuning..for sure
@@ -726,7 +724,6 @@ Example:
 ```python
 from sklearn.ensemble import GradientBoostingClassifier
 model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
-
 ```
 
 ---
@@ -743,10 +740,6 @@ model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_dept
 | **XGBoost** | Same as traditional | fₖ(x) = wₖ(q(x))<br>where:<br>• q(x) maps data to leaf index<br>• wₖ is leaf weight vector<br>• wₖⱼ = -gⱼ/(hⱼ + λ)<br>• gⱼ, hⱼ are gradient sums in leaf j | F(x) = ∑ₖ₌₁ᴷ fₖ(x)<br>with regularization Ω(fₖ) | • Uses gradient & hessian<br>• Leaf weights analytically optimized<br>• Includes regularization term |
 | **LightGBM** | Same as traditional | fₖ(x) = wₖ(qₖ(x))<br>where:<br>• qₖ(x) uses histogram-based splits<br>• wₖ optimized on histograms<br>• Exclusive Feature Bundling used | F(x) = ∑ₖ₌₁ᴷ fₖ(x)<br>with GOSS sampling | • Leaf-wise growth<br>• Histogram-based splits<br>• GOSS sampling for gradients |
 | **CatBoost** | Uses ordered target statistics | fₖ(x) = wₖ(qₖ(x))<br>where:<br>• qₖ uses ordered target statistics<br>• wₖ computed using ordered gradients<br>• Categorical features handled natively | F(x) = M₀ + ∑ₖ₌₁ᴷ (F^k(x) - M₀)/k<br>where F^k are ordered models | • Symmetric trees<br>• Ordered boosting<br>• Native categorical handling |
-
- 
-
- 
 
 ---
 
@@ -1120,7 +1113,7 @@ Despite being a simple and small model, KNN remains relevant due to its:
 - **Non-parametric Nature**: KNN does not assume any underlying distribution for the data, making it versatile for various types of datasets.
 
 In the era of ensemble techniques, KNN can complement other models, especially in scenarios where interpretability is crucial or when combining models in ensemble methods. 
-<span style="color:red">***However, due to its computational inefficiency with large datasets, it is often not the first choice when scalability is a concern.*** </span> 
+<span style="color:red">***However, due to its computational inefficiency with large datasets, it is often not the first choice when scalability is a concern.*** </span>
 
 Certainly! Here’s the structured information for **Logistic Regression** including the optimization step with equations, representations, and a graph representation of the gradient descent process.
 

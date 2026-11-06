@@ -17,8 +17,6 @@
   docker exec -it container_id bash
   ```
 
- 
-
 ## Docker Architecture and Requirements
 
 Docker requires Linux kernel features to run containers. On Windows, Docker integrates with WSL2 to provide a real Linux kernel. Docker containers are process-based and specific to applications, unlike VMs which create separate OS instances.

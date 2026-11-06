@@ -110,7 +110,6 @@ This combination of mathematics and intuitive understanding is crucial for:
 - Debugging issues
 - Optimizing performance
 - Understanding behavior
- 
 
 # What is Deep Learning
 
@@ -676,9 +675,7 @@ $$
 - **$ \Delta W^2 $**: $ \begin{pmatrix} -0.03155 \\ -0.03587 \end{pmatrix} $  
 - **$ \Delta b^2 $**: $ -0.0503 $  
 - **$ \Delta W^1 $**: $ \begin{pmatrix} -0.00294 \\ -0.00308 \end{pmatrix} $ 
-- **$ \Delta b^1 $**: $ \begin{pmatrix} -0.00588 \\ -0.00617 \end{pmatrix} $ 
-
- 
+- **$ \Delta b^1 $**: $ \begin{pmatrix} -0.00588 \\ -0.00617 \end{pmatrix} $
 
 ---
 ---
@@ -745,7 +742,7 @@ Here’s an updated table with tasks adjusted based on the number of independent
 
 In practice, standard ReLU is often chosen unless the model experiences vanishing gradients or dead neurons, in which case Leaky ReLU or other alternatives (like ELU or SELU) might be considered. So, the choice often depends on the specific network and dataset.
 
- key **deep learning** (DL) terms related to training and regularization, excluding activation functions, loss functions, and optimizers:
+key **deep learning** (DL) terms related to training and regularization, excluding activation functions, loss functions, and optimizers:
 
 | **Term**                     | **Definition**                                                                 | **Commonly Asked Questions**                                                                 | **Key Concepts**                                                                                |
 |------------------------------|---------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
@@ -762,8 +759,6 @@ In practice, standard ReLU is often chosen unless the model experiences vanishin
 | **Hyperparameter Tuning**     | Process of selecting the best hyperparameters (e.g., learning rate, batch size) to optimize model performance. | - How do you tune hyperparameters?<br>- What’s the difference between grid search and random search? | Grid search, random search, Bayesian optimization, hyperparameter ranges                         |
 | **Overfitting and Underfitting** | **Overfitting**: Model performs well on training data but poorly on unseen data.<br>**Underfitting**: Model performs poorly on both training and unseen data. | - How do you detect overfitting?<br>- What methods can you use to mitigate it?                | Bias-variance tradeoff, generalization, cross-validation, regularization methods                  |
 | **Weight Initialization**     | Strategy for setting the initial values of the weights before training starts.  | - How do different initialization methods affect training?<br>- What’s the Xavier/He initialization? | Xavier initialization, He initialization, convergence speed, symmetry breaking                   |
-
- 
 
 ---
 ---

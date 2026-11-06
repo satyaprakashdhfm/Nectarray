@@ -11,9 +11,9 @@ import { ADMIN } from "@/lib/admin-path";
  * so the ~120 MB archive ships only with the routes that read it and not
  * with every page that reads a lesson file:
  *
- *     knowledge/source/   the archive itself, file for file
- *     knowledge/notes/    one markdown note per notebook, text file or folder
- *     knowledge/media/    every image and report pulled out of the notebooks
+ *     knowledge/source/   the archive itself, file for file — the backup
+ *     knowledge/notes/    the notes, in the academy lessons' markdown
+ *     knowledge/media/    every image and figure, pulled out of the archive
  *     knowledge/index.json  subjects -> sections -> notes
  *
  * notes/, media/ and index.json are generated from source/ by
@@ -26,10 +26,9 @@ export type KbNote = {
   id: string;
   title: string;
   file: string;
-  kind: "notebook" | "text" | "files" | "project" | "checkpoints";
-  /** Path of the original inside knowledge/source/, when there is one file. */
+  kind: "note" | "text" | "files" | "project";
+  /** What it was made from, inside knowledge/source/ (never shown or served for a notebook). */
   source: string | null;
-  cells?: number;
 };
 export type KbSection = { title: string; notes: KbNote[] };
 export type KbSubject = {
@@ -115,8 +114,13 @@ export async function knowledgeMedia(name: string): Promise<Buffer | null> {
   }
 }
 
-/** Bytes of one original from the archive, or null. Never leaves source/. */
+/**
+ * Bytes of one file from the archive (a PDF, a dataset, a code file), or
+ * null. Never leaves source/, and never a notebook: the site shows notes,
+ * and the notebooks they were written from stay in the repository only.
+ */
 export async function knowledgeSource(parts: string[]): Promise<Buffer | null> {
+  if (/\.ipynb$/i.test(parts.at(-1) ?? "")) return null;
   const base = path.join(ROOT, "source");
   const target = path.resolve(base, ...parts);
   if (!target.startsWith(base + path.sep)) return null;
@@ -140,7 +144,6 @@ const TYPES: Record<string, string> = {
   ".txt": "text/plain; charset=utf-8",
   ".py": "text/plain; charset=utf-8",
   ".csv": "text/csv; charset=utf-8",
-  ".ipynb": "application/x-ipynb+json",
   ".docx":
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 };

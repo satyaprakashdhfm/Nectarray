@@ -2,7 +2,7 @@ https://betterstack.com/community/guides/logging/how-to-start-logging-with-pytho
 
 https://claroty.com/team82/research/opc-ua-deep-dive-part-3-exploring-the-opc-ua-protocol
 
-- ip vs mac address -- 
+- ip vs mac address --
 
 The Demand Side:
     • The residential proxy market is growing at a CAGR of 11.48%, driven by rising demand for scalable IPv4 Address Shortage: How Many Are Actually Left Today?

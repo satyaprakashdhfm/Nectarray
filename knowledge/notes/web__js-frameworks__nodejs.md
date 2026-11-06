@@ -1,7 +1,6 @@
 - Hardware → OS → **Node.js runtime** → Express.js
 - Hardware → OS → **Python + WSGI server** → Django  
 - Hardware → OS → **JVM + Tomcat** → Spring Boot
- 
 
 ### 🟩 Node.js Vocabulary
 

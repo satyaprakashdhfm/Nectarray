@@ -137,6 +137,10 @@ const RICH_SCHEMA = {
   strip: ["script", "style"],
   tagNames: [
     ...(defaultSchema.tagNames ?? []),
+    // The joined code + output card and the tabbed code group, which
+    // remarkCodeTabs asks for by these names.
+    "codetabs",
+    "codegroup",
     "iframe",
     "u",
     "center",
@@ -147,6 +151,9 @@ const RICH_SCHEMA = {
     "*": [...(defaultSchema.attributes?.["*"] ?? []), "className", "align"],
     img: [...(defaultSchema.attributes?.img ?? []), "width", "height"],
     iframe: ["src", "title", "className", "loading"],
+    codetabs: ["code", "language", "output", "title"],
+    codegroup: ["tabs"],
+    div: [...(defaultSchema.attributes?.div ?? []), "dataFigures"],
     code: [...(defaultSchema.attributes?.code ?? []), "className"],
   },
   // Relative paths (the panel's own knowledge routes) always pass; images
@@ -161,10 +168,11 @@ export function Markdown({
 }: {
   children: string;
   /**
-   * For the admin Knowledge base, whose notes are converted notebooks: TeX
-   * math (`$x$`, `$$…$$`) typeset with KaTeX, and the raw HTML notebooks
-   * use (images with a width, DataFrame tables) rendered — sanitised —
-   * rather than shown as text. Academy lessons leave this off.
+   * For the admin Knowledge base, whose notes came from notebooks: TeX
+   * math (`$x$`, `$$…$$`) typeset with KaTeX, and the bits of raw HTML
+   * those notes use (an `<img>` with a width, `<details>`) rendered —
+   * sanitised — rather than shown as text. Everything else is the same as
+   * a lesson, code + output cards included. Academy lessons leave this off.
    */
   rich?: boolean;
 }) {
@@ -187,7 +195,7 @@ export function Markdown({
       <ReactMarkdown
         remarkPlugins={
           rich
-            ? [remarkGfm, remarkMath]
+            ? [remarkGfm, remarkMath, remarkCodeTabs, remarkFigureTabs]
             : [remarkGfm, remarkCodeTabs, remarkFigureTabs]
         }
         rehypePlugins={

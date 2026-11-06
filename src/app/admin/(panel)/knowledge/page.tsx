@@ -19,12 +19,11 @@ export default async function KnowledgeIndexPage() {
     <>
       <PageHead
         title="Knowledge base"
-        lede={`Every notebook, image, code project and file from the old NOTES repository, by subject — ${total} notes in ${subjects.length} subjects. Admin only, and separate from the Academy's notes.`}
+        lede={`Study notes by subject — ${total} notes in ${subjects.length} subjects, written up from the old NOTES repository with every diagram and figure. Admin only, and separate from the Academy's notes.`}
       />
       <ul className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {subjects.map((subject) => {
           const notes = subject.sections.flatMap((s) => s.notes);
-          const notebooks = notes.filter((n) => n.kind === "notebook").length;
           return (
             <li key={subject.slug}>
               <Link
@@ -38,8 +37,7 @@ export default async function KnowledgeIndexPage() {
                   {subject.blurb}
                 </p>
                 <p className="text-ink-faint mt-3 text-[0.75rem]">
-                  {notes.length} {notes.length === 1 ? "note" : "notes"} ·{" "}
-                  {notebooks} {notebooks === 1 ? "notebook" : "notebooks"}
+                  {notes.length} {notes.length === 1 ? "note" : "notes"}
                 </p>
               </Link>
             </li>

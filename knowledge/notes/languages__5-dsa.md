@@ -409,8 +409,7 @@ print(f"{item}: ${price:.3f}")  # 3 decimal places
 print(f"{i}. {item:<10} x {quantity}")
 print('name is {} age is {}'.format(name,age))
 ```
-
-```result
+```output
 John Doe scored 85.5 and received a grade of B
 Name: John Doe, Age: 30, Height: 1.75 meters
 Apple: $0.99
@@ -441,8 +440,7 @@ for i in range(5):
         print("*" , end="")
     print("\r")
 ```
-
-```result
+```output
 *
 **
 ***
@@ -456,8 +454,7 @@ for i in range(5):
         print("s" , end="")
     print("\r")
 ```
-
-```result
+```output
 sssss
 ssss
 sss
@@ -474,24 +471,15 @@ for i in range(5):
     print("\r")
 ```
 
-```result
-     *
-    **
-   ***
-  ****
- *****
-```
-
 ```python
 for i in range(5):
     for j in range(i):
         print(end=" ")
     for u in range(i,5):
         print(end="*")
-    print() 
+    print()
 ```
-
-```result
+```output
 *****
  ****
   ***
@@ -509,10 +497,8 @@ for i in range(n):
     for j in range(2 * i + 1):
         print("*", end="")
     print()
-    
 ```
-
-```result
+```output
     *
    ***
   *****
@@ -528,10 +514,8 @@ for i in range(n-2,-1,-1):
     for k in range(2*i+1):
         print(end="*")
     print()
-   
 ```
-
-```result
+```output
  *******
   *****
    ***
@@ -561,8 +545,7 @@ for i in range(n - 2, -1, -1):
         print(end="*")
     print()
 ```
-
-```result
+```output
     *
    ***
   *****
@@ -592,8 +575,7 @@ print(txt)
 txt = "\110\145\154\154\157"
 print(txt)
 ```
-
-```result
+```output
 This will insert one \ (backslash).
 It's alright.
 Hello	World!
@@ -616,8 +598,7 @@ original_num = 1234
 result = reverse_number(original_num)
 print(result)
 ```
-
-```result
+```output
 4321
 ```
 
@@ -663,8 +644,7 @@ def reverse_string_join(s):
 print(reverse_string_loop("hello"))  # Output: "olleh"
 print(reverse_string_join("hello"))  # Output: "olleh"
 ```
-
-```result
+```output
 olleh
 olleh
 ```
@@ -689,8 +669,7 @@ def is_strong_number(n):
 
 print(is_strong_number(145))  # Output: True (145 is a strong number: 1! + 4! + 5! = 145)
 ```
-
-```result
+```output
 True
 True
 ```
@@ -715,8 +694,7 @@ print(is_perfect_number(6))   # Output: True
 print(is_perfect_number(28))  # Output: True
 print(is_perfect_number(12))  # Output: False
 ```
-
-```result
+```output
 True
 True
 False
@@ -728,8 +706,7 @@ print(-5 // 2)   # Output: -3 (-2.5 rounds down to -3)
 print(10 // 3)   # Output: 3  (3.33... rounds down to 3)
 print(-10 // 3)  # Output: -4 (-3.33... rounds down to -4)
 ```
-
-```result
+```output
 2
 -3
 3
@@ -739,16 +716,14 @@ print(-10 // 3)  # Output: -4 (-3.33... rounds down to -4)
 ```python
 153//10
 ```
-
-```result
+```output
 15
 ```
 
 ```python
 153%10
 ```
-
-```result
+```output
 3
 ```
 
@@ -805,8 +780,7 @@ def fibonacci_nth(n):
     return b
 print(fibonacci_nth(10))
 ```
-
-```result
+```output
 [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
 34
 ```
@@ -826,8 +800,7 @@ a, b = 12, 15
 print(f"GCD (iterative) of {a} and {b} is {gcd_iterative(a, b)}")
 print(f"LCM (using GCD) of {a} and {b} is {lcm_using_gcd(a, b)}")
 ```
-
-```result
+```output
 GCD (iterative) of 12 and 15 is 3
 LCM (using GCD) of 12 and 15 is 60
 ```
@@ -861,8 +834,7 @@ def print_factors_optimized(n):
 print_all_factors(36)
 print_factors_optimized(45)
 ```
-
-```result
+```output
 All factors of 36 are:
 1
 2
@@ -873,17 +845,13 @@ All factors of 36 are:
 12
 18
 36
-Optimized factors of 45 are:
-1
-45
-3
+… (4 more lines)
 15
 5
 9
 ```
 
 ```python
-
 # 1. Prime Basics
 # ----------------
 # - 1 is NOT a prime number.
@@ -954,8 +922,7 @@ nth_prime_list = find_nth_prime(n)
 print(f"First {n} primes: {nth_prime_list}")
 print(f"{n}th prime is: {nth_prime_list[-1]}")
 ```
-
-```result
+```output
 Prime factors of 69 are: [3, 23]
 Prime numbers below 30:
 2 3 5 7 11 13 17 19 23 29 
@@ -975,12 +942,10 @@ Performance:
 ![image.png](kb-media:26aac44758cc1aacd8e4.png)
 
 # Python's built-in sorted() function and the list.sort() method both utilize a hybrid sorting algorithm called Timsort.
- 
 
 ![image.png](kb-media:05042d996ef063a35f47.png)
 
 ```python
-
 import math
 
 def bubbleSort(customList): # if n=8
@@ -1120,8 +1085,7 @@ cList = [2, 1, 7, 6, 5, 3, 4, 9, 8]
 quickSort(cList, 0, len(cList) - 1)
 print(cList)
 ```
-
-```result
+```output
 [9, 8, 7, 6, 5, 4, 3, 2, 1]
 [1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
@@ -1135,7 +1099,6 @@ When searching for a target in an unsorted array, the most straightforward metho
   - **Binary Search Time Complexity**: $O(\log n)$
   - **Combined Time Complexity**: $O(n \log n)$
     - First, you would sort the array (which takes $O(n \log n)$) and then apply binary search to find the target (which takes $O(\log n)$).
-  
 
 ```python
 # ----------------
@@ -1197,8 +1160,7 @@ if result != -1:
 else:
     print(f"Element {target} is not present in the array")
 ```
-
-```result
+```output
 Safe mid value: 2073741820
 found 6 at index 3
 None
@@ -1377,8 +1339,7 @@ Ll.append(4)
 Ll.insert_at_position(2, 3)  # Insert 3 at index 2
 Ll.print_list()  # Output: 1 -> 2 -> 3 -> 4 -> None
 ```
-
-```result
+```output
 5 -> 10 -> 15 -> 20 -> None
 Search 15: True
 5 -> 15 -> 20 -> None
@@ -1765,8 +1726,7 @@ customStack.push(2)
 customStack.push(3)
 print(customStack)
 ```
-
-```result
+```output
 True
 False
 3
@@ -1821,8 +1781,7 @@ stack.Push(2,3)
 stack.Push(7,2)
 stack.Pop(2)
 ```
-
-```result
+```output
 7
 ```
 
@@ -1849,7 +1808,7 @@ Here is a list of data structures that can be used to implement trees in Python:
 7. **Degree of a Node**: The number of children a node has.  
 8. **Path**: A sequence of nodes connected by edges.  
 9. **Internal Node**: A node that has at least one child.  
-10. **External Node**: Another name for a leaf node.  
+10. **External Node**: Another name for a leaf node.
 
 ```python
 class TreeNode: #TreeA hierarchical structure with nodes that can have any number of children.

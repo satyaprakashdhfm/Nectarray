@@ -23,8 +23,7 @@ from sklearn.ensemble import RandomForestRegressor
 regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
 regressor.fit(X, y)
 ```
-
-```result
+```output
 RandomForestRegressor(bootstrap=True, ccp_alpha=0.0, criterion='mse',
                       max_depth=None, max_features='auto', max_leaf_nodes=None,
                       max_samples=None, min_impurity_decrease=0.0,
@@ -39,8 +38,7 @@ RandomForestRegressor(bootstrap=True, ccp_alpha=0.0, criterion='mse',
 ```python
 regressor.predict([[6.5]])
 ```
-
-```result
+```output
 array([167000.])
 ```
 
@@ -57,4 +55,4 @@ plt.ylabel('Salary')
 plt.show()
 ```
 
-![Output](kb-media:d690efc56a15249702b1.png)
+![Figure](kb-media:d690efc56a15249702b1.png)

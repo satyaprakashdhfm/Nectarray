@@ -36,12 +36,10 @@ n_clusters=len(set(labels))- (1 if -1 in labels else 0)
 
 print(metrics.silhouette_score(X,labels))
 ```
-
-```result
+```output
 -0.1908319132560097
 ```
 
-```text
 This is a pertinent question. We already have basic clustering algorithms, so why should you spend your time and energy learning about yet another clustering method? It’s a fair question so let me answer that before I talk about what DBSCAN clustering is.
 
 First, let’s clear up the role of clustering.
@@ -59,11 +57,10 @@ All these problems use the concept of clustering to reach their end goal. Theref
 K-Means and Hierarchical Clustering both fail in creating clusters of arbitrary shapes. They are not able to form clusters based on varying densities. That’s why we need DBSCAN clustering.
 
 Let’s try to understand it with an example. Here we have data points densely present in the form of concentric circles:
-```
 
- ![image.png](kb-media:3dd3f2f1d1774e5c98cf.png)
+![image.png](kb-media:3dd3f2f1d1774e5c98cf.png)
 
- ![image.png](kb-media:4155225e80fde928e19d.png)
+![image.png](kb-media:4155225e80fde928e19d.png)
 
 ![image.png](kb-media:5d512d4770418bf6098b.png)
 

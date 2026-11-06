@@ -52,9 +52,6 @@ class raider():
     def DRIVERS_MATCHED():
     def STOP_RIDE():
     def BILL (RIDE_ID):
-    
-
-    
 ```
 
 ```python
@@ -222,5 +219,4 @@ def main():
 
 if __name__ == "__main__":
     main()
- 
 ```

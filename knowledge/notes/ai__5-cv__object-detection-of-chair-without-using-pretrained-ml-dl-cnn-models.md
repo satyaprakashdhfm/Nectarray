@@ -37,16 +37,3 @@ plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 plt.axis("off")
 plt.show()
 ```
-
-```result title="Error"
----------------------------------------------------------------------------
-ModuleNotFoundError                       Traceback (most recent call last)
-Cell In[15], line 3
-      1 import cv2
-      2 import torch
-----> 3 from ultralytics import YOLO
-      4 import matplotlib.pyplot as plt
-      6 # Load the YOLOv8 model
-
-ModuleNotFoundError: No module named 'ultralytics'
-```

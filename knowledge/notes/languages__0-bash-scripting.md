@@ -1546,9 +1546,6 @@ sort file.txt
 sort file.txt | uniq
 ```
 
-
- 
-
 ---
 ---
 

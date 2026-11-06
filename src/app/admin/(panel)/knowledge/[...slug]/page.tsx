@@ -1,35 +1,29 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, Download } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { PageHead } from "@/components/admin/Business";
 import { IntentLink } from "@/components/dashboard/IntentLink";
 import { LessonToc } from "@/components/dashboard/lesson-toc";
 import { Markdown } from "@/components/dashboard/Markdown";
 import { adminPage } from "@/lib/auth/access";
-import {
-  KB_BASE,
-  kbFileHref,
-  knowledgeNote,
-  knowledgeSubject,
-} from "@/lib/knowledge";
+import { KB_BASE, knowledgeNote, knowledgeSubject } from "@/lib/knowledge";
 import { stripLeadingHeading } from "@/lib/lessons";
 import { tocEntries } from "@/lib/toc";
 
 const KIND: Record<string, string> = {
-  notebook: "Notebook",
-  text: "Text note",
+  note: "Notes",
+  text: "Notes",
   files: "Files",
   project: "Code project",
-  checkpoints: "Earlier versions",
 };
 
 /**
  * One subject (`/knowledge/ai`) or one note (`/knowledge/ai/…`).
  *
- * A note reads like an academy lesson — same header, same contents rail,
- * same renderer — in its rich mode, since these are notebooks: math is
- * typeset, DataFrames and images come through, and every code cell is a
- * card with its output beneath it. The original file is one click away.
+ * A note reads exactly like an academy lesson — same header, same contents
+ * rail, same renderer, code and its output as one card with tabs — with
+ * math typeset (Markdown's rich mode). The notebooks these were made from
+ * stay in the repository as a backup and are never served here.
  */
 export default async function KnowledgePage({
   params,
@@ -62,8 +56,7 @@ export default async function KnowledgePage({
                       {note.title}
                     </p>
                     <p className="text-ink-faint mt-1 text-[0.75rem]">
-                      {KIND[note.kind] ?? note.kind}
-                      {note.cells ? ` · ${note.cells} cells` : ""}
+                      {KIND[note.kind] ?? "Notes"}
                     </p>
                   </Link>
                 </li>
@@ -96,27 +89,12 @@ export default async function KnowledgePage({
             ? subject.title
             : `${subject.title} › ${section.title}`}
         </p>
-        {note.source && (
-          <a
-            href={`${kbFileHref(note.source)}?download=1`}
-            className={button}
-            download
-          >
-            <Download className="size-3.5" strokeWidth={2} aria-hidden />
-            Original {note.source.split(".").length > 1 ? `.${note.source.split(".").at(-1)}` : "file"}
-          </a>
-        )}
       </div>
 
       <header className="border-brand/15 from-brand-wash/70 mt-4 rounded-2xl border bg-gradient-to-br to-transparent p-7 sm:p-9">
         <h1 className="display text-ink text-[2rem] sm:text-[2.5rem]">
           {note.title}
         </h1>
-        <p className="text-ink-faint mt-3 text-[0.8125rem]">
-          {KIND[note.kind] ?? note.kind}
-          {note.cells ? ` · ${note.cells} cells` : ""}
-          {note.source ? ` · ${note.source}` : ""}
-        </p>
       </header>
 
       <div className="kb-note mt-10">

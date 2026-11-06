@@ -43,7 +43,6 @@ Simple metaphor:
 
 * **LCEL** = a train track, straight line, predictable stops.
 * **LangGraph** = a metro map, multiple routes, branches, loops, and junctions.
- 
 
 ---
 ---
@@ -58,7 +57,7 @@ Simple metaphor:
 ## sql toolkit vs mcp : 
 ## stuff document chain text summarization vs map reduce summarization technique with single prompt and multiple prompt template vs refine chain summarization:
 ## huggingfaceXlangchain features:
-##  
+##
 
 # LangChain Complete Guide: Level 1-3
 

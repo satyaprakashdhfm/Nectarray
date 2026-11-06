@@ -33,12 +33,7 @@ plt.ylabel('WCSS')
 plt.show()
 ```
 
-```result
-C:\Users\surya\anaconda3\envs\logmodel_env\lib\site-packages\sklearn\cluster\_kmeans.py:1037: UserWarning: KMeans is known to have a memory leak on Windows with MKL, when there are less chunks than available threads. You can avoid it by setting the environment variable OMP_NUM_THREADS=1.
-  "KMeans is known to have a memory leak on Windows "
-```
-
-![Output](kb-media:63ab040544be229b8dcb.png)
+![Figure](kb-media:63ab040544be229b8dcb.png)
 
 ## Training the K-Means model on the dataset
 
@@ -63,7 +58,7 @@ plt.legend()
 plt.show()
 ```
 
-![Output](kb-media:ed67ccb99acdb17a6c9d.png)
+![Figure](kb-media:ed67ccb99acdb17a6c9d.png)
 
 ```python
 from sklearn.metrics import silhouette_score
@@ -73,7 +68,6 @@ from sklearn.metrics import silhouette_score
 score=silhouette_score(X,kmeans.labels_,metric='euclidean')
 print(score)
 ```
-
-```result
+```output
 0.553931997444648
 ```

@@ -84,7 +84,6 @@ where:
 - It helps in model compression without significant accuracy loss.  
 - Commonly used in NLP, computer vision, and speech recognition.  
 ```
-
 ```
 
 ---
@@ -130,8 +129,6 @@ https://bbycroft.net/llm
 11. **Claude 3.5 Sonnet** (July 2024) - An upgraded version of Claude with improved vision and reasoning capabilities.
 
 This timeline highlights the evolution of multimodal AI models from their inception to the present day, showcasing advancements in integrating various data types for more complex interactions and outputs.
-
- 
 
 # Differences between ai agents vs multimodal ai :
 **Functionality** :

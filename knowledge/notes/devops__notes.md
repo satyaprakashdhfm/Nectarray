@@ -14,7 +14,7 @@
 - project:
     - nginx server , tomcat , nfs service(centralised storage) , rabbitMQ(queuing agent(message broker)), mssql , memcache(cache service for database), Elastic Search.
     - doing all these form vagrant is another part
-- aws : 
+- aws :
 
 # **Unix Commands & Bash Scripting**
 
@@ -348,9 +348,6 @@ git log --stat                    # Commit details with file stats
 * **Monitoring**: ELK stack, Prometheus, Grafana.
 * **Security**: Firewall rules, Vault secrets management.
 * **Cloud Testing**: Validate Terraform, AWS/GCP/Azure configs locally.
-
- 
- 
 
 -------------------------**PIPELINE SERVIES**----------------------------
 

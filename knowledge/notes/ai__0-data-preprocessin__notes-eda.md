@@ -1554,15 +1554,11 @@ g.fig.suptitle('Facet Grid', y=1.02)
 plt.show()
 ```
 
-![Output](kb-media:269f1259c379b245b95b.png)
+![Figure](kb-media:269f1259c379b245b95b.png)
 
-```result
-<Figure size 800x600 with 0 Axes>
-```
+![Figure](kb-media:aaddd0b24a4ce29660d8.png)
 
-![Output](kb-media:aaddd0b24a4ce29660d8.png)
-
-![Output](kb-media:adbdb4be587a3c0c38d6.png)
+![Figure](kb-media:adbdb4be587a3c0c38d6.png)
 
 ```python
 import plotly.express as px
@@ -1590,7 +1586,3 @@ fig = px.bar(df,
 # Show the plot
 fig.show()
 ```
-
-<div class="kb-html">
-<div>                            <div id="814b14b1-e03c-4e53-919b-ddfbde2f43a9" class="plotly-graph-div" style="height:525px; width:100%;"></div>                    </div>
-</div>

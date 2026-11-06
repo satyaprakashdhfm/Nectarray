@@ -182,7 +182,6 @@ In summary, we constructed a simple RNN with:
 - **Output Size**: 1
 
 The total number of parameters calculated is **33**, derived from the input weights, recurrent weights, and biases associated with both the hidden and output layers.
- 
 
 Where:
 - $ i $ = input size
@@ -306,8 +305,7 @@ def predict(sentence):
 # Example predictions
 print("Predicted label for 'This is the worst thing ever':", predict("This is the worst thing ever"))
 ```
-
-```result
+```output
 Epoch 0, Loss: 0.0209
 Epoch 10, Loss: 0.0849
 Epoch 20, Loss: 0.0619
@@ -471,7 +469,7 @@ def predict(sentence):
 
 ### Conclusion
 
-The provided code implements a simple RNN for sentiment classification. It involves encoding sentences into a suitable format, performing forward and backward passes to learn the weights through training, and predicting sentiment for new sentences. The key concepts illustrated include activation functions, weight initialization, forward and backward propagation, and the training loop. 
+The provided code implements a simple RNN for sentiment classification. It involves encoding sentences into a suitable format, performing forward and backward passes to learn the weights through training, and predicting sentiment for new sentences. The key concepts illustrated include activation functions, weight initialization, forward and backward propagation, and the training loop.
 
 ---
 ---
@@ -693,8 +691,7 @@ if __name__ == "__main__":
         translation = translate(rnn, sentence, char_to_ix, ix_to_char)
         print(f'{sentence} -> {translation}')
 ```
-
-```result
+```output
 Epoch 0, Loss: 71.9993
 Epoch 10, Loss: 62.3854
 Epoch 20, Loss: 56.2481
@@ -811,7 +808,6 @@ Where:
 - **Increased Complexity**: Requires more computational resources and longer training times.
 
 ---
- 
 
 ## LSTM (Long Short-Term Memory)
 
@@ -868,7 +864,6 @@ LSTMs are widely used in various NLP tasks and other sequential data application
 
 ### Summary
 LSTM networks are a powerful tool for modeling sequential data due to their ability to retain and manipulate information over long periods. Their architecture, which includes a memory cell and gating mechanisms, allows them to effectively learn from complex patterns in data, making them a popular choice for various NLP tasks and beyond.
- 
 
 ### Bidirectional LSTM (BiLSTM)
 
@@ -933,7 +928,6 @@ BiLSTMs are widely used in various NLP tasks, including:
 
 ### Summary
 Bidirectional LSTMs are a powerful extension of traditional LSTMs, enabling them to process information from both past and future contexts. This capability makes them particularly effective for various NLP applications, enhancing performance in tasks that require a deep understanding of language structure and meaning.
- 
 
 ---
 ---
@@ -1008,7 +1002,6 @@ GRUs are widely used in various NLP tasks and other sequential data applications
 
 ### Summary
 GRUs are a powerful alternative to traditional RNNs and LSTMs for modeling sequential data. Their simplified architecture allows for efficient training while still capturing essential patterns in time-dependent data.
- 
 
 ---
 ---
@@ -1085,8 +1078,6 @@ The Seq2Seq architecture is a powerful framework for transforming sequences in v
    - **Drawback**:
       - BERT-style models cannot generate output sequences natively (e.g., translations); they’re mainly used for understanding tasks and require additional architectural changes for generation.
       - Masked language modeling adds complexity during pre-training, which demands significant resources for training large models like BERT.
-
- 
 
 ---
 ---
@@ -1331,8 +1322,6 @@ $$
 $$
 
 where **h** is the number of heads.
-
- 
 
 ## mistral 7b model prediction
 
@@ -1679,9 +1668,7 @@ The Transformer architecture significantly improves upon traditional models like
 ### Summary
 The Transformer architecture revolutionizes how sequential data is processed by leveraging self-attention mechanisms and parallel processing. Its ability to handle long-range dependencies and scalability makes it a foundational model in modern natural language processing tasks.
 
- 
-
- ![image.png](kb-media:2cdfba45859c8fedb43d.png)
+![image.png](kb-media:2cdfba45859c8fedb43d.png)
 
 ### Parameters Count in Transformer Architecture
 
@@ -1861,8 +1848,6 @@ The total number of parameters in a Transformer model can vary significantly bas
 
 ### Summary
 BERT represents a significant advancement in natural language processing by leveraging bidirectional context and a robust transformer architecture. Its ability to understand language nuances has made it a foundational model for many subsequent NLP tasks and developments.
-
- 
 
 ---
 ---
@@ -2093,7 +2078,7 @@ Sure! Here's an overview of **DeepSeek R1**:
 #### **Summary**
 DeepSeek R1 represents a significant advancement in search technology, combining deep learning with search algorithms to provide superior relevance and personalization. By integrating transformers and RNNs, it is capable of understanding complex queries, adapting to user preferences, and continuously improving its results over time.
 
---- 
+---
 
 ---
 ---

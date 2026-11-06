@@ -23,8 +23,7 @@ from sklearn.linear_model import LinearRegression
 lin_reg = LinearRegression()
 lin_reg.fit(X, y)
 ```
-
-```result
+```output
 LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None, normalize=False)
 ```
 
@@ -37,8 +36,7 @@ X_poly = poly_reg.fit_transform(X)
 lin_reg_2 = LinearRegression()
 lin_reg_2.fit(X_poly, y)
 ```
-
-```result
+```output
 LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None, normalize=False)
 ```
 
@@ -53,7 +51,7 @@ plt.ylabel('Salary')
 plt.show()
 ```
 
-![Output](kb-media:790b79e540d03b9b4ea8.png)
+![Figure](kb-media:790b79e540d03b9b4ea8.png)
 
 ## Visualising the Polynomial Regression results
 
@@ -66,7 +64,7 @@ plt.ylabel('Salary')
 plt.show()
 ```
 
-![Output](kb-media:609b0a1c4cc805c755c0.png)
+![Figure](kb-media:609b0a1c4cc805c755c0.png)
 
 ## Visualising the Polynomial Regression results (for higher resolution and smoother curve)
 
@@ -81,15 +79,14 @@ plt.ylabel('Salary')
 plt.show()
 ```
 
-![Output](kb-media:d49e530dececf9b04323.png)
+![Figure](kb-media:d49e530dececf9b04323.png)
 
 ## Predicting a new result with Linear Regression
 
 ```python
 lin_reg.predict([[6.5]])
 ```
-
-```result
+```output
 array([330378.78787879])
 ```
 
@@ -98,7 +95,6 @@ array([330378.78787879])
 ```python
 lin_reg_2.predict(poly_reg.fit_transform([[6.5]]))
 ```
-
-```result
+```output
 array([158862.45265155])
 ```

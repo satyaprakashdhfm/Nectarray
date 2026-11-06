@@ -243,8 +243,6 @@ To summarize in a simplified axis:
 * **LinkedIn** = B2B leads.
 * **Amazon** = purchase-driven.
 
- 
-
 ---
 ---
 
@@ -296,7 +294,6 @@ So the formula is simple:
 * The bigger and more engaged your audience, the more you can diversify these revenue streams.
 
 A single person can literally build a one-person business empire by stacking 2–3 of these methods.
- 
 
 ---
 ---
@@ -355,8 +352,6 @@ Let’s build it like industry-style notes, not classroom fluff.
   * Scaling SaaS: \$2k–\$10k/month once you get real traction.
   * Enterprise SaaS: \$50k+/month infra not unusual.
 
- 
-
 ---
 
 ### Potential Revenue (what you can make)
@@ -408,4 +403,4 @@ Let’s build it like industry-style notes, not classroom fluff.
 ---
 ---
 
-# tech services tax on google : 
+# tech services tax on google :

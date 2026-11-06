@@ -5,9 +5,10 @@ import { contentType, knowledgeSource } from "@/lib/knowledge";
 const INLINE = /\.(pdf|png|jpe?g|gif|webp|txt|py|json)$/i;
 
 /**
- * An original from the Knowledge base archive (knowledge/source/): the
- * notebook a note was made from, a PDF, a dataset, a file of a code project.
- * `?download=1` always downloads.
+ * A file the Knowledge base's notes hand out from the archive
+ * (knowledge/source/): a PDF, a document, a dataset, a file of a code
+ * project. Never a notebook — those are kept in the repository as the
+ * backup and not served. `?download=1` always downloads.
  */
 export async function GET(
   request: Request,

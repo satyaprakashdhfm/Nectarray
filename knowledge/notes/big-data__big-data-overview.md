@@ -495,7 +495,7 @@ Country → Total_Revenue
 
 ---
 
-# Storage: 
+# Storage:
 
 ## 1. hdfs - Storage layer, batch analytics, sequential reads.
 
@@ -1033,8 +1033,6 @@ You can query HBase with SQL-like layers on top:
     • **Simple**: Connect different data sources with arrows showing data movement
     • **Technical**: Flow-based programming with processors in directed acyclic graphs (DAGs)
     • **Technical**: Guaranteed delivery via content repository with provenance and backpressure control
-
- 
 
 ## 1.sqoop:(ingestion tool):
 

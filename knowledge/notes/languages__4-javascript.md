@@ -461,8 +461,7 @@ console.log(gcd(48, 18)); // Output: 6
 console.log(lcm(4, 5)); // Output: 20
 console.log(factorial(5)); // Output: 120
 ```
-
-```result
+```output
 54321
 true
 olleh
@@ -774,23 +773,6 @@ s.length === 0          // false – another way to test empty
 /\S/.test(s)            // true – checks for any non-whitespace
 ```
 
-```result title="Error"
-evalmachine.<anonymous>:53
-/\S/.test(s)            // true – checks for any non-whitespace
- ^
-
-SyntaxError: Invalid or unexpected token
-    at new Script (node:vm:117:7)
-    at createScript (node:vm:269:10)
-    at Object.runInThisContext (node:vm:317:10)
-    at run ([eval]:1020:15)
-    at onRunRequest ([eval]:864:18)
-    at onMessage ([eval]:828:13)
-    at process.emit (node:events:524:28)
-    at emit (node:internal/child_process:950:14)
-    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
-```
-
 ## **array iteration**
 ```javascript
 for (let hobby of hobbies) {
@@ -907,7 +889,6 @@ Math.min(...arr);
 ```
 
 ```javascript
-
 // ===========================
 // Array Creation
 // ===========================
@@ -962,20 +943,15 @@ arr1.keys()               // iterator of keys (indices)
 arr1.values()             // iterator of values
 arr1.copyWithin(0,2,3)    // copies part within same array
 ```
-
-```result
+```output
 0
 3
 9
 9
-```
-
-```result
 [ 0, 0, 0, 9 ]
 ```
 
 ```javascript
-
 // ===========================
 // Map (Key-Value Store)
 // ===========================
@@ -1025,8 +1001,7 @@ let ws = new WeakSet();
 ws.add(obj);
 ws.has(obj);               // true
 ```
-
-```result
+```output
 true
 ```
 
@@ -1323,7 +1298,6 @@ function createMultiplier(factor) {
 const double = createMultiplier(2);
 console.log(double(5)); // 10
 ```
- 
 
 ---
 
