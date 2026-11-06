@@ -6,6 +6,10 @@ import {
 } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import {
   BookOpen,
   Info,
@@ -122,7 +126,48 @@ function toText(node: ReactNode): string {
  * The markdown itself is rendered on the server, so none of react-markdown
  * reaches the browser.
  */
-export function Markdown({ children }: { children: string }) {
+/**
+ * What raw HTML may survive in rich mode. Notebook cells carry `<img>` with
+ * widths, `<details>`, DataFrame tables and the odd `<iframe>` (a saved
+ * report, served from the panel itself); scripts, styles and event handlers
+ * never get through.
+ */
+const RICH_SCHEMA = {
+  ...defaultSchema,
+  strip: ["script", "style"],
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    "iframe",
+    "u",
+    "center",
+    "font",
+  ],
+  attributes: {
+    ...defaultSchema.attributes,
+    "*": [...(defaultSchema.attributes?.["*"] ?? []), "className", "align"],
+    img: [...(defaultSchema.attributes?.img ?? []), "width", "height"],
+    iframe: ["src", "title", "className", "loading"],
+    code: [...(defaultSchema.attributes?.code ?? []), "className"],
+  },
+  // Relative paths (the panel's own knowledge routes) always pass; images
+  // the notes link to on the web need http(s). No data:, no javascript:.
+  protocols: { ...defaultSchema.protocols, src: ["http", "https"] },
+  clobberPrefix: "",
+};
+
+export function Markdown({
+  children,
+  rich = false,
+}: {
+  children: string;
+  /**
+   * For the admin Knowledge base, whose notes are converted notebooks: TeX
+   * math (`$x$`, `$$…$$`) typeset with KaTeX, and the raw HTML notebooks
+   * use (images with a width, DataFrame tables) rendered — sanitised —
+   * rather than shown as text. Academy lessons leave this off.
+   */
+  rich?: boolean;
+}) {
   /*
    * Heading ids come from a counter rather than straight from the slug,
    * because the notes repeat headings — "Syntax", "Example" and "Expected
@@ -140,7 +185,16 @@ export function Markdown({ children }: { children: string }) {
   return (
     <div className="notes">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkCodeTabs, remarkFigureTabs]}
+        remarkPlugins={
+          rich
+            ? [remarkGfm, remarkMath]
+            : [remarkGfm, remarkCodeTabs, remarkFigureTabs]
+        }
+        rehypePlugins={
+          rich
+            ? [rehypeRaw, [rehypeSanitize, RICH_SCHEMA], rehypeKatex]
+            : undefined
+        }
         components={{
           // Shifted down one level: the lesson title is the page's h1, so a
           // section of the notes is an h2 however it was written.
@@ -192,10 +246,32 @@ export function Markdown({ children }: { children: string }) {
            * and renders through TechIcon instead.
            */
           img: ({ src, alt, title }) => {
-            const tech = typeof src === "string" ? /^tech:(.+)$/.exec(src) : null;
+            const tech =
+              typeof src === "string" ? /^tech:(.+)$/.exec(src) : null;
             if (tech) return <TechIcon name={tech[1]} />;
 
-            return typeof src === "string" ? (
+            if (typeof src !== "string") return null;
+
+            // Notebook HTML often wraps its own images in links (a Colab
+            // badge, a linked diagram), and a link inside a link is invalid
+            // markup the page cannot hydrate — so in rich mode the image
+            // stands alone.
+            if (rich) {
+              return (
+                <span className="notes-figure">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- markdown images have no known size for next/image */}
+                  <img
+                    src={src}
+                    alt={alt ?? ""}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  {title && <span className="notes-caption">{title}</span>}
+                </span>
+              );
+            }
+
+            return (
               <span className="notes-figure">
                 <a href={src} target="_blank" rel="noreferrer noopener">
                   {/* eslint-disable-next-line @next/next/no-img-element -- markdown images have no known size for next/image */}
@@ -208,7 +284,7 @@ export function Markdown({ children }: { children: string }) {
                 </a>
                 {title && <span className="notes-caption">{title}</span>}
               </span>
-            ) : null;
+            );
           },
 
           blockquote: ({ children }) => {

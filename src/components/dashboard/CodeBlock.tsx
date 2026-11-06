@@ -29,6 +29,7 @@ const LABEL: Record<string, string> = {
   text: "Output",
   txt: "Output",
   output: "Output",
+  result: "Output",
   csv: "CSV",
   requirements: "Requirements",
   yaml: "YAML",

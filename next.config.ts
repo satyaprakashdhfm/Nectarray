@@ -20,6 +20,15 @@ const nextConfig: NextConfig = {
    */
   outputFileTracingIncludes: {
     "/admin/web/animations": ["./src/components/admin/animations/heroes/**/*"],
+    /*
+     * The Knowledge base reads knowledge/ at request time (lib/knowledge.ts):
+     * the index, the notes, the extracted images and the archive of
+     * originals. The tracer finds the folder by itself today; this says so
+     * outright, so a change to how the paths are written cannot quietly
+     * ship the panel without its notes. About 120 MB, on its four routes
+     * only (the key matches /admin/knowledge and everything under it).
+     */
+    "/admin/knowledge": ["./knowledge/**/*"],
   },
 
   experimental: {

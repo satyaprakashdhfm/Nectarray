@@ -18,6 +18,7 @@
     "build:tests": "python3 scripts/build-python-tests.py",
     "build:testcases": "python3 scripts/testcases/build.py",
     "validate:testcases": "python3 scripts/validate-testcases.py",
+    "build:knowledge": "python3 scripts/build-knowledge.py --check",
     "workspace": "node workspace/start.mjs"
   },
   "dependencies": {
@@ -51,6 +52,7 @@
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
+    "katex": "^0.19.1",
     "lucide-react": "^1.35.0",
     "mdast-util-to-string": "^4.0.0",
     "motion": "^14.0.0",
@@ -61,7 +63,11 @@
     "react-colorful": "^5.8.1",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "server-only": "^0.0.1",
     "simple-icons": "^16.31.0",

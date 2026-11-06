@@ -1,0 +1,19 @@
+| **Aspect** | **IaaS** | **PaaS** | **SaaS** | **FaaS** | **CaaS** | **DaaS** | **IaC Tools** |
+|------------|----------|----------|----------|----------|----------|----------|--------------|
+| **What You Get** | Virtual servers, storage, networks | Development platform + runtime | Ready-to-use applications | Run code without servers | Container orchestration | Virtual desktop access | Infrastructure automation tools |
+| **Real Examples** | AWS EC2, Google Compute Engine, Azure VMs | Heroku, Vercel, Google App Engine | Gmail, Slack, Salesforce | AWS Lambda, Cloudflare Workers | Kubernetes, AWS ECS, Google GKE | AWS WorkSpaces, Citrix | Terraform, Ansible, Pulumi, CloudFormation |
+| **You Manage** | OS, runtime, apps, data | Just your code and data | Nothing (just use it) | Just your code | Container images + configs | Applications and data | Infrastructure code & configs |
+| **Provider Manages** | Hardware, virtualization | Infrastructure + platform | Everything | Infrastructure + runtime | Infrastructure + orchestration | Infrastructure + OS + platform | Tool execution environment |
+| **Best For** | Custom setups, full control | Web apps, APIs, quick deployment | End-user productivity | Event-driven tasks, microservices | Scalable containerized apps | Remote work, virtual offices | Automating infrastructure deployment |
+| **Real Use Case** | Netflix runs on AWS EC2 instances | Spotify uses Google App Engine | Teams use Slack for communication | Uber uses Lambda for ride matching | Airbnb uses Kubernetes for scaling | Companies use WorkSpaces for remote work | HashiCorp manages AWS with Terraform |
+
+## Tools That Manage All These Services
+
+| **Tool Category** | **Popular Tools** | **What They Do** | **Real Example** |
+|-------------------|-------------------|------------------|------------------|
+| **CI/CD Pipelines** | Jenkins, GitHub Actions, GitLab CI/CD, Azure DevOps, CircleCI | Automate building, testing, and deploying code to any service | Jenkins pulls your code, runs tests, builds Docker image, deploys to Kubernetes |
+| **Multi-Cloud Management** | Terraform Cloud, Pulumi Cloud, Crossplane, Spacelift | Manage infrastructure across AWS, Azure, Google Cloud | Use Terraform to deploy same app to AWS and Azure simultaneously |
+| **Container Orchestration** | Kubernetes, Docker Swarm, OpenShift, Rancher | Manage containerized apps across different cloud providers | Kubernetes runs your containers on AWS, moves them to Google Cloud if needed |
+| **Service Mesh** | Istio, Linkerd, Consul Connect | Manage communication between microservices | Istio handles traffic routing between services running on different clouds |
+| **Monitoring & Observability** | Prometheus, Grafana, Datadog, New Relic, Elastic Stack | Monitor and observe all your services in one place | Datadog monitors your AWS servers, Kubernetes pods, and Heroku apps together |
+| **GitOps Tools** | ArgoCD, Flux, Jenkins X | Deploy and manage applications using Git as source of truth | ArgoCD watches your Git repo, automatically deploys changes to Kubernetes |

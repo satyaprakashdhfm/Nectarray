@@ -8,3 +8,7 @@ package-lock.json
 # Course notes. These are prose and hand-aligned markdown tables, written to
 # be read in a diff by whoever teaches from them — Prettier reflows both.
 content
+
+# The Knowledge base archive and what scripts/build-knowledge.py makes
+# from it — generated, or copied verbatim from the old NOTES repository.
+knowledge

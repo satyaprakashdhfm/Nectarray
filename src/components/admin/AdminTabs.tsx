@@ -6,11 +6,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bot,
+  BrainCircuit,
   Briefcase,
+  Calculator,
   CalendarDays,
   ChevronDown,
   Code,
   Component,
+  Cpu,
+  Database,
   FileText,
   FolderKanban,
   Globe,
@@ -18,6 +22,7 @@ import {
   Inbox,
   IndianRupee,
   Layers,
+  Library,
   Lightbulb,
   Link2,
   ListChecks,
@@ -25,11 +30,14 @@ import {
   Megaphone,
   Menu,
   NotebookPen,
+  Network,
+  Package,
   Palette,
   Plug,
   Server,
   Sparkles,
   SquareTerminal,
+  Terminal,
   Users,
   X,
   type LucideIcon,
@@ -144,6 +152,62 @@ const GROUPS: Group[] = [
       },
     ],
   },
+  /*
+   * The founder's own library — the old NOTES repository, every notebook
+   * kept — and deliberately not part of the Academy. One tab per subject;
+   * the rail on the page itself lists every note.
+   */
+  {
+    href: `${ADMIN}/knowledge`,
+    label: "Knowledge base",
+    icon: Library,
+    owns: [`${ADMIN}/knowledge`],
+    children: [
+      { href: `${ADMIN}/knowledge`, label: "All subjects", icon: Library },
+      {
+        href: `${ADMIN}/knowledge/ai`,
+        label: "Artificial Intelligence",
+        icon: BrainCircuit,
+      },
+      { href: `${ADMIN}/knowledge/core-cs`, label: "Core CS", icon: Cpu },
+      {
+        href: `${ADMIN}/knowledge/languages`,
+        label: "Languages & DSA",
+        icon: Terminal,
+      },
+      { href: `${ADMIN}/knowledge/web`, label: "Web development", icon: Globe },
+      {
+        href: `${ADMIN}/knowledge/software`,
+        label: "System design",
+        icon: Network,
+      },
+      {
+        href: `${ADMIN}/knowledge/devops`,
+        label: "DevOps & cloud",
+        icon: Server,
+      },
+      {
+        href: `${ADMIN}/knowledge/big-data`,
+        label: "Big data",
+        icon: Database,
+      },
+      {
+        href: `${ADMIN}/knowledge/aptitude`,
+        label: "Aptitude",
+        icon: Calculator,
+      },
+      {
+        href: `${ADMIN}/knowledge/placement`,
+        label: "Placement works",
+        icon: Briefcase,
+      },
+      {
+        href: `${ADMIN}/knowledge/misc`,
+        label: "Miscellaneous",
+        icon: Package,
+      },
+    ],
+  },
 ];
 
 /**
@@ -170,7 +234,9 @@ export function AdminTabs() {
       ? pathname === `${ADMIN}`
       : // All projects and Learnings own only their own page, not the
         // tabs beside them.
-        tab.href === `${ADMIN}/development` || tab.href === `${ADMIN}/web`
+        tab.href === `${ADMIN}/development` ||
+          tab.href === `${ADMIN}/web` ||
+          tab.href === `${ADMIN}/knowledge`
         ? pathname === tab.href
         : pathname.startsWith(tab.href));
   const groupActive = (group: Group) =>
